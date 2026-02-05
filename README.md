@@ -45,6 +45,17 @@ This repo contains the Vivado project targeting the **Zybo Z7-10 (XC7Z010)**, pl
 - Python **3.7+** for the assembler
 - Board: Zybo Z7-10 (or adapt constraints for your board)
 
+### 0) Clone the repository and import the .xpr (Xilinx Project) file
+```bash
+git clone https://github.com/jssilvaa/verilog-processor && cd verilog-processor/
+```
+Open the Vivado Design Suite™ and import the .xpr file in the project root. 
+Verify the hierarchy of the project:
+- In the design sources, check if the SoC module `m_soc.v` is selected as top.
+- In the simulation sources, check if the testbench `tb_Soc.v` is selected as top.
+If not, right-click and "Select as Project/Hierarchy root".
+Any other issues, refer to the Troubleshooting section. 
+
 ### 1) Assemble a program into BRAM init hex
 
 The BRAM model loads two byte-lane files (hi/lo). Generate them from an assembly program:
