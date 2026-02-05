@@ -41,8 +41,8 @@ This repo contains the Vivado project targeting the **Zybo Z7-10 (XC7Z010)**, pl
 
 ### Prerequisites
 
-- Vivado (the docs reference **Vivado 2025.1**)
-- Python **3.11+** for the assembler
+- Vivado (preferrably **Vivado 2025.1**)
+- Python **3.7+** for the assembler
 - Board: Zybo Z7-10 (or adapt constraints for your board)
 
 ### 1) Assemble a program into BRAM init hex
