@@ -1,0 +1,49 @@
+Known Inconsistencies and Refactor Hotspots
+
+Last reviewed: 2026-02-04
+
+This list is a short "what to look at first" index for the team-project refactor.
+For the detailed, actionable writeups, prefer `failure_modes/README.md` and the FM-* docs.
+
+OPEN / NEEDS CONFIRMATION
+
+1) Instruction fetch timing + branch base ambiguity
+- SoC uses a registered instruction latch (`insn_q`) and synchronous BRAM reads.
+- The exact cycle relationship between `pc`, `i_ad`, `insn_q`, and branch/jump target calculation should be verified.
+- See: `failure_modes/FM-040_instruction_fetch_latency_and_branch_annul.md`.
+
+2) Interrupt return PC semantics needs a directed regression
+- ABI `IRET` encoding and interrupt acceptance gating were standardized, but return-PC behavior should be validated across:
+  - straight-line code,
+  - branches,
+  - JAL/CALL/RET,
+  - and load stalls.
+- See: `failure_modes/FM-030_interrupt_return_and_acceptance.md`.
+
+3) Assembler validation gaps
+- Immediate nibble truncation and lack of prefix-aware validation can hide assembly mistakes.
+- Alignment checks for word operations are not enforced.
+- See: `failure_modes/FM-060_assembler_validation_gaps.md`.
+
+4) `irq_ctrl` has an underused `in_irq` input
+- `sources_1/new/m_irq_ctrl.v` takes `in_irq` but does not currently consume it.
+- Decide whether it should be removed (simplify) or used (explicitly constrain IRQ take rules).
+
+5) Timer default/comment mismatch
+- `sources_1/new/m_timerH.v` reset sets `int_en <= 1'b1` while the comment claims disabled.
+- Confirm intent (nested IRQ demo vs leftover comment) and update either the logic or the comment.
+
+6) `imem_invalid` forces NOP on 0x0000 fetch
+- `sources_1/new/m_soc.v` treats `0x0000` as invalid and injects NOP.
+- This forbids `0x0000` as a valid instruction encoding and can mask uninitialized memory fetches.
+
+TO FIX IN THIS WORKSPACE (WAS REGRESSED) (2026-02-04)
+
+- `IRET` macro vs RTL `iret_detected` mismatch: standardized in `tools/abi.inc`.
+- Assembler include path mismatch for `.include "abi.inc"`: fixed in `tools/assembler.py`.
+- UART/PARIO MMIO decode inconsistencies and unreachable UART status: fixed in `sources_1/new/m_periph_bus.v` and `sources_1/new/m_pario.v`.
+- Data addressing / byte ops (`LB/SB`) semantics mismatch: standardized to byte addressing in `sources_1/new/m_gr0040.v` and store-byte data path fix in `sources_1/new/m_soc.v`.
+- TeX docs stale repo paths/names (e.g., `gr0041_min.v`, `cpu_wrapper.v`): updated in `docs.tex` and `docs-implementation.tex`.
+
+FIXED (2026-02-06)
+- Hardcoded absolute `$readmemh` init paths: replaced with relative defaults + plusarg overrides in BRAM models.

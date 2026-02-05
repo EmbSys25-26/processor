@@ -1,3 +1,36 @@
 # ignore all project specific directories 
 # project dependencies are located under srcs/ constraints/ and tools/
 processor.*/ 
+.DS_Store
+.idea/
+.vscode/
+*.iml
+# ignore all project specific files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+# ignore build artifacts
+build/
+dist/
+*.o
+*.so
+*.dll
+*.exe
+*.class
+*.pyc
+*.pyo
+*.jar
+*.war
+*.ear
+# ignore environment files
+.env
+.env.local
+.env.*.local
+# ignore coverage reports
+coverage/
+*.lcov
+# ignore test results
+test-results/
+*.xml
