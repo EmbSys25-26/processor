@@ -80,6 +80,12 @@ Useful defines in `sim/tb_Soc.v`:
 - `TB_USE_INTERNALS` – exposes internal DUT signals and prints IRQ/UART activity
 - `TB_UART_MMIO_TEST` – bypasses the CPU and directly pokes UART MMIO registers
 
+In order to define a set of properties for simulation, run the following command in the TCL prompt: 
+```bash
+set_property verilog_defines {SIM=1 TB_USE_INTERNALS=1} [get_filesets sources_1]
+```
+Change the `{SIM=1 TB_USE_INTERNALS=1}` part with the properties you want to set. 
+
 The testbench writes a VCD: `waves_soc.vcd`.
 
 ### 3) Build bitstream & program hardware
@@ -186,7 +192,7 @@ The interrupt controller generates **hardware vectors**:
 | PARIO | `0x0060` |
 | UART (RX pending) | `0x0080` |
 
-An example vector table + ISRs live in `sw-programs/input.asm`.
+An example vector table + ISRs live in `assembly/input.asm`.
 
 ## Documentation
 
