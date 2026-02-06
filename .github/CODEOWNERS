@@ -1,0 +1,19 @@
+# Global default
+
+- @EmbSys25-26/admin
+
+# Pipeline core
+
+# set a default here (ze)
+
+# Compiler backend
+
+# set a default here (mariana)
+
+# Peripherals
+
+# set a default here (andre)
+
+# CI
+
+# /.github/workflows/ @EmbSys25-26/admin
