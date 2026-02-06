@@ -18,3 +18,5 @@ Examples:
 - `compiler/ add bison grammar ruleset`
 - `peripherals/ add I2C peripheral`
 - `peripherals/ add VGA peripheral`
+
+See `submit_bug.md` and `work.md` for issue templates and example content and descriptions.
