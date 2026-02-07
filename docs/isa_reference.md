@@ -1,4 +1,4 @@
-# GR0040 ISA Reference (Current RTL/Assembler Contract)
+# ISA Reference (Current RTL/Assembler Contract)
 
 _Last reviewed: 2026-02-07_
 

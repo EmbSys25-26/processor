@@ -47,16 +47,16 @@ Open issues are:
 
 - Issue #\_\_\_ — (why still open, what blocks it)
 
-## Risks / Callouts for next team (⚠)
+## Risks / Callouts for next rotation (⚠)
 
 Example - be careful with:
 
 - Timing of x, y, and z (link issues/PRs with `#`).
 - Additional testing needed for feature x (link issues/PRs with `#`).
 
-## Suggested focus areas for next team
+## Suggested focus areas for next rotation
 
-The suggested next steps for the team are:
+The suggested next steps are:
 
 1. Fix issues a, b, and c (link issues with `#`).
 2. Complete work on feature x (link PRs/issues with `#`).

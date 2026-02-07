@@ -1,4 +1,4 @@
-# GR0040 ABI Specification (Current Project Contract)
+# ABI Specification (Current Project Contract)
 
 _Last reviewed: 2026-02-07_
 
@@ -7,7 +7,7 @@ _Last reviewed: 2026-02-07_
   - handwritten assembly,
   - future compiler output,
   - interrupt handlers,
-  - and current GR0040/GR0041 RTL behavior.
+  - and current RTL behavior.
 - Primary sources:
   - `tools/abi.inc`
   - `docs/report/docs.tex` (ABI/interrupt sections)

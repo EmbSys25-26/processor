@@ -1,11 +1,11 @@
-# GR0040/GR0041 Architecture and Memory Notes
+# Processor Architecture and Memory Notes
 
 _Last reviewed: 2026-02-07_
 
 ## 1. System Partition
-- CPU core: `gr0040` in `srcs/m_gr0040.v`
+- CPU core module: `gr0040` in `srcs/m_gr0040.v`
   - Split into `control_unit` + `datapath`.
-- IRQ wrapper: `gr0041` in `srcs/m_gr0041.v`
+- IRQ wrapper module: `gr0041` in `srcs/m_gr0041.v`
   - Tracks interrupt nesting depth (`in_irq`) and wires CPU to IRQ controller signals.
 - SoC top: `soc` in `srcs/m_soc.v`
   - Integrates CPU wrapper, BRAM, peripheral bus, UART/pario pins.

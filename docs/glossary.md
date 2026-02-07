@@ -1,4 +1,4 @@
-# GR0040/GR0041 Glossary (Signals + Terms)
+# Processor Glossary (Signals + Terms)
 
 _Last reviewed: 2026-02-07_
 
@@ -26,7 +26,7 @@ _Last reviewed: 2026-02-07_
 - int_en: CPU-side "interrupts may be taken now" gate (depends on gie, stalls, interlocks, IMM atomicity).
 - irq_take: asserted by IRQ controller when it is taking an interrupt.
 - irq_vector: target PC address for the interrupt handler entry.
-- in_irq: asserted by the GR0041 wrapper when interrupt nesting depth is nonzero (or an IRQ is being taken).
+- in_irq: asserted by the IRQ wrapper when interrupt nesting depth is nonzero (or an IRQ is being taken).
 - iret_detected: asserted by CPU when the canonical IRET encoding is observed (used by wrapper/controller).
 
 ### Memory/MMIO terms

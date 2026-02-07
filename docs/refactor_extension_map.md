@@ -2,7 +2,7 @@
 
 _Last reviewed: 2026-02-07_
 
-This file links current implementation boundaries to planned team-project extensions.
+This file links current implementation boundaries to planned refactor extensions.
 
 ## 1. Pipeline implementation (staged instruction fetch/execution)
 
