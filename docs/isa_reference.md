@@ -1,13 +1,13 @@
-GR0040 ISA Reference (Current RTL/Assembler Contract)
+# GR0040 ISA Reference (Current RTL/Assembler Contract)
 
-Last reviewed: 2026-02-04
+_Last reviewed: 2026-02-07_
 
-1) Word size and register model
+## 1. Word size and register model
 - Instruction width: 16 bits.
 - Register file: 16 general-purpose registers (`r0..r15`).
 - `r0` is constant zero (writes ignored).
 
-2) Instruction field formats
+## 2. Instruction field formats
 
 JAL / ADDI / MEM class
 - `[15:12]=op`, `[11:8]=rd`, `[7:4]=rs`, `[3:0]=imm4`
@@ -21,13 +21,13 @@ RI ALU class
 IMM prefix class
 - `[15:12]=0x8`, `[11:0]=imm12`
 
-Branch class
+### Branch class
 - `[15:12]=0x9`, `[11:8]=cond`, `[7:0]=disp8`
 
 SYS class
 - `[15:12]=0xA`, `[11:8]=rd`, `[7:4]=rs`, `[3:0]=fn`
 
-3) Opcode map
+## 3. Opcode map
 - `0x0` JAL
 - `0x1` ADDI
 - `0x2` RR ALU
@@ -43,9 +43,9 @@ SYS class
 - `0xC` STI
 - `0xF` NOP
 
-4) Function code map (`fn`) for ALU/SYS
+## 4. Function code map (`fn`) for ALU/SYS
 
-RR/RI ALU fn map
+### RR/RI ALU fn map
 - `0x0` ADD
 - `0x1` SUB
 - `0x2` AND
@@ -56,11 +56,11 @@ RR/RI ALU fn map
 - `0x7` SRL
 - `0x8` SRA
 
-SYS fn map
+### SYS fn map
 - `0x9` GETCC
 - `0xA` SETCC
 
-RI-only assembler mnemonics map to fn
+### RI-only assembler mnemonics map to fn
 - `RSUBI` -> fn=1
 - `ANDI`  -> fn=2
 - `XORI`  -> fn=3
@@ -68,9 +68,9 @@ RI-only assembler mnemonics map to fn
 - `RSCBI` -> fn=5
 - `RCMPI` -> fn=6
 
-5) Branch conditions
+## 5. Branch conditions
 
-Assembler mnemonic -> cond nibble
+### Assembler mnemonic -> cond nibble
 - `BR`   -> 0x0
 - `BEQ`  -> 0x2
 - `BC`   -> 0x4
@@ -80,10 +80,10 @@ Assembler mnemonic -> cond nibble
 - `BLTU` -> 0xC
 - `BLEU` -> 0xE
 
-Note
+### Note
 - RTL branch logic supports inversion through low cond bit (`cond[0]`), but assembler currently emits the even encodings above.
 
-6) Immediate and prefix behavior
+## 6. Immediate and prefix behavior
 - `IMM` stores upper 12 bits for next immediate-using instruction.
 - Next instruction consumes combined immediate as:
   - upper bits from `IMM.i12`
@@ -93,34 +93,33 @@ Note
   - use `IMM` when you need a full 16-bit constant/address.
   - otherwise `imm4` behaves like a small signed offset/constant.
 
-7) Flag/PSW model
+## 7. Flag/PSW model
 - CPU maintains flags: Z, N, C, V.
 - Additional carry latch is tracked for ADC/SBC interlock behavior.
 - `GETCC` exports packed low PSW bits into a GPR.
 - `SETCC` restores those bits from a GPR.
 
-8) Interrupt-related instructions
+## 8. Interrupt-related instructions
 - `CLI`: clear global interrupt enable latch.
 - `STI`: set global interrupt enable latch.
 - Hardware interrupt entry stores link/return PC into `lr` path and vectors PC.
 
-9) Address generation note
+## 9. Address generation note
 - Instruction addresses (`i_ad`) are byte addresses (PC increments by 2 per instruction).
-- Data/MMIO addresses (`d_ad`) are byte addresses (architectural byte addressing).
-- Byte-lane behavior (big-endian within a 16-bit word):
-  - even `d_ad` selects the high byte lane (`data_in[15:8]`)
-  - odd `d_ad` selects the low byte lane (`data_in[7:0]`)
-- `LB` returns `{8'h00, selected_byte}`.
-- `SB` writes the byte from `data_out[7:0]` into the selected lane.
-- Alignment note:
-  - `LW/SW` are word operations and should use even byte addresses (`d_ad[0]=0`).
+- Current datapath computes `d_ad = (sum << 1)` (`srcs/m_gr0040.v`).
+  - Effective addresses issued by the CPU are even-byte-aligned.
+- Byte-lane behavior remains big-endian within a 16-bit word:
+  - `d_ad[0]=0` selects high byte (`data_in[15:8]`)
+  - `d_ad[0]=1` selects low byte (`data_in[7:0]`)
+- Current consequence:
+  - `LB/SB` lane selection is effectively pinned to `d_ad[0]=0` for core-generated accesses.
 
-10) Canonical pseudo-instructions (via ABI macros)
+## 10. Canonical pseudo-instructions (via ABI macros)
 - `CALL target` -> `IMM + JAL lr,r0,imm4`
 - `RET` -> `JAL r0,lr,#0`
 - `LI rd,imm16` -> `IMM + ADDI`
 - `PUSH/POP` -> `ADDI` + `SW/LW`
 
-11) Interrupt return convention caveat
+## 11. Interrupt return convention caveat
 - RTL `iret_detected` checks exact instruction `16'h0EE0`.
 - ABI `IRET` macro is expected to emit exactly this encoding so wrapper/controller depth return signaling triggers reliably.

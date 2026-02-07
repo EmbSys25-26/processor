@@ -35,7 +35,7 @@ This repo contains the Vivado project targeting the **Zybo Z7-10 (XC7Z010)**, pl
 - `assembly/` – example assembly programs
 	- `input.asm` – vector table + ISRs + small ABI tests
 - `constraints/` – Zybo XDC constraints (and optional ILA constraints)
-- `docs/` – LaTeX programmer’s guide + implementation notes
+- `docs/` – Markdown implementation baseline + report sources
 
 ## Quickstart
 
@@ -69,7 +69,7 @@ python3 tools/assembler.py
 
 Notes:
 - The assembler uses *byte addresses* in `.org`/labels, but internally tracks locations in *words* and enforces alignment.
-- `.include` is supported (used by `input.asm` to pull in `abi.inc`).
+- `.include` is resolved relative to the including file. Example: `assembly/input.asm` uses `.include "../tools/abi.inc"`.
 
 ### 2) Run simulation (Vivado xsim)
 
@@ -111,8 +111,11 @@ Instruction fetch is synchronous: the BRAM instruction output is registered into
 
 ### Addressing model
 
-- Software-visible addresses are **byte addresses**.
-- Internally, the BRAM is word-indexed using `addr[9:1]` (bit 0 is used as a byte-lane selector for `SB`).
+- Instruction addresses are byte addresses (`PC` increments by 2 per instruction).
+- Current datapath computes load/store/MMIO address as `d_ad = (sum << 1)` in `srcs/m_gr0040.v`.
+- BRAM is word-indexed using `addr[9:1]`; lane select uses `addr[0]`.
+- Current consequence: core-generated accesses are even-byte aligned, so `LB/SB` lane-select behavior is constrained until address-generation logic is revised.
+- Software examples therefore use pre-shift constants for MMIO/data references (for example, `0x4000` in code maps to MMIO base `0x8000` after the datapath shift).
 - MMIO is selected by `d_ad[15] == 1` (i.e., `0x8000–0xFFFF`), with this design using `0x8000–0x8FFF`.
 
 ### Global memory map (byte addressing)
@@ -196,15 +199,23 @@ An example vector table + ISRs live in `assembly/input.asm`.
 
 ## Documentation
 
-The full programmer’s guide / implementation notes are in:
+Primary docs are in:
 
-- `docs/docs.tex`
-- `docs/docs-implementation.tex`
+- `docs/README.md`
+- `docs/architecture_and_memory.md`
+- `docs/isa_reference.md`
+- `docs/abi_spec.md`
+
+Legacy report sources are in:
+- `docs/report/docs.tex`
+- `docs/report/docs-implementation.tex`
 
 ## Practical notes / gotchas
 
-- `srcs/m_bram.v` initializes BRAM from `srcs/mem/mem_hi.hex` and `srcs/mem/mem_lo.hex` by default. You can override paths at sim-time with `+MEM_HEX_HI=...` and `+MEM_HEX_LO=...`.
-- In Vivado/xsim runs (when `SIM` is defined), the default paths are set up to work from Vivado’s generated `processor.sim/.../behav/xsim/` directory (repo root is typically `../../../../`). For fully deterministic CI, prefer passing explicit `+MEM_HEX_HI=... +MEM_HEX_LO=...`.
+- `srcs/m_bram.v` uses hardcoded init file paths for BRAM loading:
+  - non-`SIM`: absolute host path defaults
+  - `SIM`: relative `../../../../srcs/mem/mem_{hi,lo}.hex`
+- If sim fails to find BRAM init files, update these paths in `srcs/m_bram.v` for your environment.
 - UART baud rate is compile-time selectable in `srcs/m_periph_bus.v`: `SIM` builds use a much faster baud for testbench convenience.
 
 ## Credits
