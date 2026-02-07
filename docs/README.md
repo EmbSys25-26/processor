@@ -1,13 +1,14 @@
-# GR0040/GR0041 Team Documentation (Refactor Baseline)
+# Documentation
 
 _Last reviewed: 2026-02-07_
 
 ## Purpose
+
 - This folder is the implementation-aligned documentation baseline for refactor work.
-- It is based on RTL in `srcs/*.v`, testbenches in `sim/*.v`, and project report sources in `docs/report/`.
-- If documentation disagrees with RTL, **RTL is the source of truth**.
+- It is based on RTL in `srcs/*.v`, testbenches in `sim/*.v`.
 
 ## Contents
+
 - [`architecture_and_memory.md`](architecture_and_memory.md)
   - SoC architecture, addressing model, IVT/memory layout, MMIO regions, and interrupt flow.
 - [`isa_reference.md`](isa_reference.md)
@@ -26,11 +27,13 @@ _Last reviewed: 2026-02-07_
   - Curated source set used for this baseline.
 
 ## Assembler Docs
+
 - [`assembler/assembler_reference.md`](assembler/assembler_reference.md)
 - [`assembler/abi_inc_macro_reference.md`](assembler/abi_inc_macro_reference.md)
 - [`assembler/isa_abi_assembler_checklist.md`](assembler/isa_abi_assembler_checklist.md)
 
 ## Recommended Read Order
+
 1. `architecture_and_memory.md`
 2. `isa_reference.md`
 3. `abi_spec.md`
@@ -39,7 +42,3 @@ _Last reviewed: 2026-02-07_
 6. `assembler/isa_abi_assembler_checklist.md`
 7. `refactor_extension_map.md`
 8. `known_inconsistencies_for_refactor.md`
-
-## Notes
-- This snapshot does not currently contain standalone `pipeline/`, `failure_modes/`, or `team_guide/` directories.
-- The legacy report sources remain under `docs/report/`.
