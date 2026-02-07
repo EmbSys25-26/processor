@@ -1,8 +1,8 @@
-Assembler Reference (`tools/assembler.py`)
+# Assembler Reference (`tools/assembler.py`)
 
-Last reviewed: 2026-02-04
+_Last reviewed: 2026-02-07_
 
-1) Role in the project
+## 1. Role in the project
 - Assembler is the SW/HW boundary for this SoC.
 - Converts assembly source into:
   - combined 16-bit word image (`mem.hex` style)
@@ -10,18 +10,18 @@ Last reviewed: 2026-02-04
   - low-byte stream (`mem_lo.hex`)
 - Output format directly matches BRAM hi/lo memory layout in RTL.
 
-2) Command line
+## 2. Command line
 
-Basic usage
+### Basic usage
 - `python3 tools/assembler.py <input.asm> [output.hex]`
 
-Explicit output options
+### Explicit output options
 - `-o, --out <path>`: combined 16-bit words (default `srcs/mem/mem.hex`)
 - `--hi <path>`: high-byte stream (default `srcs/mem/mem_hi.hex`)
 - `--lo <path>`: low-byte stream (default `srcs/mem/mem_lo.hex`)
 - `-q, --quiet`: suppress summary print
 
-3) Pipeline
+## 3. Pipeline
 
 Stage 0: read file
 - Reads input source text line-by-line.
@@ -29,9 +29,8 @@ Stage 0: read file
 Stage 1: include expansion
 - Supports `.include "file"`.
 - Includes are recursive.
-- Include path search order:
-  1) directory of the including file
-  2) directory of `tools/assembler.py` (repo `tools/`)
+- Include resolution is relative to the including file directory.
+- There is no secondary fallback include search path in the current implementation.
 
 Stage 2: macro expansion
 - Supports `.macro ...` / `.endm`.
@@ -57,7 +56,7 @@ Stage 5: emit files
 - Hi stream: upper byte of each word.
 - Lo stream: lower byte of each word.
 
-4) Supported directives
+## 4. Supported directives
 - `.include "file"`
 - `.macro NAME [params...]`
 - `.endm`
@@ -65,7 +64,7 @@ Stage 5: emit files
 - `.org expr` (must be even byte address)
 - `.word expr`
 
-5) Expressions supported in assembler
+## 5. Expressions supported in assembler
 - Decimal and hex literals (`0x...`), signed ints.
 - Register aliases or `r0..r15` parsing in some expression contexts.
 - Label references with optional `+/-offset`.
@@ -73,40 +72,40 @@ Stage 5: emit files
   - `expr >> imm`
   - `expr & imm`
 
-6) Register names recognized
+## 6. Register names recognized
 - ABI aliases: `a0`, `v0`, `a1`, `v1`, `a2`, `t0-t3`, `s0-s3`, `fp`, `sp`, `lr`, `gp`, `zero`
 - Raw names: `r0` to `r15`
 
-7) ISA mnemonics encoded by assembler
+## 7. ISA mnemonics encoded by assembler
 
-Control/system
+### Control/system
 - `JAL`, `IMM`, `CLI`, `STI`, `GETCC`, `SETCC`, `NOP`
 
-ALU RR (op=0x2)
+### ALU RR (op=0x2)
 - `ADD`, `SUB`, `AND`, `XOR`, `ADC`, `SBC`, `CMP`, `SRL`, `SRA`
 
-ALU RI (op=0x3)
+### ALU RI (op=0x3)
 - `RSUBI`, `ANDI`, `XORI`, `ADCI`, `RSCBI`, `RCMPI`
 
-Immediate arithmetic
+### Immediate arithmetic
 - `ADDI`
 
-Memory
+### Memory
 - `LW`, `LB`, `SW`, `SB`
 
-Branch
+### Branch
 - `BR`, `BEQ`, `BC`, `BV`, `BLT`, `BLE`, `BLTU`, `BLEU`
 
-8) Notes on immediate encoding
+## 8. Notes on immediate encoding
 - 4-bit immediate path uses `encode_imm4()` and keeps lower nibble (`val & 0xF`).
 - Range guard is intentionally wider (`-128..127`) before nibble extraction.
 - 12-bit `IMM` immediate must be `0..0xFFF`.
 
-9) ABI integration expectations
+## 9. ABI integration expectations
 - `tools/abi.inc` is intended to be included by program sources.
 - ABI pseudo-ops/macros like `CALL`, `RET`, `LI`, `PUSH`, `POP`, `IRET` are expanded before pass1/pass2 encoding.
 - Compiler backend for subset-C should target these ABI macros or emit equivalent canonical instruction sequences.
 
-10) Practical build note
-- `assembler/input.asm` uses `.include "abi.inc"`.
-- Assembler searches both `assembler/` and `tools/`, so this works without copying files.
+## 10. Practical build note
+- `assembly/input.asm` uses `.include "../tools/abi.inc"`.
+- Keep include paths explicit/relative from the including source file.

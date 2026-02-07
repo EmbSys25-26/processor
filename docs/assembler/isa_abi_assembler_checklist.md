@@ -1,16 +1,16 @@
-ISA <-> ABI <-> Assembler Checklist
+# ISA <-> ABI <-> Assembler Checklist
 
-Last reviewed: 2026-02-04
+_Last reviewed: 2026-02-07_
 
-Purpose
+### Purpose
 - Map the implemented ISA (RTL) to ABI conventions and assembler support.
 - Use this checklist during refactor to keep software/hardware contracts aligned.
 
-Legend
+### Legend
 - [x] implemented/used
 - [ ] not implemented or not currently used
 
-A) Opcode-Class Coverage (Top Nibble `insn[15:12]`)
+## A. Opcode-Class Coverage (Top Nibble `insn[15:12]`)
 
 [ x ] op=0x0 JAL
 - RTL decode: yes (`JAL` macro in control/datapath)
@@ -90,7 +90,7 @@ A) Opcode-Class Coverage (Top Nibble `insn[15:12]`)
 - Assembler mnemonic: `NOP`
 - ABI/macros use it: padding and branch-annul safety path
 
-B) Branch Condition Map (Assembler -> cond nibble)
+## B. Branch Condition Map (Assembler -> cond nibble)
 
 [ x ] BR   -> cond=0x0
 [ x ] BEQ  -> cond=0x2
@@ -101,19 +101,19 @@ B) Branch Condition Map (Assembler -> cond nibble)
 [ x ] BLTU -> cond=0xC
 [ x ] BLEU -> cond=0xE
 
-Note
+### Note
 - RTL supports inversion through `cond[0]` behavior, but assembler currently exposes only even-condition mnemonics above.
 
-C) ABI Macro Coverage Against Assembler
+## C. ABI Macro Coverage Against Assembler
 
-Stack/call
+### Stack/call
 [ x ] PUSH uses `ADDI` + `SW`
 [ x ] POP uses `LW` + `ADDI`
 [ x ] CALL uses `IMM` + `JAL`
 [ x ] RET uses `JAL`
 [ x ] LI uses `IMM` + `ADDI`
 
-ALU helpers
+### ALU helpers
 [ x ] MOV uses `ADDI`
 [ x ] SUBI uses `ADDI`
 [ x ] NEG uses `RSUBI`
@@ -123,27 +123,27 @@ ALU helpers
 [ x ] LEA uses `ADDI`
 [ x ] LBS uses `LB` + `IMM` + `ADDI` + `XOR` + `SUB`
 
-ISR/flags
+### ISR/flags
 [ x ] PUSH_CC uses `GETCC` + `PUSH`
 [ x ] POP_CC uses `POP` + `SETCC`
 [ x ] ISR_PRO uses `PUSH` + `PUSH_CC` + `STI`
 [ x ] IRET uses `POP_CC` + `POP` + `JAL lr,lr,#0` (canonical IRET encoding)
 
-D) ABI/RTL Contract Risk Checks
+## D. ABI/RTL Contract Risk Checks
 
 [ x ] `IRET` macro encoding matches hardware `iret_detected`
 - Current status: standardized to `0x0EE0` (`JAL r14,r14,#0`).
 
-[ x ] Sample source include layout is build-clean by default
-- Current status: assembler searches both source directory and `tools/` for includes.
+[ ] Sample source include layout is build-clean by default without explicit paths
+- Current status: assembler resolves includes only relative to the including file; explicit relative paths are required.
 
 [ x ] UART status register addressing reachable through CPU path
-- Current status: UART status is word-aligned at `0x8302` (bus passes `addr[2:1]` to `uart_mmio`).
+- Current status: UART status is word-aligned at `0x8302` (bus passes `addr[1:0]` to `uart_mmio`).
 
-[ x ] LB/SB byte-lane behavior matches byte addressing model
-- Current status: `d_ad = sum` (byte address); `LB` selects by `d_ad[0]`; `SB` uses byte enables by `d_ad[0]`.
+[ ] LB/SB byte-lane behavior matches intended byte-address model
+- Current status: datapath emits `d_ad = (sum << 1)`; `d_ad[0]` stays `0` for core-generated accesses, so `LB/SB` lane select is effectively pinned.
 
-E) Refactor Exit Criteria (Suggested)
+## E. Refactor Exit Criteria (Suggested)
 - [ ] All ABI macros assemble and execute under regression testbench.
 - [ ] Interrupt return sequence standardized (one canonical encoding).
 - [ ] Assembler include model documented and CI-tested.
