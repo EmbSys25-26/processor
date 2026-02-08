@@ -4,7 +4,7 @@ set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
 set_property C_ADV_TRIGGER false [get_debug_cores u_ila_0]
 set_property C_DATA_DEPTH 1024 [get_debug_cores u_ila_0]
 set_property C_EN_STRG_QUAL false [get_debug_cores u_ila_0]
-set_property C_INPUT_PIPE_STAGES 0 [get_debug_cores u_ila_0]
+set_property C_INPUT_PIPE_STAGES 1 [get_debug_cores u_ila_0]
 set_property C_TRIGIN_EN false [get_debug_cores u_ila_0]
 set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
 
@@ -165,27 +165,3 @@ create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe24]
 set_property port_width 1 [get_debug_ports u_ila_0/probe24]
 connect_debug_port u_ila_0/probe24 [get_nets _iret_detected]
-
-# timer0 start counter register probe
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe25]
-set_property port_width 16 [get_debug_ports u_ila_0/probe25]
-connect_debug_port u_ila_0/probe25 [get_nets [list {u_periph/u_timer0/_cnt_start[0]} {u_periph/u_timer0/_cnt_start[1]} {u_periph/u_timer0/_cnt_start[2]} {u_periph/u_timer0/_cnt_start[3]} {u_periph/u_timer0/_cnt_start[4]} {u_periph/u_timer0/_cnt_start[5]} {u_periph/u_timer0/_cnt_start[6]} {u_periph/u_timer0/_cnt_start[7]} {u_periph/u_timer0/_cnt_start[8]} {u_periph/u_timer0/_cnt_start[9]} {u_periph/u_timer0/_cnt_start[10]} {u_periph/u_timer0/_cnt_start[11]} {u_periph/u_timer0/_cnt_start[12]} {u_periph/u_timer0/_cnt_start[13]} {u_periph/u_timer0/_cnt_start[14]} {u_periph/u_timer0/_cnt_start[15]}]]
-
-# timer1 start counter register probe
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe26]
-set_property port_width 16 [get_debug_ports u_ila_0/probe26]
-connect_debug_port u_ila_0/probe26 [get_nets [list {u_periph/u_timer1/_cnt_start[0]} {u_periph/u_timer1/_cnt_start[1]} {u_periph/u_timer1/_cnt_start[2]} {u_periph/u_timer1/_cnt_start[3]} {u_periph/u_timer1/_cnt_start[4]} {u_periph/u_timer1/_cnt_start[5]} {u_periph/u_timer1/_cnt_start[6]} {u_periph/u_timer1/_cnt_start[7]} {u_periph/u_timer1/_cnt_start[8]} {u_periph/u_timer1/_cnt_start[9]} {u_periph/u_timer1/_cnt_start[10]} {u_periph/u_timer1/_cnt_start[11]} {u_periph/u_timer1/_cnt_start[12]} {u_periph/u_timer1/_cnt_start[13]} {u_periph/u_timer1/_cnt_start[14]} {u_periph/u_timer1/_cnt_start[15]}]]
-
-# timer0 live counter probe
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe27]
-set_property port_width 16 [get_debug_ports u_ila_0/probe27]
-connect_debug_port u_ila_0/probe27 [get_nets [list {u_periph/u_timer0/_cnt[0]} {u_periph/u_timer0/_cnt[1]} {u_periph/u_timer0/_cnt[2]} {u_periph/u_timer0/_cnt[3]} {u_periph/u_timer0/_cnt[4]} {u_periph/u_timer0/_cnt[5]} {u_periph/u_timer0/_cnt[6]} {u_periph/u_timer0/_cnt[7]} {u_periph/u_timer0/_cnt[8]} {u_periph/u_timer0/_cnt[9]} {u_periph/u_timer0/_cnt[10]} {u_periph/u_timer0/_cnt[11]} {u_periph/u_timer0/_cnt[12]} {u_periph/u_timer0/_cnt[13]} {u_periph/u_timer0/_cnt[14]} {u_periph/u_timer0/_cnt[15]}]]
-
-# timer1 live counter probe
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe28]
-set_property port_width 16 [get_debug_ports u_ila_0/probe28]
-connect_debug_port u_ila_0/probe28 [get_nets [list {u_periph/u_timer1/_cnt[0]} {u_periph/u_timer1/_cnt[1]} {u_periph/u_timer1/_cnt[2]} {u_periph/u_timer1/_cnt[3]} {u_periph/u_timer1/_cnt[4]} {u_periph/u_timer1/_cnt[5]} {u_periph/u_timer1/_cnt[6]} {u_periph/u_timer1/_cnt[7]} {u_periph/u_timer1/_cnt[8]} {u_periph/u_timer1/_cnt[9]} {u_periph/u_timer1/_cnt[10]} {u_periph/u_timer1/_cnt[11]} {u_periph/u_timer1/_cnt[12]} {u_periph/u_timer1/_cnt[13]} {u_periph/u_timer1/_cnt[14]} {u_periph/u_timer1/_cnt[15]}]]

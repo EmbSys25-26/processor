@@ -214,32 +214,4 @@
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">iret_detected</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe25">
-      <obj_property name="ElementShortName">probe25[15:0]</obj_property>
-      <obj_property name="ObjectShortName">probe25[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">timer0_cnt_start</obj_property>
-      <obj_property name="Reversed">true</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe26">
-      <obj_property name="ElementShortName">probe26[15:0]</obj_property>
-      <obj_property name="ObjectShortName">probe26[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">timer1_cnt_start</obj_property>
-      <obj_property name="Reversed">true</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe27">
-      <obj_property name="ElementShortName">probe27[15:0]</obj_property>
-      <obj_property name="ObjectShortName">probe27[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">timer0_cnt</obj_property>
-      <obj_property name="Reversed">true</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe28">
-      <obj_property name="ElementShortName">probe28[15:0]</obj_property>
-      <obj_property name="ObjectShortName">probe28[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">timer1_cnt</obj_property>
-      <obj_property name="Reversed">true</obj_property>
-   </wvobject>
 </wave_config>
