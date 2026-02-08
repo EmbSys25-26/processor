@@ -1,102 +1,122 @@
 `timescale 1ns / 1ps
-// 1 KiB BRAM (big-endian) with byte enables, true dual port
-(* ram_style = "block", keep_hierarchy = "true", dont_touch = "true" *)
+
 module bram_1kb_be(
-    input wire clk, // clock
-    input wire rst, // rst (sync)
+    input wire i_clk,
+    input wire i_rst,
+    input wire i_a_en,
+    input wire [9:1] i_a_addr,
+    output wire [7:0] o_a_dout_h,
+    output wire [7:0] o_a_dout_l,
+    input wire i_b_en,
+    input wire i_b_we_h,
+    input wire i_b_we_l,
+    input wire [9:1] i_b_addr,
+    input wire [7:0] i_b_din_h,
+    input wire [7:0] i_b_din_l,
+    output wire [7:0] o_b_dout_h,
+    output wire [7:0] o_b_dout_l
+);
 
-    // Port A (instruction fetch)
-    input wire a_en, 
-    input wire [9:1] a_addr,    // word index (byte_address[9:1])
-    output reg [7:0] a_dout_h,  // data out (high byte) MSB @ even address
-    output reg [7:0] a_dout_l,  // data out (low byte)  LSB @ odd address
+/*************************************************************************************
+ * SECTION 1. DECLARE WIRES / REGS
+ ************************************************************************************/
+    reg [7:0] _mem_h [0:511];
+    reg [7:0] _mem_l [0:511];
 
-    // Port B (data access)
-    input wire b_en,
-    input wire b_we_h,            // write enable
-    input wire b_we_l,            // write enable
-    input wire [9:1] b_addr,      // word index (byte_address[9:1])
-    input wire [7:0] b_din_h,     // data in (high byte) MSB @ even address
-    input wire [7:0] b_din_l,     // data in (low byte)  LSB @ odd address
-    output reg [7:0] b_dout_h,    // data out (high byte) MSB @ even address
-    output reg [7:0] b_dout_l     // data out (low byte)  LSB @ odd address
-    );
+    reg [7:0] _a_dout_h;
+    reg [7:0] _a_dout_l;
+    reg [7:0] _b_dout_h;
+    reg [7:0] _b_dout_l;
 
-    // Synthesis hints, range is from 0x000 to 0x3FF (1 KiB)
-    (* ram_style = "block" *) reg [7:0] mem_h [0:511]; // high byte (MSB) @ even address
-    (* ram_style = "block" *) reg [7:0] mem_l [0:511]; // low byte  (LSB) @ odd  address
-    
-    // Initialize memory to NOPs 
-    // Note: NOP is 0xF000, so high byte = 0xF0, low byte = 0x00
-    // If NOP encoding changes, this needs to be updated
-    integer i;
+    integer _i;
+
+    reg [1023:0] _mem_hex_lo;
+    reg [1023:0] _mem_hex_hi;
+
+    (* mark_debug = "true" *) reg [15:0] _mem0_dbg;
+    (* mark_debug = "true" *) reg [15:0] _mem1_dbg;
+    (* mark_debug = "true" *) reg [15:0] _mem2_dbg;
+
+/*************************************************************************************
+ * SECTION 2. IMPLEMENTATION
+ ************************************************************************************/
+
+/*************************************************************************************
+ * 2.1 Initialization
+ ************************************************************************************/
     initial begin
-        for (i = 0; i < 512; i = i + 1) begin
-            mem_h[i] = 8'hF0;
-            mem_l[i] = 8'h00;
+        for (_i = 0; _i < 512; _i = _i + 1) begin
+            _mem_h[_i] = 8'hF0;
+            _mem_l[_i] = 8'h00;
         end
     end
 
-    // simulation file paths
-    reg [1023:0] MEM_HEX_LO;
-    reg [1023:0] MEM_HEX_HI;
     initial begin
-    `ifndef SIM 
-        MEM_HEX_LO = "/home/josesilvaa/processor/srcs/mem/mem_lo.hex";
-        MEM_HEX_HI = "/home/josesilvaa/processor/srcs/mem/mem_hi.hex";
-    `else
-        MEM_HEX_LO = "../../../../srcs/mem/mem_lo.hex";
-        MEM_HEX_HI = "../../../../srcs/mem/mem_hi.hex";
-    `endif
-        $readmemh(MEM_HEX_LO, mem_l);
-        $readmemh(MEM_HEX_HI, mem_h);
+`ifndef SIM
+        _mem_hex_lo = "./srcs/mem/mem_lo.hex";
+        _mem_hex_hi = "./srcs/mem/mem_hi.hex";
+`else
+        _mem_hex_lo = "./srcs/mem/mem_lo.hex";
+        _mem_hex_hi = "./srcs/mem/mem_hi.hex";
+`endif
+        $readmemh(_mem_hex_lo, _mem_l);
+        $readmemh(_mem_hex_hi, _mem_h);
     end
 
-    // Port A (i fetch)
-    always @(posedge clk) begin
-        if (rst) begin
-            a_dout_h <= 8'hF0; // NOP
-            a_dout_l <= 8'h00; 
-        end else if (a_en) begin
-            a_dout_h <= mem_h[a_addr];
-            a_dout_l <= mem_l[a_addr];
+/*************************************************************************************
+ * 2.2 Port A (Instruction)
+ ************************************************************************************/
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _a_dout_h <= 8'hF0;
+            _a_dout_l <= 8'h00;
+        end else if (i_a_en) begin
+            _a_dout_h <= _mem_h[i_a_addr];
+            _a_dout_l <= _mem_l[i_a_addr];
         end
     end
 
-    // Port B (d load/store)
-    reg [7:0] memh_q, meml_q; 
-    always @(posedge clk) begin
-        if (~rst & b_en) begin
-          // writes go to the memory arrays
-          if (b_we_h) begin mem_h[b_addr] <= b_din_h; end
-          if (b_we_l) begin mem_l[b_addr] <= b_din_l; end 
-        end 
-    end
-
-    // registered output
-    always @(posedge clk) begin
-        if (rst) begin
-            b_dout_h <= 8'h00;
-            b_dout_l <= 8'h00;
-        end else if (b_en) begin
-            b_dout_h <= mem_h[b_addr];
-            b_dout_l <= mem_l[b_addr];
+/*************************************************************************************
+ * 2.3 Port B (Data)
+ ************************************************************************************/
+    always @(posedge i_clk) begin
+        if (~i_rst & i_b_en) begin
+            if (i_b_we_h) begin
+                _mem_h[i_b_addr] <= i_b_din_h;
+            end
+            if (i_b_we_l) begin
+                _mem_l[i_b_addr] <= i_b_din_l;
+            end
         end
     end
 
-    // Debug regs (for waveform inspection)
-    (* mark_debug = "true" *) reg [15:0] mem0_dbg, mem1_dbg, mem2_dbg;
-    always @(posedge clk) begin
-        if (b_en)
-        case (b_addr)
-            9'd0: mem0_dbg <= {b_we_h ? b_din_h : b_dout_h,
-                               b_we_l ? b_din_l : b_dout_l};
-            9'd1: mem1_dbg <= {b_we_h ? b_din_h : b_dout_h,
-                               b_we_l ? b_din_l : b_dout_l};
-            9'd2: mem2_dbg <= {b_we_h ? b_din_h : b_dout_h,
-                               b_we_l ? b_din_l : b_dout_l};    
-            default:;
-        endcase
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _b_dout_h <= 8'h00;
+            _b_dout_l <= 8'h00;
+        end else if (i_b_en) begin
+            _b_dout_h <= _mem_h[i_b_addr];
+            _b_dout_l <= _mem_l[i_b_addr];
+        end
     end
 
-endmodule // bram_1kb_be
+/*************************************************************************************
+ * 2.4 Debug regs
+ ************************************************************************************/
+    always @(posedge i_clk) begin
+        if (i_b_en) begin
+            case (i_b_addr)
+                9'd0: _mem0_dbg <= {i_b_we_h ? i_b_din_h : _b_dout_h, i_b_we_l ? i_b_din_l : _b_dout_l};
+                9'd1: _mem1_dbg <= {i_b_we_h ? i_b_din_h : _b_dout_h, i_b_we_l ? i_b_din_l : _b_dout_l};
+                9'd2: _mem2_dbg <= {i_b_we_h ? i_b_din_h : _b_dout_h, i_b_we_l ? i_b_din_l : _b_dout_l};
+                default: ;
+            endcase
+        end
+    end
+
+    assign o_a_dout_h = _a_dout_h;
+    assign o_a_dout_l = _a_dout_l;
+    assign o_b_dout_h = _b_dout_h;
+    assign o_b_dout_l = _b_dout_l;
+
+endmodule

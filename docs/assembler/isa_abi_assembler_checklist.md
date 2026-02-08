@@ -140,8 +140,8 @@ _Last reviewed: 2026-02-07_
 [ x ] UART status register addressing reachable through CPU path
 - Current status: UART status is word-aligned at `0x8302` (bus passes `addr[1:0]` to `uart_mmio`).
 
-[ ] LB/SB byte-lane behavior matches intended byte-address model
-- Current status: datapath emits `d_ad = (sum << 1)`; `d_ad[0]` stays `0` for core-generated accesses, so `LB/SB` lane select is effectively pinned.
+[ x ] LB/SB byte-lane behavior matches intended byte-address model
+- Current status: datapath emits `d_ad = (sum << 1)` and SoC uses `d_ad[1]` as byte-lane select for core-generated `LB/SB`; `LB` is zero-extended from selected lane.
 
 ## E. Refactor Exit Criteria (Suggested)
 - [ ] All ABI macros assemble and execute under regression testbench.

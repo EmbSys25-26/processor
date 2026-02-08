@@ -1,168 +1,183 @@
-// periph_bus.v: Peripheral bus module
-`timescale 1ns/1ps
-module periph_bus
-( 
-    input wire         clk,
-    input wire         rst, 
-    input wire [15:0]  addr,
-    input wire         sel,
-    input wire         we,
-    input wire         re,
-    input wire [15:0]  wdata,
-    output wire [15:0] rdata,
-    output wire        rdy,
-    input  wire [3:0]  par_i,
-    output wire [3:0]  par_o, 
-    input  wire        uart_rx,
-    output wire        uart_tx,
+`timescale 1ns / 1ps
 
-    input wire         int_en,
-    input wire         in_irq, 
-    output wire [15:0] irq_vector,
-    output wire        irq_take,
-    input wire         irq_ret 
-); 
+module periph_bus(
+    input wire i_clk,
+    input wire i_rst,
+    input wire [15:0] i_addr,
+    input wire i_sel,
+    input wire i_we,
+    input wire i_re,
+    input wire [15:0] i_wdata,
+    output wire [15:0] o_rdata,
+    output wire o_rdy,
+    input wire [3:0] i_par_i,
+    output wire [3:0] o_par_o,
+    input wire i_uart_rx,
+    output wire o_uart_tx,
+    input wire i_int_en,
+    input wire i_in_irq,
+    output wire [15:0] o_irq_vector,
+    output wire o_irq_take,
+    input wire i_irq_ret
+);
 
-    // Peripheral address map
-    localparam [3:0] PERIPH_TIMER = 4'h0;     // Timer0: addr[11:8] = 0, range 0x8000-0x80FF
-    localparam [3:0] PERIPH_TIMER1 = 4'h1;    // Timer1: addr[11:8] = 1, range 0x8100-0x81FF
-    localparam [3:0] PERIPH_PARIO  = 4'h2;    // PARIO:  addr[11:8] = 2, range 0x8200-0x82FF
-    localparam [3:0] PERIPH_UART = 4'h3;   // UART MMIO: addr[11:8] = 3, range 0x8300-0x83FF
-    localparam [3:0] PERIPH_IRQ   = 4'hF;     // IRQ regs: addr[11:8] = 0xF, range 0x8F00-0x8FFF
+/*************************************************************************************
+ * SECTION 1. DECLARE WIRES / REGS
+ ************************************************************************************/
+    localparam [3:0] _periph_timer0 = 4'h0;
+    localparam [3:0] _periph_timer1 = 4'h1;
+    localparam [3:0] _periph_pario = 4'h2;
+    localparam [3:0] _periph_uart = 4'h3;
+    localparam [3:0] _periph_irq = 4'hF;
 
-    // Peripheral select signals
-    wire sel_timer, sel_timer1, sel_pario, sel_uart, sel_irq;
-    assign sel_timer  = sel && (addr[11:8] == PERIPH_TIMER);
-    assign sel_timer1 = sel && (addr[11:8] == PERIPH_TIMER1);
-    assign sel_pario  = sel && (addr[11:8] == PERIPH_PARIO);
-    assign sel_uart   = sel && (addr[11:8] == PERIPH_UART);
-    assign sel_irq    = sel && (addr[11:8] == PERIPH_IRQ);
+    wire _sel_timer0;
+    wire _sel_timer1;
+    wire _sel_pario;
+    wire _sel_uart;
+    wire _sel_irq;
 
-    // Ready signals from peripherals
-    wire timer_rdy, timer1_rdy, pario_rdy, uart_rdy, irq_rdy;
-    wire timer_int_req, timer1_int_req, pario_int_req, uart_int_req;
+    wire _timer0_rdy;
+    wire _timer1_rdy;
+    wire _pario_rdy;
+    wire _uart_rdy;
+    wire _irq_rdy;
 
-    // INTCAUSE bits
-    localparam integer IRQ_TIMER0 = 0;
-    localparam integer IRQ_TIMER1 = 1;
-    localparam integer IRQ_PARIO  = 2;
-    localparam integer IRQ_UART   = 3;
+    wire _timer0_int_req;
+    wire _timer1_int_req;
+    wire _pario_int_req;
+    wire _uart_int_req;
 
-    // interrupt cause wiring (for sw interrupts)
-    // currently we use hw vectored interrupts
-    // here for legacy reasons, it can still be used if desired
-    wire [7:0] int_cause;
-    assign int_cause[IRQ_TIMER0] = timer_int_req;
-    assign int_cause[IRQ_TIMER1] = timer1_int_req; 
-    assign int_cause[IRQ_PARIO]  = pario_int_req;
-    assign int_cause[IRQ_UART]   = uart_int_req;
-    assign int_cause[7:4] = 4'b0;
+    localparam integer _irq_timer0 = 0;
+    localparam integer _irq_timer1 = 1;
+    localparam integer _irq_pario = 2;
+    localparam integer _irq_uart = 3;
 
-    // read vectors
-    wire [15:0] timer_rdata, timer1_rdata, pario_rdata, uart_rdata, irq_rdata;
+    wire [7:0] _int_cause;
 
-    // timer0 
-    timer16 u_timer (
-        .clk(clk),
-        .rst(rst),
-        .sel(sel_timer),
-        .we(we),
-        .re(re),
-        .addr(addr[2:1]), // two LSBs for reg index
-        .wdata(wdata),
-        .rdata(timer_rdata),
-        .rdy(timer_rdy),
-        .int_req(timer_int_req)
-    );
-
-    // timer1 (higher priority timer for nesting tests)
-    timerH u_timer1 (
-        .clk(clk),
-        .rst(rst),
-        .sel(sel_timer1),
-        .we(we),
-        .re(re),
-        .addr(addr[2:1]), // two LSBs for reg index
-        .wdata(wdata),
-        .rdata(timer1_rdata),
-        .rdy(timer1_rdy),
-        .int_req(timer1_int_req)
-    );
-
-    // pario 
-    pario u_pario (
-        .clk(clk),
-        .rst(rst),
-        .sel(sel_pario),
-        .we(we),
-        .re(re),
-        .addr(addr[1:0]), // two LSBs for reg index
-        .wdata(wdata),
-        .rdata(pario_rdata),
-        .rdy(pario_rdy),
-        .i(par_i),
-        .o(par_o),
-        .int_req(pario_int_req)
-    );
+    wire [15:0] _timer0_rdata;
+    wire [15:0] _timer1_rdata;
+    wire [15:0] _pario_rdata;
+    wire [15:0] _uart_rdata;
+    wire [15:0] _irq_rdata;
 
 `ifdef SIM
-    localparam integer UART_BAUD_RATE = 2_000_000;
+    localparam integer _uart_baud_rate = 2_000_000;
 `else
-    localparam integer UART_BAUD_RATE = 115200;
+    localparam integer _uart_baud_rate = 115200;
 `endif
+
+/*************************************************************************************
+ * SECTION 2. IMPLEMENTATION
+ ************************************************************************************/
+
+/*************************************************************************************
+ * 2.1 Peripheral Select Decode
+ ************************************************************************************/
+    assign _sel_timer0 = i_sel && (i_addr[11:8] == _periph_timer0);
+    assign _sel_timer1 = i_sel && (i_addr[11:8] == _periph_timer1);
+    assign _sel_pario = i_sel && (i_addr[11:8] == _periph_pario);
+    assign _sel_uart = i_sel && (i_addr[11:8] == _periph_uart);
+    assign _sel_irq = i_sel && (i_addr[11:8] == _periph_irq);
+
+    assign _int_cause[_irq_timer0] = _timer0_int_req;
+    assign _int_cause[_irq_timer1] = _timer1_int_req;
+    assign _int_cause[_irq_pario] = _pario_int_req;
+    assign _int_cause[_irq_uart] = _uart_int_req;
+    assign _int_cause[7:4] = 4'b0000;
+
+/*************************************************************************************
+ * 2.2 Peripheral Instances
+ ************************************************************************************/
+    timer16 u_timer0 (
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_sel(_sel_timer0),
+        .i_we(i_we),
+        .i_re(i_re),
+        .i_addr(i_addr[2:1]),
+        .i_wdata(i_wdata),
+        .o_rdata(_timer0_rdata),
+        .o_rdy(_timer0_rdy),
+        .o_int_req(_timer0_int_req)
+    );
+
+    timerH u_timer1 (
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_sel(_sel_timer1),
+        .i_we(i_we),
+        .i_re(i_re),
+        .i_addr(i_addr[2:1]),
+        .i_wdata(i_wdata),
+        .o_rdata(_timer1_rdata),
+        .o_rdy(_timer1_rdy),
+        .o_int_req(_timer1_int_req)
+    );
+
+    pario u_pario (
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_sel(_sel_pario),
+        .i_we(i_we),
+        .i_re(i_re),
+        .i_addr(i_addr[1:0]),
+        .i_wdata(i_wdata),
+        .o_rdata(_pario_rdata),
+        .o_rdy(_pario_rdy),
+        .i_i(i_par_i),
+        .o_o(o_par_o),
+        .o_int_req(_pario_int_req)
+    );
 
     uart_mmio #(
         .CLK_FREQ(100_000_000),
-        .BAUD_RATE(UART_BAUD_RATE)
+        .BAUD_RATE(_uart_baud_rate)
     ) u_uart (
-        .clk(clk),
-        .rst(rst),
-        .sel(sel_uart),
-        .we(we),
-        .re(re),
-        .addr(addr[1:0]),
-        .wdata(wdata),
-        .rdata(uart_rdata),
-        .rdy(uart_rdy),
-        .rx_in(uart_rx),
-        .tx_out(uart_tx),
-        .irq_req(uart_int_req)
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_sel(_sel_uart),
+        .i_we(i_we),
+        .i_re(i_re),
+        .i_addr(i_addr[1:0]),
+        .i_wdata(i_wdata),
+        .o_rdata(_uart_rdata),
+        .o_rdy(_uart_rdy),
+        .i_rx_in(i_uart_rx),
+        .o_tx_out(o_uart_tx),
+        .o_irq_req(_uart_int_req)
     );
 
-    // two timers + irq reg => rdy logic
-    assign rdy = 
-            sel_timer  ? timer_rdy  : 
-            sel_timer1 ? timer1_rdy :
-            sel_pario  ? pario_rdy  :
-            sel_uart   ? uart_rdy   :
-            sel_irq    ? irq_rdy    : 
-                         1'b1;
-
-    // read mux
-    assign rdata = (sel_timer && re)  ? timer_rdata  : 
-                   (sel_timer1 && re) ? timer1_rdata :
-                   (sel_pario  && re) ? pario_rdata  :
-                   (sel_uart   && re) ? uart_rdata   :
-                   (sel_irq   && re)  ? irq_rdata    :  
-                                        16'h0000;
-
-    // Instantiate the interrupt controller
     irq_ctrl u_irq_ctrl (
-        .clk(clk), .rst(rst),
-        .sel(sel_irq),
-        .we(we),
-        .re(re),
-        .wdata(wdata),
-        .rdata(irq_rdata),
-        .rdy(irq_rdy),
-        .addr(addr[3:1]),
-
-        .src_irq(int_cause),
-        .in_irq(in_irq),
-        .int_en(int_en),
-        .irq_take(irq_take),
-        .irq_vector(irq_vector),
-        .irq_ret(irq_ret)
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_sel(_sel_irq),
+        .i_we(i_we),
+        .i_re(i_re),
+        .i_wdata(i_wdata),
+        .o_rdata(_irq_rdata),
+        .i_addr(i_addr[3:1]),
+        .o_rdy(_irq_rdy),
+        .i_src_irq(_int_cause),
+        .i_in_irq(i_in_irq),
+        .i_int_en(i_int_en),
+        .i_irq_ret(i_irq_ret),
+        .o_irq_take(o_irq_take),
+        .o_irq_vector(o_irq_vector)
     );
 
-endmodule // periph_bus
+/*************************************************************************************
+ * 2.3 Return Muxes
+ ************************************************************************************/
+    assign o_rdy = _sel_timer0 ? _timer0_rdy :
+                   (_sel_timer1 ? _timer1_rdy :
+                   (_sel_pario ? _pario_rdy :
+                   (_sel_uart ? _uart_rdy :
+                   (_sel_irq ? _irq_rdy : 1'b1))));
+
+    assign o_rdata = (_sel_timer0 && i_re) ? _timer0_rdata :
+                     ((_sel_timer1 && i_re) ? _timer1_rdata :
+                     ((_sel_pario && i_re) ? _pario_rdata :
+                     ((_sel_uart && i_re) ? _uart_rdata :
+                     ((_sel_irq && i_re) ? _irq_rdata : 16'h0000))));
+
+endmodule

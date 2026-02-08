@@ -104,12 +104,14 @@ OS & \texttt{Linux Ubuntu 22.04} \\
 \label{subsubsec:repo_layout}
 \begin{lstlisting}[basicstyle=\ttfamily\footnotesize,frame=single]
 repo_root/
-  sources_1/new/        # RTL: gr0040/gr0041, bus, timers, VIC, BRAM
-  constrs_1/new/        # XDC: board constraints + optional ILA insertion
-  sim_1/new/            # testbenches + wave configs
-  sw/                   # assembly programs + abi.inc + vector table
+  srcs/                 # RTL: soc/cpu/control/datapath/bus/peripherals/BRAM
+  constraints/          # XDC: board constraints + optional ILA insertion
+  sim/                  # testbenches + wave configs
+  assembly/             # assembly programs + vector table
+  tools/abi.inc         # ABI aliases/macros
   tools/assembler.py    # assembler + preprocessor
-  scripts/              # (add) vivado build scripts + run recipes
+  scripts/ci/           # CI simulation regression runner
+  .github/workflows/    # CI orchestration
 \end{lstlisting}
 
 \subsubsection{Build Firmware Image (Assembler)}

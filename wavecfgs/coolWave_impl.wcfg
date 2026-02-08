@@ -3,7 +3,7 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="tb_Soc_time_synth.wdb" id="1">
+      <db_ref path="tb_Soc_time_impl.wdb" id="1">
          <top_modules>
             <top_module name="glbl" />
             <top_module name="tb_Soc" />

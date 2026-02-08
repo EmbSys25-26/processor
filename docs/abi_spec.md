@@ -11,7 +11,7 @@ _Last reviewed: 2026-02-07_
 - Primary sources:
   - `tools/abi.inc`
   - `docs/report/docs.tex` (ABI/interrupt sections)
-  - RTL behavior in `m_gr0040.v`, `m_gr0041.v`, `m_irq_ctrl.v`.
+  - RTL behavior in `m_cpu.v`, `m_ctrl_unit.v`, `m_datapath.v`, `m_irq_ctrl.v`.
 
 ## 1. Register Allocation
 
@@ -162,6 +162,7 @@ _Last reviewed: 2026-02-07_
 
 - Address-generation caveat in current RTL
   - Datapath currently computes `d_ad = (sum << 1)` for load/store/MMIO.
+  - SoC byte operations use `d_ad[1]` for lane selection.
   - Existing assembly code accounts for this with pre-shift constants for MMIO and data references.
 
 ## 10. ABI Requirements for Compiler Backend (Subset-C Target)

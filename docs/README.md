@@ -23,6 +23,10 @@ _Last reviewed: 2026-02-07_
   - Mapping from current boundaries to planned pipeline/compiler/peripheral work.
 - [`known_inconsistencies_for_refactor.md`](known_inconsistencies_for_refactor.md)
   - Active code/documentation mismatches and hotspots.
+- [`ci_baseline_verification.md`](ci_baseline_verification.md)
+  - CI regression methodology, domain coverage, GitHub setup, and reproduction.
+- `../wavecfgs/coolWave.wcfg` / `../wavecfgs/coolWave_impl.wcfg`
+  - Timing-simulation waveform presets for post-synthesis and post-implementation runs.
 - [`references.md`](references.md)
   - Curated source set used for this baseline.
 
@@ -41,4 +45,5 @@ _Last reviewed: 2026-02-07_
 5. `assembler/assembler_reference.md`
 6. `assembler/isa_abi_assembler_checklist.md`
 7. `refactor_extension_map.md`
-8. `known_inconsistencies_for_refactor.md`
+8. `ci_baseline_verification.md`
+9. `known_inconsistencies_for_refactor.md`

@@ -1,0 +1,82 @@
+# CI Baseline Verification (Release Gate)
+
+_Last reviewed: 2026-02-07_
+
+## 1. Goal
+
+Define a deterministic CI gate for the first consolidated release so future PRs are blocked on core functional regressions across CPU, SoC integration, interrupt behavior, timer behavior, and memory byte-lane semantics.
+
+## 2. CI Entry Points
+
+- GitHub Actions workflow:
+  - `.github/workflows/ci-baseline.yml`
+- Single local/CI regression runner:
+  - `scripts/ci/run_iverilog_regression.sh`
+
+## 3. Curated Baseline Domains
+
+| Domain | Primary Failure Concept | Test/Check | Pass Criteria |
+|---|---|---|---|
+| Firmware image generation | Broken assembly output, wrong BRAM image shape | `tools/assembler.py` + line-count check | `mem.hex`, `mem_hi.hex`, `mem_lo.hex` each 512 lines |
+| Timer register map and start/reload behavior | Timer start value not writable/readable/reloadable | `sim/tb_timer_start_reg.v` | `PASS tb_timer_start_reg` |
+| CPU IRQ depth safety | Underflow/wrap on `IRET`, wrong `in_irq` state | `sim/tb_cpu_irq_depth.v` | `PASS tb_cpu_irq_depth` |
+| Byte-lane semantics for `LB/SB` | Wrong lane chosen, wrong zero-extension | `sim/tb_soc_byte_lane.v` | `PASS tb_soc_byte_lane` |
+| SoC integration + MMIO/IRQ activity | Missing IRQ/MMIO activity after changes | `sim/tb_soc_refactor_regression.v` | `PASS tb_soc_refactor_regression` |
+| End-to-end anchors | Lost timer preemption or ABI preservation | `sim/tb_anchor_preemption_abi.v` | `PASS tb_anchor_preemption_abi` + preemption/restore evidence lines |
+| Runtime guard and smoke | Open-ended simulations, deadlock | `sim/tb_Soc.v` with `+max-cycles=1200` | Observes IRQ vectors `0x0020` and `0x0040`, then exits by guard |
+
+## 4. Methodology
+
+1. Rebuild BRAM images from canonical assembly input.
+2. Execute fast unit-level regressions first (timers, CPU depth, lane behavior).
+3. Execute SoC-level regressions next (integration + anchor behavior).
+4. Execute bounded smoke run to catch lockups and keep CI runtime deterministic.
+5. Fail CI on:
+   - any `FAIL` in run logs,
+   - missing required `PASS` markers,
+   - BRAM short-image symptom (`Not enough words`),
+   - missing anchor evidence lines.
+
+## 5. Local Reproduction
+
+From repository root:
+
+```bash
+bash scripts/ci/run_iverilog_regression.sh
+```
+
+Optional custom artifact directory:
+
+```bash
+bash scripts/ci/run_iverilog_regression.sh .ci_artifacts/sim
+```
+
+Generated logs:
+- `.ci_artifacts/sim/*.compile.log`
+- `.ci_artifacts/sim/*.run.log`
+
+## 6. GitHub Setup Steps
+
+1. Push this workflow and scripts to your default branch.
+2. In GitHub repository settings, ensure Actions are enabled.
+3. Configure branch protection for your integration branch (`main`/`master`):
+   - require pull requests before merging,
+   - require status checks to pass,
+   - mark required check: `Baseline Verification (iverilog)`.
+4. Optionally require branch to be up-to-date before merge.
+5. Keep `CODEOWNERS` active so RTL/docs/CI changes get reviewed by the right owners.
+
+## 7. Scope Notes
+
+- This CI gate is simulation-focused and lightweight (Icarus Verilog + Python).
+- Vivado synthesis/implementation timing closure is intentionally out-of-scope for per-PR CI due to runtime/resource costs.
+- Vivado should remain a release-candidate or nightly gate.
+
+## 8. Related Docs
+
+- `docs/architecture_and_memory.md`
+- `docs/isa_reference.md`
+- `docs/abi_spec.md`
+- `docs/rtl_file_walkthrough.md`
+- `docs/known_inconsistencies_for_refactor.md`
+- `docs/report/docs-implementation.tex`

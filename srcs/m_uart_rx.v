@@ -1,133 +1,157 @@
 `timescale 1ns / 1ps
-module uart_rx (
-    input clk,              // FPGA clock, currently @ 80 MHz
-    input rst,              // Active-high reset
-    input rx_in,            // Serial input
-    output reg [7:0] data,      // Received data
-    output reg data_valid,      // Data ready to read (1-cycle pulse)
-    output reg  rx_out,      // For debugging: current bit being received
-    output reg  rx_done,     // Reception complete (1 cycle pulse)
-    output wire rx_busy,    // Reception in progress
-    output wire [1:0] state_debug  // For debugging
+
+module uart_rx(
+    input wire i_clk,
+    input wire i_rst,
+    input wire i_rx_in,
+    output wire [7:0] o_data,
+    output wire o_data_valid,
+    output wire o_rx_out,
+    output wire o_rx_done,
+    output wire o_rx_busy,
+    output wire [1:0] o_state_debug
 );
 
-    // Parameters
-    parameter CLK_FREQ = 80_000_000;             // 80 MHz, match top level module clk 
-    parameter BAUD_RATE = 115200;                // Baud rate 
-    localparam BIT_TIME = (CLK_FREQ + (BAUD_RATE/2)) / BAUD_RATE;  // Bit time in clock cycles (rounded)
-    localparam CTR_WIDTH = $clog2(BIT_TIME) + 1; // Counter width 
-    localparam HALF_BIT = BIT_TIME / 2; 
+    parameter CLK_FREQ = 80_000_000;
+    parameter BAUD_RATE = 115200;
 
-    // State machine encoding
-    localparam STATE_IDLE    = 2'd0;
-    localparam STATE_START   = 2'd1;
-    localparam STATE_DATA    = 2'd2;
-    localparam STATE_STOP    = 2'd3;
+/*************************************************************************************
+ * SECTION 1. DECLARE WIRES / REGS
+ ************************************************************************************/
+    localparam _bit_time = (CLK_FREQ + (BAUD_RATE / 2)) / BAUD_RATE;
+    localparam _ctr_width = $clog2(_bit_time) + 1;
+    localparam _half_bit = _bit_time / 2;
 
-    // Internal regs
-    reg [1:0] state;
-    reg [CTR_WIDTH-1:0] counter;
-    reg [7:0] shift_reg;
-    reg [2:0] bit_index;
-    reg stop_ok;
+    localparam _state_idle = 2'd0;
+    localparam _state_start = 2'd1;
+    localparam _state_data = 2'd2;
+    localparam _state_stop = 2'd3;
 
-    // RX input synchronizer
-    reg rx_sync1;
-    reg rx_sync2;
-    wire rx_s = rx_sync2;
+    reg [1:0] _state;
+    reg [_ctr_width-1:0] _counter;
+    reg [7:0] _shift_reg;
+    reg [2:0] _bit_index;
+    reg _stop_ok;
 
-    // Status/debug
-    assign rx_busy = (state != STATE_IDLE);
-    assign state_debug = state;
+    reg _rx_sync1;
+    reg _rx_sync2;
+    wire _rx_s;
 
-    // RX state machine
-    always @(posedge clk) begin
-        if (rst) begin
-            state       <= STATE_IDLE; 
-            counter     <= 0;
-            rx_out      <= 1;      // Idle high
-            rx_done     <= 0;
-            data_valid  <= 0;
-            shift_reg   <= 8'd0;
-            bit_index   <= 0;
-            data        <= 8'd0;
-            stop_ok     <= 1'b0;
-            rx_sync1    <= 1'b1;
-            rx_sync2    <= 1'b1;
-        end else begin 
-            rx_sync1 <= rx_in;   // 2-flop synchronizer for async RX
-            rx_sync2 <= rx_sync1;
+    reg [7:0] _data;
+    reg _data_valid;
+    reg _rx_out;
+    reg _rx_done;
 
-            rx_done <= 0; // Default: pulse for one cycle only
-            data_valid <= 0;
+/*************************************************************************************
+ * SECTION 2. IMPLEMENTATION
+ ************************************************************************************/
 
-            case (state)
-                STATE_IDLE: begin  // wait for start bit 
-                    rx_out <= 1;  // High when idle
-                    if (!rx_s) begin // start bit
-                        counter   <= 0;
-                        state     <= STATE_START;
-                        bit_index <= 0;
-                        stop_ok   <= 1'b0;
+/*************************************************************************************
+ * 2.1 Status and Sync
+ ************************************************************************************/
+    assign _rx_s = _rx_sync2;
+    assign o_rx_busy = (_state != _state_idle);
+    assign o_state_debug = _state;
+
+/*************************************************************************************
+ * 2.2 RX FSM
+ ************************************************************************************/
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _state <= _state_idle;
+            _counter <= 0;
+            _rx_out <= 1'b1;
+            _rx_done <= 1'b0;
+            _data_valid <= 1'b0;
+            _shift_reg <= 8'd0;
+            _bit_index <= 3'd0;
+            _data <= 8'd0;
+            _stop_ok <= 1'b0;
+            _rx_sync1 <= 1'b1;
+            _rx_sync2 <= 1'b1;
+        end else begin
+            _rx_sync1 <= i_rx_in;
+            _rx_sync2 <= _rx_sync1;
+
+            _rx_done <= 1'b0;
+            _data_valid <= 1'b0;
+
+            case (_state)
+                _state_idle: begin
+                    _rx_out <= 1'b1;
+                    if (!_rx_s) begin
+                        _counter <= 0;
+                        _state <= _state_start;
+                        _bit_index <= 3'd0;
+                        _stop_ok <= 1'b0;
                     end
                 end
 
-                STATE_START: begin  // Sample mid-start bit (confirm start)
-                    if (counter == HALF_BIT - 1) begin
-                        if (!rx_s) begin          // Confirm start bit
-                            rx_out  <= 0;         // Output start bit
-                            counter <= 0;
-                            state   <= STATE_DATA;
-                            bit_index <= 0; 
-                        end else begin 
-                            rx_out  <= 1;         // False start, go back to idle
-                            counter <= 0; 
-                            state <= STATE_IDLE;  // False start
-                            bit_index <= 0; 
-                        end
-                    end else counter <= counter + 1;
-                end
-
-                STATE_DATA: begin  // Sample data bits (8 bits)
-                    if (counter == HALF_BIT - 1) begin
-                        shift_reg[bit_index] <= rx_s;
-                        rx_out <= rx_s;
-                    end
-
-                    if (counter == BIT_TIME - 1) begin
-                        counter <= 0;
-                        if (bit_index == 3'd7) begin
-                            state <= STATE_STOP;
-                            bit_index <= 0;
+                _state_start: begin
+                    if (_counter == (_half_bit - 1)) begin
+                        if (!_rx_s) begin
+                            _rx_out <= 1'b0;
+                            _counter <= 0;
+                            _state <= _state_data;
+                            _bit_index <= 3'd0;
                         end else begin
-                            bit_index <= bit_index + 1;
+                            _rx_out <= 1'b1;
+                            _counter <= 0;
+                            _state <= _state_idle;
+                            _bit_index <= 3'd0;
                         end
                     end else begin
-                        counter <= counter + 1;
+                        _counter <= _counter + 1'b1;
                     end
                 end
 
-                STATE_STOP: begin  // Stop bit
-                    rx_out <= 1;   // Stop bit is high
-                    if (counter == HALF_BIT - 1) begin
-                        stop_ok <= rx_s;
+                _state_data: begin
+                    if (_counter == (_half_bit - 1)) begin
+                        _shift_reg[_bit_index] <= _rx_s;
+                        _rx_out <= _rx_s;
                     end
-                    if (counter == BIT_TIME - 1) begin
-                        counter <= 0;
-                        state <= STATE_IDLE;
-                        if (stop_ok) begin
-                            data <= shift_reg;
-                            rx_done <= 1;     // Pulse indicating reception complete
-                            data_valid <= 1;
+
+                    if (_counter == (_bit_time - 1)) begin
+                        _counter <= 0;
+                        if (_bit_index == 3'd7) begin
+                            _state <= _state_stop;
+                            _bit_index <= 3'd0;
+                        end else begin
+                            _bit_index <= _bit_index + 1'b1;
                         end
-                    end else counter <= counter + 1;
+                    end else begin
+                        _counter <= _counter + 1'b1;
+                    end
+                end
+
+                _state_stop: begin
+                    _rx_out <= 1'b1;
+                    if (_counter == (_half_bit - 1)) begin
+                        _stop_ok <= _rx_s;
+                    end
+                    if (_counter == (_bit_time - 1)) begin
+                        _counter <= 0;
+                        _state <= _state_idle;
+                        if (_stop_ok) begin
+                            _data <= _shift_reg;
+                            _rx_done <= 1'b1;
+                            _data_valid <= 1'b1;
+                        end
+                    end else begin
+                        _counter <= _counter + 1'b1;
+                    end
                 end
 
                 default: begin
-                    state <= STATE_IDLE; 
+                    _state <= _state_idle;
                 end
             endcase
         end
     end
 
-endmodule // uart_rx
+    assign o_data = _data;
+    assign o_data_valid = _data_valid;
+    assign o_rx_out = _rx_out;
+    assign o_rx_done = _rx_done;
+
+endmodule

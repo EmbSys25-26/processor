@@ -106,13 +106,12 @@ SYS class
 
 ## 9. Address generation note
 - Instruction addresses (`i_ad`) are byte addresses (PC increments by 2 per instruction).
-- Current datapath computes `d_ad = (sum << 1)` (`srcs/m_gr0040.v`).
+- Current datapath computes `d_ad = (sum << 1)` (`srcs/m_datapath.v`).
   - Effective addresses issued by the CPU are even-byte-aligned.
-- Byte-lane behavior remains big-endian within a 16-bit word:
-  - `d_ad[0]=0` selects high byte (`data_in[15:8]`)
-  - `d_ad[0]=1` selects low byte (`data_in[7:0]`)
-- Current consequence:
-  - `LB/SB` lane selection is effectively pinned to `d_ad[0]=0` for core-generated accesses.
+- SoC byte-lane behavior for core-generated `LB/SB` uses `d_ad[1]`:
+  - `d_ad[1]=0` selects high byte
+  - `d_ad[1]=1` selects low byte
+- `LB` returns zero-extended selected byte data.
 
 ## 10. Canonical pseudo-instructions (via ABI macros)
 - `CALL target` -> `IMM + JAL lr,r0,imm4`
