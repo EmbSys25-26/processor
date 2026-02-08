@@ -43,7 +43,7 @@ module timerH(
         if (i_rst) begin
             _int_en <= 1'b1;
             _timer_mode <= 1'b1;
-            _cnt_start <= 16'hFFF0 - 16'd4;
+            _cnt_start <= 16'h0000;
         end else if (i_sel && i_we && (i_addr == 2'b00)) begin
             _int_en <= i_wdata[0];
             _timer_mode <= i_wdata[1];

@@ -66,7 +66,7 @@ module soc(
 
     wire _irq_take;
     wire [15:0] _irq_vector;
-    wire _in_irq;
+    (* mark_debug = "true" *) wire _in_irq;
     wire _int_en_cpu;
     wire _iret_detected;
 

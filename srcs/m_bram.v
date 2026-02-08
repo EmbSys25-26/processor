@@ -53,11 +53,11 @@ module bram_1kb_be(
 
     initial begin
 `ifndef SIM
-        _mem_hex_lo = "./srcs/mem/mem_lo.hex";
-        _mem_hex_hi = "./srcs/mem/mem_hi.hex";
+        _mem_hex_lo = "/home/josesilvaa/processor/srcs/mem/mem_lo.hex";
+        _mem_hex_hi = "/home/josesilvaa/processor/srcs/mem/mem_hi.hex";
 `else
-        _mem_hex_lo = "./srcs/mem/mem_lo.hex";
-        _mem_hex_hi = "./srcs/mem/mem_hi.hex";
+        _mem_hex_lo = "../../../../srcs/mem/mem_lo.hex";
+        _mem_hex_hi = "../../../../srcs/mem/mem_hi.hex";
 `endif
         $readmemh(_mem_hex_lo, _mem_l);
         $readmemh(_mem_hex_hi, _mem_h);
