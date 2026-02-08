@@ -52,11 +52,11 @@ module tb_Soc;
 
 `ifdef TB_UART_MMIO_TEST
     reg [15:0] _mmio_rd;
-    reg [7:0] _mmio_expect;
+    reg _mmio_test_done = 1'b0;
 
     task periph_write(input [1:0] i_a, input [15:0] i_d);
         begin
-            force dut.u_periph.i_addr = 16'h8300 | {14'b0, i_a};
+            force dut.u_periph.i_addr = 16'h8300 + ({14'b0, i_a} << 1);
             force dut.u_periph.i_wdata = i_d;
             force dut.u_periph.i_sel = 1'b1;
             force dut.u_periph.i_we = 1'b1;
@@ -72,7 +72,7 @@ module tb_Soc;
 
     task periph_read(input [1:0] i_a, output [15:0] o_d);
         begin
-            force dut.u_periph.i_addr = 16'h8300 | {14'b0, i_a};
+            force dut.u_periph.i_addr = 16'h8300 + ({14'b0, i_a} << 1);
             force dut.u_periph.i_wdata = 16'h0000;
             force dut.u_periph.i_sel = 1'b1;
             force dut.u_periph.i_we = 1'b0;
@@ -117,6 +117,12 @@ module tb_Soc;
         end
         wait (_rst == 1'b0);
         wait (_cycles >= _max_cycles);
+`ifdef TB_UART_MMIO_TEST
+        if (!_mmio_test_done) begin
+            $display("FAIL tb_soc_uart_mmio timeout/guard reached at cycles=%0d", _cycles);
+            $fatal(1);
+        end
+`endif
         $display("TB timeout/guard reached at cycles=%0d", _cycles);
         $finish;
     end
@@ -143,29 +149,40 @@ module tb_Soc;
         _rst = 1'b0;
         wait_clocks(10);
 
-        _mmio_expect = 8'hA5;
-        uart_send_byte(_mmio_expect);
-        wait_clocks(2);
-        wait (dut.u_periph.u_uart.o_irq_req == 1'b1);
-
-        periph_read(2'b01, _mmio_rd);
-        if (_mmio_rd[1] !== 1'b1) begin
-            $display("UART MMIO RX pending not set as expected");
-        end
-
-        periph_read(2'b00, _mmio_rd);
-        if (_mmio_rd[7:0] !== _mmio_expect) begin
-            $display("UART MMIO RX mismatch got 0x%02h expected 0x%02h", _mmio_rd[7:0], _mmio_expect);
-        end
-
+        // STATUS at index 1 must be reachable through word-aligned address +0x02.
         periph_write(2'b00, 16'h005A);
+        wait_clocks(1);
         periph_read(2'b01, _mmio_rd);
         if (_mmio_rd[0] !== 1'b1) begin
-            $display("UART MMIO TX busy not set after write");
+            $display("FAIL tb_soc_uart_mmio: TX busy not set after write");
+            $fatal(1);
         end
 
         wait (dut.u_periph.u_uart._tx_busy == 1'b0);
-        $display("UART MMIO test done");
+        periph_read(2'b01, _mmio_rd);
+        if (_mmio_rd[0] !== 1'b0) begin
+            $display("FAIL tb_soc_uart_mmio: TX busy did not clear");
+            $fatal(1);
+        end
+
+        // Drive pending bit directly to validate STATUS clear-on-write mapping.
+        dut.u_periph.u_uart._rx_pending = 1'b1;
+        periph_read(2'b01, _mmio_rd);
+        if (_mmio_rd[1] !== 1'b1) begin
+            $display("FAIL tb_soc_uart_mmio: RX pending bit not observable via STATUS");
+            $fatal(1);
+        end
+
+        periph_write(2'b01, 16'h0002);
+        periph_read(2'b01, _mmio_rd);
+        if (_mmio_rd[1] !== 1'b0) begin
+            $display("FAIL tb_soc_uart_mmio: STATUS clear-on-write did not clear RX pending");
+            $fatal(1);
+        end
+
+        _mmio_test_done = 1'b1;
+        $display("PASS tb_soc_uart_mmio");
+        $finish;
     end
 `endif
 

@@ -109,6 +109,10 @@ The project now uses explicit module separation:
   - `0x2`: PARIO
   - `0x3`: UART MMIO
   - `0xF`: IRQ controller
+- Sub-address slicing:
+  - timers/UART receive word index `i_addr[2:1]` (`+0x00`, `+0x02`, ...)
+  - PARIO currently receives `i_addr[1:0]` and decodes `00` / `10`
+  - IRQ controller receives `i_addr[3:1]`
 - Multiplexes `o_rdata` / `o_rdy` from selected block.
 - Builds IRQ source vector for `irq_ctrl`.
 
@@ -166,7 +170,7 @@ The project now uses explicit module separation:
 ### Purpose
 - UART RX/TX core + MMIO register interface.
 
-### Register map (`i_addr[1:0]`)
+### Register map (`i_addr[1:0]`, fed from bus word index `addr[2:1]`)
 - `00`: DATA (read RX byte / write TX byte)
 - `01`: STATUS (`tx_busy`, `rx_pending`; write bit1 clears pending)
 

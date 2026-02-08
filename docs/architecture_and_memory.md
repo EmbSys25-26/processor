@@ -87,7 +87,7 @@ _Last reviewed: 2026-02-07_
 - IRQ behavior: asserts `int_req=1` when all four inputs are high (`i==4'hF`).
 
 ## 10. UART MMIO Register View (base `0x8300`, current RTL)
-- UART registers are word-aligned and decoded by low address bits (`addr[1:0]` into `uart_mmio`):
+- UART registers are word-aligned and decoded by word index (`periph_bus` passes `i_addr[2:1]` into `uart_mmio`):
   - +0x00: RX data read / TX data write
   - +0x02: status (`tx_busy`, `rx_pending`) and clear-on-write behavior
 - `irq_req` is asserted when RX pending is set.

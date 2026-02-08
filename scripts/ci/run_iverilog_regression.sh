@@ -113,6 +113,11 @@ require_log_contains "${ARTIFACT_DIR}/tb_anchor_preemption_abi.run.log" "PASS tb
 require_log_contains "${ARTIFACT_DIR}/tb_anchor_preemption_abi.run.log" "ANCHOR PREEMPTION observed"
 require_log_contains "${ARTIFACT_DIR}/tb_anchor_preemption_abi.run.log" "ANCHOR ABI restored"
 
+info "running peripheral-bus UART MMIO word-aligned decode regression"
+compile_tb "tb_uart_mmio_word_aligned" sim/tb_uart_mmio_word_aligned.v srcs/m_periph_bus.v srcs/m_timer16.v srcs/m_timerH.v srcs/m_pario.v srcs/m_uart_mmio.v srcs/m_uart_rx.v srcs/m_uart_tx.v srcs/m_irq_ctrl.v
+run_tb "tb_uart_mmio_word_aligned"
+require_log_contains "${ARTIFACT_DIR}/tb_uart_mmio_word_aligned.run.log" "PASS tb_uart_mmio_word_aligned"
+
 info "running SoC smoke with bounded runtime"
 iverilog -g2012 -DSIM=1 -DCI=1 -DTB_USE_INTERNALS=1 -Isrcs -o "${ARTIFACT_DIR}/tb_soc_smoke.vvp" sim/tb_Soc.v "${SOC_SRCS[@]}" >"${ARTIFACT_DIR}/tb_soc_smoke.compile.log" 2>&1
 vvp "${ARTIFACT_DIR}/tb_soc_smoke.vvp" +max-cycles=1200 >"${ARTIFACT_DIR}/tb_soc_smoke.run.log" 2>&1

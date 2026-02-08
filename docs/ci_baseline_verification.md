@@ -24,6 +24,7 @@ Define a deterministic CI gate for the first consolidated release so future PRs 
 | SoC integration + MMIO/IRQ activity | Missing IRQ/MMIO activity after changes | `sim/tb_soc_refactor_regression.v` | `PASS tb_soc_refactor_regression` |
 | Branch annul corner case | Fall-through not annulled on taken branch | `sim/tb_soc_branch_annul.v` | `PASS tb_soc_branch_annul` |
 | End-to-end anchors | Lost timer preemption or ABI preservation | `sim/tb_anchor_preemption_abi.v` | `PASS tb_anchor_preemption_abi` + preemption/restore evidence lines |
+| UART MMIO word alignment | UART STATUS/ACK unreachable through CPU-aligned address model | `sim/tb_uart_mmio_word_aligned.v` | `PASS tb_uart_mmio_word_aligned` |
 | Runtime guard and smoke | Open-ended simulations, deadlock | `sim/tb_Soc.v` with `+max-cycles=1200` | Observes IRQ vectors `0x0020` and `0x0040`, then exits by guard |
 
 ## 4. Methodology
@@ -82,6 +83,7 @@ Generated logs:
 
 - Keep `sim/tb_soc_branch_annul.v` in CI. It guards synchronous fetch/latch branch-annul ordering.
 - Keep `sim/tb_anchor_preemption_abi.v` in CI. It is the anchor for timer preemption and ABI preservation.
+- Keep `sim/tb_uart_mmio_word_aligned.v` in CI. It guards word-indexed UART register reachability and STATUS clear behavior at `0x8300`/`0x8302`.
 - Keep canonical `IRET` encoding synchronized across:
   - `srcs/constants.vh` (`CPU_IRET_INSN`)
   - `tools/abi.inc` (`IRET` macro)
