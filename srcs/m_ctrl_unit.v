@@ -145,6 +145,8 @@ module ctrl_unit(
     assign _is_adc = (_fn == `FN_ADC);
     assign _is_sbc = (_fn == `FN_SBC);
     assign _is_cmp = (_fn == `FN_CMP);
+    assign _is_srl = (_fn == `FN_SRL);
+    assign _is_sra = (_fn == `FN_SRA);
 
     assign _is_alu = _is_rr | _is_ri;
     assign _is_getcc = _is_sys & (_fn == `FN_GETCC);

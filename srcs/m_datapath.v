@@ -76,7 +76,6 @@ module datapath(
     wire _add;
     wire _ci;
     wire _c_w;
-    wire _x;
 
     wire [`CPU_N:0] _log;
     wire [`CPU_N:0] _sr;
@@ -171,7 +170,7 @@ module datapath(
         .o_log(_log),
         .o_sr(_sr),
         .o_co(_c_w),
-        .o_x(_x)
+        .o_x()
     );
 
     assign _z = (_sum == 16'h0000);
