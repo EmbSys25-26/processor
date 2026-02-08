@@ -3,7 +3,7 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="tb_Soc_time_synth.wdb" id="1">
+      <db_ref path="tb_Soc_time_impl.wdb" id="1">
          <top_modules>
             <top_module name="glbl" />
             <top_module name="tb_Soc" />
@@ -11,13 +11,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="771.405 ns"></ZoomStartTime>
-      <ZoomEndTime time="1,578.406 ns"></ZoomEndTime>
-      <Cursor1Time time="401.254 ns"></Cursor1Time>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="823.001 ns"></ZoomEndTime>
+      <Cursor1Time time="75.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="120"></NameColumnWidth>
-      <ValueColumnWidth column_width="72"></ValueColumnWidth>
+      <NameColumnWidth column_width="110"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="30" />
    <wvobject type="logic" fp_name="/tb_Soc/clk">
@@ -116,105 +116,105 @@
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe0[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe0[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">r0</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe1">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe1[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe1[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">a0</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe2">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe2[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe2[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">a1</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe3">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe3[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe3[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">a2</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe4">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe4[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe4[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">t0</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe5">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe5[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe5[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">t1</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe6">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe6[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe6[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">t2</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe7">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe7[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe7[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">t3</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe8">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe8[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe8[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">s0</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe9">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe9[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe9[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">s1</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe10">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe10[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe10[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">s2</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe11">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe11[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe11[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">s3</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe12">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe12[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe12[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">fp</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe13">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe13[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe13[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">sp</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe14">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe14[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe14[15:0]</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
       <obj_property name="label">lr</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe15">
@@ -222,6 +222,6 @@
       <obj_property name="ElementShortName">probe15[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe15[15:0]</obj_property>
       <obj_property name="label">gp</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
    </wvobject>
 </wave_config>
