@@ -59,6 +59,6 @@
  ************************************************************************************/
 `define CPU_RESET_VEC 16'h0100
 `define CPU_NOP_INSN  16'hF000
-`define CPU_IRET_INSN 16'h0EE0 // JAL lr, lr, #0
+`define CPU_IRET_INSN 16'h00E0 // JAL r0, lr, #0
 
 `endif
