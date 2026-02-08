@@ -1,0 +1,40 @@
+name: CI Baseline Verification
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  baseline-sim:
+    name: Baseline Verification (iverilog)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+
+      - name: Run baseline regression suite
+        run: |
+          bash scripts/ci/run_iverilog_regression.sh .ci_artifacts/sim
+
+      - name: Upload simulation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseline-sim-logs
+          path: .ci_artifacts/sim
+          retention-days: 14

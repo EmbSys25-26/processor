@@ -1,6 +1,6 @@
 # CI Baseline Verification (Release Gate)
 
-_Last reviewed: 2026-02-07_
+_Last reviewed: 2026-02-08_
 
 ## 1. Goal
 
@@ -59,14 +59,18 @@ Generated logs:
 
 ## 6. GitHub Setup Steps
 
-1. Push this workflow and scripts to your default branch.
-2. In GitHub repository settings, ensure Actions are enabled.
-3. Configure branch protection for your integration branch (`main`/`master`):
+1. Ensure these files are committed and pushed:
+   - `.github/workflows/ci-baseline.yml`
+   - `scripts/ci/run_iverilog_regression.sh`
+2. In GitHub repository settings, ensure Actions are enabled:
+   - `Settings -> Actions -> General -> Allow all actions and reusable workflows` (or your team-approved equivalent).
+3. Push to a branch and open a test PR; confirm workflow `CI Baseline Verification` appears and runs.
+4. Configure branch protection for your integration branch (`main`/`master`):
    - require pull requests before merging,
    - require status checks to pass,
    - mark required check: `Baseline Verification (iverilog)`.
-4. Optionally require branch to be up-to-date before merge.
-5. Keep `CODEOWNERS` active so RTL/docs/CI changes get reviewed by the right owners.
+5. Optionally require branch to be up-to-date before merge.
+6. Keep `CODEOWNERS` active so RTL/docs/CI changes get reviewed by the right owners.
 
 ## 7. Scope Notes
 
@@ -74,11 +78,19 @@ Generated logs:
 - Vivado synthesis/implementation timing closure is intentionally out-of-scope for per-PR CI due to runtime/resource costs.
 - Vivado should remain a release-candidate or nightly gate.
 
-## 8. Related Docs
+## 8. Release Watchpoints
+
+- Keep `sim/tb_soc_branch_annul.v` in CI. It guards synchronous fetch/latch branch-annul ordering.
+- Keep `sim/tb_anchor_preemption_abi.v` in CI. It is the anchor for timer preemption and ABI preservation.
+- Keep canonical `IRET` encoding synchronized across:
+  - `srcs/constants.vh` (`CPU_IRET_INSN`)
+  - `tools/abi.inc` (`IRET` macro)
+  - assembly programs using ISR epilogues.
+
+## 9. Related Docs
 
 - `docs/architecture_and_memory.md`
 - `docs/isa_reference.md`
 - `docs/abi_spec.md`
 - `docs/rtl_file_walkthrough.md`
-- `docs/known_inconsistencies_for_refactor.md`
 - `docs/report/docs-implementation.tex`

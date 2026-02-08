@@ -36,5 +36,5 @@ test-results/
 *.xml
 *.vcd
 .ci_artifacts/
-.github/
-scripts/
+# ignore admin documentation
+admin-docs/

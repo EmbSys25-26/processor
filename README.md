@@ -98,8 +98,9 @@ Change the `{SIM=1 TB_USE_INTERNALS=1}` part with the properties you want to set
 The testbench writes a VCD: `waves_soc.vcd`.
 
 Timing-simulation waveform presets:
-- post-synthesis: `wavecfgs/coolWave.wcfg` (targets `tb_Soc_time_synth.wdb`)
-- post-implementation: `wavecfgs/coolWave_impl.wcfg` (targets `tb_Soc_time_impl.wdb`)
+- behavioral: `wavecfgs/coolWaveBehav.wcfg`
+- post-synthesis: `wavecfgs/coolWaveSynth.wcfg` (targets `tb_Soc_time_synth.wdb`)
+- post-implementation: `wavecfgs/coolWaveImpl.wcfg` (targets `tb_Soc_time_impl.wdb`)
 
 ### 3) Build bitstream & program hardware
 
