@@ -92,9 +92,10 @@ The project now uses explicit module separation:
 ### Contract
 - Port A: instruction fetch.
 - Port B: data access with independent hi/lo byte enables.
-- Loads init files from:
-  - `./srcs/mem/mem_hi.hex`
-  - `./srcs/mem/mem_lo.hex`
+- Loads init files using mode-specific paths:
+  - CI (`SIM+CI`): `srcs/mem/mem_hi.hex`, `srcs/mem/mem_lo.hex`
+  - Vivado behavioral sim (`SIM`): `../../../../srcs/mem/mem_hi.hex`, `../../../../srcs/mem/mem_lo.hex`
+  - synthesis/implementation default: absolute paths or `BRAM_MEM_HI_PATH`/`BRAM_MEM_LO_PATH` overrides.
 
 ## 8. File: srcs/m_periph_bus.v
 **Module:** `periph_bus`
@@ -201,6 +202,9 @@ The project now uses explicit module separation:
 
 ### `sim/tb_soc_refactor_regression.v`
 - SoC-level regression for IRQ/MMIO activity after refactor.
+
+### `sim/tb_soc_branch_annul.v`
+- SoC-level corner-case regression that checks fall-through annul (`insn_q` forced to NOP) after taken branches.
 
 ### `sim/tb_Soc.v`
 - General SoC smoke bench with optional internal tracing and UART MMIO helper mode.

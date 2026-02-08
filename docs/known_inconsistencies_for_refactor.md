@@ -1,50 +1,52 @@
 # Known Inconsistencies and Refactor Hotspots
 
-_Last reviewed: 2026-02-07_
+_Last reviewed: 2026-02-08_
 
-This index tracks implementation/documentation mismatches and verification-risk areas.
+This index tracks only active verification hotspots and intentional design contracts that can be misread as inconsistencies.
 
-## Active Hotspots
+## Active Verification Hotspots
 
-### 1. Instruction fetch timing and branch annul behavior need directed regression
+### 1. Interrupt return PC semantics still need broader directed coverage
+
+- `iret_detected` is encoding-specific (`16'h00E0`) and should keep coverage across deeper call/branch/stall mixes.
+- Current CI coverage:
+  - `sim/tb_cpu_irq_depth.v`
+  - `sim/tb_anchor_preemption_abi.v`
+- Suggested next expansion:
+  - add directed ISR return tests where `IRET` occurs immediately after stall-release cycles.
+
+### 2. Branch-annul corner case is CI-guarded and should remain in release gates
 
 - SoC uses a registered instruction latch (`insn_q`) with synchronous BRAM reads.
-- The exact cycle relation among `pc`, `i_ad`, `insn_q`, and branch/jump updates should remain covered by waveform-backed tests.
+- On cycles where branch redirect and fetch/latch interact, `insn_q` annul logic (`NOP` injection) must suppress fall-through.
+- Current CI coverage:
+  - `sim/tb_soc_branch_annul.v`
+- Keep this bench in CI to detect one-cycle ordering regressions when CPU/SoC timing is adjusted.
 
-### 2. Interrupt return PC semantics still need broader coverage
+## Intentional Behaviors (Not Inconsistencies)
 
-- `iret_detected` is encoding-specific (`16'h0EE0`) and should be validated across deeper call/branch/stall mixes.
+### A. Assembler imm4 truncation permissiveness
 
-### 3. Assembler validation remains permissive for imm4 truncation
+- Intentional for nibble-based address formation workflows, especially `IMM + JAL` absolute jump/call style.
+- Valid call/jump targets may require low nibble values `0x8..0xF`, so strict signed-imm4 rejection would break legal flows.
+- Future improvement (optional): emit warnings (not errors) for suspicious arithmetic-style imm4 truncation.
 
-- Immediate nibble encoding keeps low 4 bits; this can hide source mistakes.
-- Consider stricter diagnostics for out-of-contract immediates.
+### B. `irq_ctrl` keeps `i_in_irq` wired even when unused
 
-### 4. `irq_ctrl` receives `in_irq` but does not consume it
-
-- `srcs/m_irq_ctrl.v` keeps `i_in_irq` only for interface compatibility.
+- `srcs/m_irq_ctrl.v` keeps `i_in_irq` for interface compatibility and future VIC changes.
 - Preemption currently relies on internal depth/priority stack only.
+- Unused input is synthesis-safe (optimized away by Vivado).
 
-### 5. `imem_invalid` blocks `0x0000` as an instruction word
+### C. `imem_invalid` blocks `0x0000` instruction fetches
 
 - `srcs/m_soc.v` injects NOP when fetched instruction equals `16'h0000`.
-- This masks some uninitialized-memory failures and reserves one encoding.
+- Intentional trap-style guardrail for invalid/empty fetch paths.
 
-## Resolved in Current Refactor
+### D. BRAM absolute fallback path outside SIM/CI
 
-### A. IRQ depth underflow in CPU module
-
-- `srcs/m_cpu.v` now uses saturating depth updates and post-update `in_irq` derivation.
-
-### B. LB/SB lane-select mismatch
-
-- Datapath still emits `d_ad = (sum << 1)` (`srcs/m_datapath.v`).
-- SoC now uses `d_ad[1]` for byte-lane select, with explicit `LB` zero-extension and `SB` low-byte lane writes (`srcs/m_soc.v`).
-
-### C. BRAM init warning due to short hex files
-
-- `tools/assembler.py` now pads output to 512 words by default (`--pad-words`), aligning with BRAM depth.
+- `srcs/m_bram.v` uses developer absolute paths in the non-`SIM`/non-`CI` branch for synthesis/timing simulation workflows.
+- Team contract: developers override paths locally or via `BRAM_MEM_HI_PATH`/`BRAM_MEM_LO_PATH` defines.
 
 ## Refactor Rule
 
-- Any ISA/ABI/MMIO behavior change should update RTL, tooling, tests, and corresponding docs in the same PR.
+- Any ISA/ABI/MMIO behavior change should update RTL, tooling, tests, and docs in the same PR.

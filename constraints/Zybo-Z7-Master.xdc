@@ -1,5 +1,5 @@
 ## This file is a .xdc for the Zybo Z7-10
-## Clock signal. Currently @ 80MHz. Change accordingly.
+## Clock signal. Currently @ 50MHz. Change accordingly.
 set_property -dict { PACKAGE_PIN K17 IOSTANDARD LVCMOS33 } [get_ports { i_clk }];
 create_clock -add -name sys_clk_pin -period 20.00 -waveform {0 10} [get_ports { i_clk }];
 

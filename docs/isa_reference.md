@@ -120,5 +120,5 @@ SYS class
 - `PUSH/POP` -> `ADDI` + `SW/LW`
 
 ## 11. Interrupt return convention caveat
-- RTL `iret_detected` checks exact instruction `16'h0EE0`.
+- RTL `iret_detected` checks exact instruction `16'h00E0`.
 - ABI `IRET` macro is expected to emit exactly this encoding so wrapper/controller depth return signaling triggers reliably.

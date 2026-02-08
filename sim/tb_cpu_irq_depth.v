@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+`include "constants.vh"
+
 module tb_cpu_irq_depth;
 
 /*************************************************************************************
@@ -66,7 +68,7 @@ module tb_cpu_irq_depth;
         _rst = 1'b0;
 
         // 1) Stray IRETs must not underflow depth.
-        _insn = 16'h0EE0;
+        _insn = `CPU_IRET_INSN;
         repeat (4) @(posedge _clk);
         if (dut._irq_depth != 2'b00 || _in_irq !== 1'b0) begin
             $display("FAIL depth underflow guard: depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
@@ -86,7 +88,7 @@ module tb_cpu_irq_depth;
         end
         $display("WAVE single-enter depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
 
-        _insn = 16'h0EE0;
+        _insn = `CPU_IRET_INSN;
         @(posedge _clk);
         @(posedge _clk);
         if (dut._irq_depth != 2'b00 || _in_irq !== 1'b0) begin
@@ -113,7 +115,7 @@ module tb_cpu_irq_depth;
         end
         $display("WAVE nested-enter depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
 
-        _insn = 16'h0EE0;
+        _insn = `CPU_IRET_INSN;
         @(posedge _clk);
         @(posedge _clk);
         if (dut._irq_depth != 2'b01 || _in_irq !== 1'b1) begin

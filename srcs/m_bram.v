@@ -52,12 +52,24 @@ module bram_1kb_be(
     end
 
     initial begin
-`ifndef SIM
-        _mem_hex_lo = "/home/josesilvaa/processor/srcs/mem/mem_lo.hex";
-        _mem_hex_hi = "/home/josesilvaa/processor/srcs/mem/mem_hi.hex";
-`else
+        // Optional overrides for synthesis/implementation:
+        // -DBRAM_MEM_LO_PATH=\"/abs/path/to/mem_lo.hex\"
+        // -DBRAM_MEM_HI_PATH=\"/abs/path/to/mem_hi.hex\"
+`ifdef BRAM_MEM_LO_PATH
+        _mem_hex_lo = `BRAM_MEM_LO_PATH;
+        _mem_hex_hi = `BRAM_MEM_HI_PATH;
+`elsif CI
+        // CI/local script flow runs from repository root.
+        _mem_hex_lo = "srcs/mem/mem_lo.hex";
+        _mem_hex_hi = "srcs/mem/mem_hi.hex";
+`elsif SIM
+        // Vivado behavioral sim launch directory depth.
         _mem_hex_lo = "../../../../srcs/mem/mem_lo.hex";
         _mem_hex_hi = "../../../../srcs/mem/mem_hi.hex";
+`else
+        // Board-flow default absolute paths (override via BRAM_MEM_*_PATH if needed).
+        _mem_hex_lo = "/home/josesilvaa/processor/srcs/mem/mem_lo.hex";
+        _mem_hex_hi = "/home/josesilvaa/processor/srcs/mem/mem_hi.hex";
 `endif
         $readmemh(_mem_hex_lo, _mem_l);
         $readmemh(_mem_hex_hi, _mem_h);

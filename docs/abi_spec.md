@@ -109,7 +109,7 @@ _Last reviewed: 2026-02-07_
 ### Exit
 - Software must clear/ack source-specific interrupt condition.
 - Software returns using the project-defined interrupt return sequence (see caveat below).
-  - RTL detects interrupt-return only for a specific encoding (`16'h0EE0`), so ISR epilogues must use the standardized `IRET` macro in `abi.inc`.
+  - RTL detects interrupt-return only for a specific encoding (`16'h00E0`), so ISR epilogues must use the standardized `IRET` macro in `abi.inc`.
 
 ### Nesting
 - IRQ controller supports nesting depth up to 2 levels.
@@ -152,8 +152,8 @@ _Last reviewed: 2026-02-07_
 
 ## 9. ABI Caveats in Current RTL/Tooling (Important for Refactor)
 
-- `iret_detected` in CPU control checks exact instruction word `16'h0EE0`
-  - This corresponds to `JAL r14, r14, #0`.
+- `iret_detected` in CPU control checks exact instruction word `16'h00E0`
+  - This corresponds to `JAL r0, r14, #0`.
   - ABI `IRET` macro emits this encoding (standardized).
 
 - Include path expectation in assembler

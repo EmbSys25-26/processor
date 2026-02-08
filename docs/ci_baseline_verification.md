@@ -22,16 +22,18 @@ Define a deterministic CI gate for the first consolidated release so future PRs 
 | CPU IRQ depth safety | Underflow/wrap on `IRET`, wrong `in_irq` state | `sim/tb_cpu_irq_depth.v` | `PASS tb_cpu_irq_depth` |
 | Byte-lane semantics for `LB/SB` | Wrong lane chosen, wrong zero-extension | `sim/tb_soc_byte_lane.v` | `PASS tb_soc_byte_lane` |
 | SoC integration + MMIO/IRQ activity | Missing IRQ/MMIO activity after changes | `sim/tb_soc_refactor_regression.v` | `PASS tb_soc_refactor_regression` |
+| Branch annul corner case | Fall-through not annulled on taken branch | `sim/tb_soc_branch_annul.v` | `PASS tb_soc_branch_annul` |
 | End-to-end anchors | Lost timer preemption or ABI preservation | `sim/tb_anchor_preemption_abi.v` | `PASS tb_anchor_preemption_abi` + preemption/restore evidence lines |
 | Runtime guard and smoke | Open-ended simulations, deadlock | `sim/tb_Soc.v` with `+max-cycles=1200` | Observes IRQ vectors `0x0020` and `0x0040`, then exits by guard |
 
 ## 4. Methodology
 
 1. Rebuild BRAM images from canonical assembly input.
-2. Execute fast unit-level regressions first (timers, CPU depth, lane behavior).
-3. Execute SoC-level regressions next (integration + anchor behavior).
-4. Execute bounded smoke run to catch lockups and keep CI runtime deterministic.
-5. Fail CI on:
+2. Compile benches with `SIM=1` and `CI=1` so BRAM init paths resolve to repository-root hex files.
+3. Execute fast unit-level regressions first (timers, CPU depth, lane behavior).
+4. Execute SoC-level regressions next (integration + anchor behavior).
+5. Execute bounded smoke run to catch lockups and keep CI runtime deterministic.
+6. Fail CI on:
    - any `FAIL` in run logs,
    - missing required `PASS` markers,
    - BRAM short-image symptom (`Not enough words`),

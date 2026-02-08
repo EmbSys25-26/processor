@@ -127,12 +127,12 @@ _Last reviewed: 2026-02-07_
 [ x ] PUSH_CC uses `GETCC` + `PUSH`
 [ x ] POP_CC uses `POP` + `SETCC`
 [ x ] ISR_PRO uses `PUSH` + `PUSH_CC` + `STI`
-[ x ] IRET uses `POP_CC` + `POP` + `JAL lr,lr,#0` (canonical IRET encoding)
+[ x ] IRET uses `POP_CC` + `POP` + `JAL r0,lr,#0` (canonical IRET encoding)
 
 ## D. ABI/RTL Contract Risk Checks
 
 [ x ] `IRET` macro encoding matches hardware `iret_detected`
-- Current status: standardized to `0x0EE0` (`JAL r14,r14,#0`).
+- Current status: standardized to `0x00E0` (`JAL r0,r14,#0`).
 
 [ ] Sample source include layout is build-clean by default without explicit paths
 - Current status: assembler resolves includes only relative to the including file; explicit relative paths are required.

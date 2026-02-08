@@ -246,7 +246,10 @@ Legacy report sources are in:
 
 ## Practical notes / gotchas
 
-- `srcs/m_bram.v` loads BRAM init files from `./srcs/mem/mem_hi.hex` and `./srcs/mem/mem_lo.hex`.
+- `srcs/m_bram.v` supports mode-specific BRAM image paths:
+  - CI (`SIM+CI`): `srcs/mem/mem_hi.hex`, `srcs/mem/mem_lo.hex`
+  - Vivado behavioral sim (`SIM`): `../../../../srcs/mem/mem_hi.hex`, `../../../../srcs/mem/mem_lo.hex`
+  - synthesis/implementation default: absolute paths, or override with `BRAM_MEM_HI_PATH`/`BRAM_MEM_LO_PATH` defines.
 - `tools/assembler.py` now pads output to 512 words by default, so BRAM init warnings about short hex files are avoided.
 - UART baud rate is compile-time selectable in `srcs/m_periph_bus.v`: `SIM` builds use a much faster baud for testbench convenience.
 
