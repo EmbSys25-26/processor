@@ -61,7 +61,7 @@ what you validated in Vivado in the PR description.
 
 This repository includes material derived from Gray Research XSOC work.
 Contributions must preserve required attribution and license terms in
-`/Users/josesilvaa/verilog-processor/LICENSE`.
+`root/LICENSE`.
 
 If you import external code, document provenance and license compatibility in
 your PR.
