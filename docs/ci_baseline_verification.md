@@ -64,7 +64,7 @@ Generated logs:
    - `.github/workflows/ci-baseline.yml`
    - `scripts/ci/run_iverilog_regression.sh`
 2. In GitHub repository settings, ensure Actions are enabled:
-   - `Settings -> Actions -> General -> Allow all actions and reusable workflows` (or your team-approved equivalent).
+   - `Settings -> Actions -> General -> Allow all actions and reusable workflows`.
 3. Push to a branch and open a test PR; confirm workflow `CI Baseline Verification` appears and runs.
 4. Configure branch protection for your integration branch (`main`/`master`):
    - require pull requests before merging,
