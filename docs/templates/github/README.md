@@ -9,10 +9,13 @@ The workflow will be as follows:
 ## Issue naming convention
 
 Issue names are: `<type>/<short description>`, where `<type>` is one of `pipeline/compiler/peripherals/bug` and the description is a short action verb phrase. 
+
 For example: `pipeline/add IF/ID stage register + valid`.
 
 ## Branch naming convention
 
 `<type>/<short description>`, where `<type>` is one of `pipeline/compiler/peripherals/bug` and the description is a short action verb phrase. 
+
 For example: `pipeline/add-IF-ID-stage-register`.
+
 This **should match** the issue name, but with dashes instead of spaces and no labels.
