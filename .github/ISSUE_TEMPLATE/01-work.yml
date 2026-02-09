@@ -1,11 +1,11 @@
 name: Work item
-description: Weekly rotation implementation task
+description: Biweekly rotation implementation task
 labels: ["work"]
 body:
   - type: markdown
     attributes:
       value: |
-        Use this template for manager/admin-created weekly work items.
+        Use this template for manager/admin-created biweekly work items.
   - type: dropdown
     id: domain
     attributes:
@@ -15,14 +15,6 @@ body:
         - pipeline
         - compiler backend
         - peripherals
-    validations:
-      required: true
-  - type: input
-    id: rotation
-    attributes:
-      label: Rotation week
-      description: Milestone/week identifier (example: R03-2026-W08).
-      placeholder: R03-2026-W08
     validations:
       required: true
   - type: textarea

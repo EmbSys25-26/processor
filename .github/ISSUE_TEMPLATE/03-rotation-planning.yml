@@ -1,15 +1,27 @@
 name: Rotation planning
-description: Manager/admin weekly planning issue for milestone scope
+description: Manager/admin planning issue aligned with ROTATION_NOTES.md
 labels: ["planning"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Keep this plan aligned with `/docs/templates/github/ROTATION_NOTES.md` so planning and release reporting use the same structure.
   - type: input
     id: milestone
     attributes:
       label: Milestone name
-      description: Weekly milestone identifier to create/use.
-      placeholder: R03-2026-W08
+      description: Rotation milestone identifier to create/use.
+      placeholder: R__-YYYY-W__
     validations:
       required: true
+  - type: input
+    id: period
+    attributes:
+      label: Rotation period
+      description: Date range for this rotation.
+      placeholder: YYYY-MM-DD to YYYY-MM-DD
+    validations:
+      required: false
   - type: textarea
     id: prior_notes
     attributes:
@@ -21,21 +33,51 @@ body:
     validations:
       required: true
   - type: textarea
-    id: objectives
+    id: tldr
     attributes:
-      label: Weekly objectives
-      description: Overall objective and measurable exit criteria.
+      label: TL;DR planning summary (3 bullets)
+      description: Short planning summary for this rotation.
       placeholder: |
-        Objective:
-        Exit criteria:
-        - [ ] ...
+        - Focus x this rotation.
+        - Fix y regression.
+        - Prepare z for next release.
     validations:
-      required: true
+      required: false
+  - type: textarea
+    id: pipeline_plan
+    attributes:
+      label: Planned work - Pipeline
+      description: Planned issue set + intended deliverables for pipeline.
+      placeholder: |
+        - Issue #... (owner/group)
+        - Issue #... (owner/group)
+    validations:
+      required: false
+  - type: textarea
+    id: compiler_plan
+    attributes:
+      label: Planned work - Compiler
+      description: Planned issue set + intended deliverables for compiler backend.
+      placeholder: |
+        - Issue #... (owner/group)
+        - Issue #... (owner/group)
+    validations:
+      required: false
+  - type: textarea
+    id: peripherals_plan
+    attributes:
+      label: Planned work - Peripherals
+      description: Planned issue set + intended deliverables for peripherals.
+      placeholder: |
+        - Issue #... (owner/group)
+        - Issue #... (owner/group)
+    validations:
+      required: false
   - type: textarea
     id: issue_set
     attributes:
-      label: Planned issue set and deliverables
-      description: List of issues to create/update with owners/groups.
+      label: Consolidated issue set and assignments
+      description: Final list of issues to create/update and assignees/groups.
       placeholder: |
         - pipeline: ... (Group A)
         - compiler backend: ... (Group B)
@@ -43,9 +85,57 @@ body:
     validations:
       required: true
   - type: textarea
+    id: behavior_changes
+    attributes:
+      label: Expected behavior changes
+      description: Any expected user-visible behavior change this rotation.
+      placeholder: None / list behavior deltas to watch.
+    validations:
+      required: false
+  - type: textarea
+    id: planned_verification
+    attributes:
+      label: Planned tests / verification
+      description: Planned benches/sim/CI checks to validate this rotation.
+      placeholder: |
+        - tb_...
+        - CI check ...
+    validations:
+      required: false
+  - type: textarea
+    id: carry_over
+    attributes:
+      label: Known issues to carry from previous rotation
+      description: Open issues and why they remain open.
+      placeholder: |
+        - Issue #... - blocker/rationale
+    validations:
+      required: false
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks / callouts for this rotation
+      description: Key risks and mitigation notes.
+      placeholder: |
+        - Timing risk on ...
+        - Verification gap on ...
+    validations:
+      required: false
+  - type: textarea
+    id: next_focus
+    attributes:
+      label: Suggested focus for next rotation
+      description: Seed items for next planning cycle.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: false
+  - type: textarea
     id: handoff
     attributes:
       label: Handoff and reporting plan
-      description: How end-of-week notes, carry-overs, and blockers will be recorded.
+      description: How end-of-rotation notes, carry-overs, and blockers will be recorded.
     validations:
-      required: true
+      required: false

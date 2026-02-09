@@ -15,14 +15,6 @@ body:
         - docs/process
     validations:
       required: true
-  - type: input
-    id: rotation
-    attributes:
-      label: Rotation week/milestone
-      description: Current milestone or release context.
-      placeholder: R03-2026-W08 or v0.1.0-pre-refactor
-    validations:
-      required: true
   - type: textarea
     id: summary
     attributes:
@@ -57,12 +49,5 @@ body:
     attributes:
       label: Evidence
       description: Logs/waveform snippets/CI links.
-    validations:
-      required: true
-  - type: textarea
-    id: impact
-    attributes:
-      label: Impact and risk
-      description: What release/refactor work is blocked or at risk.
     validations:
       required: true
