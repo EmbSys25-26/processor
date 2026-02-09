@@ -105,7 +105,7 @@ module tb_uart_mmio_word_aligned;
     endtask
 
 /*************************************************************************************
- * 2.3 Deterministic UART word-alignment checks
+ * 2.3 Deterministic stimulus and UART word-alignment checks
  ************************************************************************************/
     reg [15:0] _rd;
     integer _timeout;
