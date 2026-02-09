@@ -22,14 +22,78 @@ Thanks for contributing.
 
 ## Development flow
 
-1. Sync your branch from `main`.
-2. Confirm the issue is assigned to you (or your group) in the current milestone.
-3. Implement the smallest change that closes the issue.
-4. Keep RTL style conventions used in this repository:
+1. Sync your local `main` from origin before starting any work.
+2. Create your feature branch from the latest `main` (do not branch from stale commits).
+3. Confirm the issue is assigned to you (or your group) in the current milestone.
+4. Implement the smallest change that closes the issue.
+5. Keep RTL style conventions used in this repository:
    - sectioned modules/testbenches
    - explicit signal naming conventions
    - update docs when behavior/register maps change
-5. Run local checks before opening the PR.
+6. While your branch is open, rebase (or merge) from `main` frequently, especially after PRs that touch shared interfaces.
+7. Before opening/reopening PR review, update your branch to latest `main` and resolve conflicts locally.
+8. Run local checks before opening the PR.
+
+## Git workflow commands (copy/paste)
+
+### 1) Start work from latest `main`
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b <type>/<short-description>
+```
+
+Example:
+
+```bash
+git checkout -b pipeline/add-forwarding-fix
+```
+
+### 2) Commit your work normally
+
+```bash
+git add -A
+git commit -m "pipeline: fix forwarding hazard in EX stage"
+git push -u origin <type>/<short-description>
+```
+
+### 3) Keep branch synced while PR is open (recommended daily)
+
+Rebase style (preferred for clean history):
+
+```bash
+git fetch origin
+git rebase origin/main
+git push --force-with-lease
+```
+
+### 4) Sync again right before requesting final review/merge
+
+```bash
+git fetch origin
+git rebase origin/main
+git push --force-with-lease
+```
+
+### 5) If rebase conflicts happen
+
+```bash
+git status
+# edit conflicting files, then:
+git add <resolved-file> ...
+git rebase --continue
+```
+
+### 6) After PR is merged
+
+Rinse and repeat for the next issue.
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b <type>/<short-description>
+```
 
 ## Required local checks
 
@@ -49,8 +113,9 @@ what you validated in Vivado in the PR description.
 - Include one auto-closing issue reference (`Fixes #...` or equivalent).
 - Include clear verification evidence (command output summary, waveform note,
   or testbench pass markers).
-- Keep PRs focused (avoid mixing unrelated changes).
+- **Keep PRs focused (AVOID MIXING UNRELATED CHANGES).**
 - If work is group-owned, **include all relevant assignees/reviewers in the PR.**
+- PR branch must be updated with latest `main` before merge (required when branch protection enforces up-to-date merges).
 
 ## Commit guidance
 
