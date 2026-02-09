@@ -3,7 +3,7 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="tb_Soc_time_synth.wdb" id="1">
+      <db_ref path="tb_Soc_time_impl.wdb" id="1">
          <top_modules>
             <top_module name="glbl" />
             <top_module name="tb_Soc" />
@@ -156,7 +156,7 @@
       <obj_property name="ObjectShortName">probe15[15:0]</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">gp</obj_property>
-      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="Reversed">false</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe16">
       <obj_property name="ElementShortName">probe16</obj_property>
