@@ -686,6 +686,13 @@ def main():
         dest="lo_out",
         help="lo-byte hex output path (default srcs/mem/mem_lo.hex)",
     )
+    parser.add_argument(
+        "--pad-words",
+        dest="pad_words",
+        type=int,
+        default=512,
+        help="pad output to this many words with NOP (default 512, use 0 to disable)",
+    )
     parser.add_argument("-q", "--quiet", action="store_true", help="suppress summary output")
 
     args = parser.parse_args()
@@ -710,6 +717,20 @@ def main():
 
     symbols, sym_kind, cooked = first_pass(lines)
     words = second_pass(cooked, symbols, sym_kind)
+
+    if args.pad_words < 0:
+        print("error: --pad-words must be >= 0", file=sys.stderr)
+        sys.exit(2)
+
+    if args.pad_words > 0:
+        if len(words) > args.pad_words:
+            print(
+                f"error: program length ({len(words)} words) exceeds --pad-words ({args.pad_words})",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        if len(words) < args.pad_words:
+            words = words + ([0xF000] * (args.pad_words - len(words)))
 
     hex_lines_full = [f"{w:04X}" for w in words]
     _write_text(out_path, "\n".join(hex_lines_full) + "\n")

@@ -1,53 +1,65 @@
-// m_pario.v: 8-bit parallel I/O peripheral (MMIO)
-`timescale 1ns/1ps
-module pario (
-    input  wire        clk,
-    input  wire        rst,
-    input  wire        sel,
-    input  wire        we,
-    input  wire        re,
-    input  wire [1:0]  addr,   // reg index
-    input  wire [15:0] wdata,
-    output reg  [15:0] rdata,
-    output wire        rdy,
+`timescale 1ns / 1ps
 
-    input  wire [3:0]  i,
-    output reg  [3:0]  o,
-    output reg        int_req
+module pario(
+    input wire i_clk,
+    input wire i_rst,
+    input wire i_sel,
+    input wire i_we,
+    input wire i_re,
+    input wire [1:0] i_addr,
+    input wire [15:0] i_wdata,
+    output wire [15:0] o_rdata,
+    output wire o_rdy,
+    input wire [3:0] i_i,
+    output wire [3:0] o_o,
+    output wire o_int_req
 );
-    assign rdy = sel;  // single-cycle access when selected
 
-    // Interrupt request when all inputs are high (example, more fun this way)
-    always @(*) begin
-        if (i == 4'hF)
-            int_req = 1'b1;
-        else
-            int_req = 1'b0;    
-    end
+/*************************************************************************************
+ * SECTION 1. DECLARE WIRES / REGS
+ ************************************************************************************/
+    reg [15:0] _rdata;
+    reg [3:0] _o;
+    wire _int_req;
 
-    // IRQ when all 4 LSB inputs are high
-    always @(posedge clk) begin
-        if (rst) begin
-            o   <= 4'h0;
-        end else if (sel && we) begin
-            case (addr)
-                2'b00: o   <= wdata[3:0]; // DATA
+/*************************************************************************************
+ * SECTION 2. IMPLEMENTATION
+ ************************************************************************************/
+
+/*************************************************************************************
+ * 2.1 Output Register and IRQ Condition
+ ************************************************************************************/
+    assign o_rdy = i_sel;
+    assign _int_req = (i_i == 4'hF);
+
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _o <= 4'h0;
+        end else if (i_sel && i_we) begin
+            case (i_addr)
+                2'b00: _o <= i_wdata[3:0];
                 default: ;
             endcase
         end
     end
 
-    // Readback
+/*************************************************************************************
+ * 2.2 Readback
+ ************************************************************************************/
     always @(*) begin
-        if (!sel || !re) begin
-            rdata = 16'h0000;
+        if (!i_sel || !i_re) begin
+            _rdata = 16'h0000;
         end else begin
-            case (addr)
-                2'b00: rdata = {12'h000, o}; // read OUTPUT data
-                2'b10: rdata = {12'h000, i}; // read INPUT data
-                default: rdata = 16'h0000;
+            case (i_addr)
+                2'b00: _rdata = {12'h000, _o};
+                2'b10: _rdata = {12'h000, i_i};
+                default: _rdata = 16'h0000;
             endcase
         end
     end
+
+    assign o_rdata = _rdata;
+    assign o_o = _o;
+    assign o_int_req = _int_req;
 
 endmodule

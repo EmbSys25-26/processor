@@ -19,6 +19,7 @@ _Last reviewed: 2026-02-07_
 - `-o, --out <path>`: combined 16-bit words (default `srcs/mem/mem.hex`)
 - `--hi <path>`: high-byte stream (default `srcs/mem/mem_hi.hex`)
 - `--lo <path>`: low-byte stream (default `srcs/mem/mem_lo.hex`)
+- `--pad-words <N>`: pad output image to `N` words with `0xF000` NOP (default `512`, use `0` to disable)
 - `-q, --quiet`: suppress summary print
 
 ## 3. Pipeline
@@ -52,6 +53,7 @@ Stage 4: pass 2 (encoding)
 - Rejects backward `.org` movement after code emission has progressed.
 
 Stage 5: emit files
+- Optional fixed-size image padding is applied before emit (`--pad-words`, default 512 words).
 - Combined words: one 16-bit hex word per line.
 - Hi stream: upper byte of each word.
 - Lo stream: lower byte of each word.

@@ -3,7 +3,7 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="tb_Soc_time_impl.wdb" id="1">
+      <db_ref path="tb_Soc_time_synth.wdb" id="1">
          <top_modules>
             <top_module name="glbl" />
             <top_module name="tb_Soc" />
@@ -11,207 +11,239 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0 ps"></ZoomStartTime>
-      <ZoomEndTime time="2 us"></ZoomEndTime>
-      <Cursor1Time time="1 us"></Cursor1Time>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="2,570.001 ns"></ZoomEndTime>
+      <Cursor1Time time="472.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="180"></NameColumnWidth>
-      <ValueColumnWidth column_width="120"></ValueColumnWidth>
+      <ValueColumnWidth column_width="104"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="33" />
+   <WVObjectSize size="34" />
    <wvobject type="logic" fp_name="/tb_Soc/_clk">
-      <obj_property name="ElementShortName">clk</obj_property>
-      <obj_property name="ObjectShortName">clk</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">_clk</obj_property>
+      <obj_property name="ObjectShortName">_clk</obj_property>
       <obj_property name="label">clk</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_Soc/_rst">
-      <obj_property name="ElementShortName">rst</obj_property>
-      <obj_property name="ObjectShortName">rst</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">_rst</obj_property>
+      <obj_property name="ObjectShortName">_rst</obj_property>
       <obj_property name="label">rst</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/_par_i">
-      <obj_property name="ElementShortName">par_i[3:0]</obj_property>
-      <obj_property name="ObjectShortName">par_i[3:0]</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">_par_i[0:3]</obj_property>
+      <obj_property name="ObjectShortName">_par_i[0:3]</obj_property>
       <obj_property name="label">par_i</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/_par_o">
-      <obj_property name="ElementShortName">par_o[3:0]</obj_property>
-      <obj_property name="ObjectShortName">par_o[3:0]</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">_par_o[0:3]</obj_property>
+      <obj_property name="ObjectShortName">_par_o[0:3]</obj_property>
       <obj_property name="label">par_o</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
+   <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe17">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">probe17[15:0]</obj_property>
+      <obj_property name="ObjectShortName">probe17[15:0]</obj_property>
+      <obj_property name="label">pc</obj_property>
+      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="CustomSignalColor">#FFD700</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_Soc/dut/_imem_dout">
+      <obj_property name="ElementShortName">_imem_dout[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_imem_dout[15:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe19[0]">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">[0]</obj_property>
+      <obj_property name="ObjectShortName">[0]</obj_property>
+      <obj_property name="label">int_en_cpu</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe16[0]">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">[0]</obj_property>
+      <obj_property name="ObjectShortName">[0]</obj_property>
+      <obj_property name="label">_rf_we_final</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe18[0]">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">[0]</obj_property>
+      <obj_property name="ObjectShortName">[0]</obj_property>
+      <obj_property name="label">_irq_take</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe24[0]">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">[0]</obj_property>
+      <obj_property name="ObjectShortName">[0]</obj_property>
+      <obj_property name="label">_iret_detected</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe0">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe0[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe0[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">r0</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe1">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe1[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe1[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">a0</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe2">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe2[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe2[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">a1</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe3">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe3[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe3[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">a2</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe4">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe4[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe4[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">t0</obj_property>
       <obj_property name="Reversed">true</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe5">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe5[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe5[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">t1</obj_property>
       <obj_property name="Reversed">true</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe6">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe6[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe6[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">t2</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe7">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe7[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe7[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">t3</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe8">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe8[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe8[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">s0</obj_property>
       <obj_property name="Reversed">true</obj_property>
+      <obj_property name="CustomSignalColor">#F0E68C</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe9">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe9[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe9[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">s1</obj_property>
       <obj_property name="Reversed">true</obj_property>
+      <obj_property name="CustomSignalColor">#F0E68C</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe10">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe10[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe10[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">s2</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe11">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe11[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe11[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">s3</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe12">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe12[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe12[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">fp</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe13">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe13[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe13[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">sp</obj_property>
       <obj_property name="Reversed">true</obj_property>
+      <obj_property name="CustomSignalColor">#A52A2A</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe14">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe14[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe14[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">lr</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe15">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe15[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe15[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">gp</obj_property>
-      <obj_property name="Reversed">false</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe16">
-      <obj_property name="ElementShortName">probe16</obj_property>
-      <obj_property name="ObjectShortName">probe16</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">rf_we</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe17">
-      <obj_property name="ElementShortName">probe17[15:0]</obj_property>
-      <obj_property name="ObjectShortName">probe17[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">pc</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe18">
-      <obj_property name="ElementShortName">probe18</obj_property>
-      <obj_property name="ObjectShortName">probe18</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">irq_take</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe19">
-      <obj_property name="ElementShortName">probe19</obj_property>
-      <obj_property name="ObjectShortName">probe19</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">int_en_cpu</obj_property>
-   </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe20">
+      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">probe20[15:0]</obj_property>
       <obj_property name="ObjectShortName">probe20[15:0]</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
       <obj_property name="label">irq_vector</obj_property>
       <obj_property name="Reversed">true</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe21">
-      <obj_property name="ElementShortName">probe21</obj_property>
-      <obj_property name="ObjectShortName">probe21</obj_property>
+   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe23[0]">
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">timer0_irq_req</obj_property>
+      <obj_property name="ElementShortName">[0]</obj_property>
+      <obj_property name="ObjectShortName">[0]</obj_property>
+      <obj_property name="label">_in_irq</obj_property>
+      <obj_property name="CustomSignalColor">#FF0080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe22">
-      <obj_property name="ElementShortName">probe22</obj_property>
-      <obj_property name="ObjectShortName">probe22</obj_property>
+   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe21[0]">
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">timer1_irq_req</obj_property>
+      <obj_property name="ElementShortName">[0]</obj_property>
+      <obj_property name="ObjectShortName">[0]</obj_property>
+      <obj_property name="label">_int_req_T0</obj_property>
+      <obj_property name="CustomSignalColor">#800080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe23">
-      <obj_property name="ElementShortName">probe23</obj_property>
-      <obj_property name="ObjectShortName">probe23</obj_property>
+   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe22[0]">
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">in_irq</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe24">
-      <obj_property name="ElementShortName">probe24</obj_property>
-      <obj_property name="ObjectShortName">probe24</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="label">iret_detected</obj_property>
+      <obj_property name="ElementShortName">[0]</obj_property>
+      <obj_property name="ObjectShortName">[0]</obj_property>
+      <obj_property name="label">_int_req_T1</obj_property>
+      <obj_property name="CustomSignalColor">#800080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
 </wave_config>

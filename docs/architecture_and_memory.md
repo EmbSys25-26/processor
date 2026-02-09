@@ -3,12 +3,12 @@
 _Last reviewed: 2026-02-07_
 
 ## 1. System Partition
-- CPU core module: `gr0040` in `srcs/m_gr0040.v`
-  - Split into `control_unit` + `datapath`.
-- IRQ wrapper module: `gr0041` in `srcs/m_gr0041.v`
-  - Tracks interrupt nesting depth (`in_irq`) and wires CPU to IRQ controller signals.
+- CPU composition:
+  - `cpu` in `srcs/m_cpu.v` integrates `ctrl_unit` + `datapath` and tracks interrupt nesting depth (`in_irq`).
+- Datapath/control implementation files:
+  - `srcs/m_ctrl_unit.v`, `srcs/m_datapath.v`, `srcs/m_alu.v`, `srcs/m_regfile16x16.v`.
 - SoC top: `soc` in `srcs/m_soc.v`
-  - Integrates CPU wrapper, BRAM, peripheral bus, UART/pario pins.
+  - Integrates CPU module, BRAM, peripheral bus, UART/pario pins.
 - Peripheral bus: `periph_bus` in `srcs/m_periph_bus.v`
   - Decodes MMIO regions, multiplexes read data and ready, instantiates IRQ controller.
 - Interrupt controller: `irq_ctrl` in `srcs/m_irq_ctrl.v`
@@ -25,14 +25,13 @@ _Last reviewed: 2026-02-07_
 - BRAM storage is byte-sliced as high and low 8-bit arrays.
 - Instruction addresses (PC / `i_ad`) are byte addresses.
   - Sequential fetch increments PC by 2 bytes per instruction.
-- Current datapath generates data/MMIO address as `d_ad = (sum << 1)` in `srcs/m_gr0040.v`.
+- Current datapath generates data/MMIO address as `d_ad = (sum << 1)` in `srcs/m_datapath.v`.
   - Effective accesses are therefore even-byte-aligned at the SoC boundary.
-- BRAM uses word index `addr[9:1]`; lane select is `addr[0]`.
+- BRAM uses word index `addr[9:1]`.
 - Byte lanes (big-endian within a 16-bit word):
-  - even byte address (`d_ad[0]=0`) is the high lane (MSB)
-  - odd  byte address (`d_ad[0]=1`) is the low lane  (LSB)
-- With current `d_ad = (sum << 1)`, `d_ad[0]` remains `0` for core-generated accesses.
-  - Practical effect: `LB/SB` currently operate on the high lane unless addressing is revised.
+  - high lane (MSB) and low lane (LSB) are selected in SoC glue for byte operations via `d_ad[1]`.
+- `LB` returns zero-extended selected byte.
+- `SB` stores `data_out[7:0]` into the selected byte lane.
 
 ## 4. Instruction Path (Harvard-style)
 - BRAM Port A serves instruction fetch.
@@ -78,7 +77,9 @@ _Last reviewed: 2026-02-07_
 - +0x02 (CR1): status/ack
   - bit0 = `int_req`
   - write clears request latch
-- +0x04 (CNT): counter readback (debug)
+- +0x04 (CNT_INIT): start/reload counter value (read/write)
+  - writing also loads current counter immediately
+- +0x06 (CNT): live counter readback (debug)
 
 ## 9. PARIO Register View (base `0x8200`)
 - +0x00: output register write (`o[3:0]`), readback output value
@@ -86,7 +87,7 @@ _Last reviewed: 2026-02-07_
 - IRQ behavior: asserts `int_req=1` when all four inputs are high (`i==4'hF`).
 
 ## 10. UART MMIO Register View (base `0x8300`, current RTL)
-- UART registers are word-aligned and decoded by low address bits (`addr[1:0]` into `uart_mmio`):
+- UART registers are word-aligned and decoded by word index (`periph_bus` passes `i_addr[2:1]` into `uart_mmio`):
   - +0x00: RX data read / TX data write
   - +0x02: status (`tx_busy`, `rx_pending`) and clear-on-write behavior
 - `irq_req` is asserted when RX pending is set.

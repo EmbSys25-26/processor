@@ -1,6 +1,6 @@
 # Documentation
 
-_Last reviewed: 2026-02-07_
+_Last reviewed: 2026-02-08_
 
 ## Purpose
 
@@ -21,8 +21,10 @@ _Last reviewed: 2026-02-07_
   - Walkthrough of Verilog files in `srcs/` and `sim/`.
 - [`refactor_extension_map.md`](refactor_extension_map.md)
   - Mapping from current boundaries to planned pipeline/compiler/peripheral work.
-- [`known_inconsistencies_for_refactor.md`](known_inconsistencies_for_refactor.md)
-  - Active code/documentation mismatches and hotspots.
+- [`ci_baseline_verification.md`](ci_baseline_verification.md)
+  - CI regression methodology, domain coverage, GitHub setup, and reproduction.
+- `../wavecfgs/coolWaveBehav.wcfg`, `../wavecfgs/coolWaveSynth.wcfg`, `../wavecfgs/coolWaveImpl.wcfg`
+  - Waveform presets for behavioral, post-synthesis, and post-implementation timing runs.
 - [`references.md`](references.md)
   - Curated source set used for this baseline.
 
@@ -41,4 +43,4 @@ _Last reviewed: 2026-02-07_
 5. `assembler/assembler_reference.md`
 6. `assembler/isa_abi_assembler_checklist.md`
 7. `refactor_extension_map.md`
-8. `known_inconsistencies_for_refactor.md`
+8. `ci_baseline_verification.md`

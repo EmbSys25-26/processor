@@ -1,171 +1,202 @@
-// SoC module 
-// Creates CPU + Peripheral bus, and insn/data Harvard Architecture BRAM
-// CPU is the gr0041 version wrapped for interrupt handling 
+`timescale 1ns / 1ps
 
-// notes: 
-// some wires / ports are marked with "mark_debug" attribute for visibility in the waveform analyzer in Vivado 
+`include "constants.vh"
 
-`timescale 1ns/1ps
-module soc
-(
-  input  wire        clk,
-  input  wire        rst,
-  input  wire [3:0]  par_i, 
-  output wire [3:0]  par_o,
-  input  wire        uart_rx,
-  output wire        uart_tx
+module soc(
+    input wire i_clk,
+    input wire i_rst,
+    input wire [3:0] i_par_i,
+    output wire [3:0] o_par_o,
+    input wire i_uart_rx,
+    output wire o_uart_tx
 );
-    // localparam 
-    // for some reason reset_vec is not propagating to lower hierarchy modules
-    // we might see this valued hardcoded within the int_wrapper / cpu
-    // changes here must be reflected there as well
-    localparam default_nop = 16'hF000; // NOP instruction
-    localparam reset_vec   = 16'h0100; // reset vector address
 
-    // Core - BRAM Communication 
-    wire        insn_ce;
-    wire [15:0] i_ad;
-    wire hit = ~rst;  // always hit when not in reset
+/*************************************************************************************
+ * SECTION 1. DECLARE WIRES / REGS
+ ************************************************************************************/
+    localparam [15:0] _default_nop = `CPU_NOP_INSN;
+    localparam [15:0] _reset_vec = `CPU_RESET_VEC;
 
-    // Data address and strobes 
-    (* mark_debug = "true" *) wire [15:0] d_ad; // address bus
-    wire        sw, sb, lw, lb;                 // strobes
+    wire _insn_ce;
+    wire [15:0] _i_ad;
+    wire _hit;
 
-    // SoC - CPU data buses
-    (* mark_debug = "true" *) wire [15:0] cpu_do; // cpu_o : CPU to mem
-    (* mark_debug = "true" *) wire [15:0] cpu_di; // mem_o : mem to CPU
+    (* mark_debug = "true" *) wire [15:0] _d_ad;
+    wire _sw;
+    wire _sb;
+    wire _lw;
+    wire _lb;
 
-    // Hi-Lo i-Memory Outputs
-    wire [7:0] imem_dout_h;
-    wire [7:0] imem_dout_l;
+    (* mark_debug = "true" *) wire [15:0] _cpu_do;
+    (* mark_debug = "true" *) wire [15:0] _cpu_di;
 
-    // Hi-Lo d-Memory Outputs
-    wire [7:0] dmem_dout_h;
-    wire [7:0] dmem_dout_l;
+    wire [7:0] _imem_dout_h;
+    wire [7:0] _imem_dout_l;
+    wire [7:0] _dmem_dout_h;
+    wire [7:0] _dmem_dout_l;
 
-    // Interrupt wires
-    wire [7:0]  int_req;               // driven by periph_bus.timer
-    wire [15:0] i_ad_rst = reset_vec;  // reset vector, here assigned to the localparam 
+    wire [15:0] _i_ad_rst;
 
-    // Instruction fetch registers
-    (* mark_debug = "true" *) reg [15:0] insn_q;      // registered instruction from imem 
-    wire br_taken;                                    // branch taken signal
+    (* mark_debug = "true" *) reg [15:0] _insn_q;
+    wire _br_taken;
 
-    (* mark_debug = "true" *) wire [15:0] imem_dout = {imem_dout_h, imem_dout_l};
-    wire imem_invalid = &(~imem_dout); // all bits zero indicates invalid instruction (here for warning and immediate failure)
-    // as we explictly hold off from 0x0000. this can be relaxed later if needed
+    (* mark_debug = "true" *) wire [15:0] _imem_dout;
+    wire _imem_invalid;
 
-    always @(posedge clk) begin
-        if (rst | imem_invalid) begin
-            insn_q <= default_nop; 
-        end else if (insn_ce) begin
-            insn_q <= imem_dout;  
-            if (br_taken) begin
-                insn_q <= default_nop; 
+    reg _loaded;
+    wire _mem_rdy;
+
+    wire _is_io;
+    wire _byte_lane;
+    wire _mem_we_h;
+    wire _mem_we_l;
+    wire [7:0] _mem_din_h;
+    wire [7:0] _mem_din_l;
+    wire [15:0] _mem_dout;
+    wire [15:0] _mem_load_data;
+
+    wire _io_sel;
+    wire _io_we;
+    wire _io_re;
+    wire [15:0] _io_wdata;
+    wire [15:0] _io_rdata;
+    wire _io_rdy;
+
+    wire _rdy;
+
+    wire _irq_take;
+    wire [15:0] _irq_vector;
+    (* mark_debug = "true" *) wire _in_irq;
+    wire _int_en_cpu;
+    wire _iret_detected;
+
+/*************************************************************************************
+ * SECTION 2. IMPLEMENTATION
+ ************************************************************************************/
+
+/*************************************************************************************
+ * 2.1 Static Assignments
+ ************************************************************************************/
+    assign _hit = ~i_rst;
+    assign _i_ad_rst = _reset_vec;
+
+    assign _imem_dout = {_imem_dout_h, _imem_dout_l};
+    assign _imem_invalid = ~|_imem_dout;
+
+/*************************************************************************************
+ * 2.2 Instruction Fetch Latch
+ ************************************************************************************/
+    always @(posedge i_clk) begin
+        if (i_rst | _imem_invalid) begin
+            _insn_q <= _default_nop;
+        end else if (_insn_ce) begin
+            _insn_q <= _imem_dout;
+            if (_br_taken) begin
+                _insn_q <= _default_nop;
             end
         end
     end
 
-    // Ready control 
-    reg loaded; // load bram in bram out regs 
-    always @(posedge clk) begin
-        if (rst) begin
-            loaded <= 1'b0;
-        end else if (insn_ce) begin
-            loaded <= 1'b0;
+/*************************************************************************************
+ * 2.3 Load Ready Tracking
+ ************************************************************************************/
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _loaded <= 1'b0;
+        end else if (_insn_ce) begin
+            _loaded <= 1'b0;
         end else begin
-            loaded <= (lw|lb);
+            _loaded <= (_lw | _lb);
         end
     end
-    assign mem_rdy = ~((lw|lb) & ~loaded);
 
-    // IO signals
-    wire is_io = d_ad[15]; // MSB-based IO mapping
-    wire mem_we_h = (sw | sb&~d_ad[0]) & ~is_io;
-    wire mem_we_l = (sw | sb& d_ad[0]) & ~is_io;
+    assign _mem_rdy = ~((_lw | _lb) & ~_loaded);
 
-    // Drive the mem to cpu data bus
-    wire [15:0] mem_dout = {dmem_dout_h, dmem_dout_l};
+/*************************************************************************************
+ * 2.4 Data/IO Split and Bus Muxing
+ ************************************************************************************/
+    assign _is_io = _d_ad[15];
+    assign _byte_lane = _d_ad[1];
+    assign _mem_we_h = (_sw | (_sb & ~_byte_lane)) & ~_is_io;
+    assign _mem_we_l = (_sw | (_sb & _byte_lane)) & ~_is_io;
 
-    // IO peripheral signals
-    wire        io_sel  = is_io;
-    wire        io_we   = is_io & (sw | sb);
-    wire        io_re   = is_io & (lw | lb);
-    wire [15:0] io_wdata = cpu_do;
-    wire [15:0] io_rdata;
-    wire        io_rdy;
+    assign _mem_din_h = _sw ? _cpu_do[15:8] : _cpu_do[7:0];
+    assign _mem_din_l = _cpu_do[7:0];
 
-    assign cpu_di = is_io ? io_rdata : mem_dout;
-    assign rdy    = is_io ? io_rdy    : mem_rdy;
+    assign _mem_dout = {_dmem_dout_h, _dmem_dout_l};
+    assign _mem_load_data = _lb ? (_byte_lane ? {8'h00, _dmem_dout_l} : {8'h00, _dmem_dout_h}) : _mem_dout;
 
-    // interrupt controller wires 
-    wire irq_take;              // interrupt taken signal
-    wire [15:0] irq_vector;     // interrupt vector from periph_bus
-    wire in_irq;                // cpu in interrupt service routine
-    wire int_en_cpu;            // interrupt enable from cpu
-    wire iret_detected;         // iret instruction detected signal (from cpu)
+    assign _io_sel = _is_io;
+    assign _io_we = _is_io & (_sw | _sb);
+    assign _io_re = _is_io & (_lw | _lb);
+    assign _io_wdata = _cpu_do;
 
-    // Instantiate the CPU + Interrupt wrapper
-    gr0041 u_irq_cpu (
-        .clk(clk), .rst(rst),
-        .i_ad_rst(i_ad_rst),
+    assign _cpu_di = _is_io ? _io_rdata : _mem_load_data;
+    assign _rdy = _is_io ? _io_rdy : _mem_rdy;
 
-        .insn_ce(insn_ce),
-        .i_ad(i_ad),
-        .insn(insn_q),
-        .hit(~rst),
-
-        .rdy(rdy),
-        .sw(sw), .sb(sb),
-        .lw(lw), .lb(lb),
-
-        .d_ad(d_ad),
-        .data_out(cpu_do),
-        .data_in(cpu_di),
-        .br_taken(br_taken),
-
-        .irq_take(irq_take),
-        .irq_vector(irq_vector),
-        .in_irq(in_irq),
-        .int_en(int_en_cpu),
-        .iret_detected(iret_detected)
+/*************************************************************************************
+ * 2.5 CPU, BRAM, and Peripheral Instances
+ ************************************************************************************/
+    cpu u_cpu (
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_i_ad_rst(_i_ad_rst),
+        .o_insn_ce(_insn_ce),
+        .o_i_ad(_i_ad),
+        .i_insn(_insn_q),
+        .i_hit(_hit),
+        .o_d_ad(_d_ad),
+        .i_rdy(_rdy),
+        .o_sw(_sw),
+        .o_sb(_sb),
+        .o_lw(_lw),
+        .o_lb(_lb),
+        .o_data_out(_cpu_do),
+        .i_data_in(_cpu_di),
+        .i_irq_take(_irq_take),
+        .i_irq_vector(_irq_vector),
+        .o_in_irq(_in_irq),
+        .o_int_en(_int_en_cpu),
+        .o_iret_detected(_iret_detected),
+        .o_br_taken(_br_taken)
     );
 
-    // Dual-port 1KB BRAM
     bram_1kb_be u_mem (
-        .clk(clk), .rst(rst),
-        .a_en(insn_ce),
-        .a_addr(i_ad[9:1]),
-        .a_dout_h(imem_dout_h),
-        .a_dout_l(imem_dout_l),
-        .b_en(sw | sb | lw | lb),
-        .b_addr(d_ad[9:1]),
-        .b_we_h(mem_we_h),
-        .b_we_l(mem_we_l),
-        .b_din_h(cpu_do[15:8]),
-        .b_din_l(cpu_do[7:0]),
-        .b_dout_h(dmem_dout_h),
-        .b_dout_l(dmem_dout_l)
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_a_en(_insn_ce),
+        .i_a_addr(_i_ad[9:1]),
+        .o_a_dout_h(_imem_dout_h),
+        .o_a_dout_l(_imem_dout_l),
+        .i_b_en(_sw | _sb | _lw | _lb),
+        .i_b_addr(_d_ad[9:1]),
+        .i_b_we_h(_mem_we_h),
+        .i_b_we_l(_mem_we_l),
+        .i_b_din_h(_mem_din_h),
+        .i_b_din_l(_mem_din_l),
+        .o_b_dout_h(_dmem_dout_h),
+        .o_b_dout_l(_dmem_dout_l)
     );
 
     periph_bus u_periph (
-        .clk(clk), .rst(rst),
-        .addr(d_ad),
-        .sel(io_sel),
-        .we(io_we),
-        .re(io_re),
-        .wdata(io_wdata),
-        .rdata(io_rdata),
-        .rdy(io_rdy),
-        .par_i(par_i),
-        .par_o(par_o),
-        .uart_rx(uart_rx),
-        .uart_tx(uart_tx),
-        .int_en(int_en_cpu),
-        .in_irq(in_irq),
-        .irq_vector(irq_vector),
-        .irq_take(irq_take),
-        .irq_ret(iret_detected)
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_addr(_d_ad),
+        .i_sel(_io_sel),
+        .i_we(_io_we),
+        .i_re(_io_re),
+        .i_wdata(_io_wdata),
+        .o_rdata(_io_rdata),
+        .o_rdy(_io_rdy),
+        .i_par_i(i_par_i),
+        .o_par_o(o_par_o),
+        .i_uart_rx(i_uart_rx),
+        .o_uart_tx(o_uart_tx),
+        .i_int_en(_int_en_cpu),
+        .i_in_irq(_in_irq),
+        .o_irq_vector(_irq_vector),
+        .o_irq_take(_irq_take),
+        .i_irq_ret(_iret_detected)
     );
 
-endmodule // soc
+endmodule

@@ -97,7 +97,7 @@ _Last reviewed: 2026-02-07_
 
 - `ISR_EPILOGUE`
   - Pops `sp`, `fp`, `s3`, `s2`, `s1`, `s0`
-  - `JAL lr, lr, #0` (IRET encoding)
+  - `JAL r0, lr, #0` (IRET encoding)
   - Clobbers: popped regs, `sp`
 
 - `ISR_PRO`
@@ -109,7 +109,7 @@ _Last reviewed: 2026-02-07_
 - `IRET`
   - `POP_CC`
   - `POP lr`
-  - `JAL lr, lr, #0` (must match RTL iret_detected = `16'h0EE0`)
+  - `JAL r0, lr, #0` (must match RTL iret_detected = `16'h00E0`)
   - Clobbers: `sp`, `t0`, `lr`
 
 ### Macro usage guidance for refactor

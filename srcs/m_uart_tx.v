@@ -1,102 +1,117 @@
 `timescale 1ns / 1ps
-module uart_tx (
-    input clk,              // FPGA clock (currently @ 80 MHz)
-    input rst,              // Active-high reset
-    input [7:0] data,       // 8-bit data to transmit
-    input tx_start,         // Trigger transmission
-    output reg  tx_out,      // Serial output
-    output reg  tx_done,     // Transmission complete (1 cycle pulse)
-    output wire tx_busy,    // Transmission in progress
-    output wire [1:0] state_debug  // For debugging
+
+module uart_tx(
+    input wire i_clk,
+    input wire i_rst,
+    input wire [7:0] i_data,
+    input wire i_tx_start,
+    output wire o_tx_out,
+    output wire o_tx_done,
+    output wire o_tx_busy,
+    output wire [1:0] o_state_debug
 );
 
-    // Parameters
-    parameter CLK_FREQ = 80_000_000;  // 80 MHz, match top level module clk 
-    parameter BAUD_RATE = 115200;     // Baud rate
+    parameter CLK_FREQ = 80_000_000;
+    parameter BAUD_RATE = 115200;
 
-    localparam BIT_TIME = (CLK_FREQ + (BAUD_RATE/2)) / BAUD_RATE;  // Clock cycles per bit (rounded)
-    localparam CTR_WIDTH = $clog2(BIT_TIME) + 1; // Counter width
+/*************************************************************************************
+ * SECTION 1. DECLARE WIRES / REGS
+ ************************************************************************************/
+    localparam _state_idle = 2'd0;
+    localparam _state_start = 2'd1;
+    localparam _state_data = 2'd2;
+    localparam _state_stop = 2'd3;
 
-    // State machine encoding
-    localparam STATE_IDLE  = 2'd0;
-    localparam STATE_START = 2'd1;
-    localparam STATE_DATA  = 2'd2;
-    localparam STATE_STOP  = 2'd3;
+    localparam _bit_time = (CLK_FREQ + (BAUD_RATE / 2)) / BAUD_RATE;
+    localparam _ctr_width = $clog2(_bit_time) + 1;
 
-    // Internal regs
-    reg [1:0] state;                    // tracks state machine 
-    reg [CTR_WIDTH-1:0] counter;        // bit time counter 
-    reg [7:0] shift_reg;                // shift reg for data bits
-    reg [2:0] bit_index;                // index for data bits (0-7)
+    reg [1:0] _state;
+    reg [_ctr_width-1:0] _counter;
+    reg [7:0] _shift_reg;
+    reg [2:0] _bit_index;
 
-    // Status/debug
-    assign tx_busy = (state != STATE_IDLE);
-    assign state_debug = state;
+    reg _tx_out;
+    reg _tx_done;
 
-    // TX state machine
-    always @(posedge clk) begin
-        if (rst) begin
-            state     <= STATE_IDLE;
-            counter   <= 0;
-            tx_out    <= 1;        // Idle high
-            tx_done   <= 0;
-            shift_reg <= 8'd0;
-            bit_index <= 0;
+/*************************************************************************************
+ * SECTION 2. IMPLEMENTATION
+ ************************************************************************************/
+
+/*************************************************************************************
+ * 2.1 Status and Debug
+ ************************************************************************************/
+    assign o_tx_busy = (_state != _state_idle);
+    assign o_state_debug = _state;
+
+/*************************************************************************************
+ * 2.2 TX FSM
+ ************************************************************************************/
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _state <= _state_idle;
+            _counter <= 0;
+            _tx_out <= 1'b1;
+            _tx_done <= 1'b0;
+            _shift_reg <= 8'h00;
+            _bit_index <= 3'd0;
         end else begin
-            tx_done <= 0;       // Default: pulse for one cycle only
-            
-            case (state)
-                STATE_IDLE: begin
-                    tx_out <= 1;  // High when idle
-                    if (tx_start) begin
-                        shift_reg <= data;
-                        state <= STATE_START;
-                        counter <= 0;
-                        bit_index <= 0;
+            _tx_done <= 1'b0;
+
+            case (_state)
+                _state_idle: begin
+                    _tx_out <= 1'b1;
+                    if (i_tx_start) begin
+                        _shift_reg <= i_data;
+                        _state <= _state_start;
+                        _counter <= 0;
+                        _bit_index <= 3'd0;
                     end
                 end
-                
-                STATE_START: begin
-                    tx_out <= 0;  // Start bit
-                    if (counter == BIT_TIME - 1) begin
-                        counter <= 0;
-                        state <= STATE_DATA;
+
+                _state_start: begin
+                    _tx_out <= 1'b0;
+                    if (_counter == (_bit_time - 1)) begin
+                        _counter <= 0;
+                        _state <= _state_data;
                     end else begin
-                        counter <= counter + 1;
+                        _counter <= _counter + 1'b1;
                     end
                 end
-                
-                STATE_DATA: begin
-                    tx_out <= shift_reg[bit_index];  // Output current bit (LSB first)
-                    if (counter == BIT_TIME - 1) begin
-                        counter <= 0;
-                        if (bit_index == 7) begin
-                            state <= STATE_STOP;
-                            bit_index <= 0;
+
+                _state_data: begin
+                    _tx_out <= _shift_reg[_bit_index];
+                    if (_counter == (_bit_time - 1)) begin
+                        _counter <= 0;
+                        if (_bit_index == 3'd7) begin
+                            _state <= _state_stop;
+                            _bit_index <= 3'd0;
                         end else begin
-                            bit_index <= bit_index + 1;
+                            _bit_index <= _bit_index + 1'b1;
                         end
                     end else begin
-                        counter <= counter + 1;
+                        _counter <= _counter + 1'b1;
                     end
                 end
-                
-                STATE_STOP: begin
-                    tx_out <= 1;  // Stop bit
-                    if (counter == BIT_TIME - 1) begin
-                        counter <= 0;
-                        state <= STATE_IDLE;
-                        tx_done <= 1;  // Pulse indicating completion
+
+                _state_stop: begin
+                    _tx_out <= 1'b1;
+                    if (_counter == (_bit_time - 1)) begin
+                        _counter <= 0;
+                        _state <= _state_idle;
+                        _tx_done <= 1'b1;
                     end else begin
-                        counter <= counter + 1;
+                        _counter <= _counter + 1'b1;
                     end
                 end
-                
+
                 default: begin
-                    state <= STATE_IDLE;
+                    _state <= _state_idle;
                 end
             endcase
         end
     end
 
-endmodule // uart_tx
+    assign o_tx_out = _tx_out;
+    assign o_tx_done = _tx_done;
+
+endmodule

@@ -58,7 +58,7 @@
 \newpage
 
 \section{Document Summary}
-This document provides comprehensive technical documentation of a small FPGA softcore CPU ecosystem. The work centers on adapting and extending Gray's gr0040 RISC processor\footnote{Original design reference: Designing a Simple FPGA-Optimized RISC CPU and System-on-a-Chip, available at \url{https://www.researchgate.net/publication/2922770_Designing_a_Simple_FPGA-Optimized_RISC_CPU_and_System-on-a-Chip}.} for modern Xilinx 7-series FPGAs, culminating in bare-metal execution on a Zybo Z7-10 development board. Key achievements include: (1) hardware-verified interrupt handling via a custom Vectored Interrupt Controller, (2) a complete Application Binary Interface specification, and (3) cycle-accurate post-implementation timing validation at 80MHz operational frequency.
+This document provides comprehensive technical documentation of a small FPGA softcore CPU ecosystem. The work centers on adapting and extending Gray's gr0040 RISC processor\footnote{Original design reference: Designing a Simple FPGA-Optimized RISC CPU and System-on-a-Chip, available at \url{https://www.researchgate.net/publication/2922770_Designing_a_Simple_FPGA-Optimized_RISC_CPU_and_System-on-a-Chip}.} for modern Xilinx 7-series FPGAs, culminating in bare-metal execution on a Zybo Z7-10 development board. Key achievements include: (1) hardware-verified interrupt handling via a custom Vectored Interrupt Controller, (2) a complete Application Binary Interface specification, and (3) cycle-accurate post-implementation timing validation at a 50\,MHz operational frequency.
 
 \section{About This Guide}
 
@@ -104,12 +104,14 @@ OS & \texttt{Linux Ubuntu 22.04} \\
 \label{subsubsec:repo_layout}
 \begin{lstlisting}[basicstyle=\ttfamily\footnotesize,frame=single]
 repo_root/
-  sources_1/new/        # RTL: gr0040/gr0041, bus, timers, VIC, BRAM
-  constrs_1/new/        # XDC: board constraints + optional ILA insertion
-  sim_1/new/            # testbenches + wave configs
-  sw/                   # assembly programs + abi.inc + vector table
+  srcs/                 # RTL: soc/cpu/control/datapath/bus/peripherals/BRAM
+  constraints/          # XDC: board constraints + optional ILA insertion
+  sim/                  # testbenches + wave configs
+  assembly/             # assembly programs + vector table
+  tools/abi.inc         # ABI aliases/macros
   tools/assembler.py    # assembler + preprocessor
-  scripts/              # (add) vivado build scripts + run recipes
+  scripts/ci/           # CI simulation regression runner
+  .github/workflows/    # CI orchestration
 \end{lstlisting}
 
 \subsubsection{Build Firmware Image (Assembler)}
@@ -355,7 +357,7 @@ The peripheral bus acts as a memory-mapped I/O controller, mediating communicati
     \item Peripherals occupy address space \texttt{0x8000--0x8FFF}.
     \item Decoding signal: \texttt{is\_io = d\_ad[15]} (MSB high indicates I/O access).
     \item Peripheral sub-blocks are selected by \texttt{addr[11:8]} (e.g., Timer0 at \texttt{0x8000--0x80FF}, Timer1 at \texttt{0x8100--0x81FF}, IRQCTRL at \texttt{0x8F00--0x8FFF}).
-    \item The current bus implementation is single-cycle when selected\footnote{This is remarkable considering we can still run this in the range of 80-100MHz, whereas Gray's original design had not only a cycle extra of latency, in addition to running capped at 50MHz. The difference in architecture pays off here.} (\texttt{rdy = sel} for each block) and uses a read-data mux; this is primarily a microarchitectural choice rather than a special constraint trick.
+    \item The current bus implementation is single-cycle when selected\footnote{The current validated board-operating point is 50\,MHz after hardware bring-up exposed functional hazards at higher clocks under the current implementation/debug setup.} (\texttt{rdy = sel} for each block) and uses a read-data mux; this is primarily a microarchitectural choice rather than a special constraint trick.
 \end{itemize}
 
 \begin{figure}[H]
@@ -633,7 +635,7 @@ In this repository, the checked-in constraints focus on hardware debug insertion
     \item \texttt{constrs\_1/new/Zybo-Z7-Master.xdc}: the main constraints file that defines:
     \begin{itemize}
         \item Pin assignments for clock and reset inputs.
-        \item Clock definition for the system clock (80-100MHz on pin K17).
+        \item Clock definition for the system clock (50MHz operational target on pin K17).
         \item IO standard for clock/reset pins (LVCMOS33).
         \item Other physical constraints as needed (e.g. switches, LEDs for PARIO peripheral).
     \end{itemize}
@@ -650,14 +652,14 @@ Both files are meant to be interpreted by Vivado's Tcl interpreter as part of th
 
 \subsubsection{Clock Constraint Example}
 \begin{lstlisting}[language=tcl, caption=XDC clock definition]
-set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVCMOS33} [get_ports clk]
-create_clock -name sys_clk -period 10.000 -waveform {0.000 5.000} [get_ports clk]
+set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVCMOS33} [get_ports i_clk]
+create_clock -name sys_clk -period 20.000 -waveform {0.000 10.000} [get_ports i_clk]
 \end{lstlisting}
 
 \texttt{create\_clock} informs the timing engine:
 \begin{itemize}
-    \item Period: 10ns (100MHz).
-    \item Rising edge at 0ns, falling edge at 5ns.
+    \item Period: 20ns (50MHz).
+    \item Rising edge at 0ns, falling edge at 10ns.
     \item This propagates to all sequential elements in the clock domain.
 \end{itemize}
 
@@ -1383,22 +1385,22 @@ Captured waveforms confirmed:
 \label{fig:ila_nested_irq}
 \end{figure}
 
-\subsection{Clock Frequency: 80MHz Operational Target}
-While post-implementation simulation showed WNS $> 0$ at 100MHz, the physical hardware run used 80MHz for margin. Reasons:
+\subsection{Clock Frequency: 50MHz Operational Target}
+Although post-implementation timing reported WNS $> 0$ at higher targets, hardware validation used 50\,MHz because functional hazards were observed above this point in the current build/debug configuration. Reasons:
 \begin{enumerate}
     \item ILA insertion adds routing congestion.
     \item Temperature variation on FPGA die.
     \item Conservative approach for first hardware bring-up.
 \end{enumerate}
 
-Future optimizations (Pblocks, manual placement hints) may enable 100MHz on hardware.
+Future optimizations (Pblocks, manual placement hints, and additional hazard closure) may recover higher hardware frequencies.
 
 \subsection{Hardware Validation Summary}
 Hardware validation on Zybo Z7-10 focuses on externally observable behavior and interrupt-corner cases:
 \begin{itemize}
     \item Condition codes are preserved across interrupts using the PSR mechanism and \texttt{GETCC}/\texttt{SETCC}.
     \item Priority-based nesting behavior is observed using timer-driven interrupt sources and ILA capture of PC/vector signals.
-    \item Bare-metal programs execute at an 80\,MHz operating point chosen for additional margin under debug instrumentation.
+    \item Bare-metal programs execute at a 50\,MHz operating point chosen for robust behavior under debug instrumentation.
 \end{itemize}
 
 \section{Roadmap and Future Work}

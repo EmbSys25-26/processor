@@ -26,8 +26,8 @@ _Last reviewed: 2026-02-07_
 - int_en: CPU-side "interrupts may be taken now" gate (depends on gie, stalls, interlocks, IMM atomicity).
 - irq_take: asserted by IRQ controller when it is taking an interrupt.
 - irq_vector: target PC address for the interrupt handler entry.
-- in_irq: asserted by the IRQ wrapper when interrupt nesting depth is nonzero (or an IRQ is being taken).
-- iret_detected: asserted by CPU when the canonical IRET encoding is observed (used by wrapper/controller).
+- in_irq: asserted by CPU interrupt-depth logic when interrupt nesting depth is nonzero (or an IRQ is being taken).
+- iret_detected: asserted by CPU when the canonical IRET encoding is observed (used by CPU/IRQ-controller depth tracking).
 
 ### Memory/MMIO terms
 - is_io: selects MMIO vs BRAM in the SoC harness (is_io = d_ad[15]).

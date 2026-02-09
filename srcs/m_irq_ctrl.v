@@ -1,187 +1,202 @@
-module irq_ctrl (
-    input  wire        clk,
-    input  wire        rst,
-    input  wire        sel, 
-    input  wire        we,
-    input  wire        re,
-    input  wire [15:0] wdata,
-    output reg  [15:0] rdata,
-    input  wire [2:0]  addr,
-    output wire        rdy,
+`timescale 1ns / 1ps
 
-    input  wire [7:0]  src_irq,     // raw interrupt lines (level)
-    input  wire        in_irq,      // CPU in ISR
-    input  wire        int_en,      // CPU interrupt enable
-    input  wire        irq_ret,     // from CPU: return from interrupt
-
-    output wire        irq_take,    // to CPU: take interrupt now
-    output reg  [15:0] irq_vector   // to CPU: vector PC
+module irq_ctrl(
+    input wire i_clk,
+    input wire i_rst,
+    input wire i_sel,
+    input wire i_we,
+    input wire i_re,
+    input wire [15:0] i_wdata,
+    output wire [15:0] o_rdata,
+    input wire [2:0] i_addr,
+    output wire o_rdy,
+    input wire [7:0] i_src_irq,
+    input wire i_in_irq,
+    input wire i_int_en,
+    input wire i_irq_ret,
+    output wire o_irq_take,
+    output wire [15:0] o_irq_vector
 );
 
-    // MMIO ready (single-cycle)
-    assign rdy = sel;     // single-cycle access when selected
+/*************************************************************************************
+ * SECTION 1. DECLARE WIRES / REGS
+ ************************************************************************************/
+    reg [15:0] _rdata;
+    reg [15:0] _irq_vector;
 
-    // Pending/mask bookkeeping
-    reg [7:0] pending;    // latched pending interrupts
-    reg [7:0] mask;       // interrupt enable mask
-    reg [7:0] servicing;  // currently serviced source (prevents re-latch)
+    reg [7:0] _pending;
+    reg [7:0] _mask;
+    reg [7:0] _servicing;
 
-    // masked level requests (new or still asserted)
-    wire [7:0] masked = (src_irq & mask) & ~servicing;
+    wire [7:0] _masked;
+    wire [7:0] _next_pend;
+    wire _any_pend;
 
-    // any pending or newly asserted
-    wire [7:0] next_pend = pending | masked;
-    wire       any_pend  = |next_pend;
+    reg [2:0] _sel_idx;
+    reg [7:0] _sel_onehot;
 
-    reg [2:0] sel_idx;
-    reg [7:0] sel_onehot;
+    localparam _depth_max = 2;
+    reg [_depth_max-1:0] _depth;
+    reg [2:0] _pri_stack [_depth_max-1:0];
 
-    // Nesting depth / priority tracking
-    // decide to take interrupt when: something pending, enabled, priority greater than current
-    localparam DEPTH = 2; // max interrupt nesting depth
-    reg [DEPTH-1:0] depth;
-    reg [2:0] pri_stack [DEPTH-1:0]; // store priority level (irq line) at each depth
+    wire [_depth_max-1:0] _depth_eff;
+    wire [2:0] _cur_pri;
+    wire _can_preempt;
 
-    // effective depth for same cycle irq_take decision
-    // when irq_ret is asserted, consider depth-1 for priority comparison
-    wire [DEPTH-1:0] depth_eff = (irq_ret && (depth != 0)) ? (depth - 1'b1) : depth;
-    wire [2:0] cur_pri = (depth_eff == 0) ? 3'd0 : pri_stack[depth_eff - 1];
+    reg [7:0] _pending_next;
 
-    wire can_preempt = (depth_eff == 0) ? 1'b1 : (sel_idx > cur_pri);
-    
-    assign irq_take = any_pend & int_en & can_preempt; // allow nested IRQs
+    integer _k;
 
-    // Fixed priority encoder (highest index wins)
-    // simple fixed priority-based encoder on next_pend[3:0]
-    // the higher the irq line number, the greater the priority
-    always @(*) begin 
-        sel_idx    = 3'd0;
-        sel_onehot = 8'b0000_0000;
-        casex (next_pend[3:0])
-            4'b1xxx: begin sel_idx = 3'd3; sel_onehot = 8'b0000_1000; end // UART_RX
-            4'b01xx: begin sel_idx = 3'd2; sel_onehot = 8'b0000_0100; end // PARIO 
-            4'b001x: begin sel_idx = 3'd1; sel_onehot = 8'b0000_0010; end // TIMER1
-            4'b0001: begin sel_idx = 3'd0; sel_onehot = 8'b0000_0001; end // TIMER0
-            default: begin sel_idx = 3'd0; sel_onehot = 8'b0000_0000; end
+/*************************************************************************************
+ * SECTION 2. IMPLEMENTATION
+ ************************************************************************************/
+
+/*************************************************************************************
+ * 2.1 Base Signals
+ ************************************************************************************/
+    assign o_rdy = i_sel;
+    assign _masked = (i_src_irq & _mask) & ~_servicing;
+    assign _next_pend = _pending | _masked;
+    assign _any_pend = |_next_pend;
+
+    assign _depth_eff = (i_irq_ret && (_depth != 0)) ? (_depth - 1'b1) : _depth;
+    assign _cur_pri = (_depth_eff == 0) ? 3'd0 : _pri_stack[_depth_eff - 1];
+    assign _can_preempt = (_depth_eff == 0) ? 1'b1 : (_sel_idx > _cur_pri);
+
+    assign o_irq_take = _any_pend & i_int_en & _can_preempt;
+
+    // Explicitly consume i_in_irq for lint cleanliness; preemption is controlled by depth/priority.
+    wire _unused_in_irq;
+    assign _unused_in_irq = i_in_irq;
+
+/*************************************************************************************
+ * 2.2 Priority Encoder and Vector
+ ************************************************************************************/
+    always @(*) begin
+        _sel_idx = 3'd0;
+        _sel_onehot = 8'h00;
+        casex (_next_pend[3:0])
+            4'b1xxx: begin _sel_idx = 3'd3; _sel_onehot = 8'b0000_1000; end
+            4'b01xx: begin _sel_idx = 3'd2; _sel_onehot = 8'b0000_0100; end
+            4'b001x: begin _sel_idx = 3'd1; _sel_onehot = 8'b0000_0010; end
+            4'b0001: begin _sel_idx = 3'd0; _sel_onehot = 8'b0000_0001; end
+            default: begin _sel_idx = 3'd0; _sel_onehot = 8'h00; end
         endcase
     end
 
-    // Pending computation (sources + MMIO)
-    reg [7:0] pending_next;
-
     always @(*) begin
-        // start from OR of old pending and newly asserted & masked sources
-        pending_next = next_pend;
+        if (o_irq_take) begin
+            case (_sel_idx)
+                3'd0: _irq_vector = 16'h0020;
+                3'd1: _irq_vector = 16'h0040;
+                3'd2: _irq_vector = 16'h0060;
+                3'd3: _irq_vector = 16'h0080;
+                default: _irq_vector = 16'hFFFF;
+            endcase
+        end else begin
+            _irq_vector = 16'hFFFF;
+        end
+    end
 
-        // if CPU takes an interrupt, clear that source's pending bit
-        if (irq_take)
-            pending_next = pending_next & ~sel_onehot;
+/*************************************************************************************
+ * 2.3 Pending and Servicing State
+ ************************************************************************************/
+    always @(*) begin
+        _pending_next = _next_pend;
 
-        // apply MMIO writes on top
-        if (sel && we) begin
-            case (addr)
-                3'b100: pending_next = pending_next |  wdata[7:0]; // IRQ_FORCE
-                3'b110: pending_next = pending_next & ~wdata[7:0]; // IRQ_CLEAR
+        if (o_irq_take) begin
+            _pending_next = _pending_next & ~_sel_onehot;
+        end
+
+        if (i_sel && i_we) begin
+            case (i_addr)
+                3'b100: _pending_next = _pending_next | i_wdata[7:0];
+                3'b110: _pending_next = _pending_next & ~i_wdata[7:0];
                 default: ;
             endcase
         end
     end
 
-    // sequential state update
-    always @(posedge clk) begin
-        if (rst) begin
-            pending <= 8'h00;
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _pending <= 8'h00;
         end else begin
-            pending <= pending_next;
+            _pending <= _pending_next;
         end
     end
 
-    // Servicing latch (blocks re-latching while source is active)
-    // latch taken IRQs with sel_onehot, clear when source de-asserts
-    always @(posedge clk) begin
-        if (rst) begin
-            servicing <= 8'h00;
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _servicing <= 8'h00;
         end else begin
-            // keep bits set only while the raw request is still asserted
-            servicing <= (servicing & src_irq);
-            if (irq_take) begin
-                servicing <= (servicing & src_irq) | sel_onehot;
+            _servicing <= (_servicing & i_src_irq);
+            if (o_irq_take) begin
+                _servicing <= (_servicing & i_src_irq) | _sel_onehot;
             end
         end
     end
 
-    // Vector generation
-    // generate irq_vector based on selected source index
-    always @(*) begin
-        if (irq_take) begin
-            case (sel_idx)
-                3'd0: irq_vector = 16'h0020;  // TIMER0
-                3'd1: irq_vector = 16'h0040;  // TIMER1
-                3'd2: irq_vector = 16'h0060;  // PARIO
-                3'd3: irq_vector = 16'h0080;  // UART_RX
-                default: irq_vector = 16'hFFFF;
-            endcase
-        end else begin
-            irq_vector = 16'hFFFF;
-        end
-    end
-
-    // Depth + priority stack update
-    integer k; 
-    always @(posedge clk) begin
-        if (rst) begin
-            depth <= {DEPTH{1'b0}}; 
-            for (k = 0; k < DEPTH; k = k + 1) begin
-                pri_stack[k] <= 3'd0;
+/*************************************************************************************
+ * 2.4 Nesting and Mask Registers
+ ************************************************************************************/
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _depth <= {_depth_max{1'b0}};
+            for (_k = 0; _k < _depth_max; _k = _k + 1) begin
+                _pri_stack[_k] <= 3'd0;
             end
         end else begin
-            case ({irq_take, irq_ret}) 
+            case ({o_irq_take, i_irq_ret})
                 2'b10: begin
-                    if (depth < DEPTH) begin
-                        pri_stack[depth] <= sel_idx; 
-                        depth <= depth + 1'b1;
+                    if (_depth < _depth_max) begin
+                        _pri_stack[_depth] <= _sel_idx;
+                        _depth <= _depth + 1'b1;
                     end
                 end
                 2'b01: begin
-                    if (depth > 0) begin
-                        depth <= depth - 1'b1;
+                    if (_depth > 0) begin
+                        _depth <= _depth - 1'b1;
                     end
                 end
                 2'b11: begin
-                    if (depth == 0) begin
-                        pri_stack[0] <= sel_idx;
-                        depth <= 1'b1;
+                    if (_depth == 0) begin
+                        _pri_stack[0] <= _sel_idx;
+                        _depth <= 1'b1;
                     end else begin
-                        pri_stack[depth-1] <= sel_idx; // replace current top, depth unchanged
+                        _pri_stack[_depth - 1] <= _sel_idx;
                     end
                 end
-                default: ; 
+                default: ;
             endcase
         end
     end
 
-
-    // simple mask register: all enabled for now, MMIO writable
-    always @(posedge clk) begin
-        if (rst)
-            mask <= 8'hFF;
-        else if (sel && we && addr == 3'b010)
-            mask <= wdata[7:0]; // IRQ_MASK
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _mask <= 8'hFF;
+        end else if (i_sel && i_we && (i_addr == 3'b010)) begin
+            _mask <= i_wdata[7:0];
+        end
     end
 
-    // MMIO readback
-    always @(posedge clk) begin
-        if (rst) begin
-            rdata <= 16'h0000;
-        end else if (sel && re) begin
-            case (addr)
-                3'b000: rdata <= {8'h00, pending}; // IRQ_PEND
-                3'b010: rdata <= {8'h00, mask};    // IRQ_MASK
-                default: rdata <= 16'h0000;
+/*************************************************************************************
+ * 2.5 MMIO Readback
+ ************************************************************************************/
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            _rdata <= 16'h0000;
+        end else if (i_sel && i_re) begin
+            case (i_addr)
+                3'b000: _rdata <= {8'h00, _pending};
+                3'b010: _rdata <= {8'h00, _mask};
+                default: _rdata <= 16'h0000;
             endcase
         end else begin
-            rdata <= 16'h0000;
+            _rdata <= 16'h0000;
         end
     end
 
-endmodule // irq_ctrl
+    assign o_rdata = _rdata;
+    assign o_irq_vector = _irq_vector;
+
+endmodule

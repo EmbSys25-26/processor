@@ -34,3 +34,7 @@ coverage/
 # ignore test results
 test-results/
 *.xml
+*.vcd
+.ci_artifacts/
+# ignore admin documentation
+admin-docs/
