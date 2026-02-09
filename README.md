@@ -247,6 +247,13 @@ Legacy report sources are in:
 - `docs/report/docs.tex`
 - `docs/report/docs-implementation.tex`
 
+## Community
+
+- `LICENSE` - XSOC license terms and attribution requirements.
+- `CODE_OF_CONDUCT.md` - expected behavior in project spaces.
+- `CONTRIBUTING.md` - contribution flow, local checks, and PR requirements.
+- `SECURITY.md` - vulnerability reporting policy.
+
 ## Practical notes / gotchas
 
 - `srcs/m_bram.v` supports mode-specific BRAM image paths:
