@@ -32,4 +32,4 @@ _Last reviewed: 2026-02-09_
 ### Memory/MMIO terms
 - `is_io`: selects MMIO vs BRAM in the SoC harness (`is_io = d_ad[15]`).
 - `mem_rdy`/`io_rdy`: ready from BRAM vs MMIO; multiplexed to CPU as `rdy`.
-- SB/LB: byte store/load operations using lane select; with current address generation they hit the high lane for normal core accesses.
+- SB/LB: byte store/load operations using lane select.
