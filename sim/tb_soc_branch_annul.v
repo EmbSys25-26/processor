@@ -113,7 +113,6 @@ module tb_soc_branch_annul;
         repeat (5) @(posedge _clk);
         _rst = 1'b0;
 
-        // Optional deterministic activity for MMIO/UART background load.
         repeat (100) @(posedge _clk);
     end
 

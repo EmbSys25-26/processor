@@ -161,7 +161,6 @@ module tb_anchor_preemption_abi;
         repeat (5) @(posedge _clk);
         _rst = 1'b0;
 
-        // Optional extra activity for UART path; not required for anchor checks.
         repeat (200) @(posedge _clk);
     end
 

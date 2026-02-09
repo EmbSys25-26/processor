@@ -2,6 +2,10 @@
 `default_nettype none
 
 module tb_timer_start_reg;
+
+/*************************************************************************************
+ * SECTION 1. DECLARE WIRES / REGS
+ ************************************************************************************/
     reg _clk = 1'b0;
     reg _rst = 1'b1;
 
@@ -26,6 +30,13 @@ module tb_timer_start_reg;
     integer _errors = 0;
     integer _k;
 
+/*************************************************************************************
+ * SECTION 2. IMPLEMENTATION
+ ************************************************************************************/
+
+/*************************************************************************************
+ * 2.1 DUT and clock generation
+ ************************************************************************************/
     always #5 _clk = ~_clk;
 
     timer16 u_t16 (
@@ -54,6 +65,9 @@ module tb_timer_start_reg;
         .o_int_req(_th_int_req)
     );
 
+/*************************************************************************************
+ * 2.2 Timer MMIO helpers
+ ************************************************************************************/
     task t16_write(input [1:0] i_addr, input [15:0] i_data);
         begin
             _t16_sel = 1'b1;
@@ -116,6 +130,9 @@ module tb_timer_start_reg;
         end
     endtask
 
+/*************************************************************************************
+ * 2.3 Stimulus and checks
+ ************************************************************************************/
     reg [15:0] _rd;
 
     initial begin
@@ -133,6 +150,7 @@ module tb_timer_start_reg;
         $display("WAVE T16 write: wdata=0x%04h cnt_start=0x%04h cnt=0x%04h", 16'hFFFC, u_t16._cnt_start, u_t16._cnt);
         $display("WAVE TH  write: wdata=0x%04h cnt_start=0x%04h cnt=0x%04h", 16'hFFFA, u_th._cnt_start, u_th._cnt);
 
+        // Checks values directly with hierarchical references. 
         if (u_t16._cnt_start !== 16'hFFFC) begin
             $display("FAIL T16 start register mismatch");
             _errors = _errors + 1;
@@ -142,6 +160,7 @@ module tb_timer_start_reg;
             _errors = _errors + 1;
         end
 
+        // Read back start register values over MMIO.
         t16_read(2'b10, _rd);
         if (_rd !== 16'hFFFC) begin
             $display("FAIL T16 read CNT_INIT expected 0xFFFC got 0x%04h", _rd);
@@ -184,7 +203,7 @@ module tb_timer_start_reg;
             _errors = _errors + 1;
         end
 
-        // Read live counters (new debug location +0x06).
+        // Read live counters (debug location +0x06).
         t16_read(2'b11, _rd);
         $display("WAVE T16 live counter read: 0x%04h", _rd);
         th_read(2'b11, _rd);

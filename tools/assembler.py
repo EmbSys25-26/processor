@@ -307,6 +307,8 @@ def expand_macros(lines):
         # inside macro body
         if in_macro:
             if low.startswith(".endm"):
+                if cur_name is None:
+                    raise ValueError("Unexpected .endm without matching .macro")
                 name_upper = cur_name.upper()
                 if name_upper in macros:
                     raise ValueError(f"Macro redefined: {cur_name}")

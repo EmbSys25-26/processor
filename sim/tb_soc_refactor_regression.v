@@ -2,6 +2,10 @@
 `default_nettype none
 
 module tb_soc_refactor_regression;
+
+/*************************************************************************************
+ * SECTION 1. DECLARE WIRES / REGS
+ ************************************************************************************/
     reg _clk = 1'b0;
     reg _rst = 1'b1;
     reg [3:0] _par_i = 4'h0;
@@ -27,6 +31,13 @@ module tb_soc_refactor_regression;
     localparam integer _bit_time_ns = _bit_cycles * _clk_period_ns;
     localparam integer _max_cycles = 6000;
 
+/*************************************************************************************
+ * SECTION 2. IMPLEMENTATION
+ ************************************************************************************/
+
+/*************************************************************************************
+ * 2.1 DUT and clock generation
+ ************************************************************************************/
     always #5 _clk = ~_clk;
 
     soc dut (
@@ -38,6 +49,9 @@ module tb_soc_refactor_regression;
         .o_uart_tx(_uart_tx)
     );
 
+/*************************************************************************************
+ * 2.2 UART stimulus helper
+ ************************************************************************************/
     task uart_send_byte(input [7:0] i_b);
         integer _k;
         begin
@@ -52,6 +66,9 @@ module tb_soc_refactor_regression;
         end
     endtask
 
+/*************************************************************************************
+ * 2.3 Runtime monitors and pass/fail gate
+ ************************************************************************************/
     always @(posedge _clk) begin
         if (!_rst) begin
             _cycles <= _cycles + 1;
@@ -99,6 +116,9 @@ module tb_soc_refactor_regression;
         end
     end
 
+/*************************************************************************************
+ * 2.4 Stimulus sequence
+ ************************************************************************************/
     initial begin
         repeat (5) @(posedge _clk);
         _rst = 1'b0;
