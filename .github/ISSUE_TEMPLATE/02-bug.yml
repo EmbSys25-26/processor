@@ -1,0 +1,68 @@
+name: Bug report
+description: Report functional or process bugs
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Domain
+      description: Area where bug is observed.
+      options:
+        - pipeline
+        - compiler backend
+        - peripherals
+        - tooling/ci
+        - docs/process
+    validations:
+      required: true
+  - type: input
+    id: rotation
+    attributes:
+      label: Rotation week/milestone
+      description: Current milestone or release context.
+      placeholder: R03-2026-W08 or v0.1.0-pre-refactor
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug summary
+      description: Clear and concise bug statement.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include commands, testbench name, and input conditions.
+      placeholder: |
+        1. Run ...
+        2. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Logs/waveform snippets/CI links.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact and risk
+      description: What release/refactor work is blocked or at risk.
+    validations:
+      required: true

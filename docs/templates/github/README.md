@@ -1,5 +1,8 @@
 # Rules to enforce on GitHub
 
+Note: live GitHub issue/PR templates are in `.github/ISSUE_TEMPLATE/` and `.github/pull_request_template.md`.
+This folder contains planning/reference material only.
+
 The workflow will be as follows:
 
 1. **One issue → one branch → one pull request.**

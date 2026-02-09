@@ -1,0 +1,51 @@
+name: Rotation planning
+description: Manager/admin weekly planning issue for milestone scope
+labels: ["planning"]
+body:
+  - type: input
+    id: milestone
+    attributes:
+      label: Milestone name
+      description: Weekly milestone identifier to create/use.
+      placeholder: R03-2026-W08
+    validations:
+      required: true
+  - type: textarea
+    id: prior_notes
+    attributes:
+      label: Prior rotation release notes input
+      description: Links to prior rotation notes used as planning input.
+      placeholder: |
+        - #101
+        - docs/templates/github/ROTATION_NOTES.md
+    validations:
+      required: true
+  - type: textarea
+    id: objectives
+    attributes:
+      label: Weekly objectives
+      description: Overall objective and measurable exit criteria.
+      placeholder: |
+        Objective:
+        Exit criteria:
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: issue_set
+    attributes:
+      label: Planned issue set and deliverables
+      description: List of issues to create/update with owners/groups.
+      placeholder: |
+        - pipeline: ... (Group A)
+        - compiler backend: ... (Group B)
+        - peripherals: ... (Group C)
+    validations:
+      required: true
+  - type: textarea
+    id: handoff
+    attributes:
+      label: Handoff and reporting plan
+      description: How end-of-week notes, carry-overs, and blockers will be recorded.
+    validations:
+      required: true

@@ -1,0 +1,80 @@
+name: Work item
+description: Weekly rotation implementation task
+labels: ["work"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for manager/admin-created weekly work items.
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Domain
+      description: Rotation domain this issue belongs to.
+      options:
+        - pipeline
+        - compiler backend
+        - peripherals
+    validations:
+      required: true
+  - type: input
+    id: rotation
+    attributes:
+      label: Rotation week
+      description: Milestone/week identifier (example: R03-2026-W08).
+      placeholder: R03-2026-W08
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One-sentence intended outcome.
+      placeholder: Implement ...
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this work matters now; link related issues/PRs/docs.
+      placeholder: Background and references...
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Files/modules likely touched.
+      placeholder: |
+        - srcs/...
+        - sim/...
+    validations:
+      required: true
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of done
+      description: Checkable completion criteria.
+      placeholder: |
+        - [ ] CI baseline passes
+        - [ ] Docs updated
+        - [ ] PR references this issue
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence required
+      description: Expected verification evidence to include in PR.
+      placeholder: tb name, waveform marker, command output snippet...
+    validations:
+      required: true
+  - type: textarea
+    id: assignment
+    attributes:
+      label: Assignment notes
+      description: Assigned member(s)/group and dependencies.
+      placeholder: Group A, depends on #123
+    validations:
+      required: true
