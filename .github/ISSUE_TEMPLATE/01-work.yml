@@ -69,4 +69,4 @@ body:
       description: Assigned member(s)/group and dependencies.
       placeholder: Group A, depends on #123
     validations:
-      required: true
+      required: false
