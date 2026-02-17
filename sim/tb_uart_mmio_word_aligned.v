@@ -17,6 +17,8 @@ module tb_uart_mmio_word_aligned;
 
     reg [3:0] _par_i = 4'h0;
     reg _uart_rx = 1'b1;
+    tri1 _i2c_sda;
+    tri1 _i2c_scl;
     reg _in_irq = 1'b0;
     reg _int_en = 1'b1;
     reg _irq_ret = 1'b0;
@@ -54,6 +56,8 @@ module tb_uart_mmio_word_aligned;
         .o_par_o(_par_o),
         .i_uart_rx(_uart_rx),
         .o_uart_tx(_uart_tx),
+        .io_i2c_sda(_i2c_sda),
+        .io_i2c_scl(_i2c_scl),
         .i_in_irq(_in_irq),
         .i_int_en(_int_en),
         .i_irq_ret(_irq_ret),

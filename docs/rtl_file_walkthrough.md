@@ -1,6 +1,6 @@
 # RTL File Walkthrough (Current Refactor)
 
-_Last reviewed: 2026-02-07_
+_Last reviewed: 2026-02-16_
 
 This walkthrough documents the current RTL structure under:
 - `srcs/`
@@ -108,9 +108,11 @@ The project now uses explicit module separation:
   - `0x1`: Timer1 (`timerH`)
   - `0x2`: PARIO
   - `0x3`: UART MMIO
+  - `0x4`: I2C MMIO
   - `0xF`: IRQ controller
 - Sub-address slicing:
   - timers/UART receive word index `i_addr[2:1]` (`+0x00`, `+0x02`, ...)
+  - I2C receives `i_addr[3:1]` (`+0x00` through `+0x0A` word-aligned map)
   - PARIO currently receives `i_addr[1:0]` and decodes `00` / `10`
   - IRQ controller receives `i_addr[3:1]`
 - Multiplexes `o_rdata` / `o_rdy` from selected block.
@@ -129,6 +131,7 @@ The project now uses explicit module separation:
   - IRQ1 -> `0x0040`
   - IRQ2 -> `0x0060`
   - IRQ3 -> `0x0080`
+  - IRQ4 -> `0x00A0`
 - Maintains priority stack for nesting depth `DEPTH=2`.
 
 ## 10. File: srcs/m_timer16.v
@@ -195,7 +198,35 @@ The project now uses explicit module separation:
 - Included by CPU-related modules.
 - Defines canonical values such as `CPU_RESET_VEC`, `CPU_NOP_INSN`, `CPU_IRET_INSN`.
 
-## 16. Simulation Files
+## 16. File: srcs/m_i2c_mmio.v
+**Module:** `i2c_mmio`
+### Purpose
+- MMIO-visible control/status/register interface for the I2C master.
+
+### Register map (`i_addr[2:0]`, fed from bus `addr[3:1]`)
+- `000`: CTRL (`en`, `start`, `rw`, `irq_en`)
+- `001`: STATUS (`busy`, `done`, `ack_err`, `rx_valid`, `irq_pend`)
+- `010`: DIV
+- `011`: ADDR
+- `100`: LEN
+- `101`: DATA (write: TX push, read: RX pop)
+
+### Contract
+- START self-clears after transaction launch.
+- STATUS supports W1C clear for `done`, `ack_err`, and `irq_pend`, plus RX FIFO flush.
+- `o_irq_req` asserts when `irq_pend` is set.
+
+## 17. File: srcs/m_i2c_master.v
+**Module:** `i2c_master`
+### Purpose
+- Open-drain I2C master engine for byte-oriented write/read transfers.
+
+### Contract
+- Uses SDA/SCL as open-drain lines (drives `0` or `Z`).
+- Supports address phase + multi-byte payload using internal TX/RX FIFOs.
+- Exposes sticky `done` and `ack_err` status with explicit clear inputs.
+
+## 18. Simulation Files
 ### `sim/tb_timer_start_reg.v`
 - Validates timer start/reload register behavior for `timer16` and `timerH`.
 
@@ -212,3 +243,12 @@ The project now uses explicit module separation:
 
 ### `sim/tb_Soc.v`
 - General SoC smoke bench with optional internal tracing and UART MMIO helper mode.
+
+### `sim/tb_i2c_mmio_regs.v`
+- Validates I2C MMIO register map, START auto-clear, and STATUS W1C behavior.
+
+### `sim/tb_i2c_master_write.v`
+- Validates master address/data write transfer against an ACKing I2C slave model.
+
+### `sim/tb_i2c_irq_vector.v`
+- Validates end-to-end I2C IRQ propagation through `periph_bus` and `irq_ctrl` (`0x00A0` vector).

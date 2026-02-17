@@ -1,6 +1,6 @@
 # Processor Architecture and Memory Notes
 
-_Last reviewed: 2026-02-07_
+_Last reviewed: 2026-02-16_
 
 ## 1. System Partition
 - CPU composition:
@@ -8,7 +8,7 @@ _Last reviewed: 2026-02-07_
 - Datapath/control implementation files:
   - `srcs/m_ctrl_unit.v`, `srcs/m_datapath.v`, `srcs/m_alu.v`, `srcs/m_regfile16x16.v`.
 - SoC top: `soc` in `srcs/m_soc.v`
-  - Integrates CPU module, BRAM, peripheral bus, UART/pario pins.
+  - Integrates CPU module, BRAM, peripheral bus, UART/pario pins, and I2C pins.
 - Peripheral bus: `periph_bus` in `srcs/m_periph_bus.v`
   - Decodes MMIO regions, multiplexes read data and ready, instantiates IRQ controller.
 - Interrupt controller: `irq_ctrl` in `srcs/m_irq_ctrl.v`
@@ -57,6 +57,7 @@ _Last reviewed: 2026-02-07_
 - `0x0040 - 0x005F`: IRQ1 vector (Timer1)
 - `0x0060 - 0x007F`: IRQ2 vector (PARIO)
 - `0x0080 - 0x009F`: IRQ3 vector (UART)
+- `0x00A0 - 0x00BF`: IRQ4 vector (I2C)
 - `0x0100 - 0x02FF`: main code region
 - `0x0300 - 0x03FF`: stack region in bytes (128 words)
   - Recommended: keep `sp` word-aligned (even) and initialize it to one-past-end `0x0400`.
@@ -68,6 +69,7 @@ _Last reviewed: 2026-02-07_
 - `0x1`: Timer1 / high-priority timer (`0x8100 - 0x81FF`)
 - `0x2`: PARIO (`0x8200 - 0x82FF`)
 - `0x3`: UART MMIO (`0x8300 - 0x83FF`)
+- `0x4`: I2C MMIO (`0x8400 - 0x84FF`)
 - `0xF`: IRQ controller (`0x8F00 - 0x8FFF`)
 
 ## 8. Timer Register View (Timer0 base `0x8000`, Timer1 base `0x8100`)
@@ -97,14 +99,30 @@ _Last reviewed: 2026-02-07_
 - `IRQ_MASK` (read/write): enable mask [7:0]
 - `IRQ_FORCE` (write): set pending bits
 - `IRQ_CLEAR` (write): clear pending bits
-- Priority: fixed, higher IRQ index wins among implemented IRQ[3:0].
+- Priority: fixed, higher IRQ index wins among implemented IRQ[4:0].
 - Current vector mapping:
   - IRQ0 -> `0x0020` (Timer0)
   - IRQ1 -> `0x0040` (Timer1)
   - IRQ2 -> `0x0060` (PARIO)
   - IRQ3 -> `0x0080` (UART)
+  - IRQ4 -> `0x00A0` (I2C)
 
-## 12. Interrupt Acceptance Rules
+## 12. I2C MMIO Register View (base `0x8400`)
+- `i2c_mmio` is word-aligned and decoded by `i_addr[3:1]`:
+  - +0x00: `I2C_CTRL` (`en`, `start`, `rw`, `irq_en`)
+  - +0x02: `I2C_STATUS` (`busy`, `done`, `ack_err`, `rx_valid`, `irq_pend`)
+  - +0x04: `I2C_DIV` (16-bit divider)
+  - +0x06: `I2C_ADDR` (7-bit address in bits `[7:1]`)
+  - +0x08: `I2C_LEN` (byte count)
+  - +0x0A: `I2C_DATA` (TX push / RX pop)
+- STATUS write-one-to-clear:
+  - bit1 clears `done`
+  - bit2 clears `ack_err`
+  - bit3 flushes RX FIFO
+  - bit4 clears `irq_pend`
+- `irq_pend` is set on `done` or `ack_err` when `irq_en=1`.
+
+## 13. Interrupt Acceptance Rules
 - `irq_take` requires:
   - at least one pending source,
   - CPU `int_en=1`,
@@ -114,7 +132,7 @@ _Last reviewed: 2026-02-07_
   - redirects PC to `irq_vector`,
   - clears global interrupt enable latch (`gie`) until software re-enables.
 
-## 13. SoC Contracts Relevant for Refactor
+## 14. SoC Contracts Relevant for Refactor
 - Instruction fetch is currently one-stage registered at SoC boundary (`insn_q`).
 - Memory/IO share CPU load-store path via `cpu_di` mux and `rdy` mux.
 - Existing design already separates control and datapath; this is the clean insertion point for a deeper pipeline.

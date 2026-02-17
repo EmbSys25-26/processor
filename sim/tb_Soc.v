@@ -14,6 +14,8 @@ module tb_Soc;
 
     reg _uart_rx = 1'b1;
     wire _uart_tx;
+    tri1 _i2c_sda;
+    tri1 _i2c_scl;
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
@@ -28,7 +30,9 @@ module tb_Soc;
         .i_par_i(_par_i),
         .o_par_o(_par_o),
         .i_uart_rx(_uart_rx),
-        .o_uart_tx(_uart_tx)
+        .o_uart_tx(_uart_tx),
+        .io_i2c_sda(_i2c_sda),
+        .io_i2c_scl(_i2c_scl)
     );
 
     always #5 _clk = ~_clk;

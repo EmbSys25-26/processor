@@ -1,6 +1,6 @@
 # CI Baseline Verification (Release Gate)
 
-_Last reviewed: 2026-02-08_
+_Last reviewed: 2026-02-16_
 
 ## 1. Goal
 
@@ -25,6 +25,9 @@ Define a deterministic CI gate for the first consolidated release so future PRs 
 | Branch annul corner case | Fall-through not annulled on taken branch | `sim/tb_soc_branch_annul.v` | `PASS tb_soc_branch_annul` |
 | End-to-end anchors | Lost timer preemption or ABI preservation | `sim/tb_anchor_preemption_abi.v` | `PASS tb_anchor_preemption_abi` + preemption/restore evidence lines |
 | UART MMIO word alignment | UART STATUS/ACK unreachable through CPU-aligned address model | `sim/tb_uart_mmio_word_aligned.v` | `PASS tb_uart_mmio_word_aligned` |
+| I2C MMIO register model | Broken control/status semantics, missing W1C or START clear | `sim/tb_i2c_mmio_regs.v` | `PASS tb_i2c_mmio_regs` |
+| I2C protocol write path | Bad I2C START/address/data/STOP signaling | `sim/tb_i2c_master_write.v` | `PASS tb_i2c_master_write` |
+| I2C interrupt integration | I2C completion not reaching VIC or wrong vector | `sim/tb_i2c_irq_vector.v` | `PASS tb_i2c_irq_vector` |
 | Runtime guard and smoke | Open-ended simulations, deadlock | `sim/tb_Soc.v` with `+max-cycles=1200` | Observes IRQ vectors `0x0020` and `0x0040`, then exits by guard |
 
 ## 4. Methodology
@@ -84,6 +87,8 @@ Generated logs:
 - Keep `sim/tb_soc_branch_annul.v` in CI. It guards synchronous fetch/latch branch-annul ordering.
 - Keep `sim/tb_anchor_preemption_abi.v` in CI. It is the anchor for timer preemption and ABI preservation.
 - Keep `sim/tb_uart_mmio_word_aligned.v` in CI. It guards word-indexed UART register reachability and STATUS clear behavior at `0x8300`/`0x8302`.
+- Keep `sim/tb_i2c_mmio_regs.v` in CI. It guards the new I2C MMIO programming contract.
+- Keep `sim/tb_i2c_irq_vector.v` in CI. It guards I2C interrupt routing and vector `0x00A0`.
 - Keep canonical `IRET` encoding synchronized across:
   - `srcs/constants.vh` (`CPU_IRET_INSN`)
   - `tools/abi.inc` (`IRET` macro)

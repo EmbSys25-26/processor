@@ -9,6 +9,7 @@
     .equ TIMER1_VEC, 0x0040      ; 0x0040: timer1 ISR vector
     .equ PARIO_VEC,  0x0060      ; 0x0060: pario ISR vector
     .equ UART_VEC,   0x0080      ; 0x0080: uart ISR vector
+    .equ I2C_VEC,    0x00A0      ; 0x00A0: i2c ISR vector
     .equ RESET_VEC,  0x0100      ; 0x0100: reset / main
 
     ; timer region (IO) – software sees sum=0x4000 --> d_ad=0x8000
@@ -28,6 +29,15 @@
     ; uart region (IO) – software sees sum=0x4180 --> d_ad=0x8300
     .equ UART_HI,  0x418         ; high 12 bits --> imm16 = 0x4180
     .equ UART_DATA, 0            ; DATA at byte addr 0x8300
+
+    ; i2c region (IO) – software sees sum=0x4200 --> d_ad=0x8400
+    .equ I2C_HI,   0x420         ; high 12 bits --> imm16 = 0x4200
+    .equ I2C_CTRL, 0             ; +0x00
+    .equ I2C_STATUS, 1           ; +0x02
+    .equ I2C_DIV, 2              ; +0x04
+    .equ I2C_ADDR, 3             ; +0x06
+    .equ I2C_LEN, 4              ; +0x08
+    .equ I2C_DATA, 5             ; +0x0A
 
     ; intcause region (IO) – software sees sum=0x4F00 --> d_ad=0x8F00
     .equ INTCAUSE_HI, 0x4F0      ; high 12 bits --> imm16 = 0x4F00
@@ -138,6 +148,22 @@ isr_uart:
     ; Read UART DATA to clear RX interrupt
     IMM  #UART_HI          ; imm16 = 0x4180
     LW   t0, zero, #UART_DATA   ; read RX (clears pending)
+    IRET
+
+; ============================================
+; 0x00A0 — i2c ISR
+; ============================================
+    .org I2C_VEC
+isr_i2c:
+    ISR_PRO
+    PUSH t0
+
+    ; Clear sticky I2C STATUS flags (W1C): done(bit1), ack_err(bit2), irq_pend(bit4)
+    LI   t0, #0x0016
+    IMM  #I2C_HI
+    SW   t0, zero, #I2C_STATUS
+
+    POP  t0
     IRET
 
 ; ============================================
