@@ -54,7 +54,7 @@ module soc(
     wire _mem_we_l;
     wire [7:0] _mem_din_h;
     wire [7:0] _mem_din_l;
-    wire [15:0] _mem_dout;
+    (* mark_debug = "true" *) wire [15:0] _mem_dout;
     wire [15:0] _mem_load_data;
 
     wire _io_sel;
@@ -137,7 +137,7 @@ module soc(
     assign _rdy = _is_io ? _io_rdy : _mem_rdy;
 
 /*************************************************************************************
- * 2.5 CPU, BRAM, and Peripheral Instances
+ * 2.5 CPU, ROM, RAM, and Peripheral Instances
  ************************************************************************************/
     cpu u_cpu (
         .i_clk(i_clk),
@@ -163,21 +163,26 @@ module soc(
         .o_br_taken(_br_taken)
     );
 
+    brom_1kb_be u_rom (
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_en(_insn_ce),
+        .i_addr(_i_ad[9:1]),
+        .o_dout_h(_imem_dout_h),
+        .o_dout_l(_imem_dout_l)
+    );
+
     bram_1kb_be u_mem (
         .i_clk(i_clk),
         .i_rst(i_rst),
-        .i_a_en(_insn_ce),
-        .i_a_addr(_i_ad[9:1]),
-        .o_a_dout_h(_imem_dout_h),
-        .o_a_dout_l(_imem_dout_l),
-        .i_b_en(_sw | _sb | _lw | _lb),
-        .i_b_addr(_d_ad[9:1]),
-        .i_b_we_h(_mem_we_h),
-        .i_b_we_l(_mem_we_l),
-        .i_b_din_h(_mem_din_h),
-        .i_b_din_l(_mem_din_l),
-        .o_b_dout_h(_dmem_dout_h),
-        .o_b_dout_l(_dmem_dout_l)
+        .i_en(_sw | _sb | _lw | _lb),
+        .i_addr(_d_ad[9:1]),
+        .i_we_h(_mem_we_h),
+        .i_we_l(_mem_we_l),
+        .i_din_h(_mem_din_h),
+        .i_din_l(_mem_din_l),
+        .o_dout_h(_dmem_dout_h),
+        .o_dout_l(_dmem_dout_l)
     );
 
     periph_bus u_periph (

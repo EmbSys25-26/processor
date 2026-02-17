@@ -19,7 +19,7 @@
       <NameColumnWidth column_width="180"></NameColumnWidth>
       <ValueColumnWidth column_width="92"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="31" />
+   <WVObjectSize size="33" />
    <wvobject type="logic" fp_name="/tb_Soc/_clk">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">_clk</obj_property>
@@ -69,6 +69,20 @@
    <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_datapath/o_d_ad">
       <obj_property name="ElementShortName">o_d_ad[7:0]</obj_property>
       <obj_property name="ObjectShortName">o_d_ad[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_Soc/dut/_imem_dout">
+      <obj_property name="ElementShortName">_imem_dout[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_imem_dout[15:0]</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="label">imem_word</obj_property>
+      <obj_property name="Reversed">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_Soc/dut/_mem_dout">
+      <obj_property name="ElementShortName">_mem_dout[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_mem_dout[15:0]</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="label">dmem_word</obj_property>
+      <obj_property name="Reversed">true</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_Soc/dut/u_cpu/u_datapath/i_irq_take">
       <obj_property name="ElementShortName">i_irq_take</obj_property>

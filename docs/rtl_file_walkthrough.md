@@ -84,20 +84,30 @@ The project now uses explicit module separation:
 - Exposes mirrors `_r0.._gp` for debug/ILA.
 - Dual read exposure: selected source (`o_o`) and write-address mirror (`o_wr_o`).
 
-## 7. File: srcs/m_bram.v
-**Module:** `bram_1kb_be`
+## 7. File: srcs/m_brom.v
+**Module:** `brom_1kb_be`
 ### Purpose
-- 1 KiB byte-sliced dual-port BRAM model.
+- 1 KiB byte-sliced instruction ROM model.
 
 ### Contract
-- Port A: instruction fetch.
-- Port B: data access with independent hi/lo byte enables.
+- Read-only fetch port with synchronous read latency.
 - Loads init files using mode-specific paths:
   - CI (`SIM+CI`): `srcs/mem/mem_hi.hex`, `srcs/mem/mem_lo.hex`
   - Vivado behavioral sim (`SIM`): `../../../../srcs/mem/mem_hi.hex`, `../../../../srcs/mem/mem_lo.hex`
-  - synthesis/implementation default: absolute paths or `BRAM_MEM_HI_PATH`/`BRAM_MEM_LO_PATH` overrides.
+  - synthesis/implementation default: absolute paths or `BROM_MEM_HI_PATH`/`BROM_MEM_LO_PATH` overrides.
+  - legacy compatibility: accepts `BRAM_MEM_HI_PATH`/`BRAM_MEM_LO_PATH`.
 
-## 8. File: srcs/m_periph_bus.v
+## 8. File: srcs/m_bram.v
+**Module:** `bram_1kb_be`
+### Purpose
+- 1 KiB byte-sliced data RAM model.
+
+### Contract
+- Data-only port with synchronous read and independent hi/lo byte enables.
+- Zero-initialized by default (no code image preload).
+- Keeps debug mirrors `_mem_h/_mem_l` for existing byte-lane testbench probes.
+
+## 9. File: srcs/m_periph_bus.v
 **Module:** `periph_bus`
 ### Purpose
 - MMIO decode and peripheral integration.
@@ -118,7 +128,7 @@ The project now uses explicit module separation:
 - Multiplexes `o_rdata` / `o_rdy` from selected block.
 - Builds IRQ source vector for `irq_ctrl`.
 
-## 9. File: srcs/m_irq_ctrl.v
+## 10. File: srcs/m_irq_ctrl.v
 **Module:** `irq_ctrl`
 ### Purpose
 - Fixed-priority vectored IRQ controller with limited nesting.
@@ -134,7 +144,7 @@ The project now uses explicit module separation:
   - IRQ4 -> `0x00A0`
 - Maintains priority stack for nesting depth `DEPTH=2`.
 
-## 10. File: srcs/m_timer16.v
+## 11. File: srcs/m_timer16.v
 **Module:** `timer16`
 ### Purpose
 - Timer0 peripheral.
@@ -149,7 +159,7 @@ The project now uses explicit module separation:
 - Writing CNT_INIT also updates live counter immediately.
 - Overflow reloads from CNT_INIT.
 
-## 11. File: srcs/m_timerH.v
+## 12. File: srcs/m_timerH.v
 **Module:** `timerH`
 ### Purpose
 - Timer1 (higher-priority interrupt source).
@@ -158,7 +168,7 @@ The project now uses explicit module separation:
 - Same register interface as `timer16`.
 - Different reset defaults to generate earlier IRQ timing for nesting/preemption testing.
 
-## 12. File: srcs/m_pario.v
+## 13. File: srcs/m_pario.v
 **Module:** `pario`
 ### Purpose
 - 4-bit parallel IO peripheral.
@@ -168,7 +178,7 @@ The project now uses explicit module separation:
 - `addr=2`: read input nibble.
 - Asserts IRQ when input nibble is all ones (`i_i == 4'hF`).
 
-## 13. File: srcs/m_uart_mmio.v
+## 14. File: srcs/m_uart_mmio.v
 **Module:** `uart_mmio`
 ### Purpose
 - UART RX/TX core + MMIO register interface.
@@ -180,7 +190,7 @@ The project now uses explicit module separation:
 ### Contract
 - RX pending drives `o_irq_req`.
 
-## 14. Files: srcs/m_uart_rx.v, srcs/m_uart_tx.v
+## 15. Files: srcs/m_uart_rx.v, srcs/m_uart_tx.v
 **Modules:** `uart_rx`, `uart_tx`
 ### Purpose
 - Standalone UART receiver/transmitter FSMs.
@@ -190,7 +200,7 @@ The project now uses explicit module separation:
 - `uart_tx`: IDLE/START/DATA/STOP with `o_tx_busy` and `o_tx_done`.
 - `uart_rx`: synchronizer + mid-bit sampling + `o_data_valid` pulse.
 
-## 15. File: srcs/constants.vh
+## 16. File: srcs/constants.vh
 ### Purpose
 - Shared opcode/function/width/reset constants.
 
@@ -198,7 +208,7 @@ The project now uses explicit module separation:
 - Included by CPU-related modules.
 - Defines canonical values such as `CPU_RESET_VEC`, `CPU_NOP_INSN`, `CPU_IRET_INSN`.
 
-## 16. File: srcs/m_i2c_mmio.v
+## 17. File: srcs/m_i2c_mmio.v
 **Module:** `i2c_mmio`
 ### Purpose
 - MMIO-visible control/status/register interface for the I2C master.
@@ -216,7 +226,7 @@ The project now uses explicit module separation:
 - STATUS supports W1C clear for `done`, `ack_err`, and `irq_pend`, plus RX FIFO flush.
 - `o_irq_req` asserts when `irq_pend` is set.
 
-## 17. File: srcs/m_i2c_master.v
+## 18. File: srcs/m_i2c_master.v
 **Module:** `i2c_master`
 ### Purpose
 - Open-drain I2C master engine for byte-oriented write/read transfers.
@@ -226,7 +236,7 @@ The project now uses explicit module separation:
 - Supports address phase + multi-byte payload using internal TX/RX FIFOs.
 - Exposes sticky `done` and `ack_err` status with explicit clear inputs.
 
-## 18. Simulation Files
+## 19. Simulation Files
 ### `sim/tb_timer_start_reg.v`
 - Validates timer start/reload register behavior for `timer16` and `timerH`.
 
@@ -252,3 +262,6 @@ The project now uses explicit module separation:
 
 ### `sim/tb_i2c_irq_vector.v`
 - Validates end-to-end I2C IRQ propagation through `periph_bus` and `irq_ctrl` (`0x00A0` vector).
+
+### `sim/tb_harvard_mem_isolation.v`
+- Validates physical Harvard split: RAM writes do not mutate ROM contents at same byte address.
