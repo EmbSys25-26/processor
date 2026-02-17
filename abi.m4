@@ -76,11 +76,11 @@ SUB $1, t0')
 
 define(`J',
 `IMM #eval(($1) >> 4)
-JAL r0, r0, #eval(($1) & 15)')
+JAL r0, r0, #eval(($1) & 0xF)')
 
 define(`CALL',
 `IMM #eval(($1) >> 4)
-JAL lr, r0, #eval(($1) & 15)')
+JAL lr, r0, #eval(($1) & 0xF)')
 
 define(`RET', `JAL r0, lr, #0')
 
@@ -111,7 +111,7 @@ RET')
 
 define(`LI',
 `IMM #eval(($2) >> 4)
-ADDI $1, zero, #eval(($2) & 15)')
+ADDI $1, zero, #eval(($2) & 0xF)')
 
 define(`PUSH_CC', 
 `GETCC t0 
