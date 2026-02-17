@@ -98,7 +98,7 @@ Encoding: op(4) rd(4) rs(4) fn(4)
 | `CMP rd, rs` | `CMP r3, r1` | Set flags for rd − rs (no write) |
 | `SRL rd, rs` | `SRL r3, r1` | Shift rd right logical by rs |
 | `SRA rd, rs` | `SRA r3, r1` | Shift rd right arithmetic by rs |
-| `GETCC rd` | `GETCC r4` | Read condition codes into rd |
+| `GETCC rs` | `GETCC r4` | Read condition codes into rd |
 | `SETCC rd` | `SETCC r4` | Write condition codes from rd |
 
 ---
