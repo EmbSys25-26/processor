@@ -58,7 +58,7 @@ This repo contains the Vivado project targeting the **Zybo Z7-10 (XC7Z010)**, pl
 
 ### 0) Clone the repository and import the .xpr (Xilinx Project) file
 ```bash
-git clone https://github.com/jssilvaa/processor && cd processor/
+git clone https://github.com/EmbSys25-26/processor && cd processor/
 ```
 Open the Vivado Design Suite™ and import the .xpr file in the project root. 
 Verify the hierarchy of the project:
