@@ -8,7 +8,9 @@ module soc(
     input wire [3:0] i_par_i,
     output wire [3:0] o_par_o,
     input wire i_uart_rx,
-    output wire o_uart_tx
+    output wire o_uart_tx,
+    inout wire io_i2c_sda,
+    inout wire io_i2c_scl
 );
 
 /*************************************************************************************
@@ -192,6 +194,8 @@ module soc(
         .o_par_o(o_par_o),
         .i_uart_rx(i_uart_rx),
         .o_uart_tx(o_uart_tx),
+        .io_i2c_sda(io_i2c_sda),
+        .io_i2c_scl(io_i2c_scl),
         .i_int_en(_int_en_cpu),
         .i_in_irq(_in_irq),
         .o_irq_vector(_irq_vector),

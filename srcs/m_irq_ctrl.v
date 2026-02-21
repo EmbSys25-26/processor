@@ -75,11 +75,12 @@ module irq_ctrl(
     always @(*) begin
         _sel_idx = 3'd0;
         _sel_onehot = 8'h00;
-        casex (_next_pend[3:0])
-            4'b1xxx: begin _sel_idx = 3'd3; _sel_onehot = 8'b0000_1000; end
-            4'b01xx: begin _sel_idx = 3'd2; _sel_onehot = 8'b0000_0100; end
-            4'b001x: begin _sel_idx = 3'd1; _sel_onehot = 8'b0000_0010; end
-            4'b0001: begin _sel_idx = 3'd0; _sel_onehot = 8'b0000_0001; end
+        casex (_next_pend[4:0])
+            5'b1xxxx: begin _sel_idx = 3'd4; _sel_onehot = 8'b0001_0000; end
+            5'b01xxx: begin _sel_idx = 3'd3; _sel_onehot = 8'b0000_1000; end
+            5'b001xx: begin _sel_idx = 3'd2; _sel_onehot = 8'b0000_0100; end
+            5'b0001x: begin _sel_idx = 3'd1; _sel_onehot = 8'b0000_0010; end
+            5'b00001: begin _sel_idx = 3'd0; _sel_onehot = 8'b0000_0001; end
             default: begin _sel_idx = 3'd0; _sel_onehot = 8'h00; end
         endcase
     end
@@ -91,6 +92,7 @@ module irq_ctrl(
                 3'd1: _irq_vector = 16'h0040;
                 3'd2: _irq_vector = 16'h0060;
                 3'd3: _irq_vector = 16'h0080;
+                3'd4: _irq_vector = 16'h00A0;
                 default: _irq_vector = 16'hFFFF;
             endcase
         end else begin

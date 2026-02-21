@@ -21,3 +21,8 @@ set_property -dict { PACKAGE_PIN D18 IOSTANDARD LVCMOS33 } [get_ports { o_par_o[
 ## UART (PL) on PMOD JA
 set_property -dict { PACKAGE_PIN N15 IOSTANDARD LVCMOS33 } [get_ports { o_uart_tx }];
 set_property -dict { PACKAGE_PIN L14 IOSTANDARD LVCMOS33 } [get_ports { i_uart_rx }];
+
+## I2C (PL) on remaining PMOD JA pins (open-drain, pull-up enabled).
+## NOTE: external pull-ups are still recommended for robust I2C signaling.
+set_property -dict { PACKAGE_PIN K16 IOSTANDARD LVCMOS33 PULLUP true } [get_ports { io_i2c_sda }];
+set_property -dict { PACKAGE_PIN K14 IOSTANDARD LVCMOS33 PULLUP true } [get_ports { io_i2c_scl }];

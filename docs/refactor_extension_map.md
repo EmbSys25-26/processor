@@ -1,6 +1,6 @@
 # Refactor Extension Map (Pipeline, Compiler, New Peripherals)
 
-_Last reviewed: 2026-02-07_
+_Last reviewed: 2026-02-16_
 
 This file links current implementation boundaries to planned refactor extensions.
 
@@ -40,11 +40,12 @@ This file links current implementation boundaries to planned refactor extensions
 - Region select by `d_ad[15]` and `addr[11:8]` in `periph_bus`.
 
 ### Available decode space (suggested)
-- `0x8400-0x84FF`: keyboard controller
-- `0x8500-0x85FF`: mouse controller
-- `0x8600-0x86FF`: audio control FIFO/MMIO
-- `0x8700-0x87FF`: graphics command registers
-- `0x8800-0x88FF`: frame buffer window or DMA control
+- `0x8400-0x84FF`: allocated to I2C (master + MMIO + IRQ)
+- `0x8500-0x85FF`: keyboard controller
+- `0x8600-0x86FF`: mouse controller
+- `0x8700-0x87FF`: audio control FIFO/MMIO
+- `0x8800-0x88FF`: graphics command registers
+- `0x8900-0x89FF`: frame buffer window or DMA control
 
 ### Integration checklist for each new peripheral
 - Add select decode in `periph_bus`.
@@ -54,7 +55,7 @@ This file links current implementation boundaries to planned refactor extensions
 - Add focused unit testbench + SoC integration test mode.
 
 ## 4. Priority and interrupt scaling
-- `irq_ctrl` currently prioritizes IRQ[3:0] in fixed hardware order.
+- `irq_ctrl` currently prioritizes IRQ[4:0] in fixed hardware order.
 - For more devices, extend priority encoder and vector table policy.
 - Keep vector map and software IVT layout synchronized.
 

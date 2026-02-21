@@ -10,6 +10,8 @@ module tb_anchor_preemption_abi;
     reg _rst = 1'b1;
     reg [3:0] _par_i = 4'h0;
     reg _uart_rx = 1'b1;
+    tri1 _i2c_sda;
+    tri1 _i2c_scl;
 
     wire [3:0] _par_o;
     wire _uart_tx;
@@ -52,7 +54,9 @@ module tb_anchor_preemption_abi;
         .i_par_i(_par_i),
         .o_par_o(_par_o),
         .i_uart_rx(_uart_rx),
-        .o_uart_tx(_uart_tx)
+        .o_uart_tx(_uart_tx),
+        .io_i2c_sda(_i2c_sda),
+        .io_i2c_scl(_i2c_scl)
     );
 
     assign _irq_take = dut._irq_take;

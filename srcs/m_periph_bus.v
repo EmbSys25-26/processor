@@ -14,6 +14,8 @@ module periph_bus(
     output wire [3:0] o_par_o,
     input wire i_uart_rx,
     output wire o_uart_tx,
+    inout wire io_i2c_sda,
+    inout wire io_i2c_scl,
     input wire i_int_en,
     input wire i_in_irq,
     output wire [15:0] o_irq_vector,
@@ -28,29 +30,34 @@ module periph_bus(
     localparam [3:0] _periph_timer1 = 4'h1;
     localparam [3:0] _periph_pario = 4'h2;
     localparam [3:0] _periph_uart = 4'h3;
+    localparam [3:0] _periph_i2c = 4'h4;
     localparam [3:0] _periph_irq = 4'hF;
 
     wire _sel_timer0;
     wire _sel_timer1;
     wire _sel_pario;
     wire _sel_uart;
+    wire _sel_i2c;
     wire _sel_irq;
 
     wire _timer0_rdy;
     wire _timer1_rdy;
     wire _pario_rdy;
     wire _uart_rdy;
+    wire _i2c_rdy;
     wire _irq_rdy;
 
     wire _timer0_int_req;
     wire _timer1_int_req;
     wire _pario_int_req;
     wire _uart_int_req;
+    wire _i2c_int_req;
 
     localparam integer _irq_timer0 = 0;
     localparam integer _irq_timer1 = 1;
     localparam integer _irq_pario = 2;
     localparam integer _irq_uart = 3;
+    localparam integer _irq_i2c = 4;
 
     wire [7:0] _int_cause;
 
@@ -58,6 +65,7 @@ module periph_bus(
     wire [15:0] _timer1_rdata;
     wire [15:0] _pario_rdata;
     wire [15:0] _uart_rdata;
+    wire [15:0] _i2c_rdata;
     wire [15:0] _irq_rdata;
 
 `ifdef SIM
@@ -77,13 +85,15 @@ module periph_bus(
     assign _sel_timer1 = i_sel && (i_addr[11:8] == _periph_timer1);
     assign _sel_pario = i_sel && (i_addr[11:8] == _periph_pario);
     assign _sel_uart = i_sel && (i_addr[11:8] == _periph_uart);
+    assign _sel_i2c = i_sel && (i_addr[11:8] == _periph_i2c);
     assign _sel_irq = i_sel && (i_addr[11:8] == _periph_irq);
 
     assign _int_cause[_irq_timer0] = _timer0_int_req;
     assign _int_cause[_irq_timer1] = _timer1_int_req;
     assign _int_cause[_irq_pario] = _pario_int_req;
     assign _int_cause[_irq_uart] = _uart_int_req;
-    assign _int_cause[7:4] = 4'b0000;
+    assign _int_cause[_irq_i2c] = _i2c_int_req;
+    assign _int_cause[7:5] = 3'b000;
 
 /*************************************************************************************
  * 2.2 Peripheral Instances
@@ -147,6 +157,21 @@ module periph_bus(
         .o_irq_req(_uart_int_req)
     );
 
+    i2c_mmio u_i2c (
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_sel(_sel_i2c),
+        .i_we(i_we),
+        .i_re(i_re),
+        .i_addr(i_addr[3:1]),
+        .i_wdata(i_wdata),
+        .o_rdata(_i2c_rdata),
+        .o_rdy(_i2c_rdy),
+        .o_irq_req(_i2c_int_req),
+        .io_i2c_sda(io_i2c_sda),
+        .io_i2c_scl(io_i2c_scl)
+    );
+
     irq_ctrl u_irq_ctrl (
         .i_clk(i_clk),
         .i_rst(i_rst),
@@ -172,12 +197,14 @@ module periph_bus(
                    (_sel_timer1 ? _timer1_rdy :
                    (_sel_pario ? _pario_rdy :
                    (_sel_uart ? _uart_rdy :
-                   (_sel_irq ? _irq_rdy : 1'b1))));
+                   (_sel_i2c ? _i2c_rdy :
+                   (_sel_irq ? _irq_rdy : 1'b1)))));
 
     assign o_rdata = (_sel_timer0 && i_re) ? _timer0_rdata :
                      ((_sel_timer1 && i_re) ? _timer1_rdata :
                      ((_sel_pario && i_re) ? _pario_rdata :
                      ((_sel_uart && i_re) ? _uart_rdata :
-                     ((_sel_irq && i_re) ? _irq_rdata : 16'h0000))));
+                     ((_sel_i2c && i_re) ? _i2c_rdata :
+                     ((_sel_irq && i_re) ? _irq_rdata : 16'h0000)))));
 
 endmodule

@@ -13,7 +13,7 @@ This repo contains the Vivado project targeting the **Zybo Z7-10 (XC7Z010)**, pl
 - Hardware vectored interrupt controller with fixed vectors and limited nesting/preemption
 - Harvard 1 KiB true dual-port BRAM with byte lanes (hi/lo) and byte enables
 - MMIO peripheral bus mapped to `0x8000–0x8FFF`
-- Peripherals: Timer0, Timer1 (higher priority), PARIO (4-bit), UART (RX interrupt)
+- Peripherals: Timer0, Timer1 (higher priority), PARIO (4-bit), UART (RX interrupt), I2C (master, IRQ-capable)
 - Python two-pass assembler with `.include` and macro support
 
 ## Repository layout
@@ -28,9 +28,10 @@ This repo contains the Vivado project targeting the **Zybo Z7-10 (XC7Z010)**, pl
 	- `constants.vh` – shared ISA/width constants
 	- `m_periph_bus.v` – MMIO decode/mux + IRQ wiring
 	- `m_irq_ctrl.v` – interrupt controller
-	- `m_timer16.v`, `m_timerH.v` – timers
-	- `m_uart_mmio.v`, `m_uart_rx.v`, `m_uart_tx.v` – UART blocks
-	- `m_bram.v` – 1 KiB hi/lo BRAM model (init from hex files)
+		- `m_timer16.v`, `m_timerH.v` – timers
+		- `m_uart_mmio.v`, `m_uart_rx.v`, `m_uart_tx.v` – UART blocks
+		- `m_i2c_mmio.v`, `m_i2c_master.v` – I2C MMIO + master engine
+		- `m_bram.v` – 1 KiB hi/lo BRAM model (init from hex files)
 	- `m_pario.v` – simple parallel I/O
 	- `mem/` – BRAM init hex images (`mem_hi.hex`, `mem_lo.hex`)
 - `sim/` – testbenches
@@ -169,6 +170,7 @@ MMIO is decoded by `addr[11:8]` in `srcs/m_periph_bus.v`:
 | `0x8100–0x81FF` | Timer1 (`timerH`, higher priority) |
 | `0x8200–0x82FF` | PARIO |
 | `0x8300–0x83FF` | UART MMIO |
+| `0x8400–0x84FF` | I2C MMIO |
 | `0x8F00–0x8FFF` | IRQ controller regs |
 
 ### Peripheral register maps
@@ -208,6 +210,27 @@ Base `0x8300`:
 
 The UART asserts its interrupt request when RX data is pending.
 
+#### I2C MMIO
+
+Base `0x8400`:
+
+| Address | Name | Meaning |
+|---:|---|---|
+| `0x8400` | CTRL | bit0 `en`, bit1 `start` (auto-clear), bit2 `rw` (0=write,1=read), bit3 `irq_en` |
+| `0x8402` | STATUS | bit0 `busy`, bit1 `done`, bit2 `ack_err`, bit3 `rx_valid`, bit4 `irq_pend` |
+| `0x8404` | DIV | 16-bit transfer divider |
+| `0x8406` | ADDR | I2C address in bits `[7:1]` |
+| `0x8408` | LEN | transfer length in bytes `[7:0]` |
+| `0x840A` | DATA | write: TX FIFO push, read: RX FIFO pop |
+
+STATUS write-one-to-clear semantics:
+- bit1 clears `done`
+- bit2 clears `ack_err`
+- bit3 flushes RX FIFO
+- bit4 clears `irq_pend`
+
+`irq_pend` is asserted when a transaction completes (done or ack error) while `irq_en=1`.
+
 #### IRQ controller regs
 
 IRQ controller base `0x8F00`. The controller is word-indexed internally via `addr[3:1]`, which corresponds to these byte offsets:
@@ -231,6 +254,7 @@ The interrupt controller generates **hardware vectors**:
 | Timer1 | `0x0040` |
 | PARIO | `0x0060` |
 | UART (RX pending) | `0x0080` |
+| I2C | `0x00A0` |
 
 An example vector table + ISRs live in `assembly/input.asm`.
 
