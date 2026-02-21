@@ -38,9 +38,9 @@ module irq_ctrl(
  * 1.1 DEFINE SFRs - MMIO REGISTERS' ADDRESSES  (LS nibble)
  ***************************************************************************/
     localparam [3:0] IRQ_PEND = 3'b0;
-    localparam [3:0] IRQ_MASK = 3'h4;
-    localparam [4:0] IRQ_FORCE = 4'h8;
-    localparam [4:0] IRQ_CLEAR = 4'hC;
+    localparam [3:0] IRQ_MASK = 3'h2;
+    localparam [4:0] IRQ_FORCE = 4'h4;
+    localparam [4:0] IRQ_CLEAR = 4'h6;
 
 /****************************************************************************
  * 1.2 DECLARE SFRs -  MMIO REGISTERS
@@ -183,8 +183,8 @@ module irq_ctrl(
         // Write to IRQ SFRs
         if (i_sel && i_we) begin
             case (i_addr)
-                IRQ_PEND: _pending_next = _pending_next | i_wdata[7:0];     // Enable pending interrupt source(s)
-                IRQ_MASK: _pending_next = _pending_next & ~i_wdata[7:0];    // Deactivate interrupt source(s)
+                IRQ_FORCE: _pending_next = _pending_next | i_wdata[7:0];     // Enable pending interrupt source(s)
+                IRQ_CLEAR: _pending_next = _pending_next & ~i_wdata[7:0];    // Deactivate interrupt source(s)
                 default: ;
             endcase
         end
@@ -247,7 +247,7 @@ module irq_ctrl(
     always @(posedge i_clk) begin
         if (i_rst) begin
             _mask <= 8'hFF;
-        end else if (i_sel && i_we && (i_addr == 3'b010)) begin
+        end else if (i_sel && i_we && (i_addr == IRQ_MASK)) begin
             _mask <= i_wdata[7:0];
         end
     end
