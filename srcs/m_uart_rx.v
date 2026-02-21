@@ -3,29 +3,35 @@
 module uart_rx(
     input wire i_clk,
     input wire i_rst,
-    input wire i_rx_in,
-    output wire [7:0] o_data,
-    output wire o_data_valid,
-    output wire o_rx_out,
-    output wire o_rx_done,
-    output wire o_rx_busy,
-    output wire [1:0] o_state_debug
+    input wire i_rx_in,                 // Receive Line 
+    output wire [7:0] o_data,           // Received Data
+    output wire o_data_valid,           // Reception Completed -> Received Data is Valid
+    output wire o_rx_out,               // Receive Echo
+    output wire o_rx_busy,              // Reception Ongoing
+    output wire [1:0] o_state_debug     // Current State
 );
 
     parameter CLK_FREQ = 80_000_000;
     parameter BAUD_RATE = 115200;
 
 /*************************************************************************************
- * SECTION 1. DECLARE WIRES / REGS
+ * SECTION 1. DECLARE/DEFINE VARIABLES
  ************************************************************************************/
+
+/****************************************************************************
+ * 1.1 DEFINE FSM STATES 
+ ***************************************************************************/
+    localparam [1:0] IDLE = 2'd0;
+    localparam [1:0] START = 2'd1;
+    localparam [1:0] RECEIVE_DATA = 2'd2;
+    localparam [1:0] STOP = 2'd3;
+
+ /****************************************************************************
+ * 1.2 DECLARE VARIABLES    
+ ***************************************************************************/
     localparam _bit_time = (CLK_FREQ + (BAUD_RATE / 2)) / BAUD_RATE;
     localparam _ctr_width = $clog2(_bit_time) + 1;
     localparam _half_bit = _bit_time / 2;
-
-    localparam _state_idle = 2'd0;
-    localparam _state_start = 2'd1;
-    localparam _state_data = 2'd2;
-    localparam _state_stop = 2'd3;
 
     reg [1:0] _state;
     reg [_ctr_width-1:0] _counter;
@@ -40,7 +46,6 @@ module uart_rx(
     reg [7:0] _data;
     reg _data_valid;
     reg _rx_out;
-    reg _rx_done;
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
@@ -50,7 +55,7 @@ module uart_rx(
  * 2.1 Status and Sync
  ************************************************************************************/
     assign _rx_s = _rx_sync2;
-    assign o_rx_busy = (_state != _state_idle);
+    assign o_rx_busy = (_state != IDLE);
     assign o_state_debug = _state;
 
 /*************************************************************************************
@@ -58,7 +63,7 @@ module uart_rx(
  ************************************************************************************/
     always @(posedge i_clk) begin
         if (i_rst) begin
-            _state <= _state_idle;
+            _state <= IDLE;
             _counter <= 0;
             _rx_out <= 1'b1;
             _rx_done <= 1'b0;
@@ -71,33 +76,32 @@ module uart_rx(
             _rx_sync2 <= 1'b1;
         end else begin
             _rx_sync1 <= i_rx_in;
-            _rx_sync2 <= _rx_sync1;
+            _rx_sync2 <= _rx_sync1; // Reduce Metastabilty
 
-            _rx_done <= 1'b0;
             _data_valid <= 1'b0;
 
             case (_state)
-                _state_idle: begin
+                IDLE: begin
                     _rx_out <= 1'b1;
                     if (!_rx_s) begin
                         _counter <= 0;
-                        _state <= _state_start;
+                        _state <= START;
                         _bit_index <= 3'd0;
                         _stop_ok <= 1'b0;
                     end
                 end
 
-                _state_start: begin
+                START: begin
                     if (_counter == (_half_bit - 1)) begin
                         if (!_rx_s) begin
                             _rx_out <= 1'b0;
                             _counter <= 0;
-                            _state <= _state_data;
+                            _state <= RECEIVE_DATA;
                             _bit_index <= 3'd0;
                         end else begin
                             _rx_out <= 1'b1;
                             _counter <= 0;
-                            _state <= _state_idle;
+                            _state <= IDLE;
                             _bit_index <= 3'd0;
                         end
                     end else begin
@@ -105,7 +109,7 @@ module uart_rx(
                     end
                 end
 
-                _state_data: begin
+                RECEIVE_DATA: begin
                     if (_counter == (_half_bit - 1)) begin
                         _shift_reg[_bit_index] <= _rx_s;
                         _rx_out <= _rx_s;
@@ -114,7 +118,7 @@ module uart_rx(
                     if (_counter == (_bit_time - 1)) begin
                         _counter <= 0;
                         if (_bit_index == 3'd7) begin
-                            _state <= _state_stop;
+                            _state <= STOP;
                             _bit_index <= 3'd0;
                         end else begin
                             _bit_index <= _bit_index + 1'b1;
@@ -124,17 +128,16 @@ module uart_rx(
                     end
                 end
 
-                _state_stop: begin
+                STOP: begin
                     _rx_out <= 1'b1;
                     if (_counter == (_half_bit - 1)) begin
                         _stop_ok <= _rx_s;
                     end
                     if (_counter == (_bit_time - 1)) begin
                         _counter <= 0;
-                        _state <= _state_idle;
+                        _state <= IDLE;
                         if (_stop_ok) begin
                             _data <= _shift_reg;
-                            _rx_done <= 1'b1;
                             _data_valid <= 1'b1;
                         end
                     end else begin
@@ -143,7 +146,7 @@ module uart_rx(
                 end
 
                 default: begin
-                    _state <= _state_idle;
+                    _state <= IDLE;
                 end
             endcase
         end
@@ -152,6 +155,5 @@ module uart_rx(
     assign o_data = _data;
     assign o_data_valid = _data_valid;
     assign o_rx_out = _rx_out;
-    assign o_rx_done = _rx_done;
 
 endmodule

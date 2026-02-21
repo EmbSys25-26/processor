@@ -1,41 +1,69 @@
 `timescale 1ns / 1ps
 
+/*************************************************************************************
+ * I2C MMIO MODULE
+ *  Implements I2C MMIO, instantiates I2C Master Module
+ *  Features:
+ *  - Multi-byte send/receive
+ *  - Peripheral Interrupt on Transmission Finished
+ ************************************************************************************/
+
 module i2c_mmio(
     input wire i_clk,
     input wire i_rst,
-    input wire i_sel,
-    input wire i_we,
-    input wire i_re,
-    input wire [2:0] i_addr,
-    input wire [15:0] i_wdata,
-    output wire [15:0] o_rdata,
-    output wire o_rdy,
-    output wire o_irq_req,
-    inout wire io_i2c_sda,
-    inout wire io_i2c_scl
+    input wire i_sel,           // IO selection
+    input wire i_we,            // IO write enable
+    input wire i_re,            // IO read enable
+    input wire [2:0] i_addr,    // Address used to identify the peripheral register
+    input wire [15:0] i_wdata,  // Data to Write
+    output wire [15:0] o_rdata, // Data Read
+    output wire o_rdy,          // Feadback peripheral ready
+    output wire o_irq_req,      // I2C - Interrupt Request
+    inout wire io_i2c_sda,      // I2C - SDA
+    inout wire io_i2c_scl       // I2C - SCL
 );
 
 /*************************************************************************************
- * SECTION 1. DECLARE WIRES / REGS
+ * SECTION 1. DECLARE/DEFINE Variables/Registers/Wires
  ************************************************************************************/
+
+/****************************************************************************
+ * 1.1 DEFINE SFRs - MMIO REGISTERS' ADDRESSES  (LS nibble)
+ ***************************************************************************/
+    localparam [2:0] CONFIG0_BASE = 3'd0;
+    localparam [2:0] CONFIG1_BASE = 3'd1;
+    localparam [2:0] DIVIDER = 3'd2;  // Note: CLK/DIVIDER won't exactly specify the baudrate
+    localparam [2:0] ADDR = 3'd3;     // Address Only
+    localparam [2:0] DATA_LEN = 3'd4;
+    localparam [2:0] DATA = 3'd5;
+
+/****************************************************************************
+ * 1.2 DECLARE SFRs -  MMIO REGISTERS
+ ***************************************************************************/
+ // CONFIG0_BASE
     reg _en;
     reg _start;
     reg _rw;
     reg _irq_en;
 
-    reg [15:0] _div;
-    reg [7:0] _addr;
-    reg [7:0] _len;
+ // CONFIG1_BASE
+    reg _rx_pop;
+    reg _rx_flush;
+    reg _clr_done;
+    reg _clr_ack_err;
 
+    reg [15:0] _div;    // DIVIDER
+    reg [7:0] _addr;    // ADDR
+    reg [7:0] _len;     // DATA_LEN
+
+/****************************************************************************
+ * 1.3 DECLARE WIRES / REGS
+ ***************************************************************************/
     reg _irq_pend;
 
     reg _start_pulse;
     reg _tx_push;
     reg [7:0] _tx_push_data;
-    reg _rx_pop;
-    reg _rx_flush;
-    reg _clr_done;
-    reg _clr_ack_err;
 
     wire _busy;
     wire _done;
@@ -92,7 +120,7 @@ module i2c_mmio(
             _rw <= 1'b0;
             _irq_en <= 1'b0;
 
-            _div <= 16'd100;
+            _div <= 16'd100; // Default divider value = 100  => freq = (CLK_freq/100)
             _addr <= 8'h00;
             _len <= 8'h00;
 
@@ -107,7 +135,8 @@ module i2c_mmio(
             _clr_ack_err <= 1'b0;
             _done_d <= 1'b0;
             _ack_err_d <= 1'b0;
-        end else begin
+        end 
+            else begin
             _start_pulse <= 1'b0;
             _tx_push <= 1'b0;
             _rx_pop <= 1'b0;
@@ -129,7 +158,7 @@ module i2c_mmio(
 
             if (i_sel && i_we) begin
                 case (i_addr)
-                    3'd0: begin
+                    CONFIG0_BASE: begin
                         _en <= i_wdata[0];
                         _rw <= i_wdata[2];
                         _irq_en <= i_wdata[3];
@@ -141,7 +170,7 @@ module i2c_mmio(
                         end
                     end
 
-                    3'd1: begin
+                    CONFIG1_BASE: begin
                         if (i_wdata[1]) begin
                             _clr_done <= 1'b1;
                         end
@@ -156,19 +185,19 @@ module i2c_mmio(
                         end
                     end
 
-                    3'd2: begin
+                    DIVIDER: begin
                         _div <= i_wdata;
                     end
 
-                    3'd3: begin
+                    ADDR: begin
                         _addr <= {i_wdata[7:1], 1'b0};
                     end
 
-                    3'd4: begin
+                    DATA_LEN: begin
                         _len <= i_wdata[7:0];
                     end
 
-                    3'd5: begin
+                    DATA: begin
                         _tx_push <= 1'b1;
                         _tx_push_data <= i_wdata[7:0];
                     end
@@ -195,12 +224,12 @@ module i2c_mmio(
             _rdata = 16'h0000;
         end else begin
             case (i_addr)
-                3'd0: _rdata = {12'b0, _irq_en, _rw, _start, _en};
-                3'd1: _rdata = {11'b0, _irq_pend, _rx_valid, _ack_err, _done, _busy};
-                3'd2: _rdata = _div;
-                3'd3: _rdata = {8'h00, _addr};
-                3'd4: _rdata = {8'h00, _len};
-                3'd5: _rdata = {8'h00, _rx_data};
+                CONFIG0_BASE: _rdata = {12'b0, _irq_en, _rw, _start, _en};
+                CONFIG1_BASE: _rdata = {11'b0, _irq_pend, _rx_valid, _ack_err, _done, _busy};
+                DIVIDER: _rdata = _div;
+                ADDR: _rdata = {8'h00, _addr};
+                DATA_LEN: _rdata = {8'h00, _len};
+                DATA: _rdata = {8'h00, _rx_data};
                 default: _rdata = 16'h0000;
             endcase
         end
