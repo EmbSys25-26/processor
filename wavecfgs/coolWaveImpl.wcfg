@@ -19,7 +19,7 @@
       <NameColumnWidth column_width="180"></NameColumnWidth>
       <ValueColumnWidth column_width="112"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="34" />
+   <WVObjectSize size="36" />
    <wvobject type="logic" fp_name="/tb_Soc/_clk">
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="ElementShortName">_clk</obj_property>
@@ -223,6 +223,24 @@
       <obj_property name="ObjectShortName">probe20[15:0]</obj_property>
       <obj_property name="label">irq_vector</obj_property>
       <obj_property name="Reversed">false</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe25">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">probe25[15:0]</obj_property>
+      <obj_property name="ObjectShortName">probe25[15:0]</obj_property>
+      <obj_property name="label">imem_word_ila</obj_property>
+      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="CustomSignalColor">#00BFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_Soc/dut/u_ila_0/probe26">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">probe26[15:0]</obj_property>
+      <obj_property name="ObjectShortName">probe26[15:0]</obj_property>
+      <obj_property name="label">dmem_word_ila</obj_property>
+      <obj_property name="Reversed">true</obj_property>
+      <obj_property name="CustomSignalColor">#32CD32</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_Soc/dut/u_ila_0/probe23[0]">
       <obj_property name="DisplayName">label</obj_property>

@@ -1,6 +1,6 @@
 # CI Baseline Verification (Release Gate)
 
-_Last reviewed: 2026-02-16_
+_Last reviewed: 2026-02-17_
 
 ## 1. Goal
 
@@ -17,10 +17,12 @@ Define a deterministic CI gate for the first consolidated release so future PRs 
 
 | Domain | Primary Failure Concept | Test/Check | Pass Criteria |
 |---|---|---|---|
-| Firmware image generation | Broken assembly output, wrong BRAM image shape | `tools/assembler.py` + line-count check | `mem.hex`, `mem_hi.hex`, `mem_lo.hex` each 512 lines |
+| Firmware image generation | Broken assembly output, wrong ROM image shape | `tools/assembler.py` + line-count check | `mem.hex`, `mem_hi.hex`, `mem_lo.hex` each 512 lines |
 | Timer register map and start/reload behavior | Timer start value not writable/readable/reloadable | `sim/tb_timer_start_reg.v` | `PASS tb_timer_start_reg` |
+| Harvard ROM/RAM isolation | Data writes corrupt instruction image | `sim/tb_harvard_mem_isolation.v` | `PASS tb_harvard_mem_isolation` |
 | CPU IRQ depth safety | Underflow/wrap on `IRET`, wrong `in_irq` state | `sim/tb_cpu_irq_depth.v` | `PASS tb_cpu_irq_depth` |
 | Byte-lane semantics for `LB/SB` | Wrong lane chosen, wrong zero-extension | `sim/tb_soc_byte_lane.v` | `PASS tb_soc_byte_lane` |
+| Word read/write semantics for `LW/SW` | Wrong word write/readback or address aliasing | `sim/tb_soc_word_rw.v` | `PASS tb_soc_word_rw` |
 | SoC integration + MMIO/IRQ activity | Missing IRQ/MMIO activity after changes | `sim/tb_soc_refactor_regression.v` | `PASS tb_soc_refactor_regression` |
 | Branch annul corner case | Fall-through not annulled on taken branch | `sim/tb_soc_branch_annul.v` | `PASS tb_soc_branch_annul` |
 | End-to-end anchors | Lost timer preemption or ABI preservation | `sim/tb_anchor_preemption_abi.v` | `PASS tb_anchor_preemption_abi` + preemption/restore evidence lines |
@@ -32,15 +34,15 @@ Define a deterministic CI gate for the first consolidated release so future PRs 
 
 ## 4. Methodology
 
-1. Rebuild BRAM images from canonical assembly input.
-2. Compile benches with `SIM=1` and `CI=1` so BRAM init paths resolve to repository-root hex files.
-3. Execute fast unit-level regressions first (timers, CPU depth, lane behavior).
+1. Rebuild ROM images from canonical assembly input.
+2. Compile benches with `SIM=1` and `CI=1` so ROM init paths resolve to repository-root hex files.
+3. Execute fast unit-level regressions first (timers, Harvard memory split, CPU depth, lane behavior).
 4. Execute SoC-level regressions next (integration + anchor behavior).
 5. Execute bounded smoke run to catch lockups and keep CI runtime deterministic.
 6. Fail CI on:
    - any `FAIL` in run logs,
    - missing required `PASS` markers,
-   - BRAM short-image symptom (`Not enough words`),
+   - ROM short-image symptom (`Not enough words`),
    - missing anchor evidence lines.
 
 ## 5. Local Reproduction
@@ -86,6 +88,7 @@ Generated logs:
 
 - Keep `sim/tb_soc_branch_annul.v` in CI. It guards synchronous fetch/latch branch-annul ordering.
 - Keep `sim/tb_anchor_preemption_abi.v` in CI. It is the anchor for timer preemption and ABI preservation.
+- Keep `sim/tb_harvard_mem_isolation.v` in CI. It guards against accidental re-coupling of instruction and data memory.
 - Keep `sim/tb_uart_mmio_word_aligned.v` in CI. It guards word-indexed UART register reachability and STATUS clear behavior at `0x8300`/`0x8302`.
 - Keep `sim/tb_i2c_mmio_regs.v` in CI. It guards the new I2C MMIO programming contract.
 - Keep `sim/tb_i2c_irq_vector.v` in CI. It guards I2C interrupt routing and vector `0x00A0`.

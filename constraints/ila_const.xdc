@@ -165,3 +165,15 @@ create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe24]
 set_property port_width 1 [get_debug_ports u_ila_0/probe24]
 connect_debug_port u_ila_0/probe24 [get_nets _iret_detected]
+
+# instruction word probe (ROM fetch output)
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe25]
+set_property port_width 16 [get_debug_ports u_ila_0/probe25]
+connect_debug_port u_ila_0/probe25 [get_nets [list {_imem_dout[0]} {_imem_dout[1]} {_imem_dout[2]} {_imem_dout[3]} {_imem_dout[4]} {_imem_dout[5]} {_imem_dout[6]} {_imem_dout[7]} {_imem_dout[8]} {_imem_dout[9]} {_imem_dout[10]} {_imem_dout[11]} {_imem_dout[12]} {_imem_dout[13]} {_imem_dout[14]} {_imem_dout[15]}]]
+
+# data word probe (RAM read data path)
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe26]
+set_property port_width 16 [get_debug_ports u_ila_0/probe26]
+connect_debug_port u_ila_0/probe26 [get_nets [list {_mem_dout[0]} {_mem_dout[1]} {_mem_dout[2]} {_mem_dout[3]} {_mem_dout[4]} {_mem_dout[5]} {_mem_dout[6]} {_mem_dout[7]} {_mem_dout[8]} {_mem_dout[9]} {_mem_dout[10]} {_mem_dout[11]} {_mem_dout[12]} {_mem_dout[13]} {_mem_dout[14]} {_mem_dout[15]}]]

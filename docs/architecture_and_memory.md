@@ -1,6 +1,6 @@
 # Processor Architecture and Memory Notes
 
-_Last reviewed: 2026-02-16_
+_Last reviewed: 2026-02-17_
 
 ## 1. System Partition
 - CPU composition:
@@ -8,7 +8,7 @@ _Last reviewed: 2026-02-16_
 - Datapath/control implementation files:
   - `srcs/m_ctrl_unit.v`, `srcs/m_datapath.v`, `srcs/m_alu.v`, `srcs/m_regfile16x16.v`.
 - SoC top: `soc` in `srcs/m_soc.v`
-  - Integrates CPU module, BRAM, peripheral bus, UART/pario pins, and I2C pins.
+  - Integrates CPU module, instruction ROM, data RAM, peripheral bus, UART/pario pins, and I2C pins.
 - Peripheral bus: `periph_bus` in `srcs/m_periph_bus.v`
   - Decodes MMIO regions, multiplexes read data and ready, instantiates IRQ controller.
 - Interrupt controller: `irq_ctrl` in `srcs/m_irq_ctrl.v`
@@ -22,25 +22,26 @@ _Last reviewed: 2026-02-16_
 
 ## 3. Addressing Model
 - Architectural word size: 16 bits.
-- BRAM storage is byte-sliced as high and low 8-bit arrays.
+- ROM/RAM storage is byte-sliced as high and low 8-bit arrays.
 - Instruction addresses (PC / `i_ad`) are byte addresses.
   - Sequential fetch increments PC by 2 bytes per instruction.
 - Current datapath generates data/MMIO address as `d_ad = (sum << 1)` in `srcs/m_datapath.v`.
   - Effective accesses are therefore even-byte-aligned at the SoC boundary.
-- BRAM uses word index `addr[9:1]`.
+- Both ROM and RAM use word index `addr[9:1]`.
 - Byte lanes (big-endian within a 16-bit word):
   - high lane (MSB) and low lane (LSB) are selected in SoC glue for byte operations via `d_ad[1]`.
 - `LB` returns zero-extended selected byte.
 - `SB` stores `data_out[7:0]` into the selected byte lane.
 
 ## 4. Instruction Path (Harvard-style)
-- BRAM Port A serves instruction fetch.
+- Dedicated instruction ROM (`brom_1kb_be`) serves instruction fetch.
 - SoC registers fetched instruction into `insn_q` (instruction latch).
 - SoC treats an all-zero fetched instruction word (`0x0000`) as invalid and injects NOP in that case.
 - If a branch is taken, SoC injects NOP (`0xF000`) into `insn_q` to annul fall-through.
 - CPU stalls on load-use handshake using `rdy` logic.
 
 ## 5. Data Path (Memory vs MMIO)
+- Dedicated data RAM (`bram_1kb_be`) serves load/store traffic only.
 - MMIO select is by MSB: `is_io = d_ad[15]`.
 - Data returned to CPU:
   - memory read data when `is_io=0`
@@ -61,6 +62,10 @@ _Last reviewed: 2026-02-16_
 - `0x0100 - 0x02FF`: main code region
 - `0x0300 - 0x03FF`: stack region in bytes (128 words)
   - Recommended: keep `sp` word-aligned (even) and initialize it to one-past-end `0x0400`.
+- Physical split note:
+  - instruction fetches (`i_ad`) read ROM at `0x0000 - 0x03FF`,
+  - load/store accesses (`d_ad` when `is_io=0`) read/write RAM at `0x0000 - 0x03FF`.
+  - Same byte addresses no longer imply code/data aliasing.
 - `0x8000 - 0x8FFF`: MMIO region (`d_ad[15]=1`)
 - `0x8F00 - 0x8FFF`: IRQ controller block inside MMIO
 
