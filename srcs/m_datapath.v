@@ -40,7 +40,7 @@ module datapath(
     input wire i_is_getcc,
     input wire [`CPU_N:0] i_data_in,
     output wire [`CPU_N:0] o_data_out,
-    output wire [`CPU_AN:0] o_i_ad,
+    output wire [`CPU_AN:0] o_PC,
     output wire [`CPU_AN:0] o_d_ad,
     output wire o_ccz,
     output wire o_ccn,
@@ -51,9 +51,9 @@ module datapath(
 /*************************************************************************************
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
-    (* mark_debug = "true" *) reg [`CPU_AN:0] _pc;
-    reg [`CPU_AN:0] _pc_q;
-    wire [`CPU_N:0] _pcincd;
+    (* mark_debug = "true" *) reg [`CPU_AN:0] _IR;
+    reg [`CPU_AN:0] _IR_q;
+    wire [`CPU_N:0] _IRincd;
 
     reg _c;
     reg _ccz;
@@ -99,7 +99,7 @@ module datapath(
 
     wire [6:0] _sxd7;
     wire [`CPU_N:0] _sxd16;
-    wire [`CPU_N:0] _pcinc;
+    wire [`CPU_N:0] _IRinc;
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
@@ -112,7 +112,7 @@ module datapath(
 
     assign _rf_we_final = (i_irq_save | i_is_getcc) ? 1'b1 : i_rf_we;
     assign _rf_wr_ad_final = i_irq_save ? 4'hE : i_rd;
-    assign _regfile_din = i_irq_save ? _pc_q : (i_is_getcc ? {11'b0, _psw_vector} : _regfile_din_normal);
+    assign _regfile_din = i_irq_save ? _IR_q : (i_is_getcc ? {11'b0, _psw_vector} : _regfile_din_normal);
 
     regfile16x16 u_regfile (
         .i_clk(i_clk),
@@ -128,15 +128,15 @@ module datapath(
  * 2.2 PC and Immediate Paths
  ************************************************************************************/
     always @(posedge i_clk) begin
-        _pc_q <= _pc;
+        _IR_q <= _IR;
         if (i_br_taken) begin
-            _pc_q <= _pcincd;
+            _IR_q <= _IRincd;
         end
 
         if (i_rst) begin
-            _pc <= i_i_ad_rst - 16'h0002;
+            _IR <= i_i_ad_rst - 16'h0002;
         end else if (i_exec_ce | i_irq_take) begin
-            _pc <= o_i_ad;
+            _IR <= o_PC;
         end
     end
 
@@ -205,7 +205,7 @@ module datapath(
     assign _alu_res = ((i_is_alu & i_is_sum) | i_is_addi) ? _sum :
                       ((i_is_alu & i_is_log) ? _log :
                       ((i_is_alu & i_is_sr) ? _sr :
-                      (i_is_jal ? _pc : 16'h0000)));
+                      (i_is_jal ? _IR : 16'h0000)));
 
 /*************************************************************************************
  * 2.4 External Buses
@@ -214,12 +214,12 @@ module datapath(
 
     assign _sxd7 = {7{i_disp[7]}};
     assign _sxd16 = {_sxd7, i_disp, 1'b0};
-    assign _pcinc = i_br_taken ? _sxd16 : {14'b0, i_hit, 1'b0};
-    assign _pcincd = _pcinc + _pc;
+    assign _IRinc = i_br_taken ? _sxd16 : {14'b0, i_hit, 1'b0};
+    assign _IRincd = _IRinc + _IR;
 
-    assign o_i_ad = i_rst ? i_i_ad_rst :
+    assign o_PC = i_rst ? i_i_ad_rst :
                     (i_irq_take ? i_irq_vector :
-                    ((i_hit & i_is_jal) ? _sum : _pcincd));
+                    ((i_hit & i_is_jal) ? _sum : _IRincd));
 
     assign o_d_ad = (_sum << 1);
 
