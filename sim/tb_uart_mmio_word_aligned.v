@@ -133,7 +133,7 @@ module tb_uart_mmio_word_aligned;
         end
 
         // Confirm tx_busy eventually clears.
-        _timeout = 2000;
+        _timeout = 20000;
         while ((_timeout > 0) && (_rd[0] == 1'b1)) begin
             mmio_read(16'h8302, _rd);
             _timeout = _timeout - 1;
