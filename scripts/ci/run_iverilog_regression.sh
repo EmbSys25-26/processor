@@ -99,12 +99,15 @@ compile_tb "tb_cpu_irq_depth" sim/tb_cpu_irq_depth.v "${CPU_CORE_SRCS[@]}"
 run_tb "tb_cpu_irq_depth"
 require_log_contains "${ARTIFACT_DIR}/tb_cpu_irq_depth.run.log" "PASS tb_cpu_irq_depth"
 
+info "running SoC byte-lane regression"
+compile_tb "tb_soc_byte_lane" sim/tb_soc_byte_lane.v "${SOC_SRCS[@]}"
+run_tb "tb_soc_byte_lane"
+require_log_contains "${ARTIFACT_DIR}/tb_soc_byte_lane.run.log" "PASS tb_soc_byte_lane"
 
-
-info "running SoC word read/write regression"
-compile_tb "tb_soc_word_rw" sim/tb_soc_word_rw.v "${SOC_SRCS[@]}"
-run_tb "tb_soc_word_rw"
-require_log_contains "${ARTIFACT_DIR}/tb_soc_word_rw.run.log" "PASS tb_soc_word_rw"
+#info "running SoC word read/write regression"
+#compile_tb "tb_soc_word_rw" sim/tb_soc_word_rw.v "${SOC_SRCS[@]}"
+#run_tb "tb_soc_word_rw"
+#require_log_contains "${ARTIFACT_DIR}/tb_soc_word_rw.run.log" "PASS tb_soc_word_rw"
 
 info "running SoC integration regression"
 compile_tb "tb_soc_refactor_regression" sim/tb_soc_refactor_regression.v "${SOC_SRCS[@]}"
