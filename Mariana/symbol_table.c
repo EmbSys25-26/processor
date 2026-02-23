@@ -49,7 +49,7 @@ void init_symbol_table()
 
     //adds the first symbol to the symbol table
     uint16_t zero_ptr = add_symbol("0");
-    sscanf(sym_table[zero_ptr].name, "%d", &sym_table[zero_ptr].value);
+    sscanf(sym_table[zero_ptr].name, "%hd", &sym_table[zero_ptr].value);
 }
 
 /// @brief function to delete the symbol table allocated memory
@@ -64,16 +64,13 @@ void delete_symbol_table()
 /// @return hash value
 static uint16_t hash(char *symbol_name)
 {
-    uint16_t hash_value = 0;
-    uint16_t index = 0;
+    unsigned long hash_value = 5381;
+    int c;
 
-    while (symbol_name[index] != '\0'){
-        //maps name(string) into an inteher
-        hash_value += ((int)symbol_name[index]) * 15 + 50;     //generate a symbol key with a random algorithm
-        index++;
-    }
+    while ((c = *symbol_name++))
+        hash_value = ((hash_value << 5) + hash_value) + c;  // hash * 33 + c
 
-    return (abs(hash_value)) % HASH_TABLE_SIZE;
+    return (uint16_t)(hash_value % HASH_TABLE_SIZE);
 }
 
 /// @brief function to insert a symbol in the table
@@ -162,6 +159,7 @@ uint16_t set_symbol_value(uint16_t index, int16_t value)
     else{
         sym_table[index].value = value;
     }
+    return index;
 }
 
 

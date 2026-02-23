@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define NULL_PTR            0
-#define UNINITIALIZED_VALUE 0xFFFF
+#define UNINITIALIZED_VALUE -1
    
 
 void init_symbol_table();
