@@ -1,0 +1,2 @@
+gcc main.c Util/symbol_table.c Util/statements_list.c Util/logger.c     Step1/lex.yy.c Step1/parser.tab.c Step2/code_generator.c     -I. -IStep1 -o assembler
+./assembler teste1.asm

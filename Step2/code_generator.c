@@ -3,11 +3,11 @@
 #include <stdlib.h>  
 #include <math.h>    
 #include <unistd.h>
+#include "../Util/logger.h"
 #include "../Step2/code_generator.h"
 #include "../Util/asm_operations.h"
 #include "../Util/symbol_table.h"
 #include "../Util/statements_list.h"
-#include "../Util/logger.h"
 //#include "../main.h"
 
 static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
@@ -62,7 +62,7 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 				                    - (int32_t)(stmt_lc + LC_INSTRUCTION);
 
 				if (disp < -128 || disp > 127) {
-				    log_error("Line %u: branch to label out of range (%d bytes)",
+				    LOG_ERROR("Line %u: branch to label out of range (%d bytes)",
 				              stmt.line_num, disp);
 				}
 
@@ -81,12 +81,13 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 				case STI_OPCODE: code = STI_ENCODING; break;
 				case NOP_OPCODE: code = NOP_ENCODING; break;
 				default:
-				    log_error("encode_statement: unknown FIXED opcode %d", s.opcode);
+				    LOG_ERROR("encode_statement: unknown FIXED opcode %d", stmt.opcode);
 				    break;
 			    }
 		        break;
 	
 	}
+	return code;
 
 }
 

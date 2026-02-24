@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "asm_operations.h"    
-#include "statements_list.h"  
-#include "symbol_table.h"     
+#include "../Util/asm_operations.h"    
+#include "../Util/statements_list.h"  
+#include "../Util/symbol_table.h"     
 
 extern int yylex();
 void yyerror(const char *s);
@@ -354,7 +354,7 @@ immediate_val:  TOKEN_CARDINAL expression
                 { 
                     $$ = $2;
                 }
-            |   expression 
+            |    expression 
                 { 
                     $$ = $1;
                 }
