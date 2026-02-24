@@ -66,7 +66,6 @@ module uart_rx(
             _state <= IDLE;
             _counter <= 0;
             _rx_out <= 1'b1;
-            _rx_done <= 1'b0;
             _data_valid <= 1'b0;
             _shift_reg <= 8'd0;
             _bit_index <= 3'd0;
