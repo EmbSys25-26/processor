@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "../Util/asm_operations.h"    
-#include "../Util/statements_list.h"  
-#include "../Util/symbol_table.h"     
+#include "asm_operations.h"    
+#include "statements_list.h"  
+#include "symbol_table.h"     
 
 extern int yylex();
 void yyerror(const char *s);
@@ -18,7 +18,7 @@ void yyerror(const char *s);
 /* tokens definition*/
 
 /* tokens with attributes (yylval.num), $ represents the LC */
-%token <num> TOKEN_NUMBER TOKEN_REG TOKEN_DOLLAR TOKEN_IDENTIFIER 
+%token <num> TOKEN_NUMBER TOKEN_REG TOKEN_IDENTIFIER 
 
 /* BR format */
 %token <num> TOKEN_BR TOKEN_BEQ TOKEN_BC TOKEN_BV TOKEN_BLT TOKEN_BLE TOKEN_BLETU TOKEN_BLEU
@@ -43,9 +43,6 @@ void yyerror(const char *s);
 /* others */
 %token TOKEN_GETCC TOKEN_SETCC TOKEN_CLI TOKEN_STI TOKEN_NOP
 %token TOKEN_ENDFILE TOKEN_COMMA TOKEN_COLON TOKEN_CARDINAL
-%token TOKEN_PLUS TOKEN_MINUS TOKEN_LEFT_PAREN TOKEN_RIGHT_PAREN
-
-%left TOKEN_PLUS TOKEN_MINUS
 
 %type <num> expression immediate_val branch_op
 
@@ -332,31 +329,11 @@ expression  :   TOKEN_NUMBER
                 { 
                     $$ = $1;
                 }
-            |   TOKEN_DOLLAR 
-                { 
-                    $$ = $1;
-                }
-            |   expression TOKEN_PLUS expression 
-                { 
-                    $$ = $1 + $3;
-                }
-            |   expression TOKEN_MINUS expression 
-                { 
-                    $$ = $1 - $3;
-                }
-            |   TOKEN_LEFT_PAREN expression TOKEN_RIGHT_PAREN 
-                { 
-                    $$ = $2;
-                }
             ;
 
 immediate_val:  TOKEN_CARDINAL expression 
                 { 
                     $$ = $2;
-                }
-            |    expression 
-                { 
-                    $$ = $1;
                 }
             ;
 

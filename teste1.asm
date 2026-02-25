@@ -4,7 +4,7 @@
 .org 0x0000
 
 // 1. Diretivas e Constantes
-CONST_VAL .equ 15 
+CONST_VAL .equ 15
 MASK      .equ 0xFF
 
 START:
@@ -15,12 +15,12 @@ START:
 
     // 3. Formato RRI (3 operandos: Reg, Reg, Imm/Label)
     ADDI R1, R0, #0
-    ADDI R2, R0, CONST_VAL
+    ADDI R2, R0, CONST_VAL 
     LW   R3, R1, #4
     LB   R4, R1, #8
     SW   R3, R1, #12
     SB   R4, R1, #16
-    JAL  R31, R0, FWD_LABEL   // Salto para a frente (Forward reference)
+    JAL  R13, R0, 0   // Salto para a frente (Forward reference)
 
     // 4. Formato RR (2 operandos: Reg, Reg)
     ADD  R1, R2
@@ -46,7 +46,7 @@ START:
     RCMPI R3, #10
 
     // 6. Formato I12 (1 operando: Imm/Label de 12 bits)
-    IMM 0xABC
+    IMM #0xABC
 
     // 7. Formato BR (Branches)
     BEQ  FWD_LABEL

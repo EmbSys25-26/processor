@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../Util/asm_operations.h"
-#include "../Util/statements_list.h"
-#include "../Util/symbol_table.h"
+#include "asm_operations.h"
+#include "statements_list.h"
+#include "symbol_table.h"
 #include "parser.tab.h"
 
 %}
@@ -85,12 +85,7 @@ whitespace      [ \t]+
 ","      { return TOKEN_COMMA;       }
 "#"      { return TOKEN_CARDINAL;    }
 ":"      { return TOKEN_COLON;       }
-"+"      { return TOKEN_PLUS;        }
-"-"      { return TOKEN_MINUS;       }
-"("      { return TOKEN_LEFT_PAREN;  }
-")"      { return TOKEN_RIGHT_PAREN; }
 
-"$"            { yylval.num = get_location_counter(); return TOKEN_DOLLAR;     }
 {dec_number}   { yylval.num = strtol(yytext, NULL, 10); return TOKEN_NUMBER;   }
 {hex_number_x} { yylval.num = strtol(yytext, NULL, 16); return TOKEN_NUMBER;   }
 {register}     { yylval.num = atoi(yytext + 1);          return TOKEN_REG;     }
