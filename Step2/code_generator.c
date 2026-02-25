@@ -8,7 +8,7 @@
 #include "../Util/asm_operations.h"
 #include "../Util/symbol_table.h"
 #include "../Util/statements_list.h"
-
+//#include "../main.h"
 
 static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 	
@@ -37,15 +37,9 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 		        if (stmt.misc == LABEL || stmt.misc == LINK) {
 		      
 		            int16_t label_addr = get_symbol_value(stmt.imm);
-
-			    if (stmt.opcode == JAL_OPCODE) {
-			        // JAL needs a relative displacement
-			        int16_t disp = (int32_t)label_addr - (int32_t)(stmt_lc + LC_INSTRUCTION);
-			        imm4 = (int16_t)(disp & 0xF);
-			    } else {
-			        // .equ constant — use the value directly
-			        imm4 = label_addr & 0xF;
-			    }
+		            int16_t  disp       = (int32_t)label_addr
+		                            - (int32_t)(stmt_lc + LC_INSTRUCTION);
+		            imm4 = (int16_t)(disp & 0xF);
 		        }
 		
 			code = ((uint16_t)(stmt.opcode & 0xF) << 12)
@@ -99,6 +93,8 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 
 void generate_code(void)
 {
+	FILE *fptr;
+	fptr = fopen("bleh.hex", "w");
     uint32_t count = get_statement_count();
     uint32_t lc    = 0;
 
@@ -120,14 +116,14 @@ void generate_code(void)
 
             case DIR_WORD:
                 /* emit a 32-bit word as two 16-bit hex values (big-endian) */
-                printf("%04X\n", (uint16_t)((s.imm >> 16) & 0xFFFF));
-                printf("%04X\n", (uint16_t)( s.imm        & 0xFFFF));
+                fprintf(fptr, "%04X\n", (uint16_t)((s.imm >> 16) & 0xFFFF));
+                fprintf(fptr, "%04X\n", (uint16_t)( s.imm        & 0xFFFF));
                 lc += LC_WORD;
                 continue;
 
             case DIR_BYTE:
                 /* emit a single byte, zero-extended to 16 bits for display */
-                printf("%02X\n", (uint8_t)(s.imm & 0xFF));
+                fprintf(fptr, "%02X\n", (uint8_t)(s.imm & 0xFF));
                 lc += LC_BYTE;
                 continue;
 
@@ -137,9 +133,10 @@ void generate_code(void)
 
         /* ── Instructions ────────────────────────────────────── */
         uint16_t code = encode_statement(s, lc);
-        printf("%04X\n", code);
+        fprintf(fptr, "%04X\n", code);
         lc += LC_INSTRUCTION;
     }
+	fclose(fptr);
 }
 
 
