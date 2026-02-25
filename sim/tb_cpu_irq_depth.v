@@ -41,7 +41,7 @@ module tb_cpu_irq_depth;
         .i_rst(_rst),
         .i_i_ad_rst(16'h0100),
         .o_insn_ce(_insn_ce),
-        .o_i_ad(_i_ad),
+        .o_PC(_i_ad),
         .i_insn(_insn),
         .i_hit(1'b1),
         .o_d_ad(_d_ad),

@@ -20,7 +20,7 @@ module soc(
     localparam [15:0] _reset_vec = `CPU_RESET_VEC;
 
     wire _insn_ce;
-    wire [15:0] _i_ad;
+    wire [15:0] _PC;
     wire _hit;
 
     (* mark_debug = "true" *) wire [15:0] _d_ad;
@@ -144,7 +144,7 @@ module soc(
         .i_rst(i_rst),
         .i_i_ad_rst(_i_ad_rst),
         .o_insn_ce(_insn_ce),
-        .o_i_ad(_i_ad),
+        .o_PC(_PC),
         .i_insn(_insn_q),
         .i_hit(_hit),
         .o_d_ad(_d_ad),
@@ -167,7 +167,7 @@ module soc(
         .i_clk(i_clk),
         .i_rst(i_rst),
         .i_en(_insn_ce),
-        .i_addr(_i_ad[9:1]),
+        .i_addr(_PC[9:1]),
         .o_dout_h(_imem_dout_h),
         .o_dout_l(_imem_dout_l)
     );

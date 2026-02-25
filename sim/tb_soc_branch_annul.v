@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-`include "constants.vh"
+`include "../srcs/constants.vh"
 
 module tb_soc_branch_annul;
 
@@ -79,7 +79,7 @@ module tb_soc_branch_annul;
                     _seen_branch_in_irq <= 1'b1;
                 end
                 if (_branch_prints < _max_branch_prints) begin
-                    $display("WAVE branch_annul trigger cycle=%0d in_irq=%0b i_ad=0x%04h", _cycles, dut._in_irq, dut._i_ad);
+                    $display("WAVE branch_annul trigger cycle=%0d in_irq=%0b _PC=0x%04h", _cycles, dut._in_irq, dut._PC);
                     _branch_prints = _branch_prints + 1;
                 end
             end
