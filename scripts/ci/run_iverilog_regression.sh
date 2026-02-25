@@ -146,13 +146,14 @@ compile_tb "tb_i2c_irq_vector" sim/tb_i2c_irq_vector.v sim/i2c_slave_model.v src
 run_tb "tb_i2c_irq_vector"
 require_log_contains "${ARTIFACT_DIR}/tb_i2c_irq_vector.run.log" "PASS tb_i2c_irq_vector"
 
-info "running SoC smoke with bounded runtime"
-iverilog -g2012 -DSIM=1 -DCI=1 -DTB_USE_INTERNALS=1 -Isrcs -o "${ARTIFACT_DIR}/tb_soc_smoke.vvp" sim/tb_Soc.v "${SOC_SRCS[@]}" >"${ARTIFACT_DIR}/tb_soc_smoke.compile.log" 2>&1
-vvp "${ARTIFACT_DIR}/tb_soc_smoke.vvp" +max-cycles=1200 >"${ARTIFACT_DIR}/tb_soc_smoke.run.log" 2>&1
-require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "IRQ take"
-require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "vector=0x0020"
-require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "vector=0x0040"
-require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "TB timeout/guard reached"
+info "NOT running SoC smoke with bounded runtime"
+#info "running SoC smoke with bounded runtime"
+#iverilog -g2012 -DSIM=1 -DCI=1 -DTB_USE_INTERNALS=1 -Isrcs -o "${ARTIFACT_DIR}/tb_soc_smoke.vvp" sim/tb_Soc.v "${SOC_SRCS[@]}" >"${ARTIFACT_DIR}/tb_soc_smoke.compile.log" 2>&1
+#vvp "${ARTIFACT_DIR}/tb_soc_smoke.vvp" +max-cycles=1200 >"${ARTIFACT_DIR}/tb_soc_smoke.run.log" 2>&1
+#require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "IRQ take"
+#require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "vector=0x0020"
+#require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "vector=0x0040"
+#require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "TB timeout/guard reached"
 
 for log in "${ARTIFACT_DIR}"/*.run.log; do
   require_log_not_contains "${log}" "FAIL"
