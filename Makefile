@@ -1,7 +1,7 @@
 # Toolchain Definitions
 M4        := m4
 ASM       := ./assembler
-ABI_DEFS  := abi.m4
+ABI_DEFS  := Step1/abi.m4
 SPLITTER  := awk
 
 # Build Flags
@@ -33,8 +33,7 @@ $(PRE): $(SRC) $(ABI_DEFS) Compile
 # Step 2: Assemble to 16-bit hex
 $(HEX): $(PRE)
 	$(ASM) $(PRE)
-	@mv *.hex build/
-	@mv build/*.hex $(HEX)
+	@mv bleh.hex $(HEX)
 
 # Step 3: Split into High and Low byte files
 # Extracts the top 8 bits (HI) and bottom 8 bits (LO) from each 4-digit hex line

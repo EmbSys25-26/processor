@@ -20,7 +20,7 @@ START:
     LB   R4, R1, #8
     SW   R3, R1, #12
     SB   R4, R1, #16
-    JAL  R13, R0, 0   // Salto para a frente (Forward reference)
+    JAL  R13, R0, #0   // Salto para a frente (Forward reference)
 
     // 4. Formato RR (2 operandos: Reg, Reg)
     ADD  R1, R2
@@ -57,7 +57,9 @@ START:
     BLETU FWD_LABEL
     BLEU FWD_LABEL
     BR   START               // Salto para trás (Backward reference)
-
+    POP(s0)
+    PUSH(t0)
+    
 FWD_LABEL:
     NOP
 

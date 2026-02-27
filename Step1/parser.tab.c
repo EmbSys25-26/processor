@@ -113,93 +113,88 @@ enum yysymbol_kind_t
   YYSYMBOL_YYUNDEF = 2,                    /* "invalid token"  */
   YYSYMBOL_TOKEN_NUMBER = 3,               /* TOKEN_NUMBER  */
   YYSYMBOL_TOKEN_REG = 4,                  /* TOKEN_REG  */
-  YYSYMBOL_TOKEN_DOLLAR = 5,               /* TOKEN_DOLLAR  */
-  YYSYMBOL_TOKEN_IDENTIFIER = 6,           /* TOKEN_IDENTIFIER  */
-  YYSYMBOL_TOKEN_BR = 7,                   /* TOKEN_BR  */
-  YYSYMBOL_TOKEN_BEQ = 8,                  /* TOKEN_BEQ  */
-  YYSYMBOL_TOKEN_BC = 9,                   /* TOKEN_BC  */
-  YYSYMBOL_TOKEN_BV = 10,                  /* TOKEN_BV  */
-  YYSYMBOL_TOKEN_BLT = 11,                 /* TOKEN_BLT  */
-  YYSYMBOL_TOKEN_BLE = 12,                 /* TOKEN_BLE  */
-  YYSYMBOL_TOKEN_BLETU = 13,               /* TOKEN_BLETU  */
-  YYSYMBOL_TOKEN_BLEU = 14,                /* TOKEN_BLEU  */
-  YYSYMBOL_TOKEN_ADD = 15,                 /* TOKEN_ADD  */
-  YYSYMBOL_TOKEN_SUB = 16,                 /* TOKEN_SUB  */
-  YYSYMBOL_TOKEN_AND = 17,                 /* TOKEN_AND  */
-  YYSYMBOL_TOKEN_XOR = 18,                 /* TOKEN_XOR  */
-  YYSYMBOL_TOKEN_ADC = 19,                 /* TOKEN_ADC  */
-  YYSYMBOL_TOKEN_SBC = 20,                 /* TOKEN_SBC  */
-  YYSYMBOL_TOKEN_CMP = 21,                 /* TOKEN_CMP  */
-  YYSYMBOL_TOKEN_SRL = 22,                 /* TOKEN_SRL  */
-  YYSYMBOL_TOKEN_SRA = 23,                 /* TOKEN_SRA  */
-  YYSYMBOL_TOKEN_RSUBI = 24,               /* TOKEN_RSUBI  */
-  YYSYMBOL_TOKEN_ANDI = 25,                /* TOKEN_ANDI  */
-  YYSYMBOL_TOKEN_XORI = 26,                /* TOKEN_XORI  */
-  YYSYMBOL_TOKEN_ADCI = 27,                /* TOKEN_ADCI  */
-  YYSYMBOL_TOKEN_RSBCI = 28,               /* TOKEN_RSBCI  */
-  YYSYMBOL_TOKEN_RCMPI = 29,               /* TOKEN_RCMPI  */
-  YYSYMBOL_TOKEN_JAL = 30,                 /* TOKEN_JAL  */
-  YYSYMBOL_TOKEN_ADDI = 31,                /* TOKEN_ADDI  */
-  YYSYMBOL_TOKEN_LW = 32,                  /* TOKEN_LW  */
-  YYSYMBOL_TOKEN_LB = 33,                  /* TOKEN_LB  */
-  YYSYMBOL_TOKEN_SW = 34,                  /* TOKEN_SW  */
-  YYSYMBOL_TOKEN_SB = 35,                  /* TOKEN_SB  */
-  YYSYMBOL_TOKEN_IMM_TOK = 36,             /* TOKEN_IMM_TOK  */
-  YYSYMBOL_TOKEN_BYTE = 37,                /* TOKEN_BYTE  */
-  YYSYMBOL_TOKEN_WORD = 38,                /* TOKEN_WORD  */
-  YYSYMBOL_TOKEN_ORG = 39,                 /* TOKEN_ORG  */
-  YYSYMBOL_TOKEN_EQU = 40,                 /* TOKEN_EQU  */
-  YYSYMBOL_TOKEN_GETCC = 41,               /* TOKEN_GETCC  */
-  YYSYMBOL_TOKEN_SETCC = 42,               /* TOKEN_SETCC  */
-  YYSYMBOL_TOKEN_CLI = 43,                 /* TOKEN_CLI  */
-  YYSYMBOL_TOKEN_STI = 44,                 /* TOKEN_STI  */
-  YYSYMBOL_TOKEN_NOP = 45,                 /* TOKEN_NOP  */
-  YYSYMBOL_TOKEN_ENDFILE = 46,             /* TOKEN_ENDFILE  */
-  YYSYMBOL_TOKEN_COMMA = 47,               /* TOKEN_COMMA  */
-  YYSYMBOL_TOKEN_COLON = 48,               /* TOKEN_COLON  */
-  YYSYMBOL_TOKEN_CARDINAL = 49,            /* TOKEN_CARDINAL  */
-  YYSYMBOL_TOKEN_PLUS = 50,                /* TOKEN_PLUS  */
-  YYSYMBOL_TOKEN_MINUS = 51,               /* TOKEN_MINUS  */
-  YYSYMBOL_TOKEN_LEFT_PAREN = 52,          /* TOKEN_LEFT_PAREN  */
-  YYSYMBOL_TOKEN_RIGHT_PAREN = 53,         /* TOKEN_RIGHT_PAREN  */
-  YYSYMBOL_YYACCEPT = 54,                  /* $accept  */
-  YYSYMBOL_program = 55,                   /* program  */
-  YYSYMBOL_lines = 56,                     /* lines  */
-  YYSYMBOL_line = 57,                      /* line  */
-  YYSYMBOL_label_decl = 58,                /* label_decl  */
-  YYSYMBOL_stmt = 59,                      /* stmt  */
-  YYSYMBOL_add_stmt = 60,                  /* add_stmt  */
-  YYSYMBOL_sub_stmt = 61,                  /* sub_stmt  */
-  YYSYMBOL_and_stmt = 62,                  /* and_stmt  */
-  YYSYMBOL_xor_stmt = 63,                  /* xor_stmt  */
-  YYSYMBOL_adc_stmt = 64,                  /* adc_stmt  */
-  YYSYMBOL_sbc_stmt = 65,                  /* sbc_stmt  */
-  YYSYMBOL_cmp_stmt = 66,                  /* cmp_stmt  */
-  YYSYMBOL_srl_stmt = 67,                  /* srl_stmt  */
-  YYSYMBOL_sra_stmt = 68,                  /* sra_stmt  */
-  YYSYMBOL_getcc_stmt = 69,                /* getcc_stmt  */
-  YYSYMBOL_setcc_stmt = 70,                /* setcc_stmt  */
-  YYSYMBOL_rsubi_stmt = 71,                /* rsubi_stmt  */
-  YYSYMBOL_andi_stmt = 72,                 /* andi_stmt  */
-  YYSYMBOL_xori_stmt = 73,                 /* xori_stmt  */
-  YYSYMBOL_adci_stmt = 74,                 /* adci_stmt  */
-  YYSYMBOL_rsbci_stmt = 75,                /* rsbci_stmt  */
-  YYSYMBOL_rcmpi_stmt = 76,                /* rcmpi_stmt  */
-  YYSYMBOL_addi_stmt = 77,                 /* addi_stmt  */
-  YYSYMBOL_jal_stmt = 78,                  /* jal_stmt  */
-  YYSYMBOL_lw_stmt = 79,                   /* lw_stmt  */
-  YYSYMBOL_lb_stmt = 80,                   /* lb_stmt  */
-  YYSYMBOL_sw_stmt = 81,                   /* sw_stmt  */
-  YYSYMBOL_sb_stmt = 82,                   /* sb_stmt  */
-  YYSYMBOL_imm_stmt = 83,                  /* imm_stmt  */
-  YYSYMBOL_branch_stmt = 84,               /* branch_stmt  */
-  YYSYMBOL_cli_stmt = 85,                  /* cli_stmt  */
-  YYSYMBOL_sti_stmt = 86,                  /* sti_stmt  */
-  YYSYMBOL_nop_stmt = 87,                  /* nop_stmt  */
-  YYSYMBOL_directive = 88,                 /* directive  */
-  YYSYMBOL_branch_op = 89,                 /* branch_op  */
-  YYSYMBOL_expression = 90,                /* expression  */
-  YYSYMBOL_immediate_val = 91              /* immediate_val  */
+  YYSYMBOL_TOKEN_IDENTIFIER = 5,           /* TOKEN_IDENTIFIER  */
+  YYSYMBOL_TOKEN_BR = 6,                   /* TOKEN_BR  */
+  YYSYMBOL_TOKEN_BEQ = 7,                  /* TOKEN_BEQ  */
+  YYSYMBOL_TOKEN_BC = 8,                   /* TOKEN_BC  */
+  YYSYMBOL_TOKEN_BV = 9,                   /* TOKEN_BV  */
+  YYSYMBOL_TOKEN_BLT = 10,                 /* TOKEN_BLT  */
+  YYSYMBOL_TOKEN_BLE = 11,                 /* TOKEN_BLE  */
+  YYSYMBOL_TOKEN_BLETU = 12,               /* TOKEN_BLETU  */
+  YYSYMBOL_TOKEN_BLEU = 13,                /* TOKEN_BLEU  */
+  YYSYMBOL_TOKEN_ADD = 14,                 /* TOKEN_ADD  */
+  YYSYMBOL_TOKEN_SUB = 15,                 /* TOKEN_SUB  */
+  YYSYMBOL_TOKEN_AND = 16,                 /* TOKEN_AND  */
+  YYSYMBOL_TOKEN_XOR = 17,                 /* TOKEN_XOR  */
+  YYSYMBOL_TOKEN_ADC = 18,                 /* TOKEN_ADC  */
+  YYSYMBOL_TOKEN_SBC = 19,                 /* TOKEN_SBC  */
+  YYSYMBOL_TOKEN_CMP = 20,                 /* TOKEN_CMP  */
+  YYSYMBOL_TOKEN_SRL = 21,                 /* TOKEN_SRL  */
+  YYSYMBOL_TOKEN_SRA = 22,                 /* TOKEN_SRA  */
+  YYSYMBOL_TOKEN_RSUBI = 23,               /* TOKEN_RSUBI  */
+  YYSYMBOL_TOKEN_ANDI = 24,                /* TOKEN_ANDI  */
+  YYSYMBOL_TOKEN_XORI = 25,                /* TOKEN_XORI  */
+  YYSYMBOL_TOKEN_ADCI = 26,                /* TOKEN_ADCI  */
+  YYSYMBOL_TOKEN_RSBCI = 27,               /* TOKEN_RSBCI  */
+  YYSYMBOL_TOKEN_RCMPI = 28,               /* TOKEN_RCMPI  */
+  YYSYMBOL_TOKEN_JAL = 29,                 /* TOKEN_JAL  */
+  YYSYMBOL_TOKEN_ADDI = 30,                /* TOKEN_ADDI  */
+  YYSYMBOL_TOKEN_LW = 31,                  /* TOKEN_LW  */
+  YYSYMBOL_TOKEN_LB = 32,                  /* TOKEN_LB  */
+  YYSYMBOL_TOKEN_SW = 33,                  /* TOKEN_SW  */
+  YYSYMBOL_TOKEN_SB = 34,                  /* TOKEN_SB  */
+  YYSYMBOL_TOKEN_IMM_TOK = 35,             /* TOKEN_IMM_TOK  */
+  YYSYMBOL_TOKEN_BYTE = 36,                /* TOKEN_BYTE  */
+  YYSYMBOL_TOKEN_WORD = 37,                /* TOKEN_WORD  */
+  YYSYMBOL_TOKEN_ORG = 38,                 /* TOKEN_ORG  */
+  YYSYMBOL_TOKEN_EQU = 39,                 /* TOKEN_EQU  */
+  YYSYMBOL_TOKEN_GETCC = 40,               /* TOKEN_GETCC  */
+  YYSYMBOL_TOKEN_SETCC = 41,               /* TOKEN_SETCC  */
+  YYSYMBOL_TOKEN_CLI = 42,                 /* TOKEN_CLI  */
+  YYSYMBOL_TOKEN_STI = 43,                 /* TOKEN_STI  */
+  YYSYMBOL_TOKEN_NOP = 44,                 /* TOKEN_NOP  */
+  YYSYMBOL_TOKEN_ENDFILE = 45,             /* TOKEN_ENDFILE  */
+  YYSYMBOL_TOKEN_COMMA = 46,               /* TOKEN_COMMA  */
+  YYSYMBOL_TOKEN_COLON = 47,               /* TOKEN_COLON  */
+  YYSYMBOL_TOKEN_CARDINAL = 48,            /* TOKEN_CARDINAL  */
+  YYSYMBOL_YYACCEPT = 49,                  /* $accept  */
+  YYSYMBOL_program = 50,                   /* program  */
+  YYSYMBOL_lines = 51,                     /* lines  */
+  YYSYMBOL_line = 52,                      /* line  */
+  YYSYMBOL_label_decl = 53,                /* label_decl  */
+  YYSYMBOL_stmt = 54,                      /* stmt  */
+  YYSYMBOL_add_stmt = 55,                  /* add_stmt  */
+  YYSYMBOL_sub_stmt = 56,                  /* sub_stmt  */
+  YYSYMBOL_and_stmt = 57,                  /* and_stmt  */
+  YYSYMBOL_xor_stmt = 58,                  /* xor_stmt  */
+  YYSYMBOL_adc_stmt = 59,                  /* adc_stmt  */
+  YYSYMBOL_sbc_stmt = 60,                  /* sbc_stmt  */
+  YYSYMBOL_cmp_stmt = 61,                  /* cmp_stmt  */
+  YYSYMBOL_srl_stmt = 62,                  /* srl_stmt  */
+  YYSYMBOL_sra_stmt = 63,                  /* sra_stmt  */
+  YYSYMBOL_getcc_stmt = 64,                /* getcc_stmt  */
+  YYSYMBOL_setcc_stmt = 65,                /* setcc_stmt  */
+  YYSYMBOL_rsubi_stmt = 66,                /* rsubi_stmt  */
+  YYSYMBOL_andi_stmt = 67,                 /* andi_stmt  */
+  YYSYMBOL_xori_stmt = 68,                 /* xori_stmt  */
+  YYSYMBOL_adci_stmt = 69,                 /* adci_stmt  */
+  YYSYMBOL_rsbci_stmt = 70,                /* rsbci_stmt  */
+  YYSYMBOL_rcmpi_stmt = 71,                /* rcmpi_stmt  */
+  YYSYMBOL_addi_stmt = 72,                 /* addi_stmt  */
+  YYSYMBOL_jal_stmt = 73,                  /* jal_stmt  */
+  YYSYMBOL_lw_stmt = 74,                   /* lw_stmt  */
+  YYSYMBOL_lb_stmt = 75,                   /* lb_stmt  */
+  YYSYMBOL_sw_stmt = 76,                   /* sw_stmt  */
+  YYSYMBOL_sb_stmt = 77,                   /* sb_stmt  */
+  YYSYMBOL_imm_stmt = 78,                  /* imm_stmt  */
+  YYSYMBOL_branch_stmt = 79,               /* branch_stmt  */
+  YYSYMBOL_cli_stmt = 80,                  /* cli_stmt  */
+  YYSYMBOL_sti_stmt = 81,                  /* sti_stmt  */
+  YYSYMBOL_nop_stmt = 82,                  /* nop_stmt  */
+  YYSYMBOL_directive = 83,                 /* directive  */
+  YYSYMBOL_branch_op = 84,                 /* branch_op  */
+  YYSYMBOL_expression = 85,                /* expression  */
+  YYSYMBOL_immediate_val = 86              /* immediate_val  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -527,19 +522,19 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  3
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   222
+#define YYLAST   159
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  54
+#define YYNTOKENS  49
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  38
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  99
+#define YYNRULES  94
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  190
+#define YYNSTATES  181
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   308
+#define YYMAXUTOK   303
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -583,23 +578,23 @@ static const yytype_int8 yytranslate[] =
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
       35,    36,    37,    38,    39,    40,    41,    42,    43,    44,
-      45,    46,    47,    48,    49,    50,    51,    52,    53
+      45,    46,    47,    48
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    56,    56,    61,    62,    65,    66,    67,    70,    78,
-      78,    78,    78,    78,    78,    78,    78,    78,    79,    79,
-      80,    80,    80,    80,    80,    80,    81,    81,    81,    81,
-      81,    81,    82,    83,    84,    84,    84,    88,    93,    98,
-     103,   108,   113,   118,   123,   128,   133,   138,   144,   148,
-     153,   157,   162,   166,   171,   175,   180,   184,   189,   193,
-     199,   204,   210,   214,   219,   223,   228,   232,   237,   241,
-     246,   250,   256,   260,   267,   271,   277,   282,   287,   293,
-     297,   301,   305,   309,   313,   320,   321,   322,   323,   324,
-     325,   326,   327,   331,   335,   339,   343,   347,   353,   357
+       0,    53,    53,    58,    59,    62,    63,    64,    67,    75,
+      75,    75,    75,    75,    75,    75,    75,    75,    76,    76,
+      77,    77,    77,    77,    77,    77,    78,    78,    78,    78,
+      78,    78,    79,    80,    81,    81,    81,    85,    90,    95,
+     100,   105,   110,   115,   120,   125,   130,   135,   141,   145,
+     150,   154,   159,   163,   168,   172,   177,   181,   186,   190,
+     196,   201,   207,   211,   216,   220,   225,   229,   234,   238,
+     243,   247,   253,   257,   264,   268,   274,   279,   284,   290,
+     294,   298,   302,   306,   310,   317,   318,   319,   320,   321,
+     322,   323,   324,   328,   334
 };
 #endif
 
@@ -616,17 +611,16 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
 static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "TOKEN_NUMBER",
-  "TOKEN_REG", "TOKEN_DOLLAR", "TOKEN_IDENTIFIER", "TOKEN_BR", "TOKEN_BEQ",
-  "TOKEN_BC", "TOKEN_BV", "TOKEN_BLT", "TOKEN_BLE", "TOKEN_BLETU",
-  "TOKEN_BLEU", "TOKEN_ADD", "TOKEN_SUB", "TOKEN_AND", "TOKEN_XOR",
-  "TOKEN_ADC", "TOKEN_SBC", "TOKEN_CMP", "TOKEN_SRL", "TOKEN_SRA",
-  "TOKEN_RSUBI", "TOKEN_ANDI", "TOKEN_XORI", "TOKEN_ADCI", "TOKEN_RSBCI",
-  "TOKEN_RCMPI", "TOKEN_JAL", "TOKEN_ADDI", "TOKEN_LW", "TOKEN_LB",
-  "TOKEN_SW", "TOKEN_SB", "TOKEN_IMM_TOK", "TOKEN_BYTE", "TOKEN_WORD",
-  "TOKEN_ORG", "TOKEN_EQU", "TOKEN_GETCC", "TOKEN_SETCC", "TOKEN_CLI",
-  "TOKEN_STI", "TOKEN_NOP", "TOKEN_ENDFILE", "TOKEN_COMMA", "TOKEN_COLON",
-  "TOKEN_CARDINAL", "TOKEN_PLUS", "TOKEN_MINUS", "TOKEN_LEFT_PAREN",
-  "TOKEN_RIGHT_PAREN", "$accept", "program", "lines", "line", "label_decl",
+  "TOKEN_REG", "TOKEN_IDENTIFIER", "TOKEN_BR", "TOKEN_BEQ", "TOKEN_BC",
+  "TOKEN_BV", "TOKEN_BLT", "TOKEN_BLE", "TOKEN_BLETU", "TOKEN_BLEU",
+  "TOKEN_ADD", "TOKEN_SUB", "TOKEN_AND", "TOKEN_XOR", "TOKEN_ADC",
+  "TOKEN_SBC", "TOKEN_CMP", "TOKEN_SRL", "TOKEN_SRA", "TOKEN_RSUBI",
+  "TOKEN_ANDI", "TOKEN_XORI", "TOKEN_ADCI", "TOKEN_RSBCI", "TOKEN_RCMPI",
+  "TOKEN_JAL", "TOKEN_ADDI", "TOKEN_LW", "TOKEN_LB", "TOKEN_SW",
+  "TOKEN_SB", "TOKEN_IMM_TOK", "TOKEN_BYTE", "TOKEN_WORD", "TOKEN_ORG",
+  "TOKEN_EQU", "TOKEN_GETCC", "TOKEN_SETCC", "TOKEN_CLI", "TOKEN_STI",
+  "TOKEN_NOP", "TOKEN_ENDFILE", "TOKEN_COMMA", "TOKEN_COLON",
+  "TOKEN_CARDINAL", "$accept", "program", "lines", "line", "label_decl",
   "stmt", "add_stmt", "sub_stmt", "and_stmt", "xor_stmt", "adc_stmt",
   "sbc_stmt", "cmp_stmt", "srl_stmt", "sra_stmt", "getcc_stmt",
   "setcc_stmt", "rsubi_stmt", "andi_stmt", "xori_stmt", "adci_stmt",
@@ -643,7 +637,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-74)
+#define YYPACT_NINF (-77)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -657,25 +651,25 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-     -74,     6,   171,   -74,   -30,   -74,   -74,   -74,   -74,   -74,
-     -74,   -74,   -74,     7,    56,    60,    61,    68,    69,    72,
-      73,    76,    77,    80,    81,    84,    85,    88,    89,    92,
-      93,   127,   128,   129,    10,   120,   124,     9,   130,   131,
-     -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,
-     -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,
-     -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,
-     -74,   -74,   -74,   -74,   -74,   -74,    14,     9,   -74,   -25,
-     -21,   -17,   -13,    -9,    -1,     3,    65,    90,    91,    94,
-      95,    96,    97,    98,    99,   100,   101,   102,   103,   105,
-     -74,   -74,   -74,     9,     9,   -42,   -74,   -74,   -42,   -74,
-     -42,   -42,   -74,   -74,   -74,   -74,   -42,   132,   135,   136,
-     147,   150,   151,   154,   155,   158,    18,    22,    26,    30,
-      34,    38,   159,   162,   163,   165,   166,   167,   -42,   -46,
-       9,     9,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,
-     -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,
-     -74,   -74,   -74,   126,   164,   172,   173,   174,   175,   -74,
-     -74,   -74,    42,    46,   104,   108,   112,   116,   -74,   -74,
-     -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74
+     -77,    24,    88,   -77,   -16,   -77,   -77,   -77,   -77,   -77,
+     -77,   -77,   -77,     4,    21,    22,    23,    25,    26,    28,
+      29,    30,    31,    32,    33,    34,    35,    36,    37,    39,
+      40,    41,    63,    64,    -2,     1,     2,    66,    67,    68,
+     -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,
+     -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,
+     -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,
+     -77,   -77,   -77,   -77,   -77,   -77,     5,    66,   -77,   -37,
+     -18,    27,    38,    81,    89,    90,    91,    92,    93,    94,
+      95,    96,    97,    98,    99,   100,   101,   102,   103,   104,
+     -77,    66,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,
+     -77,   -77,   -77,   -77,    70,    71,    72,    73,    74,    75,
+      76,    77,    78,     6,     7,     8,     9,    10,    11,    79,
+      82,   130,   147,   148,   149,   -77,   -77,   -77,   -77,   -77,
+     -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,
+     -77,   -77,   -77,   -77,   -77,   -77,   -77,   108,   109,   110,
+     111,   112,   113,    12,    13,    14,    15,    16,    17,   -77,
+     -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,
+     -77
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -693,24 +687,24 @@ static const yytype_int8 yydefact[] =
       32,    33,    34,    35,    36,     7,     0,     0,     8,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-      93,    94,    73,     0,     0,    99,    72,    83,    82,    81,
-      80,    79,    46,    47,    75,    74,    84,     0,     0,     0,
+      73,     0,    72,    93,    83,    82,    81,    80,    79,    46,
+      47,    75,    74,    84,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,    98,     0,
-       0,     0,    37,    38,    39,    40,    41,    42,    43,    44,
-      45,    49,    48,    51,    50,    53,    52,    55,    54,    57,
-      56,    59,    58,     0,     0,     0,     0,     0,     0,    97,
-      95,    96,     0,     0,     0,     0,     0,     0,    63,    62,
-      61,    60,    65,    64,    67,    66,    69,    68,    71,    70
+       0,     0,     0,     0,     0,    94,    37,    38,    39,    40,
+      41,    42,    43,    44,    45,    49,    48,    51,    50,    53,
+      52,    55,    54,    57,    56,    59,    58,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,    63,
+      62,    61,    60,    65,    64,    67,    66,    69,    68,    71,
+      70
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,
-     -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,
-     -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,   -74,
-     -74,   -74,   -74,   -74,   -74,   -74,   -35,   -73
+     -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,
+     -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,
+     -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,   -77,
+     -77,   -77,   -77,   -77,   -77,   -77,   -35,   -76
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
@@ -719,7 +713,7 @@ static const yytype_int8 yydefgoto[] =
        0,     1,     2,    44,    45,    46,    47,    48,    49,    50,
       51,    52,    53,    54,    55,    56,    57,    58,    59,    60,
       61,    62,    63,    64,    65,    66,    67,    68,    69,    70,
-      71,    72,    73,    74,    75,    76,   105,   106
+      71,    72,    73,    74,    75,    76,   105,   102
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -727,96 +721,82 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_uint8 yytable[] =
 {
-     108,   110,   111,   115,   140,   141,     3,   169,   140,   141,
-      77,    79,   100,   100,   101,   101,   102,   100,    78,   101,
-     114,   100,   117,   101,   151,   100,   118,   101,   153,   100,
-     119,   101,   155,   100,   120,   101,   157,   100,   121,   101,
-     159,   100,   116,   101,   161,   100,   122,   101,   178,   100,
-     123,   101,   180,   152,   154,   156,   158,   160,   162,   103,
-      80,   104,   104,   103,    81,    82,   104,   103,   138,   139,
-     104,   103,    83,    84,   104,   103,    85,    86,   104,   103,
-      87,    88,   104,   103,    89,    90,   104,   103,    91,    92,
-     104,   103,    93,    94,   104,   103,    95,    96,   104,   179,
-     181,   183,   185,   187,   189,   170,   171,   100,     0,   101,
-     182,   100,   124,   101,   184,   100,     0,   101,   186,   100,
-       0,   101,   188,   100,     0,   101,   107,   100,     0,   101,
-     109,    97,    98,    99,   112,   113,   142,   125,   126,   143,
-     144,   127,   128,   129,   130,   131,   132,   133,   134,   135,
-     136,   145,   137,   103,   146,   147,   104,   103,   148,   149,
-     104,   103,   150,   163,   104,   103,   164,   165,   104,   166,
-     167,   168,   104,   172,     0,     0,   104,     4,     5,     6,
-       7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
-      17,    18,    19,    20,    21,    22,    23,    24,    25,    26,
-      27,    28,    29,    30,    31,    32,    33,    34,    35,    36,
-      37,   173,    38,    39,    40,    41,    42,    43,     0,   174,
-     175,   176,   177
+     112,   107,   108,   100,   103,   103,   104,   106,    79,   114,
+     111,   145,   147,   149,   151,   153,   155,   169,   171,   173,
+     175,   177,   179,    77,     3,    80,    81,    82,   115,    83,
+      84,    78,    85,    86,    87,    88,    89,    90,    91,    92,
+      93,    94,   113,    95,    96,    97,   101,   146,   148,   150,
+     152,   154,   156,   101,   101,   101,   101,   101,   101,   101,
+     101,   101,   101,   101,   101,   101,   135,    98,    99,   103,
+       0,   109,   110,   116,   136,   137,   138,   139,   140,   141,
+     142,   143,   144,   157,   117,     0,   158,   170,   172,   174,
+     176,   178,   180,     4,     5,     6,     7,     8,     9,    10,
+      11,    12,    13,    14,    15,    16,    17,    18,    19,    20,
+      21,    22,    23,    24,    25,    26,    27,    28,    29,    30,
+      31,    32,    33,    34,    35,    36,    37,   118,    38,    39,
+      40,    41,    42,    43,   159,   119,   120,   121,   122,   123,
+     124,   125,   126,   127,   128,   129,   130,   131,   132,   133,
+     134,   160,   161,   162,   163,   164,   165,   166,   167,   168
 };
 
 static const yytype_int16 yycheck[] =
 {
-      35,    36,    37,    76,    50,    51,     0,    53,    50,    51,
-      40,     4,     3,     3,     5,     5,     6,     3,    48,     5,
-       6,     3,    47,     5,     6,     3,    47,     5,     6,     3,
-      47,     5,     6,     3,    47,     5,     6,     3,    47,     5,
-       6,     3,    77,     5,     6,     3,    47,     5,     6,     3,
-      47,     5,     6,   126,   127,   128,   129,   130,   131,    49,
-       4,    52,    52,    49,     4,     4,    52,    49,   103,   104,
-      52,    49,     4,     4,    52,    49,     4,     4,    52,    49,
-       4,     4,    52,    49,     4,     4,    52,    49,     4,     4,
-      52,    49,     4,     4,    52,    49,     4,     4,    52,   172,
-     173,   174,   175,   176,   177,   140,   141,     3,    -1,     5,
-       6,     3,    47,     5,     6,     3,    -1,     5,     6,     3,
-      -1,     5,     6,     3,    -1,     5,     6,     3,    -1,     5,
-       6,     4,     4,     4,     4,     4,     4,    47,    47,     4,
-       4,    47,    47,    47,    47,    47,    47,    47,    47,    47,
-      47,     4,    47,    49,     4,     4,    52,    49,     4,     4,
-      52,    49,     4,     4,    52,    49,     4,     4,    52,     4,
-       4,     4,    52,    47,    -1,    -1,    52,     6,     7,     8,
-       9,    10,    11,    12,    13,    14,    15,    16,    17,    18,
-      19,    20,    21,    22,    23,    24,    25,    26,    27,    28,
-      29,    30,    31,    32,    33,    34,    35,    36,    37,    38,
-      39,    47,    41,    42,    43,    44,    45,    46,    -1,    47,
-      47,    47,    47
+      76,    36,    37,     5,     3,     3,     5,     5,     4,    46,
+       5,     5,     5,     5,     5,     5,     5,     5,     5,     5,
+       5,     5,     5,    39,     0,     4,     4,     4,    46,     4,
+       4,    47,     4,     4,     4,     4,     4,     4,     4,     4,
+       4,     4,    77,     4,     4,     4,    48,   123,   124,   125,
+     126,   127,   128,    48,    48,    48,    48,    48,    48,    48,
+      48,    48,    48,    48,    48,    48,   101,     4,     4,     3,
+      -1,     4,     4,    46,     4,     4,     4,     4,     4,     4,
+       4,     4,     4,     4,    46,    -1,     4,   163,   164,   165,
+     166,   167,   168,     5,     6,     7,     8,     9,    10,    11,
+      12,    13,    14,    15,    16,    17,    18,    19,    20,    21,
+      22,    23,    24,    25,    26,    27,    28,    29,    30,    31,
+      32,    33,    34,    35,    36,    37,    38,    46,    40,    41,
+      42,    43,    44,    45,     4,    46,    46,    46,    46,    46,
+      46,    46,    46,    46,    46,    46,    46,    46,    46,    46,
+      46,     4,     4,     4,    46,    46,    46,    46,    46,    46
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,    55,    56,     0,     6,     7,     8,     9,    10,    11,
-      12,    13,    14,    15,    16,    17,    18,    19,    20,    21,
-      22,    23,    24,    25,    26,    27,    28,    29,    30,    31,
-      32,    33,    34,    35,    36,    37,    38,    39,    41,    42,
-      43,    44,    45,    46,    57,    58,    59,    60,    61,    62,
-      63,    64,    65,    66,    67,    68,    69,    70,    71,    72,
-      73,    74,    75,    76,    77,    78,    79,    80,    81,    82,
-      83,    84,    85,    86,    87,    88,    89,    40,    48,     4,
+       0,    50,    51,     0,     5,     6,     7,     8,     9,    10,
+      11,    12,    13,    14,    15,    16,    17,    18,    19,    20,
+      21,    22,    23,    24,    25,    26,    27,    28,    29,    30,
+      31,    32,    33,    34,    35,    36,    37,    38,    40,    41,
+      42,    43,    44,    45,    52,    53,    54,    55,    56,    57,
+      58,    59,    60,    61,    62,    63,    64,    65,    66,    67,
+      68,    69,    70,    71,    72,    73,    74,    75,    76,    77,
+      78,    79,    80,    81,    82,    83,    84,    39,    47,     4,
        4,     4,     4,     4,     4,     4,     4,     4,     4,     4,
        4,     4,     4,     4,     4,     4,     4,     4,     4,     4,
-       3,     5,     6,    49,    52,    90,    91,     6,    90,     6,
-      90,    90,     4,     4,     6,    91,    90,    47,    47,    47,
-      47,    47,    47,    47,    47,    47,    47,    47,    47,    47,
-      47,    47,    47,    47,    47,    47,    47,    47,    90,    90,
-      50,    51,     4,     4,     4,     4,     4,     4,     4,     4,
-       4,     6,    91,     6,    91,     6,    91,     6,    91,     6,
-      91,     6,    91,     4,     4,     4,     4,     4,     4,    53,
-      90,    90,    47,    47,    47,    47,    47,    47,     6,    91,
-       6,    91,     6,    91,     6,    91,     6,    91,     6,    91
+       5,    48,    86,     3,     5,    85,     5,    85,    85,     4,
+       4,     5,    86,    85,    46,    46,    46,    46,    46,    46,
+      46,    46,    46,    46,    46,    46,    46,    46,    46,    46,
+      46,    46,    46,    46,    46,    85,     4,     4,     4,     4,
+       4,     4,     4,     4,     4,     5,    86,     5,    86,     5,
+      86,     5,    86,     5,    86,     5,    86,     4,     4,     4,
+       4,     4,     4,    46,    46,    46,    46,    46,    46,     5,
+      86,     5,    86,     5,    86,     5,    86,     5,    86,     5,
+      86
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    54,    55,    56,    56,    57,    57,    57,    58,    59,
-      59,    59,    59,    59,    59,    59,    59,    59,    59,    59,
-      59,    59,    59,    59,    59,    59,    59,    59,    59,    59,
-      59,    59,    59,    59,    59,    59,    59,    60,    61,    62,
-      63,    64,    65,    66,    67,    68,    69,    70,    71,    71,
+       0,    49,    50,    51,    51,    52,    52,    52,    53,    54,
+      54,    54,    54,    54,    54,    54,    54,    54,    54,    54,
+      54,    54,    54,    54,    54,    54,    54,    54,    54,    54,
+      54,    54,    54,    54,    54,    54,    54,    55,    56,    57,
+      58,    59,    60,    61,    62,    63,    64,    65,    66,    66,
+      67,    67,    68,    68,    69,    69,    70,    70,    71,    71,
       72,    72,    73,    73,    74,    74,    75,    75,    76,    76,
-      77,    77,    78,    78,    79,    79,    80,    80,    81,    81,
-      82,    82,    83,    83,    84,    84,    85,    86,    87,    88,
-      88,    88,    88,    88,    88,    89,    89,    89,    89,    89,
-      89,    89,    89,    90,    90,    90,    90,    90,    91,    91
+      77,    77,    78,    78,    79,    79,    80,    81,    82,    83,
+      83,    83,    83,    83,    83,    84,    84,    84,    84,    84,
+      84,    84,    84,    85,    86
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
@@ -831,7 +811,7 @@ static const yytype_int8 yyr2[] =
        6,     6,     6,     6,     6,     6,     6,     6,     6,     6,
        6,     6,     2,     2,     2,     2,     1,     1,     1,     2,
        2,     2,     2,     2,     3,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     3,     3,     3,     2,     1
+       1,     1,     1,     1,     2
 };
 
 
@@ -1295,519 +1275,479 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program: lines TOKEN_ENDFILE  */
-#line 57 "parser.y"
+#line 54 "parser.y"
                 {
                     return 0;
                 }
-#line 1303 "parser.tab.c"
+#line 1283 "parser.tab.c"
     break;
 
   case 8: /* label_decl: TOKEN_IDENTIFIER TOKEN_COLON  */
-#line 71 "parser.y"
+#line 68 "parser.y"
                 {
                     /* gets the current LC and associates it to the declared label */
                     uint32_t current_lc = get_location_counter();
                     set_symbol_value((yyvsp[-1].num), (int16_t)current_lc);    
                 }
-#line 1313 "parser.tab.c"
+#line 1293 "parser.tab.c"
     break;
 
   case 37: /* add_stmt: TOKEN_ADD TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 89 "parser.y"
+#line 86 "parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, ADD_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1321 "parser.tab.c"
+#line 1301 "parser.tab.c"
     break;
 
   case 38: /* sub_stmt: TOKEN_SUB TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 94 "parser.y"
+#line 91 "parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, SUB_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1329 "parser.tab.c"
+#line 1309 "parser.tab.c"
     break;
 
   case 39: /* and_stmt: TOKEN_AND TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 99 "parser.y"
+#line 96 "parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, AND_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1337 "parser.tab.c"
+#line 1317 "parser.tab.c"
     break;
 
   case 40: /* xor_stmt: TOKEN_XOR TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 104 "parser.y"
+#line 101 "parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, XOR_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1345 "parser.tab.c"
+#line 1325 "parser.tab.c"
     break;
 
   case 41: /* adc_stmt: TOKEN_ADC TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 109 "parser.y"
+#line 106 "parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, ADC_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1353 "parser.tab.c"
+#line 1333 "parser.tab.c"
     break;
 
   case 42: /* sbc_stmt: TOKEN_SBC TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 114 "parser.y"
+#line 111 "parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, SBC_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1361 "parser.tab.c"
+#line 1341 "parser.tab.c"
     break;
 
   case 43: /* cmp_stmt: TOKEN_CMP TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 119 "parser.y"
+#line 116 "parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, CMP_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1369 "parser.tab.c"
+#line 1349 "parser.tab.c"
     break;
 
   case 44: /* srl_stmt: TOKEN_SRL TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 124 "parser.y"
+#line 121 "parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, SRL_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1377 "parser.tab.c"
+#line 1357 "parser.tab.c"
     break;
 
   case 45: /* sra_stmt: TOKEN_SRA TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 129 "parser.y"
+#line 126 "parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, SRA_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1385 "parser.tab.c"
+#line 1365 "parser.tab.c"
     break;
 
   case 46: /* getcc_stmt: TOKEN_GETCC TOKEN_REG  */
-#line 134 "parser.y"
+#line 131 "parser.y"
                 { 
                     add_statement_rr(CC_OPCODE, GETCC_FN, (yyvsp[0].num), 0);
                 }
-#line 1393 "parser.tab.c"
+#line 1373 "parser.tab.c"
     break;
 
   case 47: /* setcc_stmt: TOKEN_SETCC TOKEN_REG  */
-#line 139 "parser.y"
+#line 136 "parser.y"
                 { 
                     add_statement_rr(CC_OPCODE, SETCC_FN, 0, (yyvsp[0].num));
                 }
-#line 1401 "parser.tab.c"
+#line 1381 "parser.tab.c"
     break;
 
   case 48: /* rsubi_stmt: TOKEN_RSUBI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 145 "parser.y"
+#line 142 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RSUBI_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1409 "parser.tab.c"
+#line 1389 "parser.tab.c"
     break;
 
   case 49: /* rsubi_stmt: TOKEN_RSUBI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 149 "parser.y"
+#line 146 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RSUBI_FN, (yyvsp[-2].num), get_symbol_value((yyvsp[0].num)));
                 }
-#line 1417 "parser.tab.c"
+#line 1397 "parser.tab.c"
     break;
 
   case 50: /* andi_stmt: TOKEN_ANDI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 154 "parser.y"
+#line 151 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, ANDI_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1425 "parser.tab.c"
+#line 1405 "parser.tab.c"
     break;
 
   case 51: /* andi_stmt: TOKEN_ANDI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 158 "parser.y"
+#line 155 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, ANDI_FN, (yyvsp[-2].num), get_symbol_value((yyvsp[0].num)));
                 }
-#line 1433 "parser.tab.c"
+#line 1413 "parser.tab.c"
     break;
 
   case 52: /* xori_stmt: TOKEN_XORI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 163 "parser.y"
+#line 160 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, XORI_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1441 "parser.tab.c"
+#line 1421 "parser.tab.c"
     break;
 
   case 53: /* xori_stmt: TOKEN_XORI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 167 "parser.y"
+#line 164 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, XORI_FN, (yyvsp[-2].num), get_symbol_value((yyvsp[0].num)));
                 }
-#line 1449 "parser.tab.c"
+#line 1429 "parser.tab.c"
     break;
 
   case 54: /* adci_stmt: TOKEN_ADCI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 172 "parser.y"
+#line 169 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, ADCI_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1457 "parser.tab.c"
+#line 1437 "parser.tab.c"
     break;
 
   case 55: /* adci_stmt: TOKEN_ADCI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 176 "parser.y"
+#line 173 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, ADCI_FN, (yyvsp[-2].num), get_symbol_value((yyvsp[0].num)));
                 }
-#line 1465 "parser.tab.c"
+#line 1445 "parser.tab.c"
     break;
 
   case 56: /* rsbci_stmt: TOKEN_RSBCI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 181 "parser.y"
+#line 178 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RSBCI_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1473 "parser.tab.c"
+#line 1453 "parser.tab.c"
     break;
 
   case 57: /* rsbci_stmt: TOKEN_RSBCI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 185 "parser.y"
+#line 182 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RSBCI_FN, (yyvsp[-2].num), get_symbol_value((yyvsp[0].num)));
                 }
-#line 1481 "parser.tab.c"
+#line 1461 "parser.tab.c"
     break;
 
   case 58: /* rcmpi_stmt: TOKEN_RCMPI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 190 "parser.y"
+#line 187 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RCMPI_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1489 "parser.tab.c"
+#line 1469 "parser.tab.c"
     break;
 
   case 59: /* rcmpi_stmt: TOKEN_RCMPI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 194 "parser.y"
+#line 191 "parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RCMPI_FN, (yyvsp[-2].num), get_symbol_value((yyvsp[0].num)));
                 }
-#line 1497 "parser.tab.c"
+#line 1477 "parser.tab.c"
     break;
 
   case 60: /* addi_stmt: TOKEN_ADDI TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 200 "parser.y"
+#line 197 "parser.y"
                 { 
                     /* the value is a number saved as IMMEDIATE, no Step 2 needed */
                     add_statement_rri(ADDI_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1506 "parser.tab.c"
+#line 1486 "parser.tab.c"
     break;
 
   case 61: /* addi_stmt: TOKEN_ADDI TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 205 "parser.y"
+#line 202 "parser.y"
                 { 
                     /* the value is a Label. forwarding the symbol table index ($6) to the IR, to be resolved in Step 2. */
                     add_statement_rri(ADDI_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1515 "parser.tab.c"
+#line 1495 "parser.tab.c"
     break;
 
   case 62: /* jal_stmt: TOKEN_JAL TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 211 "parser.y"
+#line 208 "parser.y"
                 { 
                     add_statement_rri(JAL_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1523 "parser.tab.c"
+#line 1503 "parser.tab.c"
     break;
 
   case 63: /* jal_stmt: TOKEN_JAL TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 215 "parser.y"
+#line 212 "parser.y"
                 { 
                     add_statement_rri(JAL_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1531 "parser.tab.c"
+#line 1511 "parser.tab.c"
     break;
 
   case 64: /* lw_stmt: TOKEN_LW TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 220 "parser.y"
+#line 217 "parser.y"
                 { 
                     add_statement_rri(LW_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1539 "parser.tab.c"
+#line 1519 "parser.tab.c"
     break;
 
   case 65: /* lw_stmt: TOKEN_LW TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 224 "parser.y"
+#line 221 "parser.y"
                 { 
                     add_statement_rri(LW_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1547 "parser.tab.c"
+#line 1527 "parser.tab.c"
     break;
 
   case 66: /* lb_stmt: TOKEN_LB TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 229 "parser.y"
+#line 226 "parser.y"
                 { 
                     add_statement_rri(LB_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1555 "parser.tab.c"
+#line 1535 "parser.tab.c"
     break;
 
   case 67: /* lb_stmt: TOKEN_LB TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 233 "parser.y"
+#line 230 "parser.y"
                 { 
                     add_statement_rri(LB_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1563 "parser.tab.c"
+#line 1543 "parser.tab.c"
     break;
 
   case 68: /* sw_stmt: TOKEN_SW TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 238 "parser.y"
+#line 235 "parser.y"
                 { 
                     add_statement_rri(SW_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1571 "parser.tab.c"
+#line 1551 "parser.tab.c"
     break;
 
   case 69: /* sw_stmt: TOKEN_SW TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 242 "parser.y"
+#line 239 "parser.y"
                 { 
                     add_statement_rri(SW_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1579 "parser.tab.c"
+#line 1559 "parser.tab.c"
     break;
 
   case 70: /* sb_stmt: TOKEN_SB TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 247 "parser.y"
+#line 244 "parser.y"
                 { 
                     add_statement_rri(SB_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1587 "parser.tab.c"
+#line 1567 "parser.tab.c"
     break;
 
   case 71: /* sb_stmt: TOKEN_SB TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 251 "parser.y"
+#line 248 "parser.y"
                 { 
                     add_statement_rri(SB_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1595 "parser.tab.c"
+#line 1575 "parser.tab.c"
     break;
 
   case 72: /* imm_stmt: TOKEN_IMM_TOK immediate_val  */
-#line 257 "parser.y"
+#line 254 "parser.y"
                 { 
                     add_statement_i12(IMM_OPCODE, (yyvsp[0].num));
                 }
-#line 1603 "parser.tab.c"
+#line 1583 "parser.tab.c"
     break;
 
   case 73: /* imm_stmt: TOKEN_IMM_TOK TOKEN_IDENTIFIER  */
-#line 261 "parser.y"
+#line 258 "parser.y"
                 { 
                     /* immediate resolution for 12-bit prefix */
                     add_statement_i12(IMM_OPCODE, get_symbol_value((yyvsp[0].num)));
                 }
-#line 1612 "parser.tab.c"
+#line 1592 "parser.tab.c"
     break;
 
   case 74: /* branch_stmt: branch_op immediate_val  */
-#line 268 "parser.y"
+#line 265 "parser.y"
                 { 
                     add_statement_br(BR_OPCODE, (yyvsp[-1].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1620 "parser.tab.c"
+#line 1600 "parser.tab.c"
     break;
 
   case 75: /* branch_stmt: branch_op TOKEN_IDENTIFIER  */
-#line 272 "parser.y"
+#line 269 "parser.y"
                 { 
                     /* branch targets are stored as indexes (LABEL flag) for relative displacement calculation in Step 2 */
                     add_statement_br(BR_OPCODE, (yyvsp[-1].num), (yyvsp[0].num), LABEL);
                 }
-#line 1629 "parser.tab.c"
+#line 1609 "parser.tab.c"
     break;
 
   case 76: /* cli_stmt: TOKEN_CLI  */
-#line 278 "parser.y"
+#line 275 "parser.y"
                 { 
                     add_statement_fixed(CLI_OPCODE);
                 }
-#line 1637 "parser.tab.c"
+#line 1617 "parser.tab.c"
     break;
 
   case 77: /* sti_stmt: TOKEN_STI  */
-#line 283 "parser.y"
+#line 280 "parser.y"
                 { 
                     add_statement_fixed(STI_OPCODE);
                 }
-#line 1645 "parser.tab.c"
+#line 1625 "parser.tab.c"
     break;
 
   case 78: /* nop_stmt: TOKEN_NOP  */
-#line 288 "parser.y"
+#line 285 "parser.y"
                 { 
                     add_statement_fixed(NOP_OPCODE);
                 }
-#line 1653 "parser.tab.c"
+#line 1633 "parser.tab.c"
     break;
 
   case 79: /* directive: TOKEN_ORG expression  */
-#line 294 "parser.y"
+#line 291 "parser.y"
                 { 
                     add_statement_directive(DIR_ORG, (yyvsp[0].num));
                 }
-#line 1661 "parser.tab.c"
+#line 1641 "parser.tab.c"
     break;
 
   case 80: /* directive: TOKEN_WORD expression  */
-#line 298 "parser.y"
+#line 295 "parser.y"
                 { 
                     add_statement_directive(DIR_WORD, (yyvsp[0].num));
                 }
-#line 1669 "parser.tab.c"
+#line 1649 "parser.tab.c"
     break;
 
   case 81: /* directive: TOKEN_WORD TOKEN_IDENTIFIER  */
-#line 302 "parser.y"
+#line 299 "parser.y"
                 { 
                     add_statement_directive(DIR_WORD, get_symbol_value((yyvsp[0].num)));
                 }
-#line 1677 "parser.tab.c"
+#line 1657 "parser.tab.c"
     break;
 
   case 82: /* directive: TOKEN_BYTE expression  */
-#line 306 "parser.y"
+#line 303 "parser.y"
                 { 
                     add_statement_directive(DIR_BYTE, (yyvsp[0].num));
                 }
-#line 1685 "parser.tab.c"
+#line 1665 "parser.tab.c"
     break;
 
   case 83: /* directive: TOKEN_BYTE TOKEN_IDENTIFIER  */
-#line 310 "parser.y"
+#line 307 "parser.y"
                 { 
                     add_statement_directive(DIR_BYTE, get_symbol_value((yyvsp[0].num)));
                 }
-#line 1693 "parser.tab.c"
+#line 1673 "parser.tab.c"
     break;
 
   case 84: /* directive: TOKEN_IDENTIFIER TOKEN_EQU expression  */
-#line 314 "parser.y"
+#line 311 "parser.y"
                 {
                     /* assigns a constant value to a symbol explicitly */
                     set_symbol_value((yyvsp[-2].num), (yyvsp[0].num));
                     add_statement_directive(DIR_EQU, (yyvsp[0].num)); 
                 }
-#line 1703 "parser.tab.c"
+#line 1683 "parser.tab.c"
     break;
 
   case 85: /* branch_op: TOKEN_BR  */
-#line 320 "parser.y"
+#line 317 "parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1709 "parser.tab.c"
+#line 1689 "parser.tab.c"
     break;
 
   case 86: /* branch_op: TOKEN_BEQ  */
-#line 321 "parser.y"
+#line 318 "parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1715 "parser.tab.c"
+#line 1695 "parser.tab.c"
     break;
 
   case 87: /* branch_op: TOKEN_BC  */
-#line 322 "parser.y"
+#line 319 "parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1721 "parser.tab.c"
+#line 1701 "parser.tab.c"
     break;
 
   case 88: /* branch_op: TOKEN_BV  */
-#line 323 "parser.y"
+#line 320 "parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1727 "parser.tab.c"
+#line 1707 "parser.tab.c"
     break;
 
   case 89: /* branch_op: TOKEN_BLT  */
-#line 324 "parser.y"
+#line 321 "parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1733 "parser.tab.c"
+#line 1713 "parser.tab.c"
     break;
 
   case 90: /* branch_op: TOKEN_BLE  */
-#line 325 "parser.y"
+#line 322 "parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1739 "parser.tab.c"
+#line 1719 "parser.tab.c"
     break;
 
   case 91: /* branch_op: TOKEN_BLETU  */
-#line 326 "parser.y"
+#line 323 "parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1745 "parser.tab.c"
+#line 1725 "parser.tab.c"
     break;
 
   case 92: /* branch_op: TOKEN_BLEU  */
-#line 327 "parser.y"
+#line 324 "parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1751 "parser.tab.c"
+#line 1731 "parser.tab.c"
     break;
 
   case 93: /* expression: TOKEN_NUMBER  */
-#line 332 "parser.y"
+#line 329 "parser.y"
                 { 
                     (yyval.num) = (yyvsp[0].num);
                 }
-#line 1759 "parser.tab.c"
+#line 1739 "parser.tab.c"
     break;
 
-  case 94: /* expression: TOKEN_DOLLAR  */
-#line 336 "parser.y"
+  case 94: /* immediate_val: TOKEN_CARDINAL expression  */
+#line 335 "parser.y"
                 { 
                     (yyval.num) = (yyvsp[0].num);
                 }
-#line 1767 "parser.tab.c"
-    break;
-
-  case 95: /* expression: expression TOKEN_PLUS expression  */
-#line 340 "parser.y"
-                { 
-                    (yyval.num) = (yyvsp[-2].num) + (yyvsp[0].num);
-                }
-#line 1775 "parser.tab.c"
-    break;
-
-  case 96: /* expression: expression TOKEN_MINUS expression  */
-#line 344 "parser.y"
-                { 
-                    (yyval.num) = (yyvsp[-2].num) - (yyvsp[0].num);
-                }
-#line 1783 "parser.tab.c"
-    break;
-
-  case 97: /* expression: TOKEN_LEFT_PAREN expression TOKEN_RIGHT_PAREN  */
-#line 348 "parser.y"
-                { 
-                    (yyval.num) = (yyvsp[-1].num);
-                }
-#line 1791 "parser.tab.c"
-    break;
-
-  case 98: /* immediate_val: TOKEN_CARDINAL expression  */
-#line 354 "parser.y"
-                { 
-                    (yyval.num) = (yyvsp[0].num);
-                }
-#line 1799 "parser.tab.c"
-    break;
-
-  case 99: /* immediate_val: expression  */
-#line 358 "parser.y"
-                { 
-                    (yyval.num) = (yyvsp[0].num);
-                }
-#line 1807 "parser.tab.c"
+#line 1747 "parser.tab.c"
     break;
 
 
-#line 1811 "parser.tab.c"
+#line 1751 "parser.tab.c"
 
       default: break;
     }
@@ -2000,7 +1940,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 363 "parser.y"
+#line 340 "parser.y"
 
 
 void yyerror(const char *s) {

@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "asm_operations.h"
-#include "statements_list.h"
-#include "symbol_table.h"
+#include "../Util/asm_operations.h"
+#include "../Util/statements_list.h"
+#include "../Util/symbol_table.h"
 #include "parser.tab.h"
 
 %}
@@ -24,6 +24,8 @@ hex             [a-fA-F]
 
 dec_number      {digit}+
 hex_number_x    0x({digit}|{hex})+
+neg_dec_number  -[0-9]+
+neg_hex_number  -0x({digit}|{hex})+
 
 /* Registos R0-R31, aceita maiusculas e minusculas */
 register        [Rr]({digit}|[12]{digit}|3[01])
@@ -82,12 +84,15 @@ whitespace      [ \t]+
 ".org"   { return TOKEN_ORG;  }
 ".equ"   { return TOKEN_EQU;  }
 
+
 ","      { return TOKEN_COMMA;       }
 "#"      { return TOKEN_CARDINAL;    }
 ":"      { return TOKEN_COLON;       }
 
-{dec_number}   { yylval.num = strtol(yytext, NULL, 10); return TOKEN_NUMBER;   }
-{hex_number_x} { yylval.num = strtol(yytext, NULL, 16); return TOKEN_NUMBER;   }
+{neg_dec_number}   { yylval.num = strtol(yytext, NULL, 10); return TOKEN_NUMBER; }
+{neg_hex_number}   { yylval.num = strtol(yytext, NULL, 16); return TOKEN_NUMBER; }
+{dec_number}       { yylval.num = strtol(yytext, NULL, 10); return TOKEN_NUMBER; }
+{hex_number_x}     { yylval.num = strtol(yytext, NULL, 16); return TOKEN_NUMBER; }
 {register}     { yylval.num = atoi(yytext + 1);          return TOKEN_REG;     }
 {identifier}   { yylval.num = add_symbol(yytext);         return TOKEN_IDENTIFIER; }
 

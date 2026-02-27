@@ -1,27 +1,29 @@
 divert(-1)
 changecom(`;')
-divert(0)dnl
 
-zero .equ r0
-a0   .equ r1
-v0   .equ r1
-a1   .equ r2
-v1   .equ r2
-a2   .equ r3
-t0   .equ r4
-t1   .equ r5
-t2   .equ r6
-t3   .equ r7
-s0   .equ r8
-s1   .equ r9
-s2   .equ r10
-s3   .equ r11
-fp   .equ r12
-sp   .equ r13
-lr   .equ r14
-gp   .equ r15
+# ============================================================ dnl
+# Register Aliases (ABI) dnl
+# ============================================================ dnl
 
-divert(-1)
+define(`zero', `r0')
+define(`a0', `r1')
+define(`v0', `r1')
+define(`a1', `r2')
+define(`v1', `r2')
+define(`a2', `r3')
+define(`t0', `r4')
+define(`t1', `r5')
+define(`t2', `r6')
+define(`t3', `r7')
+define(`s0', `r8')
+define(`s1', `r9')
+define(`s2', `r10')
+define(`s3', `r11')
+define(`fp', `r12')
+define(`sp', `r13')
+define(`lr', `r14')
+define(`gp', `r15')
+
 # ============================================================ dnl
 # Stack PUSH/POP dnl
 # ============================================================ dnl

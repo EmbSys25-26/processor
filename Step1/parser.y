@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "asm_operations.h"    
-#include "statements_list.h"  
-#include "symbol_table.h"     
+#include "../Util/asm_operations.h"    
+#include "../Util/statements_list.h"  
+#include "../Util/symbol_table.h"     
 
 extern int yylex();
 void yyerror(const char *s);
@@ -38,7 +38,7 @@ void yyerror(const char *s);
 %token TOKEN_IMM_TOK 
 
 /* directives */
-%token TOKEN_BYTE TOKEN_WORD TOKEN_ORG TOKEN_EQU
+%token TOKEN_BYTE TOKEN_WORD TOKEN_ORG TOKEN_EQU 
 
 /* others */
 %token TOKEN_GETCC TOKEN_SETCC TOKEN_CLI TOKEN_STI TOKEN_NOP

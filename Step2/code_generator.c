@@ -8,7 +8,6 @@
 #include "../Util/asm_operations.h"
 #include "../Util/symbol_table.h"
 #include "../Util/statements_list.h"
-//#include "../main.h"
 
 static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 	
@@ -37,9 +36,15 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 		        if (stmt.misc == LABEL || stmt.misc == LINK) {
 		      
 		            int16_t label_addr = get_symbol_value(stmt.imm);
-		            int16_t  disp       = (int32_t)label_addr
-		                            - (int32_t)(stmt_lc + LC_INSTRUCTION);
-		            imm4 = (int16_t)(disp & 0xF);
+
+			    if (stmt.opcode == JAL_OPCODE) {
+			        // JAL needs a relative displacement
+			        int16_t disp = (int32_t)label_addr - (int32_t)(stmt_lc + LC_INSTRUCTION);
+			        imm4 = (int16_t)(disp & 0xF);
+			    } else {
+			        // .equ constant — use the value directly
+			        imm4 = label_addr & 0xF;
+			    }
 		        }
 		
 			code = ((uint16_t)(stmt.opcode & 0xF) << 12)
