@@ -128,7 +128,7 @@ STI')
 
 define(`IRET', 
 `POP_CC
-POP lr
+POP(lr)
 RET')
 
 divert(0)dnl

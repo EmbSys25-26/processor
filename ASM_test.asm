@@ -15,9 +15,9 @@ TIMER0_CR0 .equ 0x8000      ; Timer 0 Control Register 0
 main:
     ; Register Initialization (using ABI aliases)
     IMM #0x03                ; Prefix for 12-bit immediate
-    li sp, STACK_TOP         ; Load Stack Pointer
-    li a0, 0x0005            ; Argument 0
-    li a1, 0x000A            ; Argument 1
+    LI(sp,0x03FF)         ; Load Stack Pointer
+    LI(a0,0x0005)            ; Argument 0
+    LI(a1,0x000A)           ; Argument 1
 
     ; SYSTEM INSTRUCTIONS
     CLI                      ; Disable global interrupts
@@ -25,46 +25,46 @@ main:
     NOP                      ; No Operation (0xF000)
 
     ; ARITHMETIC & LOGIC (RR, RI, RRI Formats) 
-    add a0, a1               ; RR: a0 = a0 + a1
-    sub a2, a1               ; RR: a2 - a1
-    addi a0, a0, #1          ; RRI: a0 = a0 + 1
-    and t0, a0               ; RR: Logical AND
-    xor t1, a0               ; RR: Logical XOR
+    ADD a0, a1               ; RR: a0 = a0 + a1
+    SUB a2, a1               ; RR: a2 - a1
+    ADDI a0, a0, #1          ; RRI: a0 = a0 + 1
+    AND t0, a0               ; RR: Logical AND
+    XOR t1, a0               ; RR: Logical XOR
 
     ; MEMORY ACCESS
     ; Tests high/low byte lane split and word-addressed indexing.
-    li t2, TIMER0_CR0        ; Load MMIO base address
-    sw a0, [t2, 0]           ; Store Word: Timer0_CR0 = a0
-    lw t3, [t2, 0]           ; Load Word: t3 = Timer0_CR0
-    sb a1, [t2, 1]           ; Store Byte
-    lb t1, [t2, 1]           ; Load Byte
+    LI(t2,0x8002)        ; Load MMIO base address
+    SW a0, t2, #0           ; Store Word: Timer0_CR0 = a0
+    LW t3, t2, #0           ; Load Word: t3 = Timer0_CR0
+    SB a1, t2, #1           ; Store Byte
+    LB t1, t2, #1         ; Load Byte
 
     ; CONTROL FLOW
-    jal lr, leaf_func        ; Jump and Link to leaf function
-    cmp a0, a1               ; Compare registers (updates CC flags)
-    beq .loop                ; Branch if Equal (conditional branch)
+    JAL lr, r0, leaf_func        ; Jump and Link to leaf function
+    CMP a0, a1               ; Compare registers (updates CC flags)
+    BEQ loop                ; Branch if Equal (conditional branch)
 
-.loop:
-    br main                  ; Unconditional branch back to main
+loop:
+    BR main                  ; Unconditional branch back to main
 
 ; 5. FUNCTION 
 leaf_func:
-    PUSH s0                  ; Save callee-saved register
-    add s0, a0, a1
-    POP s0                   ; Restore callee-saved register
-    jal zero, lr, 0          ; Return to caller
+    PUSH(s0)                  ; Save callee-saved register
+    ADD a0, a1
+    POP(s0)                   ; Restore callee-saved register
+    JAL zero, lr, #0          ; Return to caller
 
 ; 6. INTERRUPT SERVICE ROUTINES
 isr_timer0:
     CLI                      ; disable interrupts, atomic context for flag saving
     GETCC t0                 ; Save Condition Codes to t0
-    PUSH t0                  ; Preserve CC on stack
+    PUSH(t0)                  ; Preserve CC on stack
     
     ; ISR Body
-    li t1, 0x0001
-    sw t1, [zero, TIMER0_CR1]; Clear interrupt request
+    LI(t1,0x0001)
+    SW t1, zero, TIMER0_CR1  ; Clear interrupt request
     
-    POP t0                   ; Pop values back into t0 from stack
+    POP(t0)                   ; Pop values back into t0 from stack
     SETCC t0                 ; Restore Condition Codes
     STI                      ; Exit atomic context
     IRET                     ; Return from interrupt (Hex: 0EE0)

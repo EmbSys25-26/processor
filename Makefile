@@ -9,7 +9,7 @@ M4_FLAGS  :=
 ASM_FLAGS := 
 
 # Target Files (derived from SRC variable)
-SRC       ?= teste1.asm
+SRC       ?= ASM_test.asm
 BASENAME  := $(basename $(SRC))
 PRE       := build/$(BASENAME).asm
 HEX       := build/$(BASENAME).hex
