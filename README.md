@@ -1,63 +1,160 @@
 # 🛠️ Custom Assembler
 
-A simple assembler toolchain for a custom 16-bit RISC architecture. It uses **Flex** for lexical analysis, **M4** for macro preprocessing, and **C** for memory splitting utilities.
+A two-pass assembler toolchain for a custom 16-bit RISC architecture. It uses **Flex** for lexical analysis, **Bison** for parsing, **M4** for macro preprocessing, and **C** for code generation and utilities.
 
 ---
 
-## 📁 Project Files
-
-| File | Description |
-|------|-------------|
-| `assembler.l` | Flex lexer — translates assembly instructions into 16-bit hex |
-| `abi.m4` | M4 macro file — defines register aliases and pseudo-instructions |
-| `Makefile` | Automates the full build pipeline |
-| `test.asm` | **Your input file** — write your assembly program here |
-| `split_mem.c` | Splits the hex output into high and low memory files |
+## 📁 Project Structure
+```
+.
+├── main.c                      # Entry point — orchestrates Pass 1 and Pass 2
+├── ASM_test.asm                # Example/default input assembly file
+├── Step1/
+│   ├── abi.m4                  # M4 macro file — register aliases & pseudo-instructions
+│   ├── lexer.l                 # Flex lexer — tokenises the assembly source
+│   ├── lex.yy.c                # Auto-generated C lexer (from lexer.l)
+│   ├── parser.y                # Bison grammar — builds the statement list
+│   ├── parser_tab.c            # Auto-generated C parser (from parser.y)
+│   └── parser_tab.h            # Auto-generated parser header
+├── Step2/
+│   ├── code_generator.c        # Pass 2 — walks the statement list and emits hex
+│   └── code_generator.h        # code_generator public interface
+├── Util/
+│   ├── symbol_table.c          # Hash-table-based symbol table
+│   ├── symbol_table.h          # symbol_table public interface
+│   ├── statements_list.c       # Dynamic array of parsed statements
+│   ├── statements_list.h       # statements_list public interface + statement_t type
+│   ├── asm_operations.h        # Opcodes, fn codes, formats and directive constants
+│   ├── logger.c                # Colour-coded terminal logging helpers
+│   └── logger.h                # LOG_DEBUG / LOG_WARNING / LOG_ERROR macros
+└── Makefile                    # Full build pipeline
+```
 
 ---
 
-## 🚀 How to Use
+## ⚙️ How It Works — Two-Pass Assembly
+
+### Pass 1 (Lex + Parse)
+The Flex lexer (`lexer.l`) tokenises the M4-expanded source file and feeds tokens to the Bison parser (`parser.y`). As instructions are recognised, the parser:
+- Adds **labels** and **`.equ` constants** to the **symbol table** (`symbol_table.c`), recording their address or value.
+- Appends every instruction and directive as a `statement_t` record to the **statements list** (`statements_list.c`), tracking the location counter as it goes.
+
+### Pass 2 (Code Generation)
+`code_generator.c` iterates over the statements list. For each statement it calls `encode_statement()`, which reads the format field and bit-packs the opcode, register numbers, immediate, and condition-code fields into a 16-bit word. Labels and forward references are resolved against the symbol table at this stage. The output is written to `build/<basename>.hex`. The addresses that don´t have instructions are filled with NOP's
+
+---
+
+## 🚀 How to Build and Use
+
+### Prerequisites
+
+| Tool | Purpose |
+|------|---------|
+| `gcc` | Compiles all C sources |
+| `flex` | Regenerates `lex.yy.c` from `lexer.l` (if needed) |
+| `bison` | Regenerates `parser_tab.c/.h` from `parser.y` (if needed) |
+| `m4` | Expands macros in `.asm` files before assembly |
+| `awk` | Splits the hex output into high/low byte files |
+
+> **Note:** `lex.yy.c`, `parser_tab.c`, and `parser_tab.h` are already pre-generated and included in `Step1/`. You only need to re-run Flex/Bison if you modify `lexer.l` (flex lexer.l )or `parser.y` (bison -d parser.y).
+
+---
 
 ### 1. Write your program
 
-Open `test.asm` and write your assembly instructions. For example:
-
+Open (or create) an `.asm` file and write your assembly. The default file is `ASM_test.asm`:
 ```asm
 ADDI r1, r0, #5     ; r1 = 5
 ADDI r2, r0, #3     ; r2 = 3
-ADD r3, r1          ; r3 = r1 + r2
+ADD  r3, r1         ; r3 = r1 + r2
 ```
+IF YOU DO CHANGE THE NAME OF THE .asm FILE, CHANGE IT IN MAKEFILE!!!
+---
 
-You can use both raw instructions and macros defined in `abi.m4`. SCROLL DOWN TO SEE WHAT INSTRUCTIONS YOU CAN USE AND HOW TO WRITE THEM IN THE .ASM FILE
-
-### 2. Build
-
-Simply run:
-
+### 2. Build the assembler and assemble your file
 ```bash
 make
 ```
 
-### 3. Output files generated
+This runs three steps automatically:
 
-After `make`, the following files are created:
+| Step | What happens |
+|------|-------------|
+| **Compile** | Compiles all `.c` files into the `assembler` binary |
+| **M4 expand** | Runs `m4 Step1/abi.m4 <src>` → `build/<basename>.asm` |
+| **Assemble** | Runs `./assembler build/<basename>.asm` → `build/<basename>.hex` |
+| **Split** | Splits hex into `build/<basename>_hi.hex` and `build/<basename>_lo.hex` |
+
+To assemble a different file:
+```bash
+make SRC=my_program.asm
+```
+
+---
+
+### 3. Output files
+
+All outputs land in the `build/` directory:
 
 | File | Description |
 |------|-------------|
-| `program.asm` | Your program after M4 macro expansion (macros replaced by real instructions) |
-| `program.hex` | Your program in 16-bit hexadecimal, one instruction per line |
-| `memH.hex` | High byte of each instruction (upper 8 bits) |
-| `memL.hex` | Low byte of each instruction (lower 8 bits) |
+| `build/<basename>.asm` | Source after M4 macro expansion |
+| `build/<basename>.hex` | 16-bit hex words, one per line |
+| `build/<basename>_hi.hex` | High byte (bits 15–8) of each instruction |
+| `build/<basename>_lo.hex` | Low byte (bits 7–0) of each instruction |
+
+---
 
 ### 4. Clean up
-
-To remove all generated files and return to the base source files:
-
 ```bash
 make clean
 ```
 
-After cleaning, you'll be left with only: `abi.m4`, `assembler.l`, `Makefile`, `test.asm`, and `split_mem.c`.
+Removes the `build/` directory and the `assembler` binary.
+
+---
+
+## 📂 Source File Descriptions
+
+### `main.c`
+Entry point. Accepts a single argument (the pre-processed `.asm` file), calls `init_symbol_table()` and `init_statements_list()`, runs `yyparse()` (Pass 1), then calls `generate_code()` (Pass 2). Frees all resources on exit.
+
+### `Step1/abi.m4`
+M4 macro definitions. Provides register name aliases (`zero`, `sp`, `lr`, etc.) and pseudo-instruction macros (`PUSH`, `POP`, `MOV`, `CALL`, `RET`, `LI`, etc.). Expanded by `m4` before the assembler sees the file.
+
+### `Step1/lexer.l`
+Flex lexer source. Defines token patterns for every instruction mnemonic, register names, numeric literals (decimal, hex), identifiers, labels, and punctuation. Sets `yylval` for tokens that carry a value and calls `yyparse()` indirectly via `yylex()`.
+
+### `Step1/parser.y`
+Bison grammar. One rule per instruction format — recognises operand patterns and calls the appropriate `add_statement_*()` function to record the instruction. Also handles `.org`, `.equ`, `.word`, and `.byte` directives, and resolves label definitions into the symbol table.
+
+### `Step1/lex.yy.c` / `Step1/parser_tab.c` / `Step1/parser_tab.h`
+Auto-generated files — do **not** edit by hand. Regenerate with:
+```bash
+flex  -o Step1/lex.yy.c       Step1/lexer.l
+bison -d -o Step1/parser_tab.c Step1/parser.y
+```
+
+### `Step2/code_generator.c`
+Pass 2 engine. Allocates a 64 KB memory image pre-filled with `NOP` (`0xF000`), walks every `statement_t`, calls `encode_statement()` to produce a 16-bit word, and writes it at the correct byte offset. Resolves branch displacements and label references against the symbol table. Writes the final hex file.
+
+### `Step2/code_generator.h`
+Declares `generate_code()`.
+
+### `Util/symbol_table.c` / `Util/symbol_table.h`
+A hash-table-backed symbol table (djb2 hash, chaining). Stores label names mapped to their 16-bit address or `.equ` value. Key functions: `add_symbol()`, `set_symbol_value()`, `get_symbol_value()`.
+
+### `Util/statements_list.c` / `Util/statements_list.h`
+A growable array (`statement_t[]`) that records every instruction and directive in program order, together with its format, opcode, register numbers, immediate, and source line number. The location counter is updated here as statements are added.
+
+### `Util/asm_operations.h`
+Central definitions header. Contains all opcode values, `fn` codes (for RR/RI formats), condition-code values (for BR format), format character constants (`FMT_RR`, `FMT_RI`, etc.), directive opcodes (`DIR_ORG`, `DIR_EQU`, `DIR_WORD`, `DIR_BYTE`), fixed encodings (`NOP_ENCODING`, `CLI_ENCODING`, `STI_ENCODING`), and `misc` type constants (`IMMEDIATE`, `LABEL`, `LINK`).
+
+### `Util/logger.c` / `Util/logger.h`
+Lightweight logging utility. Provides `LOG_DEBUG`, `LOG_WARNING`, and `LOG_ERROR` macros that print colour-coded messages to stdout with the calling function name. An optional file log (`log.txt`) can be enabled via `#define ENABLE_FILE_LOG`.
+
+### `Makefile`
+Drives the full pipeline. Targets: `all` (default — builds everything), `Compile` (builds the assembler binary), `clean` (removes all generated files). The `SRC` variable selects the input file (default: `ASM_test.asm`).
 
 ---
 
@@ -81,6 +178,12 @@ You can use either the register number (`r1`) or the alias (`a0`) — they are i
 ---
 
 ## 🔧 Instruction Set
+
+FOR IMMEDIATE VALUES ALWAYS USE # (DECIMAL OR HEXADECIMAL).
+LABELS DO NOT NEED # BEFORE THE NAME.
+HEXADECIMAL VALUES ARE ONLY ACCEPTED WITH x.
+INSTRUCTIONS NAMES ARE IN CAPITAL LETTERS.
+USING PSEUDO-INSTRUCTIONS DO NOT FORGET OF () ITS NEEDED FOR MACRO EXPANTION.
 
 ### RR Format — Register-to-Register Operations
 ```
@@ -106,7 +209,7 @@ Encoding: op(4) rd(4) rs(4) fn(4)
 ### RI Format — Register-Immediate Operations
 ```
 Encoding: op(4) rd(4) fn(4) imm(4)
-imm can be #0-15 (decimal number) or #0-F(hexa number)
+imm can be #0-15 (decimal number) or #0-F (hex number)
 ```
 
 | Instruction | Example | Description |
@@ -123,7 +226,7 @@ imm can be #0-15 (decimal number) or #0-F(hexa number)
 ### RRI (Memory) Format — Load/Store and Jump-and-Link
 ```
 Encoding: op(4) rd(4) rs(4) imm(4)
-imm can be #0-15 (decimal number) or #0-F(hexa number)
+imm can be #0-15 (decimal number) or #0-F (hex number)
 ```
 
 | Instruction | Example | Description |
@@ -140,7 +243,6 @@ imm can be #0-15 (decimal number) or #0-F(hexa number)
 ### I12 Format — 12-bit Immediate Prefix
 ```
 Encoding: op(4) imm(12)
-imm can be #0-4095 (decimal number) or #0-FFF(hexa number)
 ```
 
 | Instruction | Example | Description |
@@ -152,7 +254,7 @@ imm can be #0-4095 (decimal number) or #0-FFF(hexa number)
 ### BR Format — Conditional Branches
 ```
 Encoding: op(4) cond(4) disp(8)
-imm can be #0-255 (decimal number) or #0-FF(hexa number)
+disp can be #0-255 (decimal number) or #0-FF (hex number)
 ```
 
 | Instruction | Example | Description |
@@ -183,7 +285,7 @@ No operands needed — output a fixed hex word
 
 ## 🧩 Macros (defined in `abi.m4`)
 
-Macros are expanded by M4 before assembling. They generate multiple real instructions and are visible in `program.asm`.
+Macros are expanded by M4 before assembling. They generate multiple real instructions and are visible in `build/<basename>.asm`.
 
 ### Stack Operations
 
@@ -191,13 +293,10 @@ Macros are expanded by M4 before assembling. They generate multiple real instruc
 |-------|-----------|-------------|
 | `PUSH(reg)` | `ADDI sp, sp, #-1` + `SW reg, sp, #0` | Push register onto stack |
 | `POP(reg)` | `LW reg, sp, #0` + `ADDI sp, sp, #1` | Pop register from stack |
-
 ```asm
 PUSH(r1)   ; save r1
 POP(r1)    ; restore r1
 ```
-
----
 
 ### Pseudo-Instructions
 
@@ -211,16 +310,13 @@ POP(r1)    ; restore r1
 | `LEA(rd,rs,imm)` | `ADDI rd, rs, #imm` | Load effective address |
 | `OR(rd,rs)` | `MOV(t0, rd)` + `AND t0, rs` + `XOR rd, rs` + `XOR rd, t0` | Bitwise OR |
 | `LBS(rd,rs,imm)` | `LB` + sign-extend sequence | Load byte signed |
-
 ```asm
-MOV(r2,r1)       ; r2 = r1
-SUBI(r3,r1,4)   ; r3 = r1 - 4
-NEG(r1)           ; r1 = -r1
-SLL(r2)           ; r2 = r2 << 1
-OR(r1,r2)        ; r1 = r1 | r2
+MOV(r2, r1)      ; r2 = r1
+SUBI(r3, r1, 4)  ; r3 = r1 - 4
+NEG(r1)          ; r1 = -r1
+SLL(r2)          ; r2 = r2 << 1
+OR(r1, r2)       ; r1 = r1 | r2
 ```
-
----
 
 ### Jump and Call
 
@@ -229,14 +325,11 @@ OR(r1,r2)        ; r1 = r1 | r2
 | `J(addr)` | `IMM` + `JAL r0, r0, #...` | Unconditional jump to absolute address |
 | `CALL(addr)` | `IMM` + `JAL lr, r0, #...` | Call subroutine (saves return address in `lr`) |
 | `RET` | `JAL r0, lr, #0` | Return from subroutine |
-
 ```asm
 CALL(0x050)   ; call subroutine at address 0x050
 RET           ; return from subroutine
 J(0x010)      ; jump to address 0x010
 ```
-
----
 
 ### Interrupt Handling
 
@@ -248,7 +341,6 @@ J(0x010)      ; jump to address 0x010
 | `IRET` | Restores condition codes, restores lr, returns |
 | `PUSH_CC` | Saves condition codes register (via t0) onto stack |
 | `POP_CC` | Pops condition codes register from stack (via t0) |
-
 ```asm
 ; Full interrupt service routine:
 ISR_PRO        ; save lr, CC, enable interrupts
@@ -256,14 +348,11 @@ ISR_PRO        ; save lr, CC, enable interrupts
 IRET           ; restore CC, lr, return
 ```
 
----
-
 ### Load Immediate (Large Values)
 
 | Macro | Description |
 |-------|-------------|
 | `LI(rd, imm)` | Load a full 16-bit immediate into `rd` using `IMM` prefix + `ADDI` |
-
 ```asm
 LI(r1, 0x1A3)   ; r1 = 0x1A3 (uses IMM for upper bits, ADDI for lower)
 ```
