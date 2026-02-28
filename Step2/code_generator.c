@@ -100,7 +100,7 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 
 void generate_code(void)
 {
-    /* ── 1. Allocate memory image and fill with NOP (0xF000) ── */
+    /* ── 1. Allocate memory and fill with NOP (0xF000) ── */
     uint8_t *mem = malloc(MEM_SIZE);
     if (!mem) {
         LOG_ERROR("generate_code: out of memory");
@@ -110,30 +110,27 @@ void generate_code(void)
     /* Fill every 16-bit aligned word with NOP_ENCODING (0xF000).
      * We store bytes big-endian: high byte first. */
     for (uint32_t addr = 0; addr < MEM_SIZE; addr += 2) {
-        mem[addr]     = (NOP_ENCODING >> 8) & 0xFF;   /* 0xF0 */
+        mem[addr]     = (NOP_ENCODING >> 8) & 0xFF;   /* 0xF0 big endian*/
         mem[addr + 1] =  NOP_ENCODING       & 0xFF;   /* 0x00 */
     }
 
-    /* ── 2. Walk the statement list and write into the image ── */
-    uint32_t count = get_statement_count();
-    uint32_t lc    = 0;
+    /* ── 2. Walk the statement list, write memory, track max_lc ── */
+    uint32_t count  = get_statement_count();
+    uint32_t lc     = 0;
+    uint32_t max_lc = 0;
 
     for (uint32_t i = 0; i < count; i++) {
-
         statement_t s = get_statement(i);
 
-        /* ── Directives ──────────────────────────────────────── */
         switch (s.opcode) {
-
             case DIR_ORG:
                 lc = (uint32_t)(uint16_t)s.imm;
-                continue;
+                continue;   /* ORG just repositions lc, don't update max_lc */
 
             case DIR_EQU:
-                continue;
+                continue;   /* no bytes emitted */
 
             case DIR_WORD: {
-                /* 32-bit value, big-endian, 4 bytes */
                 uint32_t v = (uint32_t)s.imm;
                 if (lc + 3 < MEM_SIZE) {
                     mem[lc]     = (v >> 24) & 0xFF;
@@ -142,47 +139,33 @@ void generate_code(void)
                     mem[lc + 3] =  v        & 0xFF;
                 }
                 lc += LC_WORD;
-                continue;
+                break;
             }
 
             case DIR_BYTE:
                 if (lc < MEM_SIZE)
                     mem[lc] = (uint8_t)(s.imm & 0xFF);
                 lc += LC_BYTE;
-                continue;
-
-            default:
                 break;
+
+            default: {
+                uint16_t code = encode_statement(s, lc);
+                if (lc + 1 < MEM_SIZE) {
+                    mem[lc]     = (code >> 8) & 0xFF;
+                    mem[lc + 1] =  code       & 0xFF;
+                }
+                lc += LC_INSTRUCTION;
+                break;
+            }
         }
 
-        /* ── Instructions — encode and write 2 bytes ─────────── */
-        uint16_t code = encode_statement(s, lc);
-        if (lc + 1 < MEM_SIZE) {
-            mem[lc]     = (code >> 8) & 0xFF;
-            mem[lc + 1] =  code       & 0xFF;
-        }
-        lc += LC_INSTRUCTION;
-    }
-
-    /* ── 3. Determine the actual used range ──────────────────── */
-    /* Find the highest address that was explicitly written so we
-     * don't dump the entire 64 KiB when only a small fraction is
-     * used.  We scan the statement list again just for the max lc. */
-    uint32_t max_lc = 0;
-    lc = 0;
-    for (uint32_t i = 0; i < count; i++) {
-        statement_t s = get_statement(i);
-        if (s.opcode == DIR_ORG)        { lc = (uint32_t)(uint16_t)s.imm; continue; }
-        if (s.opcode == DIR_EQU)        { continue; }
-        if (s.opcode == DIR_WORD)       { lc += LC_WORD;        }
-        else if (s.opcode == DIR_BYTE)  { lc += LC_BYTE;        }
-        else                            { lc += LC_INSTRUCTION; }
         if (lc > max_lc) max_lc = lc;
     }
+
     /* Round up to next even address */
     if (max_lc & 1) max_lc++;
 
-    /* ── 4. Write the memory image to the hex file ───────────── */
+    /* ── 3. Write the memory image to the hex file ───────────── */
     FILE *fptr = fopen("bleh.hex", "w");
     if (!fptr) {
         LOG_ERROR("generate_code: cannot open output file");
@@ -200,5 +183,6 @@ void generate_code(void)
     fclose(fptr);
     free(mem);
 }
+
 
 

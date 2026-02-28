@@ -1,6 +1,8 @@
 divert(-1)
 changecom(`;')
 
+define(`_IS_NUM', `ifelse(regexp(`$1', `^[0-9\-]'), `-1', `0', `1')')
+
 # ============================================================ dnl
 # Register Aliases (ABI) dnl
 # ============================================================ dnl
@@ -75,12 +77,18 @@ SUB $1, t0')
 # ============================================================ dnl
 
 define(`J',
+`ifelse(_IS_NUM(`$1'),`1',
 `IMM #eval(($1) >> 4)
-JAL r0, r0, #eval(($1) & 15)')
+JAL r0, r0, #eval(($1) & 15)',
+`IMM $1
+JAL r0, r0, $1')')
 
 define(`CALL',
+`ifelse(_IS_NUM(`$1'),`1',
 `IMM #eval(($1) >> 4)
-JAL lr, r0, #eval(($1) & 15)')
+JAL lr, r0, #eval(($1) & 15)',
+`IMM $1
+JAL lr, r0, $1')')
 
 define(`RET', `JAL r0, lr, #0')
 
@@ -110,8 +118,11 @@ RET')
 # ============================================================ dnl
 
 define(`LI',
+`ifelse(_IS_NUM(`$2'),`1',
 `IMM #eval(($2) >> 4)
-ADDI $1, zero, #eval(($2) & 15)')
+ADDI $1, zero, #eval(($2) & 15)',
+`IMM $2
+ADDI $1, zero, $2')')
 
 define(`PUSH_CC', 
 `GETCC t0 

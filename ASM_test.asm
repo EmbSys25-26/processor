@@ -15,7 +15,7 @@ TIMER0_CR0 .equ 0x8000      ; Timer 0 Control Register 0
 main:
     ; Register Initialization (using ABI aliases)
     IMM #0x03                ; Prefix for 12-bit immediate
-    LI(sp,0x03FF)         ; Load Stack Pointer
+    LI(sp,STACK_TOP)         ; Load Stack Pointer
     LI(a0,0x0005)            ; Argument 0
     LI(a1,0x000A)           ; Argument 1
 
@@ -33,7 +33,7 @@ main:
 
     ; MEMORY ACCESS
     ; Tests high/low byte lane split and word-addressed indexing.
-    LI(t2,0x8002)        ; Load MMIO base address
+    LI(t2,TIMER0_CR1)        ; Load MMIO base address
     SW a0, t2, #0           ; Store Word: Timer0_CR0 = a0
     LW t3, t2, #0           ; Load Word: t3 = Timer0_CR0
     SB a1, t2, #1           ; Store Byte
@@ -75,5 +75,6 @@ isr_timer1:
 
 ; 7. DATA STORAGE
 .org 0x0300
+    .byte 0x34
     .word 0xDEAD             ; Direct word emission
     .word 0xBEEF
