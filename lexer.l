@@ -5,49 +5,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "parser.tab.h"
 
+YYSTYPE yylval;
 
 int line_number = 1;
-char pp_name[256];
-char pp_value[512];
-
-static void read_pp_define(void);
-static void read_pp_undef(void);
-static void read_pp_include_sys(void);
-static void read_pp_include_usr(void);
-
-typedef enum {
-    TOKEN_NUM,  TOKEN_FNUM, TOKEN_CNUM, TOKEN_STR, TOKEN_ID,
-    TOKEN_INT,    TOKEN_CHAR,    TOKEN_FLOAT,  TOKEN_DOUBLE, TOKEN_VOID,
-    TOKEN_BOOL,   TOKEN_INLINE,
-    TOKEN_SIGNED, TOKEN_UNSIGNED, TOKEN_LONG,  TOKEN_SHORT,
-    TOKEN_STATIC, TOKEN_EXTERN,   TOKEN_CONST, TOKEN_VOLATILE,
-    TOKEN_STRUCT, TOKEN_UNION,  TOKEN_ENUM, TOKEN_TYPEDEF, TOKEN_SIZEOF,
-    TOKEN_IF,  TOKEN_ELSE,  TOKEN_SWITCH, TOKEN_CASE,  TOKEN_DEFAULT,
-    TOKEN_FOR, TOKEN_WHILE, TOKEN_DO,     TOKEN_BREAK, TOKEN_RETURN,
-    TOKEN_PP_DEFINE, TOKEN_PP_UNDEF, TOKEN_PP_INCLUDE_SYS, TOKEN_PP_INCLUDE_USR,
-    TOKEN_PLUS, TOKEN_MINUS, TOKEN_ASTERISK, TOKEN_OVER, TOKEN_PERCENT,
-    TOKEN_INCREMENT, TOKEN_DECREMENT,
-    TOKEN_ASSIGN,
-    TOKEN_PLUS_ASSIGN, TOKEN_MINUS_ASSIGN, TOKEN_MULTIPLY_ASSIGN,
-    TOKEN_DIVIDE_ASSIGN, TOKEN_MODULUS_ASSIGN,
-    TOKEN_AND_ASSIGN, TOKEN_OR_ASSIGN, TOKEN_XOR_ASSIGN,
-    TOKEN_LEFT_SHIFT_ASSIGN, TOKEN_RIGHT_SHIFT_ASSIGN,
-    TOKEN_EQUAL, TOKEN_NOT_EQUAL,
-    TOKEN_LESS_THAN, TOKEN_GREATER_THAN,
-    TOKEN_LESS_THAN_OR_EQUAL, TOKEN_GREATER_THAN_OR_EQUAL,
-    TOKEN_LOGICAL_AND, TOKEN_LOGICAL_OR, TOKEN_LOGICAL_NOT,
-    TOKEN_BITWISE_AND, TOKEN_BITWISE_OR, TOKEN_BITWISE_XOR, TOKEN_BITWISE_NOT,
-    TOKEN_LEFT_SHIFT, TOKEN_RIGHT_SHIFT,
-    TOKEN_ARROW, TOKEN_DOT,
-    TOKEN_SEMI, TOKEN_COMMA, TOKEN_COLON, TOKEN_TERNARY,
-    TOKEN_LEFT_PARENTHESES, TOKEN_RIGHT_PARENTHESES,
-    TOKEN_LEFT_BRACE, TOKEN_RIGHT_BRACE,
-    TOKEN_LEFT_BRACKET, TOKEN_RIGHT_BRACKET,
-    TOKEN_EOF, TOKEN_ERROR
-} TokenType;
-
-
 %}
 
 digit       [0-9]
@@ -67,7 +29,6 @@ newline     \n
 "float"     { return TOKEN_FLOAT;    }
 "double"    { return TOKEN_DOUBLE;   }
 "void"      { return TOKEN_VOID;     }
-"bool"      { return TOKEN_BOOL;     }
 "inline"    { return TOKEN_INLINE;   }
 "signed"    { return TOKEN_SIGNED;   }
 "unsigned"  { return TOKEN_UNSIGNED; }
@@ -77,11 +38,6 @@ newline     \n
 "extern"    { return TOKEN_EXTERN;   }
 "const"     { return TOKEN_CONST;    }
 "volatile"  { return TOKEN_VOLATILE; }
-"struct"    { return TOKEN_STRUCT;   }
-"union"     { return TOKEN_UNION;    }
-"enum"      { return TOKEN_ENUM;     }
-"typedef"   { return TOKEN_TYPEDEF;  }
-"sizeof"    { return TOKEN_SIZEOF;   }
 "if"        { return TOKEN_IF;       }
 "else"      { return TOKEN_ELSE;     }
 "switch"    { return TOKEN_SWITCH;   }
@@ -91,70 +47,81 @@ newline     \n
 "while"     { return TOKEN_WHILE;    }
 "do"        { return TOKEN_DO;       }
 "break"     { return TOKEN_BREAK;    }
+"continue"  { return TOKEN_CONTINUE; }
 "return"    { return TOKEN_RETURN;   }
+"goto"      { return TOKEN_GOTO;     }
 
-"#define"[ \t]+       { read_pp_define();      return TOKEN_PP_DEFINE;      }
-"#undef"[ \t]+        { read_pp_undef();       return TOKEN_PP_UNDEF;        }
-"#include"[ \t]*"<"   { read_pp_include_sys(); return TOKEN_PP_INCLUDE_SYS; }
-"#include"[ \t]*"\""  { read_pp_include_usr(); return TOKEN_PP_INCLUDE_USR; }
-
-"<<="   { return TOKEN_LEFT_SHIFT_ASSIGN;  }
-">>="   { return TOKEN_RIGHT_SHIFT_ASSIGN; }
-"+="    { return TOKEN_PLUS_ASSIGN;        }
-"-="    { return TOKEN_MINUS_ASSIGN;       }
-"*="    { return TOKEN_MULTIPLY_ASSIGN;    }
-"/="    { return TOKEN_DIVIDE_ASSIGN;      }
-"%="    { return TOKEN_MODULUS_ASSIGN;     }
-"&="    { return TOKEN_AND_ASSIGN;         }
-"|="    { return TOKEN_OR_ASSIGN;          }
-"^="    { return TOKEN_XOR_ASSIGN;         }
-"++"    { return TOKEN_INCREMENT;          }
-"--"    { return TOKEN_DECREMENT;          }
-"+"     { return TOKEN_PLUS;               }
-"-"     { return TOKEN_MINUS;              }
-"*"     { return TOKEN_ASTERISK;           }
-"/"     { return TOKEN_OVER;               }
-"%"     { return TOKEN_PERCENT;            }
+"<<="   { return TOKEN_LEFT_SHIFT_ASSIGN;     }
+">>="   { return TOKEN_RIGHT_SHIFT_ASSIGN;    }
+"+="    { return TOKEN_PLUS_ASSIGN;           }
+"-="    { return TOKEN_MINUS_ASSIGN;          }
+"*="    { return TOKEN_MULTIPLY_ASSIGN;       }
+"/="    { return TOKEN_DIVIDE_ASSIGN;         }
+"%="    { return TOKEN_MODULUS_ASSIGN;        }
+"&="    { return TOKEN_AND_ASSIGN;            }
+"|="    { return TOKEN_OR_ASSIGN;             }
+"^="    { return TOKEN_XOR_ASSIGN;            }
+"++"    { return TOKEN_INCREMENT;             }
+"--"    { return TOKEN_DECREMENT;             }
+"+"     { return TOKEN_PLUS;                  }
+"-"     { return TOKEN_MINUS;                 }
+"*"     { return TOKEN_ASTERISK;              }
+"/"     { return TOKEN_OVER;                  }
+"%"     { return TOKEN_PERCENT;               }
 "=="    { return TOKEN_EQUAL;                 }
 "!="    { return TOKEN_NOT_EQUAL;             }
 "<="    { return TOKEN_LESS_THAN_OR_EQUAL;    }
 ">="    { return TOKEN_GREATER_THAN_OR_EQUAL; }
 "<"     { return TOKEN_LESS_THAN;             }
 ">"     { return TOKEN_GREATER_THAN;          }
-"&&"    { return TOKEN_LOGICAL_AND;  }
-"||"    { return TOKEN_LOGICAL_OR;   }
-"!"     { return TOKEN_LOGICAL_NOT;  }
-"<<"    { return TOKEN_LEFT_SHIFT;   }
-">>"    { return TOKEN_RIGHT_SHIFT;  }
-"&"     { return TOKEN_BITWISE_AND;  }
-"|"     { return TOKEN_BITWISE_OR;   }
-"^"     { return TOKEN_BITWISE_XOR;  }
-"~"     { return TOKEN_BITWISE_NOT;  }
-"->"    { return TOKEN_ARROW;        }
-"."     { return TOKEN_DOT;          }
-"="     { return TOKEN_ASSIGN;       }
-";"     { return TOKEN_SEMI;               }
-","     { return TOKEN_COMMA;              }
-":"     { return TOKEN_COLON;              }
-"?"     { return TOKEN_TERNARY;            }
-"("     { return TOKEN_LEFT_PARENTHESES;   }
-")"     { return TOKEN_RIGHT_PARENTHESES;  }
-"{"     { return TOKEN_LEFT_BRACE;         }
-"}"     { return TOKEN_RIGHT_BRACE;        }
-"["     { return TOKEN_LEFT_BRACKET;       }
-"]"     { return TOKEN_RIGHT_BRACKET;      }
+"&&"    { return TOKEN_LOGICAL_AND;           }
+"||"    { return TOKEN_LOGICAL_OR;            }
+"!"     { return TOKEN_LOGICAL_NOT;           }
+"<<"    { return TOKEN_LEFT_SHIFT;            }
+">>"    { return TOKEN_RIGHT_SHIFT;           }
+"&"     { return TOKEN_BITWISE_AND;           }
+"|"     { return TOKEN_BITWISE_OR;            }
+"^"     { return TOKEN_BITWISE_XOR;           }
+"~"     { return TOKEN_BITWISE_NOT;           }
+"="     { return TOKEN_ASSIGN;                }
+";"     { return TOKEN_SEMI;                  }
+","     { return TOKEN_COMMA;                 }
+":"     { return TOKEN_COLON;                 }
+"?"     { return TOKEN_TERNARY;               }
+"("     { return TOKEN_LEFT_PARENTHESES;      }
+")"     { return TOKEN_RIGHT_PARENTHESES;     }
+"{"     { return TOKEN_LEFT_BRACE;            }
+"}"     { return TOKEN_RIGHT_BRACE;           }
+"["     { return TOKEN_LEFT_BRACKET;          }
+"]"     { return TOKEN_RIGHT_BRACKET;         }
 
-{charlit}     { /*yylval.ival = (long int)yytext[1]; */     return TOKEN_CNUM; }
-{hexNumber}   { /*yylval.ival = strtol(yytext, NULL, 16); */return TOKEN_NUM;  }
-{number}      { /*yylval.ival = strtol(yytext, NULL, 10); */return TOKEN_NUM;  }
-{floatNumber} { /*yylval.fval = strtod(yytext, NULL);     */return TOKEN_FNUM; }
-{string}      { /*yylval.sval = strdup(yytext);           */return TOKEN_STR;  }
-{identifier}  { /*yylval.sval = strdup(yytext);           */return TOKEN_ID;   }
+{charlit} {
+    if (yytext[1] == '\\') {
+        switch (yytext[2]) {
+            case 'n':  yylval.cval = '\n'; break;
+            case 't':  yylval.cval = '\t'; break;
+            case 'r':  yylval.cval = '\r'; break;
+            case '\\': yylval.cval = '\\'; break;
+            case '\'': yylval.cval = '\''; break;
+            case '0':  yylval.cval = '\0'; break;
+            default:   yylval.cval = yytext[2]; break;
+        }
+    } else {
+        yylval.cval = yytext[1];
+    }
+    return TOKEN_CNUM;
+}
+
+{hexNumber}   { yylval.ival = strtol(yytext, NULL, 16); return TOKEN_NUM;  }
+{number}      { yylval.ival = strtol(yytext, NULL, 10); return TOKEN_NUM;  }
+{floatNumber} { yylval.fval = strtod(yytext, NULL);     return TOKEN_FNUM; }
+{string}      { yylval.sval = strdup(yytext);           return TOKEN_STR;  }
+{identifier}  { yylval.sval = strdup(yytext);           return TOKEN_ID;   }
 
 {whitespace}  { }
 {newline}     { line_number++; }
 
-"//".*  { }
+"//".*        { }
 
 <INITIAL>"/*" { BEGIN(INCOMMENT); }
 
@@ -173,71 +140,3 @@ newline     \n
     return TOKEN_ERROR; }
 
 %%
-
-static void read_pp_define(void) {
-    int ni = 0, vi = 0; char c;
-    memset(pp_name, 0, sizeof(pp_name));
-    memset(pp_value, 0, sizeof(pp_value));
-    while ((c = (char)input()) != (char)EOF && c != ' ' && c != '\t' && c != '\n')
-        if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
-    if (c == ' ' || c == '\t')
-        while ((c = (char)input()) != (char)EOF && (c == ' ' || c == '\t'));
-    if (c != '\n' && c != (char)EOF) {
-        if (vi < (int)sizeof(pp_value)-1) pp_value[vi++] = c;
-        while ((c = (char)input()) != (char)EOF && c != '\n')
-            if (vi < (int)sizeof(pp_value)-1) pp_value[vi++] = c;
-    }
-    if (c == '\n') line_number++;
-}
-
-static void read_pp_undef(void) {
-    int ni = 0; char c;
-    memset(pp_name, 0, sizeof(pp_name));
-    while ((c = (char)input()) != (char)EOF && c != ' ' && c != '\t' && c != '\n')
-        if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
-    if (c == '\n') line_number++;
-}
-
-static void read_pp_include_sys(void) {
-    int ni = 0; char c;
-    memset(pp_name, 0, sizeof(pp_name));
-    while ((c = (char)input()) != (char)EOF && c != '>' && c != '\n')
-        if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
-    if (c == '\n') line_number++;
-}
-
-static void read_pp_include_usr(void) {
-    int ni = 0; char c;
-    memset(pp_name, 0, sizeof(pp_name));
-    while ((c = (char)input()) != (char)EOF && c != '"' && c != '\n')
-        if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
-    if (c == '\n') line_number++;
-}
-
-
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        fprintf(stderr, "Uso: %s <ficheiro.c>\n", argv[0]);
-        return 1;
-    }
-    yyin = fopen(argv[1], "r");
-    if (!yyin) { perror(argv[1]); return 1; }
-
-    int tok;
-    printf("%-6s  %s\n", "LINE", "LEXEME");
-    printf("%-6s  %s\n", "----", "------");
-    while ((tok = yylex()) != 0 && tok != TOKEN_ERROR) {
-    if (tok == TOKEN_PP_DEFINE)
-        printf("%-6d  %-20s  name=%s  value=%s\n", line_number, yytext, pp_name, pp_value);
-    else if (tok == TOKEN_PP_UNDEF ||
-             tok == TOKEN_PP_INCLUDE_SYS ||
-             tok == TOKEN_PP_INCLUDE_USR)
-        printf("%-6d  %-20s  name=%s\n", line_number, yytext, pp_name);
-    else
-        printf("%-6d  %s\n", line_number, yytext);
-}
-
-    printf("%-6d  EOF\n", line_number);
-    fclose(yyin);
-    return 0;
-}
