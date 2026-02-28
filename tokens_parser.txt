@@ -1,3 +1,7 @@
+/*tokens dos defines*/
+
+%token TOKEN_PP_DEFINE TOKEN_PP_UNDEF
+%token TOKEN_PP_INCLUDE_SYS TOKEN_PP_INCLUDE_USR
 
 /* Tokens com valor semântico */
 %token <ival> TOKEN_NUM
@@ -13,7 +17,7 @@
 /* Controlo de fluxo */
 %token TOKEN_IF TOKEN_ELSE TOKEN_SWITCH TOKEN_CASE TOKEN_DEFAULT
 %token TOKEN_FOR TOKEN_WHILE TOKEN_DO TOKEN_BREAK TOKEN_CONTINUE
-%token TOKEN_RETURN TOKEN_GOTO
+%token TOKEN_RETURN 
 
 /* Operadores de atribuição */
 %token TOKEN_LEFT_SHIFT_ASSIGN TOKEN_RIGHT_SHIFT_ASSIGN

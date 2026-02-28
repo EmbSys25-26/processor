@@ -10,6 +10,13 @@
 YYSTYPE yylval;
 
 int line_number = 1;
+char pp_name[256];
+char pp_value[512];
+
+static void read_pp_define(void);
+static void read_pp_undef(void);
+static void read_pp_include_sys(void);
+static void read_pp_include_usr(void);
 %}
 
 digit       [0-9]
@@ -49,7 +56,11 @@ newline     \n
 "break"     { return TOKEN_BREAK;    }
 "continue"  { return TOKEN_CONTINUE; }
 "return"    { return TOKEN_RETURN;   }
-"goto"      { return TOKEN_GOTO;     }
+
+"#define"[ \t]+       { read_pp_define();      return TOKEN_PP_DEFINE;      }
+"#undef"[ \t]+        { read_pp_undef();       return TOKEN_PP_UNDEF;        }
+"#include"[ \t]*"<"   { read_pp_include_sys(); return TOKEN_PP_INCLUDE_SYS; }
+"#include"[ \t]*"\""  { read_pp_include_usr(); return TOKEN_PP_INCLUDE_USR; }
 
 "<<="   { return TOKEN_LEFT_SHIFT_ASSIGN;     }
 ">>="   { return TOKEN_RIGHT_SHIFT_ASSIGN;    }
@@ -140,3 +151,43 @@ newline     \n
     return TOKEN_ERROR; }
 
 %%
+
+static void read_pp_define(void) {
+    int ni = 0, vi = 0; char c;
+    memset(pp_name, 0, sizeof(pp_name));
+    memset(pp_value, 0, sizeof(pp_value));
+    while ((c = (char)input()) != (char)EOF && c != ' ' && c != '\t' && c != '\n')
+        if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
+    if (c == ' ' || c == '\t')
+        while ((c = (char)input()) != (char)EOF && (c == ' ' || c == '\t'));
+    if (c != '\n' && c != (char)EOF) {
+        if (vi < (int)sizeof(pp_value)-1) pp_value[vi++] = c;
+        while ((c = (char)input()) != (char)EOF && c != '\n')
+            if (vi < (int)sizeof(pp_value)-1) pp_value[vi++] = c;
+    }
+    if (c == '\n') line_number++;
+}
+
+static void read_pp_undef(void) {
+    int ni = 0; char c;
+    memset(pp_name, 0, sizeof(pp_name));
+    while ((c = (char)input()) != (char)EOF && c != ' ' && c != '\t' && c != '\n')
+        if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
+    if (c == '\n') line_number++;
+}
+
+static void read_pp_include_sys(void) {
+    int ni = 0; char c;
+    memset(pp_name, 0, sizeof(pp_name));
+    while ((c = (char)input()) != (char)EOF && c != '>' && c != '\n')
+        if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
+    if (c == '\n') line_number++;
+}
+
+static void read_pp_include_usr(void) {
+    int ni = 0; char c;
+    memset(pp_name, 0, sizeof(pp_name));
+    while ((c = (char)input()) != (char)EOF && c != '"' && c != '\n')
+        if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
+    if (c == '\n') line_number++;
+}
