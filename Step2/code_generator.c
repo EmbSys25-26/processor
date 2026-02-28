@@ -96,10 +96,25 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 
 }
 
+#define MEM_SIZE    0xFFFF 
+
 void generate_code(void)
 {
-	FILE *fptr;
-	fptr = fopen("bleh.hex", "w");
+    /* ── 1. Allocate memory image and fill with NOP (0xF000) ── */
+    uint8_t *mem = malloc(MEM_SIZE);
+    if (!mem) {
+        LOG_ERROR("generate_code: out of memory");
+        return;
+    }
+
+    /* Fill every 16-bit aligned word with NOP_ENCODING (0xF000).
+     * We store bytes big-endian: high byte first. */
+    for (uint32_t addr = 0; addr < MEM_SIZE; addr += 2) {
+        mem[addr]     = (NOP_ENCODING >> 8) & 0xFF;   /* 0xF0 */
+        mem[addr + 1] =  NOP_ENCODING       & 0xFF;   /* 0x00 */
+    }
+
+    /* ── 2. Walk the statement list and write into the image ── */
     uint32_t count = get_statement_count();
     uint32_t lc    = 0;
 
@@ -111,37 +126,79 @@ void generate_code(void)
         switch (s.opcode) {
 
             case DIR_ORG:
-                /* .org just sets the location counter — nothing to emit */
                 lc = (uint32_t)(uint16_t)s.imm;
                 continue;
 
             case DIR_EQU:
-                /* .equ defines a symbol — nothing to emit */
                 continue;
 
-            case DIR_WORD:
-                /* emit a 32-bit word as two 16-bit hex values (big-endian) */
-                fprintf(fptr, "%04X\n", (uint16_t)((s.imm >> 16) & 0xFFFF));
-                fprintf(fptr, "%04X\n", (uint16_t)( s.imm        & 0xFFFF));
+            case DIR_WORD: {
+                /* 32-bit value, big-endian, 4 bytes */
+                uint32_t v = (uint32_t)s.imm;
+                if (lc + 3 < MEM_SIZE) {
+                    mem[lc]     = (v >> 24) & 0xFF;
+                    mem[lc + 1] = (v >> 16) & 0xFF;
+                    mem[lc + 2] = (v >>  8) & 0xFF;
+                    mem[lc + 3] =  v        & 0xFF;
+                }
                 lc += LC_WORD;
                 continue;
+            }
 
             case DIR_BYTE:
-                /* emit a single byte, zero-extended to 16 bits for display */
-                fprintf(fptr, "%02X\n", (uint8_t)(s.imm & 0xFF));
+                if (lc < MEM_SIZE)
+                    mem[lc] = (uint8_t)(s.imm & 0xFF);
                 lc += LC_BYTE;
                 continue;
 
             default:
-                break;   /* fall through to instruction encoding */
+                break;
         }
 
-        /* ── Instructions ────────────────────────────────────── */
+        /* ── Instructions — encode and write 2 bytes ─────────── */
         uint16_t code = encode_statement(s, lc);
-        fprintf(fptr, "%04X\n", code);
+        if (lc + 1 < MEM_SIZE) {
+            mem[lc]     = (code >> 8) & 0xFF;
+            mem[lc + 1] =  code       & 0xFF;
+        }
         lc += LC_INSTRUCTION;
     }
-	fclose(fptr);
+
+    /* ── 3. Determine the actual used range ──────────────────── */
+    /* Find the highest address that was explicitly written so we
+     * don't dump the entire 64 KiB when only a small fraction is
+     * used.  We scan the statement list again just for the max lc. */
+    uint32_t max_lc = 0;
+    lc = 0;
+    for (uint32_t i = 0; i < count; i++) {
+        statement_t s = get_statement(i);
+        if (s.opcode == DIR_ORG)        { lc = (uint32_t)(uint16_t)s.imm; continue; }
+        if (s.opcode == DIR_EQU)        { continue; }
+        if (s.opcode == DIR_WORD)       { lc += LC_WORD;        }
+        else if (s.opcode == DIR_BYTE)  { lc += LC_BYTE;        }
+        else                            { lc += LC_INSTRUCTION; }
+        if (lc > max_lc) max_lc = lc;
+    }
+    /* Round up to next even address */
+    if (max_lc & 1) max_lc++;
+
+    /* ── 4. Write the memory image to the hex file ───────────── */
+    FILE *fptr = fopen("bleh.hex", "w");
+    if (!fptr) {
+        LOG_ERROR("generate_code: cannot open output file");
+        free(mem);
+        return;
+    }
+
+    /* Emit one 16-bit word per line, big-endian, from address 0
+     * up to max_lc (inclusive of the last written address). */
+    for (uint32_t addr = 0; addr < max_lc; addr += 2) {
+        uint16_t word = ((uint16_t)mem[addr] << 8) | mem[addr + 1];
+        fprintf(fptr, "%04X\n", word);
+    }
+
+    fclose(fptr);
+    free(mem);
 }
 
 
