@@ -189,7 +189,7 @@ HEXADECIMAL VALUES ARE ONLY ACCEPTED WITH x.
 
 INSTRUCTIONS NAMES ARE IN CAPITAL LETTERS.
 
-USING PSEUDO-INSTRUCTIONS DO NOT FORGET OF () ITS NEEDED FOR MACRO EXPANTION.
+USING PSEUDO-INSTRUCTIONS DO NOT FORGET () ITS NEEDED FOR MACRO EXPANTION.
 
 ### RR Format — Register-to-Register Operations
 ```
@@ -317,11 +317,11 @@ POP(r1)    ; restore r1
 | `OR(rd,rs)` | `MOV(t0, rd)` + `AND t0, rs` + `XOR rd, rs` + `XOR rd, t0` | Bitwise OR |
 | `LBS(rd,rs,imm)` | `LB` + sign-extend sequence | Load byte signed |
 ```asm
-MOV(r2, r1)      ; r2 = r1
-SUBI(r3, r1, 4)  ; r3 = r1 - 4
+MOV(r2,r1)      ; r2 = r1
+SUBI(r3,r1,4)  ; r3 = r1 - 4
 NEG(r1)          ; r1 = -r1
 SLL(r2)          ; r2 = r2 << 1
-OR(r1, r2)       ; r1 = r1 | r2
+OR(r1,r2)       ; r1 = r1 | r2
 ```
 
 ### Jump and Call
@@ -334,7 +334,7 @@ OR(r1, r2)       ; r1 = r1 | r2
 ```asm
 CALL(0x050)   ; call subroutine at address 0x050
 RET           ; return from subroutine
-J(0x010)      ; jump to address 0x010
+J(LOOP)      ; jump to address 0x010
 ```
 
 ### Interrupt Handling
@@ -360,5 +360,5 @@ IRET           ; restore CC, lr, return
 |-------|-------------|
 | `LI(rd, imm)` | Load a full 16-bit immediate into `rd` using `IMM` prefix + `ADDI` |
 ```asm
-LI(r1, 0x1A3)   ; r1 = 0x1A3 (uses IMM for upper bits, ADDI for lower)
+LI(r1,0x1A3)   ; r1 = 0x1A3 (uses IMM for upper bits, ADDI for lower)
 ```
