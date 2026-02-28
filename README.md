@@ -177,6 +177,98 @@ You can use either the register number (`r1`) or the alias (`a0`) — they are i
 
 ---
 
+## 📌 Assembler Directives
+
+Directives are special commands that control the assembler itself rather than generating instructions. They are written directly in the `.asm` file.
+
+| Directive | Example | Description |
+|-----------|---------|-------------|
+| `.org` | `.org 0x100` | Sets the location counter to a specific address. All instructions after this will be placed starting at that address. |
+| `.equ` | ` STACK_TOP .equ 0xFF` | Defines a named constant. The name can then be used anywhere an immediate value is expected. |
+| `.word` | `.word 0x1234ABCD` | Emits a 32-bit (4 byte) value directly into memory at the current location. |
+| `.byte` | `.byte 0xFF` | Emits a single 8-bit (1 byte) value directly into memory at the current location. |
+```asm
+.org 0x100          ; start placing code at address 0x100
+MAX .equ 10        ; MAX is now a constant equal to 10
+
+.word 0xDEADBEEF    ; write 4 bytes into memory
+.byte 0xFF          ; write 1 byte into memory
+```
+
+---
+
+## 📍 How the Location Counter Works
+
+The **location counter (LC)** tracks the memory address where the next instruction or data will be placed. It starts at `0x0000` and advances automatically as the assembler processes each line:
+
+- Every **instruction** advances the LC by **2 bytes** (16-bit word).
+- A **`.word`** directive advances the LC by **4 bytes**.
+- A **`.byte`** directive advances the LC by **1 byte**.
+- A **`.org`** directive **jumps** the LC to a specific address, without filling the gap in between.
+- A **`.equ`** directive does **not** move the LC — it just defines a constant with no memory footprint.
+
+When you define a label, it captures the **current value of the LC** at that point — that is what gets stored in the symbol table and used to resolve branches and jumps.
+```asm
+.org 0x00
+
+start:              ; label "start" = 0x000
+    ADDI r1, r0, #5 ; LC = 0x000 → 0x002
+    ADDI r2, r0, #3 ; LC = 0x002 → 0x004
+
+.org 0x100
+data:               ; label "data" = 0x100
+    .word 0xDEAD    ; LC = 0x100 → 0x104
+    .byte 0xFF      ; LC = 0x104 → 0x105
+```
+
+---
+
+## 🔀 How Branches and JAL Use the Location Counter
+
+### Branches (BR, BEQ, BLT, ...)
+
+Branch instructions use a **relative displacement** — they do not jump to an absolute address, they jump **forward or backward by N bytes** relative to the instruction **after** the branch.
+
+The assembler calculates the displacement automatically when you use a label:
+```
+displacement = label_address - (branch_address + 2)
+```
+
+The `+ 2` is because by the time the branch executes, the LC has already advanced to the next instruction.
+```asm
+.org 0x00
+    ADDI r1, r0, #5   ; LC = 0x000
+    ADDI r2, r0, #3   ; LC = 0x002
+    BEQ loop          ; LC = 0x004 → displacement = 0x006 - (0x004 + 2) = 0
+loop:
+    ADD r3, r1        ; LC = 0x006
+```
+
+The displacement is encoded as a **signed 8-bit value**, so the range is **−128 to +127 bytes** from the instruction after the branch. If the label is out of that range, the assembler will report an error.
+
+---
+
+### JAL — Jump and Link
+
+`JAL rd, rs, #imm` does two things at once:
+
+- Saves the **return address** (`current LC + 2`) into `rd`
+- Jumps to the address `rs + imm`
+
+When used with a label (via the `CALL` or `J` macros), the assembler pairs it with an `IMM` prefix instruction to load the full 16-bit target address, since `JAL` alone only has a 4-bit immediate field.
+```asm
+; CALL(0x050) expands to:
+IMM #0x005          ; load upper 12 bits of 0x050
+JAL lr, r0, #0      ; lr = PC+2 (return address), jump to 0x050
+
+; RET expands to:
+JAL r0, lr, #0      ; jump to address in lr, discard return address (rd = r0)
+```
+
+The key difference from branches is that JAL jumps to an **absolute address** (built from `rs + imm`, optionally prefixed by `IMM`), while branches use a **relative offset** from the current position.
+
+---
+
 ## 🔧 Instruction Set
 
 FOR IMMEDIATE VALUES ALWAYS USE # (DECIMAL OR HEXADECIMAL).
