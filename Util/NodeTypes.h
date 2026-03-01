@@ -1,4 +1,8 @@
-typedef enum{
+#ifndef NODE_TYPES_H
+#define NODE_TYPES_H
+
+typedef enum
+{
     OP_PLUS,                    // 0
     OP_MINUS,                   // 1
     OP_RIGHT_SHIFT,             // 2
@@ -34,3 +38,25 @@ typedef enum{
     OP_NEGATIVE,
     OP_NOT_DEFINED
 }OperatorType_t;
+
+typedef enum
+{
+    SIGN_SIGNED,
+    SIGN_UNSIGNED
+}SignQualifier_t;
+
+typedef enum
+{
+    MOD_NONE,
+    MOD_CONST,
+    MOD_VOLATILE
+}ModQualifier_t;
+
+typedef enum
+{
+    VIS_NONE,
+    VIS_STATIC,
+    VIS_EXTERN
+}VisQualifier_t;
+
+#endif //NODE_TYPES_H
