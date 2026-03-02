@@ -8,7 +8,7 @@
  ************************************************************************************/
 
 module uart_mmio #(
-    parameter integer CLK_FREQ = 100_000_000,
+    parameter integer CLK_FREQ = 50_000_000,
     parameter integer BAUD_RATE = 115200
 ) (
     input wire i_clk,
@@ -39,7 +39,7 @@ module uart_mmio #(
  * 1.2 DECLARE SFRs -  MMIO REGISTERS
  ***************************************************************************/
     // SBUF
-    reg [7:0] _tx_data;
+    (* mark_debug = "true" *) reg [7:0] _tx_data;
     reg [7:0] _rx_data;
 
     // STATUS
@@ -50,7 +50,7 @@ module uart_mmio #(
  * 1.3 DECLARE WIRES / REGS
  ***************************************************************************/
     reg [15:0] _rdata;
-    reg _tx_start;
+    (* mark_debug = "true" *) reg _tx_start;
     wire [7:0] _rx_data_wire;
     wire _rx_valid;
 

@@ -88,6 +88,7 @@ module ps2_h2d (
                     _clk_drive  <= 1'bz;
                     _data_drive <= 1'bz;
                     if (i_start) begin
+                        o_tx_aerr <= 1'b0;
                         _shift    <= i_data;
                         _bit_idx  <= 3'd0;
                         _inh_cnt  <= 14'd0;
@@ -110,10 +111,12 @@ module ps2_h2d (
                 // Pull DATA low (start bit), release CLK
                 // Device takes control of CLK from here
                 START: begin
-                    if (i_fall_edge) begin
-                        _data_drive <= 1'b0;
-                        _state <= DATA;
-                    end
+              
+                     _data_drive <= 1'b0;
+                     if (i_fall_edge) begin
+                     _state <= DATA;
+                     end
+
                 end
 
                 // Send 8 data bits LSB first on each falling edge(device clock)
@@ -144,14 +147,22 @@ module ps2_h2d (
                     end
                 end
 
-                // Wait for ACK from device
+                                // Wait for ACK from device
                 ACK: begin
                     if (i_fall_edge) begin
-                        _state <= DONE;
-
+                        if (!i_ps2_data_s) begin
+                            // ACK
+                            _state <= DONE;
+                        end else begin
+                            // NACK 
+                            o_tx_aerr <= 1'b1;
+                            o_tx_busy <= 1'b0;
+                            _state    <= IDLE;
+                        end
                     end
                 end
-
+                
+                
                 DONE: begin
                     o_tx_busy <= 1'b0;
                     o_tx_done <= 1'b1;

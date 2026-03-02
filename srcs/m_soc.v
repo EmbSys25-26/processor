@@ -10,8 +10,20 @@ module soc(
     input wire i_uart_rx,
     output wire o_uart_tx,
     inout wire io_i2c_sda,
-    inout wire io_i2c_scl
+    inout wire io_i2c_scl,
+    inout wire io_ps2_clk,
+    inout wire io_ps2_data
+
 );
+
+wire i_clk;
+
+    clk_wiz_0 clk_gen (
+        .clk_out1(i_clkk),
+        .reset(1'b0),       
+        .locked(locked),   
+        .clk_in1(i_clk)
+    );
 
 /*************************************************************************************
  * SECTION 1. DECLARE WIRES / REGS
@@ -88,7 +100,7 @@ module soc(
 /*************************************************************************************
  * 2.2 Instruction Fetch Latch
  ************************************************************************************/
-    always @(posedge i_clk) begin
+    always @(posedge i_clkk) begin
         if (i_rst | _imem_invalid) begin
             _insn_q <= _default_nop;
         end else if (_insn_ce) begin
@@ -102,7 +114,7 @@ module soc(
 /*************************************************************************************
  * 2.3 Load Ready Tracking
  ************************************************************************************/
-    always @(posedge i_clk) begin
+    always @(posedge i_clkk) begin
         if (i_rst) begin
             _loaded <= 1'b0;
         end else if (_insn_ce) begin
@@ -140,7 +152,7 @@ module soc(
  * 2.5 CPU, ROM, RAM, and Peripheral Instances
  ************************************************************************************/
     cpu u_cpu (
-        .i_clk(i_clk),
+        .i_clk(i_clkk),
         .i_rst(i_rst),
         .i_i_ad_rst(_i_ad_rst),
         .o_insn_ce(_insn_ce),
@@ -164,7 +176,7 @@ module soc(
     );
 
     brom_1kb_be u_rom (
-        .i_clk(i_clk),
+        .i_clk(i_clkk),
         .i_rst(i_rst),
         .i_en(_insn_ce),
         .i_addr(_PC[9:1]),
@@ -173,7 +185,7 @@ module soc(
     );
 
     bram_1kb_be u_mem (
-        .i_clk(i_clk),
+        .i_clk(i_clkk),
         .i_rst(i_rst),
         .i_en(_sw | _sb | _lw | _lb),
         .i_addr(_d_ad[9:1]),
@@ -186,7 +198,7 @@ module soc(
     );
 
     periph_bus u_periph (
-        .i_clk(i_clk),
+        .i_clk(i_clkk),
         .i_rst(i_rst),
         .i_addr(_d_ad),
         .i_sel(_io_sel),
@@ -201,6 +213,8 @@ module soc(
         .o_uart_tx(o_uart_tx),
         .io_i2c_sda(io_i2c_sda),
         .io_i2c_scl(io_i2c_scl),
+        .io_ps2_clk(io_ps2_clk),
+        .io_ps2_data(io_ps2_data),
         .i_int_en(_int_en_cpu),
         .i_in_irq(_in_irq),
         .o_irq_vector(_irq_vector),
