@@ -287,6 +287,10 @@ set proj_dir [get_property DIRECTORY [current_project]]
 add_files -fileset sim_1 [glob $proj_dir/sim/*.v]
 set_property top tb_Soc [get_filesets sim_1]
 ```
+4. Add constraint files
+```tcl
+add_files -fileset constrs_1 [glob $proj_dir/constraints/*.xdc]
+```
 
 This will let the .xpr know they exist and where they are.
 
