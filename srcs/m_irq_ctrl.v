@@ -52,44 +52,78 @@ module irq_ctrl(
  * 1.3 DEFINE INTERRUPT SOURCES
  *     - Priority is intrinsic to definition + case stmt
  ***************************************************************************/
-
+ 
+/*
     localparam IRQ_SRC_TIMER0   = 5'b00001;  // Lowest Priority
     localparam IRQ_SRC_TIMER1   = 5'b0001x;
-    localparam IRQ_SRC_PARIO    = 5'b001xx;
+    localparam IRQ_SRC_PARIO    = 5'b001xx;                            -> without wdt
     localparam IRQ_SRC_UART     = 5'b01xxx;
     localparam IRQ_SRC_I2C      = 5'b1xxxx;  // Highest priority
+*/
 
 
+    localparam IRQ_SRC_TIMER0   = 6'b000001;  // Lowest Priority
+    localparam IRQ_SRC_TIMER1   = 6'b00001x;
+    localparam IRQ_SRC_PARIO    = 6'b0001xx;                            
+    localparam IRQ_SRC_UART     = 6'b001xxx;
+    localparam IRQ_SRC_I2C      = 6'b01xxxx;  
+    localparam IRQ_SRC_WDT      = 6'b1xxxxx; // Highest priority
+ 
 /****************************************************************************
  * 1.4 DEFINE INTERRUPT INDEXES
  ***************************************************************************/
+/*
+    localparam IDX_IRQ_TIMER0   = 3'd0;
+    localparam IDX_IRQ_TIMER1   = 3'd1;
+    localparam IDX_IRQ_PARIO    = 3'd2;   -> without WDT
+    localparam IDX_IRQ_UART     = 3'd3;
+    localparam IDX_IRQ_I2C      = 3'd4;
+*/
 
     localparam IDX_IRQ_TIMER0   = 3'd0;
     localparam IDX_IRQ_TIMER1   = 3'd1;
-    localparam IDX_IRQ_PARIO    = 3'd2;
+    localparam IDX_IRQ_PARIO    = 3'd2;   
     localparam IDX_IRQ_UART     = 3'd3;
     localparam IDX_IRQ_I2C      = 3'd4;
+    localparam IDX_IRQ_WDT      = 3'd5;
 
 /****************************************************************************
  * 1.5 DEFINE INTERRUPT Lines
  ***************************************************************************/
-
+ 
+ /*
+    localparam LINE_IRQ_TIMER0   = 8'b0000_0001;
+    localparam LINE_IRQ_TIMER1   = 8'b0000_0010;
+    localparam LINE_IRQ_PARIO    = 8'b0000_0100; 
+    localparam LINE_IRQ_UART     = 8'b0000_1000;   
+    localparam LINE_IRQ_I2C      = 8'b0001_0000;
+  */
+    
     localparam LINE_IRQ_TIMER0   = 8'b0000_0001;
     localparam LINE_IRQ_TIMER1   = 8'b0000_0010;
     localparam LINE_IRQ_PARIO    = 8'b0000_0100; 
     localparam LINE_IRQ_UART     = 8'b0000_1000;
     localparam LINE_IRQ_I2C      = 8'b0001_0000;
+    localparam LINE_IRQ_WDT      = 8'b0010_0000;
 
 /****************************************************************************
  * 1.5 DEFINE INTERRUPT VECTOR ADDRESSES
  ***************************************************************************/
+/*
+    localparam ISR_TIMER0   = 16'h0020;
+    localparam ISR_TIMER1   = 16'h0040;
+    localparam ISR_PARIO    = 16'h0060;
+    localparam ISR_UART     = 16'h0080;
+    localparam ISR_I2C      = 16'h00A0;
+*/
 
     localparam ISR_TIMER0   = 16'h0020;
     localparam ISR_TIMER1   = 16'h0040;
     localparam ISR_PARIO    = 16'h0060;
     localparam ISR_UART     = 16'h0080;
     localparam ISR_I2C      = 16'h00A0;
-
+    localparam ISR_WDT      = 16'h00C0;
+    
 /****************************************************************************
  * 1.6 DECLARE WIRES / REGS
  ***************************************************************************/
@@ -142,6 +176,7 @@ module irq_ctrl(
 /****************************************************************************
  * 2.2 Priority Encoder and Vector
  ***************************************************************************/
+ /*
     always @(*) begin
         _sel_idx = 3'd0;
         _sel_onehot = 8'h00;
@@ -169,6 +204,39 @@ module irq_ctrl(
             _irq_vector = 16'hFFFF;
         end
     end
+*/
+
+ 
+    always @(*) begin
+        _sel_idx = 3'd0;
+        _sel_onehot = 8'h00;
+        casex (_next_pend[5:0])
+            IRQ_SRC_WDT:    begin _sel_idx = IDX_IRQ_WDT; _sel_onehot = LINE_IRQ_WDT; end   
+            IRQ_SRC_I2C:    begin _sel_idx = IDX_IRQ_I2C; _sel_onehot = LINE_IRQ_I2C; end    
+            IRQ_SRC_UART:   begin _sel_idx = IDX_IRQ_UART; _sel_onehot = LINE_IRQ_UART; end
+            IRQ_SRC_PARIO:  begin _sel_idx = IDX_IRQ_PARIO; _sel_onehot = LINE_IRQ_PARIO; end
+            IRQ_SRC_TIMER1: begin _sel_idx = IDX_IRQ_TIMER1; _sel_onehot = LINE_IRQ_TIMER1; end
+            IRQ_SRC_TIMER0: begin _sel_idx = IDX_IRQ_TIMER0; _sel_onehot = LINE_IRQ_TIMER0; end
+            default: begin _sel_idx = 3'd0; _sel_onehot = 8'h00; end
+        endcase
+    end
+
+    always @(*) begin
+        if (o_irq_take) begin
+            case (_sel_idx)
+                IDX_IRQ_TIMER0: _irq_vector = ISR_TIMER0;
+                IDX_IRQ_TIMER1: _irq_vector = ISR_TIMER1;
+                IDX_IRQ_PARIO:  _irq_vector = ISR_PARIO;
+                IDX_IRQ_UART:   _irq_vector = ISR_UART;
+                IDX_IRQ_I2C:    _irq_vector = ISR_I2C;
+                IDX_IRQ_WDT:    _irq_vector = ISR_WDT;
+                default: _irq_vector = 16'hFFFF;
+            endcase
+        end else begin
+            _irq_vector = 16'hFFFF;
+        end
+    end
+
 
 /****************************************************************************
  * 2.3 Pending and Servicing State
