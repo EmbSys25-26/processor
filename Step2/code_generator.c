@@ -23,28 +23,35 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 		        break;
 		        
 		/* ── RI : op(4) rd(4) fn(4) imm(4) ─────────────────── */
-		case FMT_RI:
+		case FMT_RI: {
+		        /*
+		         * FIX BUG5: se misc == LABEL, imm e o indice da symbol table.
+		         * Resolve o valor aqui no passo 2.
+		         */
+		        int32_t imm4 = stmt.imm;
+		        if (stmt.misc == LABEL) {
+		            imm4 = get_symbol_value((uint16_t)stmt.imm);
+		        }
 			code = ((uint16_t)(stmt.opcode & 0xF) << 12)
 			     | ((uint16_t)(stmt.rd & 0xF) << 8) 
 			     | ((uint16_t)(stmt.fn & 0xF) << 4) 
-			     | (uint16_t)(stmt.imm & 0xF);
+			     | (uint16_t)(imm4 & 0xF);
 		        break;
+		}
 		        
 		 /* ── RRI : op(4) rd(4) rs(4) imm(4) ────────────────── */
-		case FMT_RRI:
-			int16_t imm4 = stmt.imm;    
-		        if (stmt.misc == LABEL || stmt.misc == LINK) {
-		      
-		            int16_t label_addr = get_symbol_value(stmt.imm);
-
-			    if (stmt.opcode == JAL_OPCODE) {
-			        // JAL needs a relative displacement
-			        int16_t disp = (int32_t)label_addr - (int32_t)(stmt_lc + LC_INSTRUCTION);
-			        imm4 = (int16_t)(disp & 0xF);
-			    } else {
-			        // .equ constant — use the value directly
-			        imm4 = label_addr & 0xF;
-			    }
+		case FMT_RRI: {
+		        int32_t imm4 = stmt.imm;
+		        if (stmt.misc == LABEL) {
+		            /*
+		             * FIX BUG3: era calculado um deslocamento relativo para JAL.
+		             * JAL usa endereco ABSOLUTO: os 4 bits gravados sao os bits [3:0]
+		             * do endereco destino. O hardware combina (IMM_prefix << 4) | imm4
+		             * para formar o endereco completo.
+		             * O mesmo aplica-se a ADDI/LW/SW/etc com .equ label: usa valor direto.
+		             */
+		            int16_t label_addr = get_symbol_value((uint16_t)stmt.imm);
+		            imm4 = label_addr & 0xF;
 		        }
 		
 			code = ((uint16_t)(stmt.opcode & 0xF) << 12)
@@ -52,15 +59,29 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 			     | ((uint16_t)(stmt.rs & 0xF) << 4) 
 			     | (uint16_t)(imm4 & 0xF);
 			break;
+		}
 		        
 		/* ── I12 : op(4) imm(12) ─────────────────────────────  */
-		case FMT_I12:
+		case FMT_I12: {
+		        /*
+		         * FIX BUG2/BUG5: se misc == LABEL, imm e o indice da symbol table.
+		         * O IMM prefix deve conter os bits [15:4] do endereco destino,
+		         * ou seja, (addr >> 4) & 0xFFF.
+		         * Isto e o que permite J(label) e CALL(label) funcionarem
+		         * de forma identica a J(0x050) e CALL(0x050).
+		         */
+		        int32_t imm12 = stmt.imm;
+		        if (stmt.misc == LABEL) {
+		            int16_t full_addr = get_symbol_value((uint16_t)stmt.imm);
+		            imm12 = (full_addr >> 4) & 0xFFF;
+		        }
 		        code = ((uint16_t)(stmt.opcode & 0xF) << 12)
-		    	     |  (uint16_t)(stmt.imm    & 0xFFF);
+		    	     |  (uint16_t)(imm12 & 0xFFF);
 		        break;
+		}
 		
 		case FMT_BR: {
-		        int16_t disp8 = stmt.imm;  
+		        int32_t disp8 = stmt.imm;  
 		        if (stmt.misc == LABEL) {
 				uint32_t label_addr = get_symbol_value((uint32_t)stmt.imm);
 				int32_t  disp       = (int32_t)label_addr
@@ -71,7 +92,7 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 				              stmt.line_num, disp);
 				}
 
-				disp8 = (int16_t)(disp & 0xFF);
+				disp8 = (int32_t)(disp & 0xFF);
 			}
 
 		        code = ((uint16_t)(stmt.opcode & 0xF) << 12)
@@ -96,7 +117,13 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 
 }
 
-#define MEM_SIZE    0xFFFF 
+/*
+ * FIX BUG1: era 0xFFFF (65535 bytes).
+ * O espaco de enderecamento e 16 bits = 65536 posicoes.
+ * Com 0xFFFF, o loop de inicializacao fazia mem[65535] com um
+ * array de 65535 bytes — buffer overflow garantido.
+ */
+#define MEM_SIZE    0x10000
 
 void generate_code(void)
 {
@@ -110,7 +137,7 @@ void generate_code(void)
     /* Fill every 16-bit aligned word with NOP_ENCODING (0xF000).
      * We store bytes big-endian: high byte first. */
     for (uint32_t addr = 0; addr < MEM_SIZE; addr += 2) {
-        mem[addr]     = (NOP_ENCODING >> 8) & 0xFF;   /* 0xF0 big endian*/
+        mem[addr]     = (NOP_ENCODING >> 8) & 0xFF;   /* 0xF0 */
         mem[addr + 1] =  NOP_ENCODING       & 0xFF;   /* 0x00 */
     }
 
@@ -131,6 +158,10 @@ void generate_code(void)
                 continue;   /* no bytes emitted */
 
             case DIR_WORD: {
+                /*
+                 * FIX BUG4: s.imm e agora int32_t — nao ha truncagem.
+                 * .word 0xDEADBEEF escreve os 4 bytes corretos.
+                 */
                 uint32_t v = (uint32_t)s.imm;
                 if (lc + 3 < MEM_SIZE) {
                     mem[lc]     = (v >> 24) & 0xFF;
@@ -183,6 +214,3 @@ void generate_code(void)
     fclose(fptr);
     free(mem);
 }
-
-
-

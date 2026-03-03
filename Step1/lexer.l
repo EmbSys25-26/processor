@@ -11,7 +11,7 @@
 #include "../Util/asm_operations.h"
 #include "../Util/statements_list.h"
 #include "../Util/symbol_table.h"
-#include "parser.tab.h"
+#include "parser_tab.h"
 
 %}
 
@@ -27,8 +27,12 @@ hex_number_x    0x({digit}|{hex})+
 neg_dec_number  -[0-9]+
 neg_hex_number  -0x({digit}|{hex})+
 
-/* Registos R0-R31, aceita maiusculas e minusculas */
-register        [Rr]({digit}|[12]{digit}|3[01])
+/*
+ * FIX BUG7: era [Rr]({digit}|[12]{digit}|3[01]) que aceitava r0-r31.
+ * A ISA so tem r0-r15 (4 bits no encoding).
+ * Novo padrao: r0-r9 ou r10-r15.
+ */
+register        [Rr]([0-9]|1[0-5])
 
 identifier      [a-zA-Z_][a-zA-Z0-9_]*
 
@@ -113,8 +117,12 @@ whitespace      [ \t]+
     "*/"     { BEGIN(INITIAL); }
     "\n"     { increment_line_number(1); }
     [^*\n]+  ;
+    "*"      ;
 }
 
+	/*    FIX BUG6: sem esta regra, um '*' isolado dentro de um comentario
+    (ex: "/* 5 * 3 */ //") nao era consumido por nenhuma regra e o Flex  usava a regra default, imprimindo o caracter para stdout. */
+     
 <<EOF>> { return TOKEN_ENDFILE; }
 
 . { fprintf(stderr, "[ASSEMBLER] Erro: token invalido '%s'\n", yytext);
@@ -135,5 +143,3 @@ void init_lexer(const char *filename)
         exit(1);
     }
 }
-
-

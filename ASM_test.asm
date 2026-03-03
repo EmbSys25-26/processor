@@ -1,80 +1,96 @@
-; 1. PREPROCESSOR & DIRECTIVES
-TIMER0_CR0 .equ 0x8000      ; Timer 0 Control Register 0
- TIMER0_CR1 .equ 0x8002      ; Timer 0 Control Register 1
- STACK_TOP .equ 0x03FF      ; Initial Stack Pointer
+.org 0x0000
+J(MAIN)
 
-; 2. INTERRUPT VECTOR TABLE (IVT)
 .org 0x0020
-    JAL zero, lr, isr_timer0 ; Vector 0: Timer 0
+J(ISR_HANDLER)
 
-.org 0x0040
-    JAL zero, lr, isr_timer1 ; Vector 1: Timer 1
+.org 0x0100
+MAIN:
+CLI
+STI
+NOP
 
-; 4. MAIN PROGRAM ENTRY
-.org 0x0100                  ; Standard Reset Vector entry point
-main:
-    ; Register Initialization (using ABI aliases)
-    IMM #0x03                ; Prefix for 12-bit immediate
-    LI(sp,STACK_TOP)         ; Load Stack Pointer
-    LI(a0,0x0005)            ; Argument 0
-    LI(a1,0x000A)           ; Argument 1
+.word 0xDEADBEEF
+.byte 0xFF
+.byte 0xAA
 
-    ; SYSTEM INSTRUCTIONS
-    CLI                      ; Disable global interrupts
-    STI                      ; Enable global interrupts
-    NOP                      ; No Operation (0xF000)
+LI(r1, 0x123)
+LI(r2, 0x005)
 
-    ; ARITHMETIC & LOGIC (RR, RI, RRI Formats) 
-    ADD a0, a1               ; RR: a0 = a0 + a1
-    SUB a2, a1               ; RR: a2 - a1
-    ADDI a0, a0, #1          ; RRI: a0 = a0 + 1
-    AND t0, a0               ; RR: Logical AND
-    XOR t1, a0               ; RR: Logical XOR
+ADD r3, r1
+SUB r3, r2
+AND r4, r1
+XOR r5, r2
+ADC r6, r1
+SBC r7, r2
+CMP r1, r2
+SRL r1, r2
+SRA r3, r4
 
-    ; MEMORY ACCESS
-    ; Tests high/low byte lane split and word-addressed indexing.
-    LI(t2,TIMER0_CR1)        ; Load MMIO base address
-    SW a0, t2, #0           ; Store Word: Timer0_CR0 = a0
-    LW t3, t2, #0           ; Load Word: t3 = Timer0_CR0
-    SB a1, t2, #1           ; Store Byte
-    LB t1, t2, #1         ; Load Byte
+GETCC r8
+SETCC r8
 
-    ; CONTROL FLOW
-    JAL lr, r0, leaf_func        ; Jump and Link to leaf function
-    CMP a0, a1               ; Compare registers (updates CC flags)
-    BEQ loop                ; Branch if Equal (conditional branch)
+RSUBI r1, #15
+ANDI r2, #0xA
+XORI r3, #0
+ADCI r4, #5
+RSBCI r5, #1
+RCMPI r6, #8
 
-loop:
-    BR main                  ; Unconditional branch back to main
+ANDI r7, MASK_VAL
 
-; 5. FUNCTION 
-leaf_func:
-    PUSH(s0)                  ; Save callee-saved register
-    ADD a0, a1
-    POP(s0)                   ; Restore callee-saved register
-    JAL zero, lr, #0          ; Return to caller
+ADDI r8, r1, #7
+ADDI r9, r2, VAL_POS
 
-; 6. INTERRUPT SERVICE ROUTINES
-isr_timer0:
-    CLI                      ; disable interrupts, atomic context for flag saving
-    GETCC t0                 ; Save Condition Codes to t0
-    PUSH(t0)                  ; Preserve CC on stack
-    
-    ; ISR Body
-    LI(t1,0x0001)
-    SW t1, zero, TIMER0_CR1  ; Clear interrupt request
-    
-    POP(t0)                   ; Pop values back into t0 from stack
-    SETCC t0                 ; Restore Condition Codes
-    STI                      ; Exit atomic context
-    IRET                     ; Return from interrupt (Hex: 0EE0)
+SW r1, sp, #0
+LW r2, sp, #0
+SB r3, sp, #1
+LB r4, sp, #1
 
-.org 0x02F0
-isr_timer1:
-    IRET                     ; Minimal ISR for Vector 1
+CALL(SUB_ROUTINE)
 
-; 7. DATA STORAGE
-.org 0x0300
-    .byte 0x34
-    .word 0xDEAD             ; Direct word emission
-    .word 0xBEEF
+BR FORWARD_BR
+NOP
+
+FORWARD_BR:
+BEQ BACKWARD_BR
+
+BACKWARD_BR:
+BC FORWARD_BR
+BV FORWARD_BR
+BLT FORWARD_BR
+BLE FORWARD_BR
+BLETU FORWARD_BR
+BLEU FORWARD_BR
+
+IMM FAR_LABEL
+JAL lr, r0, FAR_LABEL
+
+PUSH(r1)
+POP(r1)
+MOV(r3, r2)
+SUBI(r4, r1, 2)
+NEG(r5)
+COM(r6)
+SLL(r7)
+LEA(r8, sp, 4)
+OR(r9, r1)
+
+END_LOOP:
+BR END_LOOP
+
+SUB_ROUTINE:
+RET
+
+ISR_HANDLER:
+ISR_PROLOGUE
+ISR_PRO
+IRET
+ISR_EPILOGUE
+
+.org 0x0500
+FAR_LABEL:
+NOP
+
+VAL_POS .equ 3
+MASK_VAL .equ 12

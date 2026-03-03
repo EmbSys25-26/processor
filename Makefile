@@ -5,8 +5,8 @@ ABI_DEFS  := Step1/abi.m4
 SPLITTER  := awk
 
 # Build Flags
-M4_FLAGS  := 
-ASM_FLAGS := 
+M4_FLAGS  :=
+ASM_FLAGS :=
 
 # Target Files (derived from SRC variable)
 SRC       ?= ASM_test.asm
@@ -22,7 +22,8 @@ all: $(HI_HEX) $(LO_HEX)
 
 # Step 0: Create the assembler
 Compile: 
-	@gcc main.c Util/symbol_table.c Util/statements_list.c Util/logger.c	Step1/lex.yy.c Step1/parser.tab.c Step2/code_generator.c -I. -IStep1 -o assembler
+	@gcc main.c Util/symbol_table.c Util/statements_list.c Util/logger.c \
+	Step1/lex.yy.c Step1/parser_tab.c Step2/code_generator.c -I. -IStep1 -o assembler
 
 # Step 1: Preprocess with m4
 # Merges ABI definitions and expands PUSH/POP macros

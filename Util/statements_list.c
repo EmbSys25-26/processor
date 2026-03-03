@@ -95,9 +95,14 @@ void add_statement_rr(uint8_t opcode, uint8_t fn,
     update_lc(opcode);
 }
 
-// RI
+/*
+ * FIX BUG5: adicionado parametro misc.
+ *   misc = IMMEDIATE — imm e o valor numerico direto
+ *   misc = LABEL     — imm guarda o indice na symbol table;
+ *                      o code generator resolve no passo 2
+ */
 void add_statement_ri(uint8_t opcode, uint8_t fn,
-                      uint8_t rd, int16_t imm)
+                      uint8_t rd, int32_t imm, uint8_t misc)
 {
     statement_t s = {0};
     s.opcode = opcode;
@@ -105,7 +110,7 @@ void add_statement_ri(uint8_t opcode, uint8_t fn,
     s.format = FMT_RI;
     s.rd     = rd;
     s.imm    = imm;
-    s.misc   = IMMEDIATE;
+    s.misc   = misc;   /* FIX BUG5: era hardcoded IMMEDIATE */
     commit_statement(s);
     update_lc(opcode);
 }
@@ -115,11 +120,11 @@ void add_statement_ri(uint8_t opcode, uint8_t fn,
  * misc pode ser:
  *   IMMEDIATE — imediato numerico normal
  *   LABEL     — o imm guarda o indice na tabela de simbolos,
- *               a Mariana resolve no passo 2
+ *               resolvido no passo 2
  *   LINK      — instrucao guarda endereco de retorno (JAL com link)
  */
 void add_statement_rri(uint8_t opcode,
-                       uint8_t rd, uint8_t rs, int16_t imm, uint8_t misc)
+                       uint8_t rd, uint8_t rs, int32_t imm, uint8_t misc)
 {
     statement_t s = {0};
     s.opcode = opcode;
@@ -132,14 +137,19 @@ void add_statement_rri(uint8_t opcode,
     update_lc(opcode);
 }
 
-// I12
-void add_statement_i12(uint8_t opcode, int16_t imm)
+/*
+ * FIX BUG2/BUG5: adicionado parametro misc.
+ *   misc = IMMEDIATE — imm e o valor de 12 bits direto
+ *   misc = LABEL     — imm guarda o indice na symbol table;
+ *                      o code generator faz (addr >> 4) & 0xFFF no passo 2
+ */
+void add_statement_i12(uint8_t opcode, int32_t imm, uint8_t misc)
 {
     statement_t s = {0};
     s.opcode = opcode;
     s.format = FMT_I12;
     s.imm    = imm;
-    s.misc   = IMMEDIATE;
+    s.misc   = misc;   /* FIX BUG2/BUG5: era hardcoded IMMEDIATE */
     commit_statement(s);
     update_lc(opcode);
 }
@@ -151,7 +161,7 @@ void add_statement_i12(uint8_t opcode, int16_t imm)
  *   LABEL     — o imm guarda indice na tabela de simbolos
  */
 void add_statement_br(uint8_t opcode, uint8_t cond,
-                      int16_t disp, uint8_t misc)
+                      int32_t disp, uint8_t misc)
 {
     statement_t s = {0};
     s.opcode = opcode;
@@ -179,9 +189,10 @@ void add_statement_fixed(uint8_t opcode)
  * .org  — value = novo endereco; LC e actualizado aqui
  * .equ  — value = valor da constante (ja resolvido pelo parser)
  * .word — value = valor a escrever em memoria (4 bytes)
+ *         FIX BUG4: agora int32_t para nao truncar valores como 0xDEADBEEF
  * .byte — value = valor a escrever em memoria (1 byte)
  */
-void add_statement_directive(uint8_t opcode, int16_t value)
+void add_statement_directive(uint8_t opcode, int32_t value)
 {
     statement_t s = {0};
     s.opcode = opcode;

@@ -137,59 +137,66 @@ setcc_stmt  :   TOKEN_SETCC TOKEN_REG
                     add_statement_rr(CC_OPCODE, SETCC_FN, 0, $2);
                 };
 
-/* RI format statements - since RI format does not support the LABEL flag in the IR, identifiers are resolved immediately */
+/*
+ * RI format statements.
+ *
+ * FIX BUG5: Os casos com TOKEN_IDENTIFIER ja nao resolvem o valor
+ * imediatamente (get_symbol_value). Em vez disso, guardam o indice
+ * da symbol table ($4) com misc=LABEL para o code generator resolver
+ * no passo 2. Isto corrige forward references.
+ */
 rsubi_stmt  :   TOKEN_RSUBI TOKEN_REG TOKEN_COMMA immediate_val 
                 { 
-                    add_statement_ri(RI_OPCODE, RSUBI_FN, $2, $4);
+                    add_statement_ri(RI_OPCODE, RSUBI_FN, $2, $4, IMMEDIATE);
                 }
             |   TOKEN_RSUBI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER 
                 { 
-                    add_statement_ri(RI_OPCODE, RSUBI_FN, $2, get_symbol_value($4));
+                    add_statement_ri(RI_OPCODE, RSUBI_FN, $2, $4, LABEL);
                 };
 
 andi_stmt   :   TOKEN_ANDI TOKEN_REG TOKEN_COMMA immediate_val  
                 { 
-                    add_statement_ri(RI_OPCODE, ANDI_FN, $2, $4);
+                    add_statement_ri(RI_OPCODE, ANDI_FN, $2, $4, IMMEDIATE);
                 }
             |   TOKEN_ANDI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  
                 { 
-                    add_statement_ri(RI_OPCODE, ANDI_FN, $2, get_symbol_value($4));
+                    add_statement_ri(RI_OPCODE, ANDI_FN, $2, $4, LABEL);
                 };
 
 xori_stmt   :   TOKEN_XORI TOKEN_REG TOKEN_COMMA immediate_val  
                 { 
-                    add_statement_ri(RI_OPCODE, XORI_FN, $2, $4);
+                    add_statement_ri(RI_OPCODE, XORI_FN, $2, $4, IMMEDIATE);
                 }
             |   TOKEN_XORI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  
                 { 
-                    add_statement_ri(RI_OPCODE, XORI_FN, $2, get_symbol_value($4));
+                    add_statement_ri(RI_OPCODE, XORI_FN, $2, $4, LABEL);
                 };
 
 adci_stmt   :   TOKEN_ADCI TOKEN_REG TOKEN_COMMA immediate_val  
                 { 
-                    add_statement_ri(RI_OPCODE, ADCI_FN, $2, $4);
+                    add_statement_ri(RI_OPCODE, ADCI_FN, $2, $4, IMMEDIATE);
                 }
             |   TOKEN_ADCI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  
                 { 
-                    add_statement_ri(RI_OPCODE, ADCI_FN, $2, get_symbol_value($4));
+                    add_statement_ri(RI_OPCODE, ADCI_FN, $2, $4, LABEL);
                 };
 
 rsbci_stmt  :   TOKEN_RSBCI TOKEN_REG TOKEN_COMMA immediate_val 
                 { 
-                    add_statement_ri(RI_OPCODE, RSBCI_FN, $2, $4);
+                    add_statement_ri(RI_OPCODE, RSBCI_FN, $2, $4, IMMEDIATE);
                 }
             |   TOKEN_RSBCI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER 
                 { 
-                    add_statement_ri(RI_OPCODE, RSBCI_FN, $2, get_symbol_value($4));
+                    add_statement_ri(RI_OPCODE, RSBCI_FN, $2, $4, LABEL);
                 };
 
 rcmpi_stmt  :   TOKEN_RCMPI TOKEN_REG TOKEN_COMMA immediate_val 
                 { 
-                    add_statement_ri(RI_OPCODE, RCMPI_FN, $2, $4);
+                    add_statement_ri(RI_OPCODE, RCMPI_FN, $2, $4, IMMEDIATE);
                 }
             |   TOKEN_RCMPI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER 
                 { 
-                    add_statement_ri(RI_OPCODE, RCMPI_FN, $2, get_symbol_value($4));
+                    add_statement_ri(RI_OPCODE, RCMPI_FN, $2, $4, LABEL);
                 };
 
 /* RRI format statements - RRI supports the LABEL flag. Identifiers are passed as table indexes for Step 2 resolution. */
@@ -249,15 +256,21 @@ sb_stmt     :   TOKEN_SB TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_v
                     add_statement_rri(SB_OPCODE, $2, $4, $6, LABEL);
                 };
 
-/* I12 format statements */
+/*
+ * I12 format statements.
+ *
+ * FIX BUG2/BUG5: O caso TOKEN_IDENTIFIER ja nao resolve o valor
+ * imediatamente. Guarda o indice ($2) com misc=LABEL.
+ * O code generator faz (addr >> 4) & 0xFFF no passo 2,
+ * o que e necessario para J(label) e CALL(label) funcionarem.
+ */
 imm_stmt    :   TOKEN_IMM_TOK immediate_val 
                 { 
-                    add_statement_i12(IMM_OPCODE, $2);
+                    add_statement_i12(IMM_OPCODE, $2, IMMEDIATE);
                 }
             |   TOKEN_IMM_TOK TOKEN_IDENTIFIER 
                 { 
-                    /* immediate resolution for 12-bit prefix */
-                    add_statement_i12(IMM_OPCODE, get_symbol_value($2));
+                    add_statement_i12(IMM_OPCODE, $2, LABEL);
                 };
 
 /* BR format statements */

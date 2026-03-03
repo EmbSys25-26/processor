@@ -11,6 +11,8 @@
  *   rd       — registo destino
  *   rs       — registo fonte
  *   imm      — imediato (4, 8 ou 12 bits conforme o formato)
+ *              FIX BUG4: int32_t para suportar .word 32-bit sem truncar
+ *              FIX BUG5: em casos LABEL guarda o indice da symbol table
  *   cond     — condition code para instrucoes BR
  *   misc     — tipo do operando: NO_TYPE, IMMEDIATE, LABEL, LINK
  *   line_num — numero da linha no .asm (para mensagens de erro)
@@ -22,7 +24,7 @@ typedef struct {
     char     format;
     uint8_t  rd;
     uint8_t  rs;
-    int16_t  imm;
+    int32_t  imm;       /* FIX BUG4: era int16_t — agora int32_t */
     uint8_t  cond;
     uint8_t  misc;
     uint32_t line_num;
@@ -39,25 +41,28 @@ void delete_statements_list(void);
 void add_statement_rr(uint8_t opcode, uint8_t fn,
                       uint8_t rd, uint8_t rs);
 
-/* adiciona uma instrucao RI  (ex: ANDI, XORI...) */
+/* adiciona uma instrucao RI  (ex: ANDI, XORI...)
+ * FIX BUG5: adicionado parametro misc para suportar LABEL (forward ref) */
 void add_statement_ri(uint8_t opcode, uint8_t fn,
-                      uint8_t rd, int16_t imm);
+                      uint8_t rd, int32_t imm, uint8_t misc);
 
 /* adiciona uma instrucao RRI (ex: ADDI, LW, SW, JAL...) */
 void add_statement_rri(uint8_t opcode,
-                       uint8_t rd, uint8_t rs, int16_t imm, uint8_t misc);
+                       uint8_t rd, uint8_t rs, int32_t imm, uint8_t misc);
 
-/* adiciona uma instrucao I12 (IMM) */
-void add_statement_i12(uint8_t opcode, int16_t imm);
+/* adiciona uma instrucao I12 (IMM)
+ * FIX BUG2/BUG5: adicionado parametro misc para suportar LABEL */
+void add_statement_i12(uint8_t opcode, int32_t imm, uint8_t misc);
 
 /* adiciona uma instrucao BR  (ex: BEQ, BLT...) */
-void add_statement_br(uint8_t opcode, uint8_t cond, int16_t disp, uint8_t misc);
+void add_statement_br(uint8_t opcode, uint8_t cond, int32_t disp, uint8_t misc);
 
 /* adiciona uma instrucao FIXED (CLI, STI, NOP) */
 void add_statement_fixed(uint8_t opcode);
 
-/* adiciona uma diretiva (DIR_ORG, DIR_EQU, DIR_WORD, DIR_BYTE) */
-void add_statement_directive(uint8_t opcode, int16_t value);
+/* adiciona uma diretiva (DIR_ORG, DIR_EQU, DIR_WORD, DIR_BYTE)
+ * FIX BUG4: value e int32_t para suportar .word sem truncar */
+void add_statement_directive(uint8_t opcode, int32_t value);
 
 
 /* getters */
