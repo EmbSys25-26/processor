@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_vysnc_fsm_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_vysnc_fsm" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="1,000.000 ns"></ZoomEndTime>
+      <Cursor1Time time="1,000.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="170"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="7" />
+   <wvobject type="logic" fp_name="/tb_vysnc_fsm/_clk">
+      <obj_property name="ElementShortName">_clk</obj_property>
+      <obj_property name="ObjectShortName">_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vysnc_fsm/_rst">
+      <obj_property name="ElementShortName">_rst</obj_property>
+      <obj_property name="ObjectShortName">_rst</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vysnc_fsm/_enVGA">
+      <obj_property name="ElementShortName">_enVGA</obj_property>
+      <obj_property name="ObjectShortName">_enVGA</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vysnc_fsm/dut/i_endLine">
+      <obj_property name="ElementShortName">i_endLine</obj_property>
+      <obj_property name="ObjectShortName">i_endLine</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vysnc_fsm/dut/_line_counter">
+      <obj_property name="ElementShortName">_line_counter[8:0]</obj_property>
+      <obj_property name="ObjectShortName">_line_counter[8:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vysnc_fsm/_vsync">
+      <obj_property name="ElementShortName">_vsync</obj_property>
+      <obj_property name="ObjectShortName">_vsync</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vysnc_fsm/_vsync_state_debug">
+      <obj_property name="ElementShortName">_vsync_state_debug[1:0]</obj_property>
+      <obj_property name="ObjectShortName">_vsync_state_debug[1:0]</obj_property>
+   </wvobject>
+</wave_config>

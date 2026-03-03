@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_controller_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_controller" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="1,179.339 ns"></ZoomStartTime>
+      <ZoomEndTime time="2,684.340 ns"></ZoomEndTime>
+      <Cursor1Time time="2,023.339 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="154"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="10" />
+   <wvobject type="logic" fp_name="/tb_controller/_clk">
+      <obj_property name="ElementShortName">_clk</obj_property>
+      <obj_property name="ObjectShortName">_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_controller/dut/periph_vga/i_clkVGA">
+      <obj_property name="ElementShortName">i_clkVGA</obj_property>
+      <obj_property name="ObjectShortName">i_clkVGA</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_controller/_imgSel">
+      <obj_property name="ElementShortName">_imgSel[2:0]</obj_property>
+      <obj_property name="ObjectShortName">_imgSel[2:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_controller/_vga_red">
+      <obj_property name="ElementShortName">_vga_red</obj_property>
+      <obj_property name="ObjectShortName">_vga_red</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_controller/_vga_green">
+      <obj_property name="ElementShortName">_vga_green</obj_property>
+      <obj_property name="ObjectShortName">_vga_green</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_controller/_vga_blue">
+      <obj_property name="ElementShortName">_vga_blue</obj_property>
+      <obj_property name="ObjectShortName">_vga_blue</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_controller/dut/periph_vga/hsync_module/_pixelCounter">
+      <obj_property name="ElementShortName">_pixelCounter[9:0]</obj_property>
+      <obj_property name="ObjectShortName">_pixelCounter[9:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_controller/_hsync">
+      <obj_property name="ElementShortName">_hsync</obj_property>
+      <obj_property name="ObjectShortName">_hsync</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_controller/dut/periph_vga/vsync_module/_line_counter">
+      <obj_property name="ElementShortName">_line_counter[8:0]</obj_property>
+      <obj_property name="ObjectShortName">_line_counter[8:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_controller/_vsync">
+      <obj_property name="ElementShortName">_vsync</obj_property>
+      <obj_property name="ObjectShortName">_vsync</obj_property>
+   </wvobject>
+</wave_config>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_vga_mmio_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_vga_mmio" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="83.235000 us"></ZoomStartTime>
+      <ZoomEndTime time="160.335001 us"></ZoomEndTime>
+      <Cursor1Time time="96.085000 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="162"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="25" />
+   <wvobject type="logic" fp_name="/tb_vga_mmio/_clk">
+      <obj_property name="ElementShortName">_clk</obj_property>
+      <obj_property name="ObjectShortName">_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/_rst">
+      <obj_property name="ElementShortName">_rst</obj_property>
+      <obj_property name="ObjectShortName">_rst</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/dut/i_clkVGA">
+      <obj_property name="ElementShortName">i_clkVGA</obj_property>
+      <obj_property name="ObjectShortName">i_clkVGA</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/_sel">
+      <obj_property name="ElementShortName">_sel</obj_property>
+      <obj_property name="ObjectShortName">_sel</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/_we">
+      <obj_property name="ElementShortName">_we</obj_property>
+      <obj_property name="ObjectShortName">_we</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/_re">
+      <obj_property name="ElementShortName">_re</obj_property>
+      <obj_property name="ObjectShortName">_re</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/_addr">
+      <obj_property name="ElementShortName">_addr</obj_property>
+      <obj_property name="ObjectShortName">_addr</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/_wdata">
+      <obj_property name="ElementShortName">_wdata[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_wdata[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/_rdata">
+      <obj_property name="ElementShortName">_rdata[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_rdata[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/_rd">
+      <obj_property name="ElementShortName">_rd[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_rd[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/_rdy">
+      <obj_property name="ElementShortName">_rdy</obj_property>
+      <obj_property name="ObjectShortName">_rdy</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/dut/_enVGA">
+      <obj_property name="ElementShortName">_enVGA</obj_property>
+      <obj_property name="ObjectShortName">_enVGA</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/dut/hsync_module/_pixelCounter">
+      <obj_property name="ElementShortName">_pixelCounter[9:0]</obj_property>
+      <obj_property name="ObjectShortName">_pixelCounter[9:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/_hsync">
+      <obj_property name="ElementShortName">_hsync</obj_property>
+      <obj_property name="ObjectShortName">_hsync</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/dut/_hsync_state_debug">
+      <obj_property name="ElementShortName">_hsync_state_debug[1:0]</obj_property>
+      <obj_property name="ObjectShortName">_hsync_state_debug[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/dut/hsync_module/_endLine">
+      <obj_property name="ElementShortName">_endLine</obj_property>
+      <obj_property name="ObjectShortName">_endLine</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/dut/vsync_module/_line_counter">
+      <obj_property name="ElementShortName">_line_counter[8:0]</obj_property>
+      <obj_property name="ObjectShortName">_line_counter[8:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/_vsync">
+      <obj_property name="ElementShortName">_vsync</obj_property>
+      <obj_property name="ObjectShortName">_vsync</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/dut/_vsync_state_debug">
+      <obj_property name="ElementShortName">_vsync_state_debug[1:0]</obj_property>
+      <obj_property name="ObjectShortName">_vsync_state_debug[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/dut/hsync_module/o_vga_red">
+      <obj_property name="ElementShortName">o_vga_red[3:0]</obj_property>
+      <obj_property name="ObjectShortName">o_vga_red[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/dut/hsync_module/o_vga_green">
+      <obj_property name="ElementShortName">o_vga_green[3:0]</obj_property>
+      <obj_property name="ObjectShortName">o_vga_green[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/dut/hsync_module/o_vga_blue">
+      <obj_property name="ElementShortName">o_vga_blue[3:0]</obj_property>
+      <obj_property name="ObjectShortName">o_vga_blue[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga_mmio/dut/_SrcImg0">
+      <obj_property name="ElementShortName">_SrcImg0</obj_property>
+      <obj_property name="ObjectShortName">_SrcImg0</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/dut/hsync_module/i_imgData">
+      <obj_property name="ElementShortName">i_imgData[4:0]</obj_property>
+      <obj_property name="ObjectShortName">i_imgData[4:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_vga_mmio/dut/hsync_module/_vga_blue">
+      <obj_property name="ElementShortName">_vga_blue[3:0]</obj_property>
+      <obj_property name="ObjectShortName">_vga_blue[3:0]</obj_property>
+   </wvobject>
+</wave_config>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_hsync_fsm_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_hsync_fsm" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000000 us"></ZoomStartTime>
+      <ZoomEndTime time="12.470001 us"></ZoomEndTime>
+      <Cursor1Time time="0.257766 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="174"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="7" />
+   <wvobject type="logic" fp_name="/tb_hsync_fsm/_clk">
+      <obj_property name="ElementShortName">_clk</obj_property>
+      <obj_property name="ObjectShortName">_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_hsync_fsm/_rst">
+      <obj_property name="ElementShortName">_rst</obj_property>
+      <obj_property name="ObjectShortName">_rst</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_hsync_fsm/_enVGA">
+      <obj_property name="ElementShortName">_enVGA</obj_property>
+      <obj_property name="ObjectShortName">_enVGA</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_hsync_fsm/_endLine">
+      <obj_property name="ElementShortName">_endLine</obj_property>
+      <obj_property name="ObjectShortName">_endLine</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_hsync_fsm/_hsync">
+      <obj_property name="ElementShortName">_hsync</obj_property>
+      <obj_property name="ObjectShortName">_hsync</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_hsync_fsm/hsync_module/_pixelCounter">
+      <obj_property name="ElementShortName">_pixelCounter[9:0]</obj_property>
+      <obj_property name="ObjectShortName">_pixelCounter[9:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_hsync_fsm/_hsync_state_debug">
+      <obj_property name="ElementShortName">_hsync_state_debug[1:0]</obj_property>
+      <obj_property name="ObjectShortName">_hsync_state_debug[1:0]</obj_property>
+   </wvobject>
+</wave_config>
