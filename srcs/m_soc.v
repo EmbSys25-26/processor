@@ -16,6 +16,11 @@ module soc(
 
 );
 
+`ifdef SIM
+
+ wire i_clkk= i_clk;
+
+`else
 
     clk_wiz_0 clk_gen (
         .clk_out1(i_clkk),
@@ -23,7 +28,8 @@ module soc(
         .locked(locked),   
         .clk_in1(i_clk)
     );
-
+    
+`endif
 /*************************************************************************************
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
