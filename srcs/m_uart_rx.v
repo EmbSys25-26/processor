@@ -11,7 +11,7 @@ module uart_rx(
     output wire [1:0] o_state_debug     // Current State
 );
 
-    parameter CLK_FREQ = 80_000_000;
+    parameter CLK_FREQ = 50000000;
     parameter BAUD_RATE = 115200;
 
 /*************************************************************************************

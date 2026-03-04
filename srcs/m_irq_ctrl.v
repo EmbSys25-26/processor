@@ -53,11 +53,13 @@ module irq_ctrl(
  *     - Priority is intrinsic to definition + case stmt
  ***************************************************************************/
 
-    localparam IRQ_SRC_TIMER0   = 5'b00001;  // Lowest Priority
-    localparam IRQ_SRC_TIMER1   = 5'b0001x;
-    localparam IRQ_SRC_PARIO    = 5'b001xx;
-    localparam IRQ_SRC_UART     = 5'b01xxx;
-    localparam IRQ_SRC_I2C      = 5'b1xxxx;  // Highest priority
+    localparam IRQ_SRC_TIMER0   = 6'b000001; // Lowest Priority
+    localparam IRQ_SRC_TIMER1   = 6'b00001x;
+    localparam IRQ_SRC_PARIO    = 6'b0001xx;
+    localparam IRQ_SRC_UART     = 6'b001xxx;   
+    localparam IRQ_SRC_I2C      = 6'b01xxxx;
+    localparam IRQ_SRC_PS2      = 6'b1xxxxx; // Highest priority
+
 
 
 /****************************************************************************
@@ -69,6 +71,7 @@ module irq_ctrl(
     localparam IDX_IRQ_PARIO    = 3'd2;
     localparam IDX_IRQ_UART     = 3'd3;
     localparam IDX_IRQ_I2C      = 3'd4;
+    localparam IDX_IRQ_PS2      = 3'd5;
 
 /****************************************************************************
  * 1.5 DEFINE INTERRUPT Lines
@@ -79,6 +82,8 @@ module irq_ctrl(
     localparam LINE_IRQ_PARIO    = 8'b0000_0100; 
     localparam LINE_IRQ_UART     = 8'b0000_1000;
     localparam LINE_IRQ_I2C      = 8'b0001_0000;
+    localparam LINE_IRQ_PS2      = 8'b0010_0000;
+    
 
 /****************************************************************************
  * 1.5 DEFINE INTERRUPT VECTOR ADDRESSES
@@ -89,6 +94,7 @@ module irq_ctrl(
     localparam ISR_PARIO    = 16'h0060;
     localparam ISR_UART     = 16'h0080;
     localparam ISR_I2C      = 16'h00A0;
+    localparam ISR_PS2      = 16'h00C0;
 
 /****************************************************************************
  * 1.6 DECLARE WIRES / REGS
@@ -145,7 +151,8 @@ module irq_ctrl(
     always @(*) begin
         _sel_idx = 3'd0;
         _sel_onehot = 8'h00;
-        casex (_next_pend[4:0])
+        casex (_next_pend[5:0])
+            IRQ_SRC_PS2:    begin _sel_idx = IDX_IRQ_PS2; _sel_onehot = LINE_IRQ_PS2; end        
             IRQ_SRC_I2C:    begin _sel_idx = IDX_IRQ_I2C; _sel_onehot = LINE_IRQ_I2C; end    
             IRQ_SRC_UART:   begin _sel_idx = IDX_IRQ_UART; _sel_onehot = LINE_IRQ_UART; end
             IRQ_SRC_PARIO:  begin _sel_idx = IDX_IRQ_PARIO; _sel_onehot = LINE_IRQ_PARIO; end
@@ -163,6 +170,7 @@ module irq_ctrl(
                 IDX_IRQ_PARIO:  _irq_vector = ISR_PARIO;
                 IDX_IRQ_UART:   _irq_vector = ISR_UART;
                 IDX_IRQ_I2C:    _irq_vector = ISR_I2C;
+                IDX_IRQ_PS2:    _irq_vector = ISR_PS2;
                 default: _irq_vector = 16'hFFFF;
             endcase
         end else begin

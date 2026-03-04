@@ -1,0 +1,37 @@
+#-----------------------------------------------------------
+# Vivado v2025.1 (64-bit)
+# SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
+# IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
+# SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
+# Start of session at: Wed Feb 25 21:48:12 2026
+# Process ID         : 57948
+# Current directory  : /home/tiago/processor
+# Command line       : vivado
+# Log file           : /home/tiago/processor/vivado.log
+# Journal file       : /home/tiago/processor/vivado.jou
+# Running On         : tiago-HP-ZBook-Power-15-6-inch-G8-Mobile-Workstation-PC
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : 11th Gen Intel(R) Core(TM) i7-11850H @ 2.50GHz
+# CPU Frequency      : 4000.069 MHz
+# CPU Physical cores : 8
+# CPU Logical cores  : 16
+# Host memory        : 33303 MB
+# Swap memory        : 2147 MB
+# Total Virtual      : 35451 MB
+# Available Virtual  : 27427 MB
+#-----------------------------------------------------------
+start_gui
+open_project /home/tiago/processor/processor.xpr
+update_compile_order -fileset sources_1
+add_files -norecurse /home/tiago/Downloads/ps2_host_to_device.v
+update_compile_order -fileset sources_1
+add_files -norecurse /home/tiago/Downloads/ps2_mmio.v
+update_compile_order -fileset sources_1
+export_ip_user_files -of_objects  [get_files /home/tiago/Downloads/ps2_mmio.v] -no_script -reset -force -quiet
+remove_files  /home/tiago/Downloads/ps2_mmio.v
+remove_files  /home/tiago/Downloads/ps2_mmio.v
+add_files -norecurse /home/tiago/Downloads/ps2_mmio.v
+update_compile_order -fileset sources_1
+launch_simulation
+source tb_soc_branch_annul.tcl

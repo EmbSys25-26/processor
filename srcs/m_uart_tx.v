@@ -3,15 +3,15 @@
 module uart_tx(
     input wire i_clk,
     input wire i_rst,
-    input wire [7:0] i_data,         // Data to Transmit
+    (* mark_debug = "true" *) input wire [7:0] i_data,         // Data to Transmit
     input wire i_tx_start,           // Signal to Enable Transmission
-    output wire o_tx_out,            // Tx Line
-    output wire o_tx_done,           // Transmission Finished
-    output wire o_tx_busy,           // Transmission Ongoing
+    (* mark_debug = "true" *)output wire o_tx_out,            // Tx Line
+    (* mark_debug = "true" *) output wire o_tx_done,           // Transmission Finished
+    (* mark_debug = "true" *)output wire o_tx_busy,           // Transmission Ongoing
     output wire [1:0] o_state_debug  // Current State
 );
 
-    parameter CLK_FREQ = 80_000_000;
+    parameter CLK_FREQ = 50_000_000;
     parameter BAUD_RATE = 115200;
 
 /*************************************************************************************
@@ -30,11 +30,13 @@ module uart_tx(
  * 1.2 DECLARE VARIABLES    
  ***************************************************************************/
     localparam _bit_time = (CLK_FREQ + (BAUD_RATE / 2)) / BAUD_RATE; // How many clock cycles fit in one UART bit period
-    localparam _ctr_width = $clog2(_bit_time) + 1;
+    //localparam _ctr_width = $clog2(_bit_time) + 1;
+    localparam _ctr_width=16;
+    
 
     reg [1:0] _state;
     reg [_ctr_width-1:0] _counter;
-    reg [7:0] _shift_reg;
+    (* mark_debug = "true" *) reg [7:0] _shift_reg;
     reg [2:0] _bit_index;
 
     reg _tx_out;
