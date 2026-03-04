@@ -9,7 +9,7 @@ typedef enum
     OP_LEFT_SHIFT,              // 3
     OP_MULTIPLY,                // 4
     OP_DIVIDE,                  // 5
-    OP_REMAIN,                  // 6
+    OP_MODULE,                  // 6
     OP_GREATER_THAN,            // 7
     OP_LESS_THAN_OR_EQUAL,      // 8
     OP_GREATER_THAN_OR_EQUAL,   // 9
@@ -36,27 +36,29 @@ typedef enum
     OP_DIVIDE_ASSIGN,           // 30
     OP_SIZEOF,                  // 31
     OP_NEGATIVE,
+    OP_UNARY_MINUS,
     OP_NOT_DEFINED
 }OperatorType_t;
 
-typedef enum
-{
+/* ── Sign qualifiers stored in nodeData.dVal for NODE_SIGN nodes ── */
+typedef enum{
     SIGN_SIGNED,
     SIGN_UNSIGNED
 }SignQualifier_t;
 
-typedef enum
-{
+/* ── Type qualifiers stored in nodeData.dVal for NODE_MODIFIER nodes ── */
+typedef enum{
     MOD_NONE,
     MOD_CONST,
     MOD_VOLATILE
 }ModQualifier_t;
 
-typedef enum
-{
+/* ── Visibility stored in nodeData.dVal for NODE_VISIBILITY nodes ── */
+typedef enum{
     VIS_NONE,
     VIS_STATIC,
-    VIS_EXTERN
+    VIS_EXTERN,
+    VIS_INLINE
 }VisQualifier_t;
 
 #endif //NODE_TYPES_H

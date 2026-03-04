@@ -17,6 +17,7 @@ void log_write(const char* colorCode, const char* func, const char* format, ...)
 
 void log_write_no_header(const char* colorCode, const char* func, const char* format, ...)
 {
+    (void)func;
     va_list args;
     va_start(args, format);
 

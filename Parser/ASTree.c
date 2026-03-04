@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <locale.h>
+#include <string.h>
 #include "ASTree.h"
 #include "../Util/logger.h"
 
@@ -99,4 +100,85 @@ int NodeAddNewChild(TreeNode_t* p_Parent, TreeNode_t** pp_NewChild, NodeType_t n
 	}
 
 	return ret;
+}
+
+int NodeAddChildCopy(TreeNode_t* p_Parent, TreeNode_t* p_Child) {
+	if (!p_Parent || !p_Child)
+	return -EINVAL;
+
+	TreeNode_t* pCopy = malloc(sizeof(TreeNode_t));
+	if (!pCopy) {
+	LOG_ERROR("Failed to allocate memory in NodeAddChildCopy!\n");
+	return -ENOMEM;
+	}
+
+	// Copy primitive fields
+	pCopy->childNumber = 0;  // leaf copy
+	pCopy->lineNumber  = p_Child->lineNumber;
+	pCopy->nodeType    = p_Child->nodeType;
+	pCopy->nodeVarType = p_Child->nodeVarType;
+
+	// Copy nodeData safely (deep copy strings)
+	switch (p_Child->nodeType) {
+	case NODE_INTEGER:
+	case NODE_CHAR:
+	    pCopy->nodeData.dVal = p_Child->nodeData.dVal;
+	    break;
+	case NODE_FLOAT:
+	    pCopy->nodeData.fVal = p_Child->nodeData.fVal;
+	    break;
+	case NODE_STRING:
+	    pCopy->nodeData.sVal = strdup(p_Child->nodeData.sVal);
+	    if (!pCopy->nodeData.sVal) {
+		free(pCopy);
+		return -ENOMEM;  // allocation failed
+	    }
+	    break;
+	default:
+	    pCopy->nodeData = p_Child->nodeData;
+	    break;
+	}
+
+	// Reset links to make it a leaf
+	pCopy->p_firstChild = NULL;
+	pCopy->p_sibling    = NULL;
+
+	// Add to parent
+	int ret = NodeAddChild(p_Parent, pCopy);
+	if (ret < 0)
+	free(pCopy);  // clean up if add failed
+
+	return ret;
+}
+
+/*
+ * NodeAppendSibling
+ * -----------------
+ * Appends a node to the end of a sibling list.
+ *
+ * Does the same as NodeAddChild but for sibling instead. Does not assume there is a parent.
+ *
+ * If *pp_Head is NULL, p_NewSibling becomes the list head.
+ * Otherwise, the function traverses p_sibling pointers to the end
+ * and links p_NewSibling there.
+ *
+ * Returns 0 on success, negative errno on failure.
+ */
+int NodeAppendSibling(TreeNode_t** pp_Head, TreeNode_t* p_NewSibling){
+	TreeNode_t* pNode;
+
+	if (!pp_Head || !p_NewSibling) 	// invalid arguments
+		return -EINVAL;
+
+	if (!(*pp_Head)) {	// if there no parent node, the new sibling becomes the head of the list
+		*pp_Head = p_NewSibling;	// equivalent to  $$.treeNode = $2.treeNode; 
+		return 0;
+	}
+
+	pNode = *pp_Head;
+	while (pNode->p_sibling)
+		pNode = pNode->p_sibling;
+
+	pNode->p_sibling = p_NewSibling;
+	return 0;
 }

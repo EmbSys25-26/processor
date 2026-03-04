@@ -1,13 +1,12 @@
 %option noyywrap
+%option nounput
 %x INCOMMENT
 
 %{
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "parser.tab.h"
-
-YYSTYPE yylval;
+#include "../Parser/parser.tab.h"
 
 int line_number = 1;
 char pp_name[256];
@@ -15,14 +14,13 @@ char pp_value[512];
 
 static void read_pp_define(void);
 static void read_pp_undef(void);
-static void read_pp_include_sys(void);
-static void read_pp_include_usr(void);
+
 %}
 
 digit       [0-9]
 number      {digit}+
 hexNumber   0[xX][0-9a-fA-F]+
-floatNumber {digit}*"."{digit}+([eE][-+]?{digit}+)?
+floatNumber  (({digit}+"."{digit}*|{digit}*"."{digit}+)([eE][-+]?{digit}+)?|{digit}+[eE][-+]?{digit}+)
 identifier  [a-zA-Z_][a-zA-Z0-9_]*
 string      \"([^"\\\n]|\\.|\\\n)*\"
 charlit     '([^'\\\n]|\\.)'
@@ -56,11 +54,13 @@ newline     \n
 "break"     { return TOKEN_BREAK;    }
 "continue"  { return TOKEN_CONTINUE; }
 "return"    { return TOKEN_RETURN;   }
+"struct"    { return TOKEN_STRUCT;   }
+"union"     { return TOKEN_UNION;    }
+"enum"      { return TOKEN_ENUM;     }
+"sizeof"    { return TOKEN_SIZEOF;   }
 
 "#define"[ \t]+       { read_pp_define();      return TOKEN_PP_DEFINE;      }
 "#undef"[ \t]+        { read_pp_undef();       return TOKEN_PP_UNDEF;        }
-"#include"[ \t]*"<"   { read_pp_include_sys(); return TOKEN_PP_INCLUDE_SYS; }
-"#include"[ \t]*"\""  { read_pp_include_usr(); return TOKEN_PP_INCLUDE_USR; }
 
 "<<="   { return TOKEN_LEFT_SHIFT_ASSIGN;     }
 ">>="   { return TOKEN_RIGHT_SHIFT_ASSIGN;    }
@@ -72,29 +72,42 @@ newline     \n
 "&="    { return TOKEN_AND_ASSIGN;            }
 "|="    { return TOKEN_OR_ASSIGN;             }
 "^="    { return TOKEN_XOR_ASSIGN;            }
+
 "++"    { return TOKEN_INCREMENT;             }
 "--"    { return TOKEN_DECREMENT;             }
-"+"     { return TOKEN_PLUS;                  }
-"-"     { return TOKEN_MINUS;                 }
-"*"     { return TOKEN_ASTERISK;              }
-"/"     { return TOKEN_OVER;                  }
-"%"     { return TOKEN_PERCENT;               }
+
 "=="    { return TOKEN_EQUAL;                 }
 "!="    { return TOKEN_NOT_EQUAL;             }
 "<="    { return TOKEN_LESS_THAN_OR_EQUAL;    }
 ">="    { return TOKEN_GREATER_THAN_OR_EQUAL; }
-"<"     { return TOKEN_LESS_THAN;             }
-">"     { return TOKEN_GREATER_THAN;          }
-"&&"    { return TOKEN_LOGICAL_AND;           }
-"||"    { return TOKEN_LOGICAL_OR;            }
-"!"     { return TOKEN_LOGICAL_NOT;           }
+
 "<<"    { return TOKEN_LEFT_SHIFT;            }
 ">>"    { return TOKEN_RIGHT_SHIFT;           }
+
+"&&"    { return TOKEN_LOGICAL_AND;           }
+"||"    { return TOKEN_LOGICAL_OR;            }
+
+"+"     { return TOKEN_PLUS;                  }
+"-"     { return TOKEN_MINUS;                 }
+"*"     { return TOKEN_ASTERISK;              }
+"/"     { return TOKEN_DIVIDE;                   }
+"%"     { return TOKEN_MOD;                   }
+
+"<"     { return TOKEN_LESS_THAN;             }
+">"     { return TOKEN_GREATER_THAN;          }
+
 "&"     { return TOKEN_BITWISE_AND;           }
 "|"     { return TOKEN_BITWISE_OR;            }
 "^"     { return TOKEN_BITWISE_XOR;           }
 "~"     { return TOKEN_BITWISE_NOT;           }
+
+"!"     { return TOKEN_LOGICAL_NOT;           }
 "="     { return TOKEN_ASSIGN;                }
+
+"->"    { return TOKEN_ARROW;                 }
+"..."   { return TOKEN_ELLIPSIS;              }
+"."     { return TOKEN_DOT;                   }
+
 ";"     { return TOKEN_SEMI;                  }
 ","     { return TOKEN_COMMA;                 }
 ":"     { return TOKEN_COLON;                 }
@@ -106,33 +119,35 @@ newline     \n
 "["     { return TOKEN_LEFT_BRACKET;          }
 "]"     { return TOKEN_RIGHT_BRACKET;         }
 
+
+
 {charlit} {
     if (yytext[1] == '\\') {
         switch (yytext[2]) {
-            case 'n':  yylval.cval = '\n'; break;
-            case 't':  yylval.cval = '\t'; break;
-            case 'r':  yylval.cval = '\r'; break;
-            case '\\': yylval.cval = '\\'; break;
-            case '\'': yylval.cval = '\''; break;
-            case '0':  yylval.cval = '\0'; break;
-            default:   yylval.cval = yytext[2]; break;
+            case 'n':  yylval.nodeData.dVal = '\n'; break;
+            case 't':  yylval.nodeData.dVal = '\t'; break;
+            case 'r':  yylval.nodeData.dVal = '\r'; break;
+            case '\\': yylval.nodeData.dVal = '\\'; break;
+            case '\'': yylval.nodeData.dVal = '\''; break;
+            case '0':  yylval.nodeData.dVal = '\0'; break;
+            default:   yylval.nodeData.dVal = yytext[2]; break;
         }
     } else {
-        yylval.cval = yytext[1];
+        yylval.nodeData.dVal = yytext[1];
     }
     return TOKEN_CNUM;
 }
 
-{hexNumber}   { yylval.ival = strtol(yytext, NULL, 16); return TOKEN_NUM;  }
-{number}      { yylval.ival = strtol(yytext, NULL, 10); return TOKEN_NUM;  }
-{floatNumber} { yylval.fval = strtod(yytext, NULL);     return TOKEN_FNUM; }
-{string}      { yylval.sval = strdup(yytext);           return TOKEN_STR;  }
-{identifier}  { yylval.sval = strdup(yytext);           return TOKEN_ID;   }
+{hexNumber}   { yylval.nodeData.dVal = strtol(yytext, NULL, 16); return TOKEN_NUM;  }
+{floatNumber} { yylval.nodeData.fVal = strtod(yytext, NULL);     return TOKEN_FNUM; }
+{number}      { yylval.nodeData.dVal = strtol(yytext, NULL, 10); return TOKEN_NUM;  }
+{string}      { yylval.nodeData.sVal = strdup(yytext);           return TOKEN_STR;  }
+{identifier}  { yylval.nodeData.sVal = strdup(yytext);           return TOKEN_ID;   }
 
 {whitespace}  { }
 {newline}     { line_number++; }
 
-"//".*        { }
+"//"[^\n]*    { }     
 
 <INITIAL>"/*" { BEGIN(INCOMMENT); }
 
@@ -145,7 +160,7 @@ newline     \n
     "*"     { }
 }
 
-<<EOF>> { return 0; }
+<<EOF>> { return TOKEN_EOF; }
 
 . { fprintf(stderr, "Line %d: unknown token '%s'\n", line_number, yytext);
     return TOKEN_ERROR; }
@@ -176,18 +191,3 @@ static void read_pp_undef(void) {
     if (c == '\n') line_number++;
 }
 
-static void read_pp_include_sys(void) {
-    int ni = 0; char c;
-    memset(pp_name, 0, sizeof(pp_name));
-    while ((c = (char)input()) != (char)EOF && c != '>' && c != '\n')
-        if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
-    if (c == '\n') line_number++;
-}
-
-static void read_pp_include_usr(void) {
-    int ni = 0; char c;
-    memset(pp_name, 0, sizeof(pp_name));
-    while ((c = (char)input()) != (char)EOF && c != '"' && c != '\n')
-        if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
-    if (c == '\n') line_number++;
-}
