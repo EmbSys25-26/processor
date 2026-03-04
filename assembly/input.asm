@@ -48,8 +48,13 @@ isr_timer1:
     .org PARIO_VEC
 isr_pario:
     ISR_PRO
-    IRET
+    
+    LI   t0, #0xFF
+    IMM  #PS2_HI
+    SW   t0, zero, #PS2_DR
 
+    IRET
+    
     .org UART_VEC
 isr_uart:
     ISR_PRO

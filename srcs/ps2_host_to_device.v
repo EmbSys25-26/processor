@@ -21,34 +21,35 @@ module ps2_h2d (
     inout  wire       io_ps2_data,    // PS2 data  (open-drain)
     output reg        o_tx_done,      // pulse: transmission complete
     output reg        o_tx_busy,      // high while transmitting
-    output reg        o_tx_aerr       // pulse:ack not received 
+    output reg        o_tx_aerr       // pulse: ack not received 
 );
 
 /*************************************************************************************
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
 
-    localparam [3:0] IDLE    = 4'd0;
-    localparam [3:0] INHIBIT = 4'd1;
-    localparam [3:0] START   = 4'd2;
-    localparam [3:0] DATA    = 4'd3;
-    localparam [3:0] PARITY  = 4'd4;
-    localparam [3:0] STOP    = 4'd5;
-    localparam [3:0] ACK     = 4'd6;
-    localparam [3:0] DONE    = 4'd7;
+    localparam [3:0] IDLE         = 4'd0;
+    localparam [3:0] INHIBIT      = 4'd1;
+    localparam [3:0] DATA_LOW     = 4'd2;
+    localparam [3:0] START        = 4'd3;
+    localparam [3:0] DATA         = 4'd4;
+    localparam [3:0] PARITY       = 4'd5;
+    localparam [3:0] STOP         = 4'd6;
+    localparam [3:0] ACK          = 4'd7;
+    localparam [3:0] DONE         = 4'd8;
 
     reg [3:0] _state;
 
-    // 100us inhibit counter (100MHz x 100us = 10000 cycles)
-    localparam [13:0] _INHIBIT_CNT = 14'd10000;
+    localparam [13:0] _INHIBIT_CNT = 14'd10000; // >400us @ 50MHz
+    localparam [13:0] _RTS_CNT     = 14'd500;   // ~10us extra
     reg [13:0] _inh_cnt;
 
     // Open-drain drive regs
     reg _clk_drive;
     reg _data_drive;
 
-    reg [7:0] _shift;//copy of byte to send
-    reg [2:0] _bit_idx;//sending index
+    reg [7:0] _shift;   // copy of byte to send
+    reg [2:0] _bit_idx; // sending index
     wire      _parity;
 
 /*************************************************************************************
@@ -76,6 +77,7 @@ module ps2_h2d (
             _data_drive <= 1'bz;
             o_tx_busy   <= 1'b0;
             o_tx_done   <= 1'b0;
+            o_tx_aerr   <= 1'b0;
             _shift      <= 8'h00;
             _bit_idx    <= 3'd0;
             _inh_cnt    <= 14'd0;
@@ -97,29 +99,39 @@ module ps2_h2d (
                     end
                 end
 
-                // Pull CLK low >= 100us
+                //Pull CLK low >=100 us
                 INHIBIT: begin
-                    _clk_drive <= 1'b0;
+                    _clk_drive  <= 1'b0;
+                    _data_drive <= 1'bz;
                     if (_inh_cnt >= _INHIBIT_CNT) begin
-                        _state <= START;
-                        _clk_drive  <= 1'bz;
+                        _inh_cnt <= 14'd0;
+                        _state   <= DATA_LOW;
                     end else begin
                         _inh_cnt <= _inh_cnt + 14'd1;
                     end
                 end
 
-                // Pull DATA low (start bit), release CLK
-                // Device takes control of CLK from here
+                // Pull DATA low while CLK is still low
+                // After 10us release CLK 
+                DATA_LOW: begin
+                    _clk_drive  <= 1'b0;
+                    _data_drive <= 1'b0;
+                    if (_inh_cnt >= _RTS_CNT) begin
+                        _state     <= START;
+                    end else begin
+                        _inh_cnt <= _inh_cnt + 14'd1;
+                    end
+                end
+
+                // Device took CLK. Hold start bit until first falling edge
                 START: begin
-              
-                     _data_drive <= 1'b0;
-                     if (i_fall_edge) begin
-                     _state <= DATA;
-                     end
+                    _clk_drive <= 1'bz;
+                    _data_drive <= 1'b0;
+                    _state <= DATA;
 
                 end
 
-                // Send 8 data bits LSB first on each falling edge(device clock)
+                // Send 8 data bits LSB first on each falling edge
                 DATA: begin
                     if (i_fall_edge) begin
                         _data_drive <= _shift[_bit_idx] ? 1'bz : 1'b0;
@@ -147,22 +159,19 @@ module ps2_h2d (
                     end
                 end
 
-                                // Wait for ACK from device
+                // Wait for ACK from device (DATA pulled low by device)
                 ACK: begin
                     if (i_fall_edge) begin
                         if (!i_ps2_data_s) begin
-                            // ACK
                             _state <= DONE;
                         end else begin
-                            // NACK 
                             o_tx_aerr <= 1'b1;
                             o_tx_busy <= 1'b0;
                             _state    <= IDLE;
                         end
                     end
                 end
-                
-                
+
                 DONE: begin
                     o_tx_busy <= 1'b0;
                     o_tx_done <= 1'b1;

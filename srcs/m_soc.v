@@ -16,7 +16,6 @@ module soc(
 
 );
 
-wire i_clk;
 
     clk_wiz_0 clk_gen (
         .clk_out1(i_clkk),

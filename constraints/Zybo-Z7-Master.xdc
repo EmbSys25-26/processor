@@ -40,7 +40,6 @@ set_property IOSTANDARD LVCMOS33 [get_ports io_ps2_clk]
 set_property PULLTYPE PULLUP [get_ports io_ps2_clk]
 
 
-
 connect_debug_port u_ila_0/probe0 [get_nets [list {u_periph/u_ps2/u_ps2_d2h/_shift_0[0]} {u_periph/u_ps2/u_ps2_d2h/_shift_0[1]} {u_periph/u_ps2/u_ps2_d2h/_shift_0[2]} {u_periph/u_ps2/u_ps2_d2h/_shift_0[3]} {u_periph/u_ps2/u_ps2_d2h/_shift_0[4]} {u_periph/u_ps2/u_ps2_d2h/_shift_0[5]} {u_periph/u_ps2/u_ps2_d2h/_shift_0[6]} {u_periph/u_ps2/u_ps2_d2h/_shift_0[7]}]]
 
 

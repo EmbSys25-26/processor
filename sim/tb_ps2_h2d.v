@@ -67,7 +67,8 @@ module tb_ps2_h2d;
         .io_ps2_clk   (_ps2_clk),
         .io_ps2_data  (_ps2_data),
         .o_tx_done    (_tx_done),
-        .o_tx_busy    (_tx_busy)
+        .o_tx_busy    (_tx_busy),
+        .o_tx_aerr    ()
     );
 
     tb_ps2_device_model device (
