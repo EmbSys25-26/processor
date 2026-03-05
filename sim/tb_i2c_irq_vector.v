@@ -54,6 +54,7 @@ module tb_i2c_irq_vector;
     periph_bus dut (
         .i_clk(_clk),
         .i_rst(_rst),
+        .i_rst_ext(_rst),
         .i_sel(_sel),
         .i_we(_we),
         .i_re(_re),
@@ -71,7 +72,8 @@ module tb_i2c_irq_vector;
         .i_int_en(_int_en),
         .i_irq_ret(_irq_ret),
         .o_irq_take(_irq_take),
-        .o_irq_vector(_irq_vector)
+        .o_irq_vector(_irq_vector),
+        .o_wdt_rst() 
     );
 
     i2c_slave_model slave (

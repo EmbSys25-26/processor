@@ -79,7 +79,10 @@ module soc(
 /*************************************************************************************
  * 2.1 Static Assignments
  ************************************************************************************/
-    assign _hit = ~i_rst;
+   // assign _hit = ~i_rst;
+  
+    wire _total_rst = i_rst | _wdt_rst_req; // watchdog reset or external reset
+    assign _hit = ~_total_rst;
     assign _i_ad_rst = _reset_vec;
 
     assign _imem_dout = {_imem_dout_h, _imem_dout_l};
@@ -141,7 +144,7 @@ module soc(
  ************************************************************************************/
     cpu u_cpu (
         .i_clk(i_clk),
-        .i_rst(i_rst),
+        .i_rst(_total_rst),
         .i_i_ad_rst(_i_ad_rst),
         .o_insn_ce(_insn_ce),
         .o_PC(_PC),
@@ -165,7 +168,7 @@ module soc(
 
     brom_1kb_be u_rom (
         .i_clk(i_clk),
-        .i_rst(i_rst),
+        .i_rst(_total_rst),
         .i_en(_insn_ce),
         .i_addr(_PC[9:1]),
         .o_dout_h(_imem_dout_h),
@@ -174,7 +177,7 @@ module soc(
 
     bram_1kb_be u_mem (
         .i_clk(i_clk),
-        .i_rst(i_rst),
+        .i_rst(_total_rst),
         .i_en(_sw | _sb | _lw | _lb),
         .i_addr(_d_ad[9:1]),
         .i_we_h(_mem_we_h),
@@ -187,7 +190,8 @@ module soc(
 
     periph_bus u_periph (
         .i_clk(i_clk),
-        .i_rst(i_rst),
+        .i_rst(_total_rst),
+        .i_rst_ext(i_rst),   // only initial reset, without a WDT activation
         .i_addr(_d_ad),
         .i_sel(_io_sel),
         .i_we(_io_we),
@@ -205,7 +209,8 @@ module soc(
         .i_in_irq(_in_irq),
         .o_irq_vector(_irq_vector),
         .o_irq_take(_irq_take),
-        .i_irq_ret(_iret_detected)
+        .i_irq_ret(_iret_detected),
+        .o_wdt_rst(_wdt_rst_req)     // WDT Reset request after timeout
     );
 
 endmodule
