@@ -1,0 +1,109 @@
+flowchart LR
+  %% Full-hazard target reference (forwarding + stall/flush)
+
+  %% IF
+  subgraph IF["IF Stage"]
+    PC["PC"]
+    PCMUX["PC Mux\n(seq/branch/irq)"]
+    IMEM["Instruction Memory"]
+    PCADD["+2"]
+    PC --> PCMUX
+    PCMUX --> IMEM
+    PC --> PCADD
+  end
+
+  IFID["IF/ID Reg"]
+
+  %% ID
+  subgraph ID["ID Stage"]
+    CTRL["Control Decode"]
+    RF["Register File\n2R1W"]
+    IMM["Immediate Build\n(inc. prefix)"]
+    BDU["Branch Decision Unit"]
+    BRADD["Branch Target Add"]
+    CMP["Cond/CC Check"]
+    CTRL --> RF
+    CTRL --> IMM
+    CTRL --> CMP
+    IMM --> BRADD
+    CMP --> BDU
+    BRADD --> BDU
+  end
+
+  IDEX["ID/EX Reg"]
+
+  %% EX
+  subgraph EX["EX Stage"]
+    MUXA["SrcA Fwd Mux\n(ID/EX, EX/MEM, MEM/WB)"]
+    MUXB["SrcB Fwd Mux\n(ID/EX, EX/MEM, MEM/WB)"]
+    ALU["ALU"]
+    ADR["Addr Gen\n(sum<<1)"]
+    FLAGS["CC/Carry Candidate"]
+    MUXA --> ALU
+    MUXB --> ALU
+    ALU --> ADR
+    ALU --> FLAGS
+  end
+
+  EXMEM["EX/MEM Reg"]
+
+  %% MEM
+  subgraph MEM["MEM Stage"]
+    DMEM["Data Memory / MMIO"]
+    MWAIT["Wait/Ready Gate"]
+    EXMEM --> DMEM
+    DMEM --> MWAIT
+  end
+
+  MEMWB["MEM/WB Reg"]
+
+  %% WB
+  subgraph WB["WB Stage"]
+    WBMUX["WB Mux\n(ALU/MEM)"]
+    RFW["Regfile Writeback"]
+    CCW["CC/Carry Commit"]
+    WBMUX --> RFW
+    WBMUX --> CCW
+  end
+
+  %% Main forward path
+  IMEM --> IFID --> CTRL
+  IFID --> RF
+  IFID --> IMM
+  RF --> IDEX
+  IMM --> IDEX
+  IDEX --> MUXA
+  IDEX --> MUXB
+  ADR --> EXMEM
+  FLAGS --> EXMEM
+  MWAIT --> MEMWB
+  MEMWB --> WBMUX
+  RFW --> RF
+
+  %% Branch redirect
+  BDU -->|"branch_taken + target"| PCMUX
+
+  %% Hazard unit
+  HZ["Hazard Unit\n(load-use, RAW, CC/carry, mem-wait, irq boundary)"]
+
+  %% Inputs into hazard unit
+  IFID --> HZ
+  IDEX --> HZ
+  EXMEM --> HZ
+  MEMWB --> HZ
+  MWAIT --> HZ
+  BDU --> HZ
+
+  %% Hazard control outputs
+  HZ -->|"stall_if"| IF
+  HZ -->|"stall_id"| IFID
+  HZ -->|"flush_ifid"| IFID
+  HZ -->|"bubble_ex"| IDEX
+  HZ -->|"stall_ex"| EXMEM
+  HZ -->|"flush_idex"| IDEX
+  HZ -->|"forward_a"| MUXA
+  HZ -->|"forward_b"| MUXB
+
+  %% IRQ precision concept hook
+  IRQ["IRQ Controller\n(take/vector)"] --> HZ
+  IRQ --> PCMUX

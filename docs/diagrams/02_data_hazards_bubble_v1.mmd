@@ -1,0 +1,10 @@
+flowchart LR
+  ID["ID Instruction\n(consumer)"] --> CHECK["Hazard Unit\nRAW/Load-Use/CC/Carry"]
+  IDEX["ID/EX producer"] --> CHECK
+  EXMEM["EX/MEM producer"] --> CHECK
+  MEMWB["MEM/WB producer"] --> CHECK
+
+  CHECK -->|"decode hazard"| STALL["stall_if=1, stall_id=1"]
+  CHECK -->|"decode hazard and !mem_wait"| BUBBLE["bubble_ex=1 (inject NOP into ID/EX)"]
+
+  CHECK -->|"mem_wait=1"| HOLD["freeze IF/ID/EX progression\n(no extra decode bubble)"]

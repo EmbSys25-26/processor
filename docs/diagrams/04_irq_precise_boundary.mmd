@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant IRQ as irq_ctrl/periph
+  participant HU as Hazard Unit
+  participant CPU as cpu core
+  participant RF as Regfile
+  participant PCN as PC Next
+
+  IRQ->>HU: i_irq_take=1
+  HU-->>CPU: accept_irq=1 only when !mem_wait
+  CPU->>RF: write lr (r14) <= pc-2
+  CPU->>PCN: select irq_vector
+  CPU-->>CPU: flush younger state (IF/ID and ID/EX)
+  Note over CPU: IRQ accepted at instruction boundary

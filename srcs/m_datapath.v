@@ -117,11 +117,12 @@ module datapath(
     regfile16x16 u_regfile (
         .i_clk(i_clk),
         .i_we(_rf_we_final),
-        .i_wr_ad(_rf_wr_ad_final),
-        .i_ad(i_is_ri ? i_rd : i_rs),
-        .i_d(_regfile_din),
-        .o_wr_o(_dreg),
-        .o_o(_sreg)
+        .i_wa(_rf_wr_ad_final),
+        .i_ra(_rf_wr_ad_final),
+        .i_rb(i_is_ri ? i_rd : i_rs),
+        .i_wd(_regfile_din),
+        .o_ra(_dreg),
+        .o_rb(_sreg)
     );
 
 /*************************************************************************************

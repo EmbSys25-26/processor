@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant IF as IF Stage
+  participant ID as ID Stage
+  participant BDU as BDU
+  participant HU as Hazard Unit
+  participant PCN as PC Next
+
+  IF->>ID: Fetch/decode candidate
+  ID->>BDU: Evaluate condition with CC flags
+  BDU-->>ID: branch_take + target
+  ID->>HU: branch_take_commit
+  HU-->>IF: flush_ifid=1
+  ID->>PCN: branch_target
+  PCN-->>IF: redirected PC
+  Note over IF,ID: fall-through is annulled

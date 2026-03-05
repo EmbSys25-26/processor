@@ -1,0 +1,25 @@
+flowchart TB
+  subgraph IFS["IF"]
+    IF_IN["i_pc, i_insn, i_hit, i_stall, i_flush"] --> IF_OUT["o_pc, o_insn, o_valid, o_insn_ce"]
+  end
+
+  subgraph IDS["ID"]
+    ID_IN["i_pc, i_insn, i_rd_data, i_rs_data, flags"] --> ID_OUT["decode controls, imm16, branch_target, branch_take"]
+  end
+
+  subgraph EXS["EX"]
+    EX_IN["operands + control qualifiers"] --> EX_OUT["alu result, d_ad, store_data, wb_pre_data, flag candidates"]
+  end
+
+  subgraph MEMS["MEM"]
+    MEM_IN["mem op + d_ad + store_data + i_rdy"] --> MEM_OUT["bus strobes, mem_wait, wb_data"]
+  end
+
+  subgraph WBS["WB"]
+    WB_IN["wb_data + rd + flag/carry updates"] --> WB_OUT["regfile write + committed flags"]
+  end
+
+  IF_OUT --> IDS
+  ID_OUT --> EXS
+  EX_OUT --> MEMS
+  MEM_OUT --> WBS

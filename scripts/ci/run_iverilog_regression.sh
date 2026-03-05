@@ -6,6 +6,21 @@ ARTIFACT_DIR="${1:-${ROOT_DIR}/.ci_artifacts/sim}"
 mkdir -p "${ARTIFACT_DIR}"
 cd "${ROOT_DIR}"
 
+PIPELINE_SRCS=(
+  srcs/m_if_stage.v
+  srcs/m_id_stage.v
+  srcs/m_ex_stage.v
+  srcs/m_mem_stage.v
+  srcs/m_wb_stage.v
+  srcs/m_pipe_if_id.v
+  srcs/m_pipe_id_ex.v
+  srcs/m_pipe_ex_mem.v
+  srcs/m_pipe_mem_wb.v
+  srcs/m_hazard_unit.v
+  srcs/m_bdu.v
+  srcs/m_pc_next.v
+)
+
 SOC_SRCS=(
   srcs/m_soc.v
   srcs/m_cpu.v
@@ -22,6 +37,7 @@ SOC_SRCS=(
   srcs/m_uart_rx.v
   srcs/m_uart_tx.v
   srcs/m_bram.v
+  "${PIPELINE_SRCS[@]}"
 )
 
 CPU_CORE_SRCS=(
@@ -30,6 +46,7 @@ CPU_CORE_SRCS=(
   srcs/m_datapath.v
   srcs/m_alu.v
   srcs/m_regfile16x16.v
+  "${PIPELINE_SRCS[@]}"
 )
 
 info() {
@@ -90,6 +107,76 @@ info "running CPU irq-depth robustness regression"
 compile_tb "tb_cpu_irq_depth" sim/tb_cpu_irq_depth.v "${CPU_CORE_SRCS[@]}"
 run_tb "tb_cpu_irq_depth"
 require_log_contains "${ARTIFACT_DIR}/tb_cpu_irq_depth.run.log" "PASS tb_cpu_irq_depth"
+
+info "running pipeline load-use bubble regression"
+compile_tb "tb_pipe_load_use_bubble" sim/tb_pipe_load_use_bubble.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_load_use_bubble"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_load_use_bubble.run.log" "PASS tb_pipe_load_use_bubble"
+
+info "running pipeline CC dependency regression"
+compile_tb "tb_pipe_cc_dependency" sim/tb_pipe_cc_dependency.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_cc_dependency"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_cc_dependency.run.log" "PASS tb_pipe_cc_dependency"
+
+info "running pipeline branch flush regression"
+compile_tb "tb_pipe_branch_flush" sim/tb_pipe_branch_flush.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_branch_flush"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_branch_flush.run.log" "PASS tb_pipe_branch_flush"
+
+info "running pipeline memory-wait freeze regression"
+compile_tb "tb_pipe_mem_wait_freeze" sim/tb_pipe_mem_wait_freeze.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_mem_wait_freeze"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_mem_wait_freeze.run.log" "PASS tb_pipe_mem_wait_freeze"
+
+info "running pipeline IRQ precise-boundary regression"
+compile_tb "tb_pipe_irq_precise_boundary" sim/tb_pipe_irq_precise_boundary.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_irq_precise_boundary"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_irq_precise_boundary.run.log" "PASS tb_pipe_irq_precise_boundary"
+
+info "running pipeline IMM-prefix flush regression"
+compile_tb "tb_pipe_imm_prefix_flush" sim/tb_pipe_imm_prefix_flush.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_imm_prefix_flush"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_imm_prefix_flush.run.log" "PASS tb_pipe_imm_prefix_flush"
+
+info "running pipeline carry dependency regression"
+compile_tb "tb_pipe_carry_dependency" sim/tb_pipe_carry_dependency.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_carry_dependency"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_carry_dependency.run.log" "PASS tb_pipe_carry_dependency"
+
+info "running pipeline IRQ-deferral on mem-wait regression"
+compile_tb "tb_pipe_irq_mem_wait_deferral" sim/tb_pipe_irq_mem_wait_deferral.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_irq_mem_wait_deferral"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_irq_mem_wait_deferral.run.log" "PASS tb_pipe_irq_mem_wait_deferral"
+
+info "running pipeline IMM-prefix IRQ-clear regression"
+compile_tb "tb_pipe_imm_prefix_irq_clear" sim/tb_pipe_imm_prefix_irq_clear.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_imm_prefix_irq_clear"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_imm_prefix_irq_clear.run.log" "PASS tb_pipe_imm_prefix_irq_clear"
+
+info "running pipeline deterministic fuzz-invariant regression"
+compile_tb "tb_pipe_fuzz_invariants" sim/tb_pipe_fuzz_invariants.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_fuzz_invariants"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_fuzz_invariants.run.log" "PASS tb_pipe_fuzz_invariants"
+
+info "running pipeline IRQ oneshot-level regression"
+compile_tb "tb_pipe_irq_oneshot_level" sim/tb_pipe_irq_oneshot_level.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_irq_oneshot_level"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_irq_oneshot_level.run.log" "PASS tb_pipe_irq_oneshot_level"
+
+info "running pipeline IRQ-vs-branch priority regression"
+compile_tb "tb_pipe_irq_branch_priority" sim/tb_pipe_irq_branch_priority.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_irq_branch_priority"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_irq_branch_priority.run.log" "PASS tb_pipe_irq_branch_priority"
+
+info "running pipeline branch defer-under-memwait regression"
+compile_tb "tb_pipe_branch_memwait_defer" sim/tb_pipe_branch_memwait_defer.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_branch_memwait_defer"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_branch_memwait_defer.run.log" "PASS tb_pipe_branch_memwait_defer"
+
+info "running pipeline r0 load-nohazard regression"
+compile_tb "tb_pipe_r0_load_no_hazard" sim/tb_pipe_r0_load_no_hazard.v "${CPU_CORE_SRCS[@]}"
+run_tb "tb_pipe_r0_load_no_hazard"
+require_log_contains "${ARTIFACT_DIR}/tb_pipe_r0_load_no_hazard.run.log" "PASS tb_pipe_r0_load_no_hazard"
 
 info "running SoC byte-lane regression"
 compile_tb "tb_soc_byte_lane" sim/tb_soc_byte_lane.v "${SOC_SRCS[@]}"

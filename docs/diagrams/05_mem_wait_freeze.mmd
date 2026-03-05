@@ -1,0 +1,9 @@
+flowchart LR
+  MEMOP["MEM stage sees load/store"] --> WAITCHK{"i_rdy ?"}
+  WAITCHK -- "no" --> WAIT["mem_wait=1"]
+  WAIT --> STALLS["stall_if=1\nstall_id=1\nstall_ex=1"]
+  STALLS --> HOLD["hold IF/ID/IDEX/EXMEM state"]
+  HOLD --> BUS["keep memory transaction stable"]
+
+  WAITCHK -- "yes" --> COMPLETE["mem_complete=1"]
+  COMPLETE --> WB["single retire to WB"]

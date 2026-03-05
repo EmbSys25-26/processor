@@ -1,6 +1,6 @@
 # Documentation
 
-_Last reviewed: 2026-02-08_
+_Last reviewed: 2026-02-18_
 
 ## Purpose
 
@@ -23,6 +23,8 @@ _Last reviewed: 2026-02-08_
   - Mapping from current boundaries to planned pipeline/compiler/peripheral work.
 - [`ci_baseline_verification.md`](ci_baseline_verification.md)
   - CI regression methodology, domain coverage, GitHub setup, and reproduction.
+- [`diagrams/README.md`](diagrams/README.md)
+  - Stage-pipeline Mermaid diagrams + context decision log (`diagrams/CONTEXT_LOG.md`).
 - `../wavecfgs/coolWaveBehav.wcfg`, `../wavecfgs/coolWaveSynth.wcfg`, `../wavecfgs/coolWaveImpl.wcfg`
   - Waveform presets for behavioral, post-synthesis, and post-implementation timing runs.
 - [`references.md`](references.md)

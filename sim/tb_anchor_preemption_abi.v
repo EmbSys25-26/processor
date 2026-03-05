@@ -60,8 +60,8 @@ module tb_anchor_preemption_abi;
     assign _in_irq = dut._in_irq;
 
     assign _cpu_irq_depth = dut.u_cpu._irq_depth;
-    assign _rf_s0 = dut.u_cpu.u_datapath.u_regfile._s0;
-    assign _rf_s1 = dut.u_cpu.u_datapath.u_regfile._s1;
+    assign _rf_s0 = dut.u_cpu.u_regfile._s0;
+    assign _rf_s1 = dut.u_cpu.u_regfile._s1;
 
 /*************************************************************************************
  * 2.2 Anchor Monitors

@@ -1,98 +1,82 @@
 # CI Baseline Verification (Release Gate)
 
-_Last reviewed: 2026-02-08_
+_Last reviewed: 2026-02-18_
 
 ## 1. Goal
 
-Define a deterministic CI gate for the first consolidated release so future PRs are blocked on core functional regressions across CPU, SoC integration, interrupt behavior, timer behavior, and memory byte-lane semantics.
+Provide a deterministic CI gate that blocks regressions in:
+- CPU/SoC baseline behavior
+- interrupt/preemption anchors
+- branch and memory corner cases
+- pipeline v1 hazard/control policy
 
-## 2. CI Entry Points
+## 2. Entry Points
 
-- GitHub Actions workflow:
-  - `.github/workflows/ci-baseline.yml`
-- Single local/CI regression runner:
-  - `scripts/ci/run_iverilog_regression.sh`
+- GitHub workflow: `.github/workflows/ci-baseline.yml`
+- Local runner: `scripts/ci/run_iverilog_regression.sh`
 
-## 3. Curated Baseline Domains
+## 3. Curated Regression Domains
 
-| Domain | Primary Failure Concept | Test/Check | Pass Criteria |
+| Domain | Failure Concept | Test/Check | Pass Criteria |
 |---|---|---|---|
-| Firmware image generation | Broken assembly output, wrong BRAM image shape | `tools/assembler.py` + line-count check | `mem.hex`, `mem_hi.hex`, `mem_lo.hex` each 512 lines |
-| Timer register map and start/reload behavior | Timer start value not writable/readable/reloadable | `sim/tb_timer_start_reg.v` | `PASS tb_timer_start_reg` |
-| CPU IRQ depth safety | Underflow/wrap on `IRET`, wrong `in_irq` state | `sim/tb_cpu_irq_depth.v` | `PASS tb_cpu_irq_depth` |
-| Byte-lane semantics for `LB/SB` | Wrong lane chosen, wrong zero-extension | `sim/tb_soc_byte_lane.v` | `PASS tb_soc_byte_lane` |
-| SoC integration + MMIO/IRQ activity | Missing IRQ/MMIO activity after changes | `sim/tb_soc_refactor_regression.v` | `PASS tb_soc_refactor_regression` |
-| Branch annul corner case | Fall-through not annulled on taken branch | `sim/tb_soc_branch_annul.v` | `PASS tb_soc_branch_annul` |
-| End-to-end anchors | Lost timer preemption or ABI preservation | `sim/tb_anchor_preemption_abi.v` | `PASS tb_anchor_preemption_abi` + preemption/restore evidence lines |
-| UART MMIO word alignment | UART STATUS/ACK unreachable through CPU-aligned address model | `sim/tb_uart_mmio_word_aligned.v` | `PASS tb_uart_mmio_word_aligned` |
-| Runtime guard and smoke | Open-ended simulations, deadlock | `sim/tb_Soc.v` with `+max-cycles=1200` | Observes IRQ vectors `0x0020` and `0x0040`, then exits by guard |
+| Firmware image generation | Broken assembler output or short BRAM image | `tools/assembler.py` + line checks | `mem.hex`, `mem_hi.hex`, `mem_lo.hex` each 512 lines |
+| Timer start/reload behavior | Timer start register broken | `sim/tb_timer_start_reg.v` | `PASS tb_timer_start_reg` |
+| CPU IRQ depth | Incorrect depth/underflow | `sim/tb_cpu_irq_depth.v` | `PASS tb_cpu_irq_depth` |
+| Pipeline load-use hazard | Missing stall/bubble | `sim/tb_pipe_load_use_bubble.v` | `PASS tb_pipe_load_use_bubble` |
+| Pipeline CC dependency | Branch-on-fresh-CC interlock broken | `sim/tb_pipe_cc_dependency.v` | `PASS tb_pipe_cc_dependency` |
+| Pipeline branch flush | Wrong-path instruction not flushed | `sim/tb_pipe_branch_flush.v` | `PASS tb_pipe_branch_flush` |
+| Pipeline memory wait freeze | Pipeline advances while waiting | `sim/tb_pipe_mem_wait_freeze.v` | `PASS tb_pipe_mem_wait_freeze` |
+| Pipeline IRQ precision | IRQ boundary/`lr` save broken | `sim/tb_pipe_irq_precise_boundary.v` | `PASS tb_pipe_irq_precise_boundary` |
+| Pipeline IMM-prefix flush | Stale IMM prefix leaks across flush | `sim/tb_pipe_imm_prefix_flush.v` | `PASS tb_pipe_imm_prefix_flush` |
+| Pipeline carry dependency | Carry-latch data dependency mishandled | `sim/tb_pipe_carry_dependency.v` | `PASS tb_pipe_carry_dependency` |
+| Pipeline IRQ during mem-wait | IRQ accepted while load/store wait active | `sim/tb_pipe_irq_mem_wait_deferral.v` | `PASS tb_pipe_irq_mem_wait_deferral` |
+| Pipeline IMM-prefix IRQ clear | IMM prefix not cleared on IRQ accept boundary | `sim/tb_pipe_imm_prefix_irq_clear.v` | `PASS tb_pipe_imm_prefix_irq_clear` |
+| Pipeline stress invariants | Silent pipeline invariant break under mixed traffic | `sim/tb_pipe_fuzz_invariants.v` | `PASS tb_pipe_fuzz_invariants` |
+| Pipeline IRQ oneshot-level | Repeated accepts when IRQ line is level-high | `sim/tb_pipe_irq_oneshot_level.v` | `PASS tb_pipe_irq_oneshot_level` |
+| Pipeline IRQ-vs-branch priority | Wrong priority when branch and IRQ collide in ID | `sim/tb_pipe_irq_branch_priority.v` | `PASS tb_pipe_irq_branch_priority` |
+| Pipeline branch under mem-wait | Branch commits while mem-wait is active | `sim/tb_pipe_branch_memwait_defer.v` | `PASS tb_pipe_branch_memwait_defer` |
+| Pipeline r0 load false hazard | False load-use interlock for producer `rd=r0` | `sim/tb_pipe_r0_load_no_hazard.v` | `PASS tb_pipe_r0_load_no_hazard` |
+| SoC byte-lane semantics | `LB/SB` lane select bug | `sim/tb_soc_byte_lane.v` | `PASS tb_soc_byte_lane` |
+| SoC integration | Core integration/IRQ/MMIO regressions | `sim/tb_soc_refactor_regression.v` | `PASS tb_soc_refactor_regression` |
+| Branch annul corner | Fall-through not annulled | `sim/tb_soc_branch_annul.v` | `PASS tb_soc_branch_annul` |
+| End-to-end anchors | Timer preemption or ABI restore broken | `sim/tb_anchor_preemption_abi.v` | `PASS tb_anchor_preemption_abi` + evidence lines |
+| UART MMIO alignment | Word-indexed decode mismatch | `sim/tb_uart_mmio_word_aligned.v` | `PASS tb_uart_mmio_word_aligned` |
+| Bounded smoke | Deadlock / open-ended sim | `sim/tb_Soc.v` with `+max-cycles=1200` | IRQ vectors observed + guard exit |
 
-## 4. Methodology
+## 4. Method
 
-1. Rebuild BRAM images from canonical assembly input.
-2. Compile benches with `SIM=1` and `CI=1` so BRAM init paths resolve to repository-root hex files.
-3. Execute fast unit-level regressions first (timers, CPU depth, lane behavior).
-4. Execute SoC-level regressions next (integration + anchor behavior).
-5. Execute bounded smoke run to catch lockups and keep CI runtime deterministic.
-6. Fail CI on:
-   - any `FAIL` in run logs,
+1. Assemble firmware image.
+2. Compile benches with `-DSIM=1 -DCI=1 -Isrcs`.
+3. Run focused unit benches first, then SoC benches.
+4. Fail run on:
    - missing required `PASS` markers,
-   - BRAM short-image symptom (`Not enough words`),
-   - missing anchor evidence lines.
+   - any `FAIL` line,
+   - BRAM short-image symptoms (`Not enough words`).
 
 ## 5. Local Reproduction
-
-From repository root:
 
 ```bash
 bash scripts/ci/run_iverilog_regression.sh
 ```
 
-Optional custom artifact directory:
+Custom artifact directory:
 
 ```bash
 bash scripts/ci/run_iverilog_regression.sh .ci_artifacts/sim
 ```
 
-Generated logs:
+Artifacts:
 - `.ci_artifacts/sim/*.compile.log`
 - `.ci_artifacts/sim/*.run.log`
 
-## 6. GitHub Setup Steps
+## 6. Branch Protection Recommendation
 
-1. Ensure these files are committed and pushed:
-   - `.github/workflows/ci-baseline.yml`
-   - `scripts/ci/run_iverilog_regression.sh`
-2. In GitHub repository settings, ensure Actions are enabled:
-   - `Settings -> Actions -> General -> Allow all actions and reusable workflows`.
-3. Push to a branch and open a test PR; confirm workflow `CI Baseline Verification` appears and runs.
-4. Configure branch protection for your integration branch (`main`/`master`):
-   - require pull requests before merging,
-   - require status checks to pass,
-   - mark required check: `Baseline Verification (iverilog)`.
-5. Optionally require branch to be up-to-date before merge.
-6. Keep `CODEOWNERS` active so RTL/docs/CI changes get reviewed by the right owners.
+Require at least:
+- 1 review
+- required status check: baseline CI workflow
+- branch up-to-date before merge (recommended)
 
 ## 7. Scope Notes
 
-- This CI gate is simulation-focused and lightweight (Icarus Verilog + Python).
-- Vivado synthesis/implementation timing closure is intentionally out-of-scope for per-PR CI due to runtime/resource costs.
-- Vivado should remain a release-candidate or nightly gate.
-
-## 8. Release Watchpoints
-
-- Keep `sim/tb_soc_branch_annul.v` in CI. It guards synchronous fetch/latch branch-annul ordering.
-- Keep `sim/tb_anchor_preemption_abi.v` in CI. It is the anchor for timer preemption and ABI preservation.
-- Keep `sim/tb_uart_mmio_word_aligned.v` in CI. It guards word-indexed UART register reachability and STATUS clear behavior at `0x8300`/`0x8302`.
-- Keep canonical `IRET` encoding synchronized across:
-  - `srcs/constants.vh` (`CPU_IRET_INSN`)
-  - `tools/abi.inc` (`IRET` macro)
-  - assembly programs using ISR epilogues.
-
-## 9. Related Docs
-
-- `docs/architecture_and_memory.md`
-- `docs/isa_reference.md`
-- `docs/abi_spec.md`
-- `docs/rtl_file_walkthrough.md`
-- `docs/report/docs-implementation.tex`
+- This CI gate is simulation-first (Icarus Verilog + assembler).
+- Vivado synth/impl remains a release or nightly gate.

@@ -1,0 +1,23 @@
+flowchart LR
+  IF["IF Stage\n(m_if_stage)"] --> IFID["IF/ID Reg\n(m_pipe_if_id)"]
+  IFID --> ID["ID Stage\n(m_id_stage)"]
+  ID --> IDEX["ID/EX Reg\n(m_pipe_id_ex)"]
+  IDEX --> EX["EX Stage\n(m_ex_stage)"]
+  EX --> EXMEM["EX/MEM Reg\n(m_pipe_ex_mem)"]
+  EXMEM --> MEM["MEM Stage\n(m_mem_stage)"]
+  MEM --> MEMWB["MEM/WB Reg\n(m_pipe_mem_wb)"]
+  MEMWB --> WB["WB Stage\n(m_wb_stage)"]
+
+  WB --> RF["Regfile\n(m_regfile16x16)"]
+  RF --> ID
+
+  HU["Hazard Unit\n(m_hazard_unit)"] --> IF
+  HU --> IFID
+  HU --> IDEX
+  HU --> EXMEM
+
+  ID --> BDU["Branch Decision\n(m_bdu)"]
+  BDU --> PCN["PC Next\n(m_pc_next)"]
+  PCN --> IF
+
+  IRQ["IRQ Take/Vector"] --> PCN
