@@ -136,7 +136,9 @@ module periph_bus(
     assign _int_cause[_irq_i2c] = _i2c_int_req;
     assign _int_cause[_irq_wdt] = _wdt_int_req;
     
-    assign _int_cause[7:6] = 2'b000;
+    //assign _int_cause[7:6] = 2'b000;
+    assign _int_cause[7] = 1'b0;
+assign _int_cause[6] = 1'b0;
 
 /****************************************************************************
  * 2.2 Peripheral Instances
