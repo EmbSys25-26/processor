@@ -58,6 +58,9 @@ typedef enum{
     NODE_START_SCOPE,       // {
     NODE_END_SCOPE,         // }
 
+    NODE_PP_DEFINE,        // #define NAME [value]
+    NODE_PP_UNDEF,         // #undef NAME
+    
     NODE_TYPE_NOT_DEFINED
 } NodeType_t;
 

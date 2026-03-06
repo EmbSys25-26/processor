@@ -52,6 +52,8 @@ static const char* NodeTypeToStr(NodeType_t t)
         case NODE_NULL:              return "NULL";
         case NODE_START_SCOPE:       return "{";
         case NODE_END_SCOPE:         return "}";
+        case NODE_PP_DEFINE:         return "PP_DEFINE";
+        case NODE_PP_UNDEF:          return "PP_UNDEF";
         default:                     return "???";
     }
 }
@@ -170,6 +172,12 @@ static void NodeValueSuffix(const TreeNode_t* p, char* buf, size_t buflen)
                 case SIGN_SIGNED:   snprintf(buf, buflen, " (signed)");   break;
                 case SIGN_UNSIGNED: snprintf(buf, buflen, " (unsigned)"); break;
             }
+            break;
+        case NODE_PP_DEFINE:
+        case NODE_PP_UNDEF:
+            /* name is stored in sVal, just like VAR_DECLARATION */
+            if (p->nodeData.sVal)
+                snprintf(buf, buflen, " (%s)", p->nodeData.sVal);
             break;
         default:
             break;
