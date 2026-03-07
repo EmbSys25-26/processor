@@ -11,7 +11,7 @@ SRCS    = $(PARSER_DIR)/parser.tab.c \
           $(PARSER_DIR)/ASTPrint.c   \
           $(UTILS_DIR)/logger.c
 
-TARGET  = parser
+TARGET  = compiler
 
 all: $(TARGET)
 
