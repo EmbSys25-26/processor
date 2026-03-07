@@ -47,7 +47,7 @@ sudo apt install gcc flex bison
 make
 ```
 
-This runs Bison on `parser.y` to generate `parser.tab.c` and `parser.tab.h`, then runs Flex on `lexer.l` to generate `lex.yy.c`, and finally compiles everything into the `parser` binary.
+This runs Bison on `parser.y` to generate `parser.tab.c` and `parser.tab.h`, then runs Flex on `lexer.l` to generate `lex.yy.c`, and finally compiles everything into the `compiler` binary.
 
 To clean generated files:
 ```bash
@@ -59,12 +59,12 @@ make clean
 ## Running
 
 ```bash
-./parser <file.c>
+./compler <file.c>
 ```
 
 Example:
 ```bash
-./parser program.c
+./compiler program.c
 ```
 
 On a successful parse, the tool prints:
