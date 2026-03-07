@@ -1129,7 +1129,7 @@ operand     :   TOKEN_MINUS operand %prec UNARY
                       $$.treeNode->nodeData.dVal = OP_UNARY_MINUS;
                       NodeAddChild($$.treeNode, $2.treeNode);
                 }
-            |   TOKEN_INCREMENT operand        // ++a
+            |   TOKEN_INCREMENT operand        // ++a  prefix has lower precedence so stays here
                 {
                     NodeCreate(&($$.treeNode), NODE_PRE_INC);
                     NodeAddChild($$.treeNode, $2.treeNode);
