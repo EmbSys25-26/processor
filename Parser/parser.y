@@ -25,6 +25,10 @@ extern FILE* yyin;
 static TreeNode_t* p_treeRoot = NULL;
 static char* currentFunction = NULL;
 
+//for define and undef directives
+extern char pp_name[256];
+extern char pp_value[512];
+
 //for preprocessor #define/#undef directives
 extern char pp_name[256];
 extern char pp_value[512];
@@ -229,8 +233,8 @@ type_declaration    :  enum_declaration { $$.treeNode = $1.treeNode; }
                     |  struct_declaration { $$.treeNode = $1.treeNode; }
                     |  union_declaration { $$.treeNode = $1.treeNode; }
                     ;
-                                     
-compound_statement  :   TOKEN_LEFT_BRACE statement_sequence TOKEN_RIGHT_BRACE   
+                                                                          
+compound_statement  :   TOKEN_LEFT_BRACE statement_sequence TOKEN_RIGHT_BRACE      
                         {
                             if ($2.treeNode != NULL) {
                                 TreeNode_t* pEnd;
@@ -401,6 +405,10 @@ case_list       :   case_clause
 
 case_clause     :   TOKEN_CASE TOKEN_NUM TOKEN_COLON statement_sequence   //number
                     {
+                          NodeCreate(&($$.treeNode), NODE_CASE);
+                          $$.treeNode->nodeData.sVal = NULL;
+                          $$.treeNode->nodeData.dVal = $2.nodeData.dVal;
+                          NodeAddChild($$.treeNode, $4.treeNode);
                           NodeCreate(&($$.treeNode), NODE_CASE);
                           $$.treeNode->nodeData.sVal = NULL;
                           $$.treeNode->nodeData.dVal = $2.nodeData.dVal;
