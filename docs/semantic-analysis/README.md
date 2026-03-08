@@ -30,12 +30,7 @@ If implementation and this spec disagree, update code or spec in the same PR.
 4. `IMPLEMENTATION_BLUEPRINT.md`
 - Detalhes da implementação, como organização de arquivos, funções, e responsabilidades.
 
-## Enforcement
-- Every semantic rule must have at least one test.
-- Every IR instruction kind used by lowering must have at least one lowering test.
-- Any unsupported feature must fail with a deterministic semantic or lowering error code.
-
-## Garantias 
+## Pontos a forçar 
 - Todas as regras semânticas devem ter pelo menos um teste.
 - Toda instrução de IR usada pelo lowering deve ter pelo menos um teste de lowering.
 - Qualquer recurso não suportado deve falhar com um código de erro semântico ou de lowering determinístico.
