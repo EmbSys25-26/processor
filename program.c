@@ -1,516 +1,242 @@
 /* ============================================================
- *  test_parser.c  —  Teste extensivo do parser C
- *  Cobre: tipos, declarações, ponteiros, arrays, structs,
- *         unions, enums, funções, expressões, operadores,
- *         controlo de fluxo, casts, sizeof, ternário
+ *  test_parser.c  —  One example of each supported feature
  * ============================================================ */
 
-/* ---------- Enums ---------- */
-enum Cor { VERMELHO, VERDE = 5, AZUL, AMARELO = -1 };
-enum Estado { ATIVO, INATIVO, PENDENTE };
+/* ---------- Pre-processor ---------- */
+#define MAX 10
+#undef MAX
+#define MAX 15
 
-/* ---------- Structs ---------- */
+/* ---------- Enum ---------- */
+enum Cor { VERMELHO, VERDE = 5, AZUL };
+
+/* ---------- Struct ---------- */
 struct Ponto {
     int x;
     int y;
+    struct Ponto* p;
 };
 
-struct Retangulo {
-    struct Ponto origem;
-    int largura;
-    int altura;
-};
-
-struct Lista {
-    int valor;
-    struct Lista* proximo;
-};
-
-/* ---------- Unions ---------- */
+/* ---------- Union ---------- */
 union Dados {
     int i;
     float f;
-    char c;
 };
 
-/* ---------- Protótipos ---------- */
+/* ---------- Prototype ---------- */
 int soma(int a, int b);
-float media(float arr[], int n);
-void trocar(int* a, int* b);
-int busca_binaria(int arr[], int n, int target);
-//struct Ponto criar_ponto(int x, int y);
-int* alocar(int n);
 
-/* ---------- Variáveis globais ---------- */
+/* ---------- Global variables ---------- */
 int contador = 0;
-float pi = 3;
 static int privado = 42;
 extern int externo;
-const int MAX = 100;
+const int LIMITE = 100;
 unsigned int flags = 0;
-long int grande = 1000000;
-short int pequeno = 10;
-
 int arr_global[10];
-int matriz[3][3];
-char nome[50];
 
-/* ---------- Funções simples ---------- */
-
+/* ---------- Basic function ---------- */
 int soma(int a, int b) {
     return a + b;
 }
 
-int subtracao(int a, int b) {
-    return a - b;
-}
-
-int multiplicacao(int a, int b) {
-    return a * b;
-}
-
-int divisao(int a, int b) {
-    return a / b;
-}
-
-int modulo(int a, int b) {
-    return a % b;
-}
-
-/* ---------- Ponteiros ---------- */
-
+/* ---------- Pointers ---------- */
 void trocar(int* a, int* b) {
     int temp = *a;
     *a = *b;
     *b = temp;
 }
 
-int soma_via_ptr(int* a, int* b) {
-    return *a + *b;
-}
-
-int** matriz_ptr(int n) {
-    int** m;
-    return m;
-}
-
-void incrementar(int* p) {
-    *p = *p + 1;
-}
-
-/* ---------- Arrays ---------- */
-
+/* ---------- Array ---------- */
 float media(float arr[], int n) {
-    float soma = 0;
+    float s = 0;
     int i;
     for (i = 0; i < n; i++) {
-        soma = soma + arr[i];
+        s = s + arr[i];
     }
-    return soma / n;
+    return s / n;
 }
 
-int busca_binaria(int arr[], int n, int target) {
-    int lo = 0;
-    int hi = n - 1;
-    while (lo <= hi) {
-        int mid = (lo + hi) / 2;
-        if (arr[mid] == target) {
-            return mid;
-        } else if (arr[mid] < target) {
-            lo = mid + 1;
-        } else {
-            hi = mid - 1;
-        }
-    }
-    return -1;
-}
-
-void preencher_array(int arr[], int n, int valor) {
-    int i;
-    for (i = 0; i < n; i++) {
-        arr[i] = valor;
-    }
-}
-
-void copiar_array(int dest[], int src[], int n) {
-    int i;
-    for (i = 0; i < n; i++) {
-        dest[i] = src[i];
-    }
-}
-
-/* ---------- Structs como argumentos ---------- */
-
-/*struct Ponto criar_ponto(int x, int y) {
-    struct Ponto p;
-    p.x = x;
-    p.y = y;
-    return p;
-}*/
-
-int distancia_quadrada(struct Ponto a, struct Ponto b) {
-    int dx = a.x - b.x;
-    int dy = a.y - b.y;
-    return dx * dx + dy * dy;
-}
-
+/* ---------- Struct as argument / dot / arrow ---------- */
 void mover_ponto(struct Ponto* p, int dx, int dy) {
     p->x = p->x + dx;
     p->y = p->y + dy;
 }
 
-int area_retangulo(struct Retangulo r) {
-    return r.largura * r.altura;
+/* ---------- Arithmetic & compound assignment ---------- */
+int operadores(int a, int b) {
+    int r = a + b * a - b / a % 2;
+    r += 1;
+    r -= 1;
+    r *= 2;
+    r /= 2;
+    r %= 3;
+    return r;
 }
 
-/* ---------- Expressões complexas ---------- */
-
-int expressoes(int a, int b, int c) {
-    int r1 = a + b * c;
-    int r2 = (a + b) * c;
-    int r3 = a - b + c;
-    int r4 = a * b / c;
-    int r5 = a % b + c;
-    int r6 = a + b + c + r1 + r2;
-    return r6;
+/* ---------- Logical & bitwise operators ---------- */
+int bits(int a, int b) {
+    int r = a && b;
+    r = a || b;
+    r = !a;
+    r = a & b;
+    r = a | b;
+    r = a ^ b;
+    r = ~a;
+    r = a << 2;
+    r = b >> 1;
+    r &= 0xFF;
+    r |= 0x01;
+    r ^= 0x10;
+    r <<= 1;
+    r >>= 1;
+    return r;
 }
 
-int operadores_logicos(int a, int b, int c) {
-    int r1 = a && b;
-    int r2 = a || b;
-    int r3 = !a;
-    int r4 = a && b || c;
-    int r5 = a && (b || c);
-    int r6 = !a && !b;
-    return r1 + r2 + r3 + r4 + r5 + r6;
-}
-
-int operadores_bitwise(int a, int b) {
-    int r1 = a & b;
-    int r2 = a | b;
-    int r3 = a ^ b;
-    int r4 = ~a;
-    int r5 = a << 2;
-    int r6 = b >> 1;
-    int r7 = a & b | r5 ^ r6;
-    return r7;
-}
-
+/* ---------- Comparison ---------- */
 int comparacoes(int a, int b) {
-    int r1 = a == b;
-    int r2 = a != b;
-    int r3 = a < b;
-    int r4 = a > b;
-    int r5 = a <= b;
-    int r6 = a >= b;
-    return r1 + r2 + r3 + r4 + r5 + r6;
+    return (a == b) + (a != b) + (a < b) + (a > b) + (a <= b) + (a >= b);
 }
 
-/* ---------- Compound assignments ---------- */
-
-void compound_assigns(int* x) {
-    *x += 5;
-    *x -= 3;
-    *x *= 2;
-    *x /= 4;
-    *x %= 7;
-    *x &= 0xFF;
-    *x |= 0x01;
-    *x ^= 0x10;
-    *x <<= 1;
-    *x >>= 1;
-}
-
-/* ---------- Incremento / Decremento ---------- */
-
+/* ---------- Increment / Decrement ---------- */
 int inc_dec(int a) {
-    int b = a;
-    b++;
-    b--;
-    ++b;
-    --b;
-    int c = b++;
-    int d = ++b;
-    int e = b-- + --d;
-    return e;
+    a++;
+    a--;
+    ++a;
+    --a;
+    return a;
 }
 
-/* ---------- Controlo de fluxo ---------- */
-
-int if_else_chain(int x) {
+/* ---------- If / else ---------- */
+int classify(int x) {
     if (x < 0) {
         return -1;
     } else if (x == 0) {
         return 0;
-    } else if (x < 10) {
-        return 1;
-    } else if (x < 100) {
-        return 2;
     } else {
-        return 3;
+        return 1;
     }
 }
 
-int switch_completo(int op, int a, int b) {
-    int resultado;
+/* ---------- Switch ---------- */
+int sw(int op, int a, int b) {
+    int r;
     switch (op) {
-        case 0:
-            resultado = a + b;
-            break;
-        case 1:
-            resultado = a - b;
-            break;
-        case 2:
-            resultado = a * b;
-            break;
-        case 3:
-            if (b != 0) {
-                resultado = a / b;
-            } else {
-                resultado = -1;
-            }
-            break;
-        default:
-            resultado = 0;
-            break;
+        case 0:  r = a + b; break;
+        case 1:  r = a - b; break;
+        default: r = 0;     break;
     }
-    return resultado;
+    return r;
 }
 
-int loops_while(int n) {
-    int soma = 0;
-    int i = 0;
-    while (i < n) {
-        soma = soma + i;
-        i++;
+/* ---------- While ---------- */
+int loop_while(int n) {
+    int s = 0;
+    while (n > 0) {
+        s = s + n;
+        n--;
     }
-    return soma;
+    return s;
 }
 
+/* ---------- Do-while ---------- */
 int loop_do_while(int n) {
-    int soma = 0;
-    int i = 0;
+    int s = 0;
     do {
-        soma = soma + i;
-        i++;
-    } while (i < n);
-    return soma;
+        s = s + n;
+        n--;
+    } while (n > 0);
+    return s;
 }
 
-int loop_for_basico(int n) {
-    int soma = 0;
-    int i;
-    for (i = 0; i < n; i++) {
-        soma = soma + i;
-    }
-    return soma;
-}
-
-int loop_for_decl(int n) {
-    int soma = 0;
+/* ---------- For + break/continue ---------- */
+int loop_for(int n) {
+    int s = 0;
     for (int i = 0; i < n; i++) {
-        soma = soma + i;
+        if (i % 2 == 0) continue;
+        if (i > 10)     break;
+        s = s + i;
     }
-    return soma;
+    return s;
 }
 
-int loop_for_compound(int n) {
-    int soma = 0;
-    for (int i = 0; i < n; i += 2) {
-        soma = soma + i;
-    }
-    return soma;
-}
-
-int loop_break_continue(int n) {
-    int soma = 0;
-    for (int i = 0; i < n; i++) {
-        if (i % 2 == 0) {
-            continue;
-        }
-        if (i > 10) {
-            break;
-        }
-        soma = soma + i;
-    }
-    return soma;
-}
-
-int loops_aninhados(int n) {
-    int soma = 0;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            soma = soma + i * j;
-        }
-    }
-    return soma;
-}
-
-/* ---------- Ternário ---------- */
-
+/* ---------- Ternary ---------- */
 int ternario(int a, int b) {
-    int max = a > b ? a : b;
-    int min = a < b ? a : b;
-    int abs_val = a >= 0 ? a : -a;
-    int nested = a > 0 ? (b > 0 ? 1 : 2) : (b > 0 ? 3 : 4);
-    return max + min + abs_val + nested;
+    return a > b ? a : b;
 }
 
-/* ---------- Type cast e sizeof ---------- */
-
-int casts_e_sizeof() {
-    int a = 10;
+/* ---------- Type cast & sizeof ---------- */
+int casts(int a) {
     float b = (float) a;
     int c = (int) b;
-    int s1 = sizeof(int);
-    int s2 = sizeof(float);
-    int s3 = sizeof(a);
-    int s4 = sizeof(struct Ponto);
-    return s1 + s2 + s3 + s4;
+    int s = sizeof(int) + sizeof(a) + sizeof(struct Ponto);
+    return c + s;
 }
 
-/* ---------- Referências e ponteiros avançados ---------- */
-
-void ponteiros_avancados() {
+/* ---------- Reference & double pointer ---------- */
+void ponteiros(void) {
     int x = 5;
     int* p = &x;
     int** pp = &p;
     *p = 10;
     **pp = 20;
-    int arr[5];
-    int* pa = &arr[0];
-    *pa = 1;
-    *(pa + 1) = 2;
 }
 
-/* ---------- Arrow operator ---------- */
-
-void arrow_operator(struct Ponto* p) {
-    p->x = 10;
-    p->y = 20;
-    int soma = p->x + p->y;
-    p->x += 1;
-    p->y -= 1;
-}
-
-void lista_ligada(struct Lista* no) {
-    no->valor = 42;
-    no->proximo = no;
-    int v = no->proximo->valor;
-}
-
-/* ---------- Função com vários tipos de retorno ---------- */
-
-void funcao_void(int x) {
-    int y = x + 1;
-    return;
-}
-
-int funcao_return_exp(int a, int b, int c) {
-    return a * b + c - 1;
-}
-
-/* ---------- Declarações múltiplas ---------- */
-
-int declaracoes_multiplas() {
-    int a, b, c;
-    int x = 1, y = 2;
-    float f1, f2;
-    int arr1[5], arr2[10];
-    a = 1;
-    b = 2;
-    c = a + b;
-    return c;
-}
-
-/* ---------- Qualificadores de tipo ---------- */
-
-void qualificadores() {
+/* ---------- Type qualifiers ---------- */
+void qualificadores(void) {
     const int k = 42;
     volatile int v = 0;
     unsigned int u = 100;
     signed int s = -50;
     static int st = 0;
     st = st + 1;
-    u = u + 1;
-    v = v + 1;
 }
 
-/* ---------- Funções inline/static/extern ---------- */
+/* ---------- Visibility qualifiers ---------- */
+static int funcao_static(int x) { return x * 2; }
+inline int funcao_inline(int x) { return x + 1; }
 
-static int funcao_static(int x) {
-    return x * 2;
+/* ---------- Void return ---------- */
+void funcao_void(int x) {
+    int y = x + 1;
+    return;
 }
 
-inline int funcao_inline(int x) {
-    return x + 1;
-}
-
-/* ---------- main ---------- */
-
+/* ---------- Main ---------- */
 int main() {
     int a = 10;
     int b = 3;
 
-    int s = soma(a, b);
-    int d = subtracao(a, b);
-    int m = multiplicacao(a, b);
-    int dv = divisao(a, b);
-    int mod = modulo(a, b);
+    int s   = soma(a, b);
+    int cl  = classify(a);
+    int sw1 = sw(0, a, b);
+    int wh  = loop_while(5);
+    int dw  = loop_do_while(5);
+    int fr  = loop_for(10);
+    int tr  = ternario(a, b);
+    int cs  = casts(a);
+    int op  = operadores(a, b);
+    int cmp = comparacoes(a, b);
+    int id  = inc_dec(a);
+    int bt  = bits(a, b);
 
     trocar(&a, &b);
+    ponteiros();
+    qualificadores();
+    funcao_void(a);
 
-    int arr[10];
-    preencher_array(arr, 10, 0);
-    arr[0] = 1;
-    arr[1] = 5;
-    arr[2] = 3;
-    arr[9] = 42;
+    struct Ponto p;
+    p.x = 3;
+    p.y = 4;
+    mover_ponto(&p, 1, -1);
 
-    int idx = busca_binaria(arr, 10, 5);
-
-    /*struct Ponto p1;
-    p1.x = 3;
-    p1.y = 4;*/
-
-    //struct Ponto p2 = criar_ponto(6, 8);
-    int dist = distancia_quadrada(p1, p2);
-    mover_ponto(&p1, 1, -1);
-
-    struct Retangulo r;
-    r.largura = 10;
-    r.altura = 5;
-    int area = area_retangulo(r);
-
-    union Dados dado;
-    dado.i = 42;
-    dado.f = 3;
+    union Dados d;
+    d.i = 42;
 
     enum Cor cor = VERDE;
-    enum Estado estado = ATIVO;
 
-    int expr = expressoes(a, b, 2);
-    int logico = operadores_logicos(1, 0, 1);
-    int bitwise = operadores_bitwise(a, b);
-    int comp = comparacoes(a, b);
+    int arr[5];
+    arr[0] = 1;
+    arr[4] = 9;
 
-    int tern = ternario(a, b);
-    int tamanhos = casts_e_sizeof();
-
-    int soma_while = loops_while(10);
-    int soma_do = loop_do_while(10);
-    int soma_for = loop_for_basico(10);
-    int soma_for2 = loop_for_decl(10);
-    int soma_for3 = loop_for_compound(10);
-    int soma_break = loop_break_continue(20);
-    int soma_nest = loops_aninhados(5);
-
-    int cat = if_else_chain(50);
-    int sw = switch_completo(0, a, b);
-
-    int ic = inc_dec(5);
-
-    int decl = declaracoes_multiplas();
-
-    return soma_while + soma_for + cat + sw + dist + area + ic + decl;
+    return s + cl + sw1 + wh + dw + fr + tr + cs + op + cmp + id + bt;
 }

@@ -24,6 +24,10 @@ extern FILE* yyin;
 
 static TreeNode_t* p_treeRoot = NULL;
 static char* currentFunction = NULL;
+
+//for preprocessor #define/#undef directives
+extern char pp_name[256];
+extern char pp_value[512];
 %}
 
 %defines
@@ -139,16 +143,16 @@ program         :   program TOKEN_EOF
 
 
 global_statement    :   type_declaration { $$.treeNode = $1.treeNode; } 
-		    |   var_declaration { $$.treeNode = $1.treeNode; }
+		            |   var_declaration { $$.treeNode = $1.treeNode; }
                     |   function_prototype { $$.treeNode = $1.treeNode; }
                     |   function_definition { $$.treeNode = $1.treeNode; }
-                    
+                    |   def_undef_definition { $$.treeNode = $1.treeNode; }
                     |   TOKEN_SEMI { $$.treeNode = NULL; }  //empty statement
                     ;
 
 //statements are siblings
-local_statement_list : %empty          { $$.treeNode = NULL; }
-                     | local_statement_list local_statement
+statement_sequence : %empty          { $$.treeNode = NULL; }
+                     | statement_sequence statement
                        {
                            TreeNode_t* pHead = $1.treeNode;
                            if ($2.treeNode != NULL) {
@@ -162,16 +166,47 @@ local_statement_list : %empty          { $$.treeNode = NULL; }
                        }
                      ;
 
-local_statement     :   selection_statement { $$.treeNode = $1.treeNode; }
+statement     :   selection_statement { $$.treeNode = $1.treeNode; }
                     |   iteration_statement { $$.treeNode = $1.treeNode; }
                     |   jump_statement { $$.treeNode = $1.treeNode; }
-                    |   compound_statement { $$.treeNode = $1.treeNode; }
-                    |   var_declaration { $$.treeNode = $1.treeNode; }
-                    |   var_assignment { $$.treeNode = $1.treeNode; }
-                    |   func_call TOKEN_SEMI { $$.treeNode = $1.treeNode; }
+                    |   compound_statement { $$.treeNode = $1.treeNode; }  // everything that is in between { ... }
+                    |   var_declaration { $$.treeNode = $1.treeNode; }  //int x=5;
+                    |   var_assignment { $$.treeNode = $1.treeNode; }  //x=5;
                     |   function_definition { $$.treeNode = $1.treeNode; }
                     |   exp TOKEN_SEMI { $$.treeNode = $1.treeNode; } //e.g. for sizeof
                     ;
+                    
+//--------------------------------------------------------------------------------------------------------------------//
+// Pre-processor
+//--------------------------------------------------------------------------------------------------------------------//
+                    
+def_undef_definition    : define    { $$.treeNode = $1.treeNode; }
+                        | undef     { $$.treeNode = $1.treeNode; }
+                        ;
+
+define  :   TOKEN_PP_DEFINE  //#define MAX 10
+            {
+                NodeCreate(&($$.treeNode), NODE_PP_DEFINE);
+                $$.treeNode->nodeData.sVal = strdup(pp_name);  //MAX
+
+                if (pp_value[0] != '\0') {
+                    TreeNode_t* pVal;
+                    NodeCreate(&pVal, NODE_STRING);
+                    pVal->nodeData.sVal = strdup(pp_value);  //10
+                    NodeAddChild($$.treeNode, pVal);
+                }
+            }
+        ;
+
+undef   :   TOKEN_PP_UNDEF    //#UNDEF MAX
+            {
+                NodeCreate(&($$.treeNode), NODE_PP_UNDEF);
+                $$.treeNode->nodeData.sVal = strdup(pp_name);
+            }
+        ;
+
+
+			
 //--------------------------------------------------------------------------------------------------------------------//
 // Statements
 //--------------------------------------------------------------------------------------------------------------------//
@@ -190,12 +225,12 @@ iteration_statement  :  do_while_loop { $$.treeNode = $1.treeNode; }
                      |  for_loop { $$.treeNode = $1.treeNode; }
                      ;
 
-type_declaration   :  enum_declaration { $$.treeNode = $1.treeNode; }
+type_declaration    :  enum_declaration { $$.treeNode = $1.treeNode; }
                     |  struct_declaration { $$.treeNode = $1.treeNode; }
                     |  union_declaration { $$.treeNode = $1.treeNode; }
                     ;
-
-compound_statement  :   TOKEN_LEFT_BRACE local_statement_list TOKEN_RIGHT_BRACE
+                                     
+compound_statement  :   TOKEN_LEFT_BRACE statement_sequence TOKEN_RIGHT_BRACE   
                         {
                             if ($2.treeNode != NULL) {
                                 TreeNode_t* pEnd;
@@ -213,15 +248,13 @@ compound_statement  :   TOKEN_LEFT_BRACE local_statement_list TOKEN_RIGHT_BRACE
                                 $$.treeNode = pNull;
                             }
                         }
-                    |   TOKEN_LEFT_BRACE TOKEN_RIGHT_BRACE
-                        { $$.treeNode = NULL; }
                     ;
 
 //--------------------------------------------------------------------------------------------------------------------//
 // Type declarations
 //--------------------------------------------------------------------------------------------------------------------//
 
-// enum Color { RED, GREEN = 5, BLUE };
+// enum Color { enum_member_list};
 enum_declaration    :   TOKEN_ENUM TOKEN_ID TOKEN_LEFT_BRACE enum_member_list TOKEN_RIGHT_BRACE TOKEN_SEMI
                         {
                             NodeCreate(&($$.treeNode), NODE_ENUM_DECLARATION);
@@ -229,9 +262,8 @@ enum_declaration    :   TOKEN_ENUM TOKEN_ID TOKEN_LEFT_BRACE enum_member_list TO
                             NodeAddChild($$.treeNode, $4.treeNode);
                         }
                     ;
-
-enum_member_list    :   enum_member
-                        { $$.treeNode = $1.treeNode; }
+//RED, GREEN = 5, BLUE 
+enum_member_list    :   enum_member { $$.treeNode = $1.treeNode; }
                     |   enum_member_list TOKEN_COMMA enum_member
                         {
                             TreeNode_t* pHead = $1.treeNode;
@@ -247,7 +279,7 @@ enum_member         :   TOKEN_ID                            // RED
                             NodeCreate(&($$.treeNode), NODE_ENUM_MEMBER);
                             $$.treeNode->nodeData.sVal = $1.nodeData.sVal;
                         }
-                    |   TOKEN_ID TOKEN_ASSIGN TOKEN_NUM     // GREEN = 5
+                    |   TOKEN_ID TOKEN_ASSIGN TOKEN_NUM     // GREEN = 5, num is always integer
                         {
                             NodeCreate(&($$.treeNode), NODE_ENUM_MEMBER);
                             $$.treeNode->nodeData.sVal = $1.nodeData.sVal;
@@ -267,8 +299,8 @@ enum_member         :   TOKEN_ID                            // RED
                         }
                     ;
 
-// struct Point { int x; float y; };
-struct_declaration  :   TOKEN_STRUCT TOKEN_ID TOKEN_LEFT_BRACE struct_member_list TOKEN_RIGHT_BRACE TOKEN_SEMI
+// struct Point { struct_union_member_list};
+struct_declaration  :   TOKEN_STRUCT TOKEN_ID TOKEN_LEFT_BRACE struct_union_member_list TOKEN_RIGHT_BRACE TOKEN_SEMI
                         {
                             NodeCreate(&($$.treeNode), NODE_STRUCT_DECLARATION);
                             $$.treeNode->nodeData.sVal = $2.nodeData.sVal;
@@ -277,7 +309,7 @@ struct_declaration  :   TOKEN_STRUCT TOKEN_ID TOKEN_LEFT_BRACE struct_member_lis
                     ;
 
 // union Data { int i; float f; };
-union_declaration   :   TOKEN_UNION TOKEN_ID TOKEN_LEFT_BRACE struct_member_list TOKEN_RIGHT_BRACE TOKEN_SEMI
+union_declaration   :   TOKEN_UNION TOKEN_ID TOKEN_LEFT_BRACE struct_union_member_list TOKEN_RIGHT_BRACE TOKEN_SEMI
                         {
                             NodeCreate(&($$.treeNode), NODE_UNION_DECLARATION);
                             $$.treeNode->nodeData.sVal = $2.nodeData.sVal;
@@ -285,25 +317,25 @@ union_declaration   :   TOKEN_UNION TOKEN_ID TOKEN_LEFT_BRACE struct_member_list
                         }
                     ;
 
-// list of members inside struct/union
-struct_member_list  :   struct_member
-                        { $$.treeNode = $1.treeNode; }
-                    |   struct_member_list struct_member
-                        {
-                            TreeNode_t* pHead = $1.treeNode;
-                            if (NodeAppendSibling(&pHead, $2.treeNode)) { YYERROR; }
-                            $$.treeNode = pHead;
-                        }
-                    ;
+/* list of members inside struct/union --> its defined the same way
+e.g: int x; int y;*/
+struct_union_member_list  :   struct_member  { $$.treeNode = $1.treeNode; }
+                          |   struct_union_member_list struct_member
+                              {
+                                  TreeNode_t* pHead = $1.treeNode;
+                                  if (NodeAppendSibling(&pHead, $2.treeNode)) { YYERROR; }
+                                  $$.treeNode = pHead;
+                              }
+                          ;
 
 // each member: int x;  or  int arr[10];  or  struct Point* next;
-struct_member       :   var_preamble TOKEN_ID TOKEN_SEMI             // int x;
+struct_member       :   var_preamble TOKEN_ID TOKEN_SEMI
                         {
                             NodeCreate(&($$.treeNode), NODE_STRUCT_MEMBER);
                             $$.treeNode->nodeData.sVal = $2.nodeData.sVal;
                             NodeAddChild($$.treeNode, $1.treeNode);
                         }
-                    |   var_preamble TOKEN_ID arr_size TOKEN_SEMI    // int arr[10];
+                    |   var_preamble TOKEN_ID arr_size TOKEN_SEMI
                         {
                             NodeCreate(&($$.treeNode), NODE_ARRAY_DECLARATION);
                             $$.treeNode->nodeData.sVal = $2.nodeData.sVal;
@@ -316,13 +348,13 @@ struct_member       :   var_preamble TOKEN_ID TOKEN_SEMI             // int x;
 // Selection statements
 //--------------------------------------------------------------------------------------------------------------------//
 
-if_statement    :   TOKEN_IF TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES local_statement %prec LOWER_THAN_ELSE
+if_statement    :   TOKEN_IF TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES statement %prec LOWER_THAN_ELSE
                     {
                         NodeCreate(&($$.treeNode), NODE_IF);
                         NodeAddChild($$.treeNode, $3.treeNode);    //condition
                         NodeAddChild($$.treeNode, $5.treeNode);    //if true
                     }
-                |   TOKEN_IF TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES local_statement TOKEN_ELSE local_statement
+                |   TOKEN_IF TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES statement TOKEN_ELSE statement //if has else
                     {
                         NodeCreate(&($$.treeNode), NODE_IF);
                         NodeAddChild($$.treeNode, $3.treeNode);   //condition
@@ -367,28 +399,28 @@ case_list       :   case_clause
                     }
                 ;
 
-case_clause     :   TOKEN_CASE TOKEN_NUM TOKEN_COLON local_statement_list   //number
+case_clause     :   TOKEN_CASE TOKEN_NUM TOKEN_COLON statement_sequence   //number
                     {
-                         NodeCreate(&($$.treeNode), NODE_CASE);
-		          $$.treeNode->nodeData.sVal = NULL;   
-		          $$.treeNode->nodeData.dVal = $2.nodeData.dVal;
-		          NodeAddChild($$.treeNode, $4.treeNode);
+                          NodeCreate(&($$.treeNode), NODE_CASE);
+                          $$.treeNode->nodeData.sVal = NULL;
+                          $$.treeNode->nodeData.dVal = $2.nodeData.dVal;
+                          NodeAddChild($$.treeNode, $4.treeNode);
                     }
-                |   TOKEN_CASE TOKEN_CNUM TOKEN_COLON local_statement_list  //char
+                |   TOKEN_CASE TOKEN_CNUM TOKEN_COLON statement_sequence  //char
                     {
-                        NodeCreate(&($$.treeNode), NODE_CASE);
-                        $$.treeNode->nodeData.dVal = $2.nodeData.dVal;
-                        NodeAddChild($$.treeNode, $4.treeNode);
+                          NodeCreate(&($$.treeNode), NODE_CASE);
+                          $$.treeNode->nodeData.dVal = $2.nodeData.dVal;
+                          NodeAddChild($$.treeNode, $4.treeNode);
                     }
-                |   TOKEN_CASE TOKEN_ID TOKEN_COLON local_statement_list   // case RED --> enum used
+                |   TOKEN_CASE TOKEN_ID TOKEN_COLON statement_sequence   // case RED --> enum used
                     {
-                        NodeCreate(&($$.treeNode), NODE_CASE);
-                        $$.treeNode->nodeData.sVal = $2.nodeData.sVal;  /* guarda o nome */
-                        NodeAddChild($$.treeNode, $4.treeNode);
+                          NodeCreate(&($$.treeNode), NODE_CASE);
+                          $$.treeNode->nodeData.sVal = $2.nodeData.sVal;  /* guarda o nome */
+                          NodeAddChild($$.treeNode, $4.treeNode);
                     }
                 ;
 
-default_clause  :   TOKEN_DEFAULT TOKEN_COLON local_statement_list
+default_clause  :   TOKEN_DEFAULT TOKEN_COLON statement_sequence
                     {
                         NodeCreate(&($$.treeNode), NODE_DEFAULT);
                         NodeAddChild($$.treeNode, $3.treeNode);
@@ -424,7 +456,7 @@ return_statement    :   TOKEN_RETURN TOKEN_SEMI
 // Iteration statements
 //--------------------------------------------------------------------------------------------------------------------//
 
-while_loop      :   TOKEN_WHILE TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES local_statement // while(exp)
+while_loop      :   TOKEN_WHILE TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES statement // while(exp)
                     {
                         NodeCreate(&($$.treeNode), NODE_WHILE);
                         NodeAddChild($$.treeNode, $3.treeNode);    // Condition
@@ -432,16 +464,16 @@ while_loop      :   TOKEN_WHILE TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHES
                     }
                 ;
 
-// normally local_statement would be compound statement because of  {...}
-do_while_loop   :   TOKEN_DO local_statement TOKEN_WHILE TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES TOKEN_SEMI
+// normally statement would be compound statement because of  {...}
+do_while_loop   :   TOKEN_DO statement TOKEN_WHILE TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES TOKEN_SEMI
                     {
                         NodeCreate(&($$.treeNode), NODE_DO_WHILE);
                         NodeAddChild($$.treeNode, $2.treeNode);
                         NodeAddChild($$.treeNode, $5.treeNode);
                     }
                 ;
-
-for_loop        :   TOKEN_FOR TOKEN_LEFT_PARENTHESES for_init_field TOKEN_SEMI for_condition TOKEN_SEMI for_assignment_field TOKEN_RIGHT_PARENTHESES local_statement
+//for(for_init_field, for_condition, for_assignment_field) statement (to allow compound)
+for_loop        :   TOKEN_FOR TOKEN_LEFT_PARENTHESES for_init_field TOKEN_SEMI for_condition TOKEN_SEMI for_assignment_field TOKEN_RIGHT_PARENTHESES statement
                     {
                         TreeNode_t* pNodeWhile;
                         TreeNode_t* pLoopBody = $9.treeNode;
@@ -503,10 +535,10 @@ for_init_field  :   %empty { $$.treeNode = NULL; }
                     }
                 ;
 for_condition     :   %empty { $$.treeNode = NULL; }
-                |   exp { $$.treeNode = $1.treeNode; }   //for (.., i < 0, ...)
-                ;
+                  |   exp { $$.treeNode = $1.treeNode; }   //for (.., i < 0, ...)
+                  ;
 
-for_assignment_field    :   %empty          { $$.treeNode = NULL; }
+for_assignment_field    :   %empty { $$.treeNode = NULL; }
                         |   simple_var_assign   { $$.treeNode = $1.treeNode; }  // for (.., ..., i=1+2)
                         |   compound_var_assign { $$.treeNode = $1.treeNode; }  // for (.., ..., i+=2)
                         |   exp { $$.treeNode = $1.treeNode; }  //// for (.., ..., i++/++i..)
@@ -560,35 +592,11 @@ function_signature  :   var_preamble TOKEN_ID TOKEN_LEFT_PARENTHESES arg_list TO
                             NodeAddChild($$.treeNode, $4.treeNode);
                         }
                     ;
-                    
-param_declaration : var_preamble TOKEN_ID
-                    {
-                        NodeCreate(&($$.treeNode), NODE_VAR_DECLARATION);
-                        $$.treeNode->nodeData.sVal = $2.nodeData.sVal;
-                        NodeAddChildCopy($$.treeNode, $1.treeNode);
-                        free($1.treeNode);
-                    }
-                    
-                  | var_preamble TOKEN_ID arr_size    /* ← ADICIONA ISTO: int arr[] */
-                    {
-                        NodeCreate(&($$.treeNode), NODE_ARRAY_DECLARATION);
-                        $$.treeNode->nodeData.sVal = $2.nodeData.sVal;
-                        NodeAddChildCopy($$.treeNode, $1.treeNode);
-                        free($1.treeNode);
-                        NodeAddChild($$.treeNode, $3.treeNode);
-                    }
-                  | var_preamble  // void func(int) - unnamed parameter
-                    {
-                        NodeCreate(&($$.treeNode), NODE_VAR_DECLARATION);
-                        NodeAddChild($$.treeNode, $1.treeNode);
-                    }
-                  ;
 
 //arguments list for function signature
-arg_list      :    %empty
-                { $$.treeNode = NULL; }
+arg_list       :    %empty  { $$.treeNode = NULL; }
 
-		| arg_list TOKEN_COMMA TOKEN_ELLIPSIS     // int func(int x, ...)
+	           |    arg_list TOKEN_COMMA TOKEN_ELLIPSIS     // int func(int x, ...)
                     {
                         TreeNode_t* pNode;
                         TreeNode_t* p_Head = $1.treeNode;
@@ -597,15 +605,40 @@ arg_list      :    %empty
                         if (NodeAppendSibling(&p_Head, pNode)) { YYERROR; }
                         $$.treeNode = p_Head;
                     }
-                |   arg_list TOKEN_COMMA param_declaration    //void func(int x, int y)
+               |    arg_list TOKEN_COMMA param_declaration    //void func(int x, int y)
                     {
                         TreeNode_t* p_Head = $1.treeNode;
                         if (NodeAppendSibling(&p_Head, $3.treeNode)) { YYERROR; }
                         $$.treeNode = p_Head;
                     }
-               |   param_declaration                         // ← changed
-                { $$.treeNode = $1.treeNode; }
-                ;
+               |    param_declaration  { $$.treeNode = $1.treeNode; }
+               ;
+
+// declaration of function parameters
+param_declaration   :   var_preamble TOKEN_ID
+                        {
+                            NodeCreate(&($$.treeNode), NODE_VAR_DECLARATION);
+                            $$.treeNode->nodeData.sVal = $2.nodeData.sVal;
+                            NodeAddChildCopy($$.treeNode, $1.treeNode);
+                            free($1.treeNode);
+                        }
+                    
+                    |   var_preamble TOKEN_ID arr_size    /* int arr[] */
+                        {
+                            NodeCreate(&($$.treeNode), NODE_ARRAY_DECLARATION);
+                            $$.treeNode->nodeData.sVal = $2.nodeData.sVal;
+                            NodeAddChildCopy($$.treeNode, $1.treeNode);
+                            free($1.treeNode);
+                            NodeAddChild($$.treeNode, $3.treeNode);
+                        }
+                    |    var_preamble  // void func(int) - unnamed parameter
+                        {
+                            NodeCreate(&($$.treeNode), NODE_VAR_DECLARATION);
+                            NodeAddChild($$.treeNode, $1.treeNode);
+                        }
+                   ;
+
+
 
 func_call           :   TOKEN_ID TOKEN_LEFT_PARENTHESES exp_list TOKEN_RIGHT_PARENTHESES
                         {
@@ -615,7 +648,7 @@ func_call           :   TOKEN_ID TOKEN_LEFT_PARENTHESES exp_list TOKEN_RIGHT_PAR
                         }
                     ;
 
-//expression list for function calling
+//exp list for function calling
 exp_list            :   %empty
                         {
                             $$.treeNode = NULL;
@@ -638,7 +671,7 @@ exp_list            :   %empty
 
 //(int)3.14 or (int*) ptr or (float) 5
 //Be careful with cast in struct, union and enum - maybe not implement!
-type_cast_specifier :   TOKEN_LEFT_PARENTHESES all_type_specifiers TOKEN_RIGHT_PARENTHESES
+type_cast_specifier :   TOKEN_LEFT_PARENTHESES all_type_specifiers TOKEN_RIGHT_PARENTHESES //(int)a
                         {
                             NodeCreate(&($$.treeNode), NODE_TYPE_CAST);
                             NodeAddChild($$.treeNode, $2.treeNode);
@@ -683,21 +716,16 @@ data_type_specifier :   TOKEN_CHAR
                             NodeCreate(&($$.treeNode), NODE_TYPE);
                             $$.treeNode->nodeData.dVal = TYPE_LONG;
                         }
-                    |   TOKEN_LONG TOKEN_LONG
+                    |   TOKEN_LONG TOKEN_INT
                         {
                             NodeCreate(&($$.treeNode), NODE_TYPE);
                             $$.treeNode->nodeData.dVal = TYPE_LONG;
                         }
-                    | TOKEN_LONG TOKEN_INT
-                      {
-                          NodeCreate(&($$.treeNode), NODE_TYPE);
-                          $$.treeNode->nodeData.dVal = TYPE_LONG;
-                      }
-                    | TOKEN_SHORT TOKEN_INT
-                      {
-                          NodeCreate(&($$.treeNode), NODE_TYPE);
-                          $$.treeNode->nodeData.dVal = TYPE_SHORT;
-                      }
+                    |   TOKEN_SHORT TOKEN_INT
+                        {
+                            NodeCreate(&($$.treeNode), NODE_TYPE);
+                            $$.treeNode->nodeData.dVal = TYPE_SHORT;
+                        }
                     |   TOKEN_FLOAT
                             { NodeCreate(&($$.treeNode), NODE_TYPE);
                             $$.treeNode->nodeData.dVal = TYPE_FLOAT;
@@ -746,39 +774,36 @@ data_type_specifier :   TOKEN_CHAR
                         }
                     ;
 
-visibility_qualifier : %empty { NodeCreate(&($$.treeNode), NODE_NULL); }
-                     | TOKEN_STATIC
-                       {
-                           NodeCreate(&($$.treeNode), NODE_VISIBILITY);
-                           $$.treeNode->nodeData.dVal = VIS_STATIC;
-                       }
-                     | TOKEN_EXTERN
-                       {
-                           NodeCreate(&($$.treeNode), NODE_VISIBILITY);
-                           $$.treeNode->nodeData.dVal = VIS_EXTERN;
-                       }
-                     | TOKEN_INLINE          /* ← add this */
-                       {
-                           NodeCreate(&($$.treeNode), NODE_VISIBILITY);
-                           $$.treeNode->nodeData.dVal = VIS_INLINE;
-                       }
-                     ;
+visibility_qualifier    :    TOKEN_STATIC
+                             {
+                                 NodeCreate(&($$.treeNode), NODE_VISIBILITY);
+                                 $$.treeNode->nodeData.dVal = VIS_STATIC;
+                             }
+                         |   TOKEN_EXTERN
+                             {
+                                 NodeCreate(&($$.treeNode), NODE_VISIBILITY);
+                                 $$.treeNode->nodeData.dVal = VIS_EXTERN;
+                             }
+                         |   TOKEN_INLINE
+                             {
+                                 NodeCreate(&($$.treeNode), NODE_VISIBILITY);
+                                 $$.treeNode->nodeData.dVal = VIS_INLINE;
+                             }
+                         ;
 
-mod_qualifier      :    %empty { NodeCreate(&($$.treeNode), NODE_NULL); }
-                   |     TOKEN_CONST
+mod_qualifier      :    TOKEN_CONST
                         {
-                            NodeCreate(&($$.treeNode), NODE_MODIFIER);
-                            $$.treeNode->nodeData.dVal = (long int) MOD_CONST;
+                        NodeCreate(&($$.treeNode), NODE_MODIFIER);
+                        $$.treeNode->nodeData.dVal = (long int) MOD_CONST;
                         }
-                    |   TOKEN_VOLATILE
+                   |    TOKEN_VOLATILE
                         {
-                            NodeCreate(&($$.treeNode), NODE_MODIFIER);
-                            $$.treeNode->nodeData.dVal = (long int) MOD_VOLATILE;
+                        NodeCreate(&($$.treeNode), NODE_MODIFIER);
+                        $$.treeNode->nodeData.dVal = (long int) MOD_VOLATILE;
                         }
-                    ;
+                   ;
 
-sign_qualifier      :   %empty { NodeCreate(&($$.treeNode), NODE_NULL); }
-                    |    TOKEN_SIGNED
+sign_qualifier      :   TOKEN_SIGNED
                         {
                             NodeCreate(&($$.treeNode), NODE_SIGN);
                             $$.treeNode->nodeData.dVal = (long int) SIGN_SIGNED;
@@ -791,13 +816,13 @@ sign_qualifier      :   %empty { NodeCreate(&($$.treeNode), NODE_NULL); }
                     ;
 
 
-
 //--------------------------------------------------------------------------------------------------------------------//
 // Variable Declarations and Assignments
 //--------------------------------------------------------------------------------------------------------------------//
 
 var_declaration :   var_preamble id_list TOKEN_SEMI
                     {
+                        /* existing action — keep unchanged */
                         TreeNode_t* pNode = $2.treeNode;
                         do {
                             if (pNode->nodeType == NODE_VAR_DECLARATION ||
@@ -824,94 +849,157 @@ arr_size    :   TOKEN_LEFT_BRACKET exp TOKEN_RIGHT_BRACKET   //[] inside can be 
                 }
             ;
 
+id_list  :    TOKEN_ID
+              {
+                  NodeCreate(&($$.treeNode), NODE_VAR_DECLARATION);
+                  $$.treeNode->nodeData.sVal = $1.nodeData.sVal;
+              }
+          |   TOKEN_ID TOKEN_ASSIGN exp         // int x=5;
+              {
+                  TreeNode_t* pNode;
+                  NodeCreate(&($$.treeNode), NODE_VAR_DECLARATION);
+                  $$.treeNode->nodeData.sVal = $1.nodeData.sVal;
+                  TreeNode_t* pAssign;
+                  NodeCreate(&pAssign, NODE_OPERATOR);
+                  pAssign->nodeData.dVal = OP_ASSIGN;
+                  NodeAddNewChild(pAssign, &pNode, NODE_IDENTIFIER);
+                  pNode->nodeData.sVal = $1.nodeData.sVal;
+                  NodeAddChild(pAssign, $3.treeNode);
+                  if (NodeAppendSibling(&($$.treeNode), pAssign)) { YYERROR; }
+              }
+          |   TOKEN_ID arr_size                        // int arr[10]
+              {
+                  NodeCreate(&($$.treeNode), NODE_ARRAY_DECLARATION);
+                  $$.treeNode->nodeData.sVal = $1.nodeData.sVal;
+                  NodeAddChild($$.treeNode, $2.treeNode);
+              }
+          |   id_list TOKEN_COMMA TOKEN_ID
+              {
+                   TreeNode_t* pHead = $1.treeNode;
+                   TreeNode_t* pNewNode;
+                   NodeCreate(&pNewNode, NODE_VAR_DECLARATION);
+                   pNewNode->nodeData.sVal = $3.nodeData.sVal;
+                   if (NodeAppendSibling(&pHead, pNewNode)) { YYERROR; }
+                   $$.treeNode = pHead;
+              }
+          |   id_list TOKEN_COMMA TOKEN_ID arr_size    // ← NEW: int x, arr[10]
+              {
+                    TreeNode_t* pHead = $1.treeNode;
+                    TreeNode_t* pNewNode;
+                    NodeCreate(&pNewNode, NODE_ARRAY_DECLARATION);
+                    pNewNode->nodeData.sVal = $3.nodeData.sVal;
+                    NodeAddChild(pNewNode, $4.treeNode);
+                    if (NodeAppendSibling(&pHead, pNewNode)) { YYERROR; }
+                    $$.treeNode = pHead;
+              }
 
-
-id_list         :   TOKEN_ID
-                    {
-                        NodeCreate(&($$.treeNode), NODE_VAR_DECLARATION);
-                        $$.treeNode->nodeData.sVal = $1.nodeData.sVal;
-                    }
-                | TOKEN_ID TOKEN_ASSIGN exp         // int x=5;
-		  {
-		      TreeNode_t* pNode;
-		      NodeCreate(&($$.treeNode), NODE_VAR_DECLARATION);
-		      $$.treeNode->nodeData.sVal = $1.nodeData.sVal;
-		      TreeNode_t* pAssign;
-		      NodeCreate(&pAssign, NODE_OPERATOR);
-		      pAssign->nodeData.dVal = OP_ASSIGN;
-		      NodeAddNewChild(pAssign, &pNode, NODE_IDENTIFIER);
-		      pNode->nodeData.sVal = $1.nodeData.sVal;
-		      NodeAddChild(pAssign, $3.treeNode);
-		      if (NodeAppendSibling(&($$.treeNode), pAssign)) { YYERROR; }
-		  }
-	        |   TOKEN_ID arr_size                        // int arr[10]
-	            {
-	                NodeCreate(&($$.treeNode), NODE_ARRAY_DECLARATION);
-	                $$.treeNode->nodeData.sVal = $1.nodeData.sVal;
-	                NodeAddChild($$.treeNode, $2.treeNode);
-	            }
-                |   id_list TOKEN_COMMA TOKEN_ID
-                    {
-                        TreeNode_t* pHead = $1.treeNode;
-                        TreeNode_t* pNewNode;
-                        NodeCreate(&pNewNode, NODE_VAR_DECLARATION);
-                        pNewNode->nodeData.sVal = $3.nodeData.sVal;
-                        if (NodeAppendSibling(&pHead, pNewNode)) { YYERROR; }
-                        $$.treeNode = pHead;
-                    }
-                |   id_list TOKEN_COMMA TOKEN_ID arr_size    // ← NEW: int x, arr[10]
-                    {
-                        TreeNode_t* pHead = $1.treeNode;
-                        TreeNode_t* pNewNode;
-                        NodeCreate(&pNewNode, NODE_ARRAY_DECLARATION);
-                        pNewNode->nodeData.sVal = $3.nodeData.sVal;
-                        NodeAddChild(pNewNode, $4.treeNode);
-                        if (NodeAppendSibling(&pHead, pNewNode)) { YYERROR; }
-                        $$.treeNode = pHead;
-                    }
-               
-                |   id_list TOKEN_COMMA simple_var_assign   //int x, y = 5;
-                    {
-                        TreeNode_t* pHead = $1.treeNode;
-                        TreeNode_t* pNode = $3.treeNode->p_firstChild;
-                        TreeNode_t* pNewNode;
-                        NodeCreate(&pNewNode, NODE_VAR_DECLARATION);
-                        pNewNode->nodeData.sVal = pNode->nodeData.sVal;
-                        if (NodeAppendSibling(&pHead, pNewNode)) { YYERROR; }
-                        if (NodeAppendSibling(&pHead, $3.treeNode)) { YYERROR; }
-                        $$.treeNode = pHead;
-                    }
-                ;
+          |   id_list TOKEN_COMMA simple_var_assign   //int x, y = 5;
+              {
+                    TreeNode_t* pHead = $1.treeNode;
+                    TreeNode_t* pNode = $3.treeNode->p_firstChild;
+                    TreeNode_t* pNewNode;
+                    NodeCreate(&pNewNode, NODE_VAR_DECLARATION);
+                    pNewNode->nodeData.sVal = pNode->nodeData.sVal;
+                    if (NodeAppendSibling(&pHead, pNewNode)) { YYERROR; }
+                    if (NodeAppendSibling(&pHead, $3.treeNode)) { YYERROR; }
+                    $$.treeNode = pHead;
+              }
+            ;
 
 //e.g: unsigned long int, static float, const int....
-var_preamble    :   visibility_qualifier mod_qualifier sign_qualifier all_type_specifiers
+/* helper macro-action shared by all var_preamble alternatives */
+var_preamble    :   all_type_specifiers
                     {
-                        TreeNode_t* pHead = $4.treeNode;
-
-                        if ($3.treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, $3.treeNode);
-                        else
-                            free($3.treeNode);
-
-                        if ($2.treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, $2.treeNode);
-                        else
-                            free($2.treeNode);
-
+                        $$.treeNode = $1.treeNode;
+                    }
+                |   visibility_qualifier all_type_specifiers
+                    {
+                        TreeNode_t* pHead = $2.treeNode;
                         if ($1.treeNode->nodeType != NODE_NULL)
                             NodeAppendSibling(&pHead, $1.treeNode);
                         else
                             free($1.treeNode);
-
+                        $$.treeNode = pHead;
+                    }
+                |   mod_qualifier all_type_specifiers
+                    {
+                        TreeNode_t* pHead = $2.treeNode;
+                        if ($1.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $1.treeNode);
+                        else
+                            free($1.treeNode);
+                        $$.treeNode = pHead;
+                    }
+                |   sign_qualifier all_type_specifiers
+                    {
+                        TreeNode_t* pHead = $2.treeNode;
+                        if ($1.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $1.treeNode);
+                        else
+                            free($1.treeNode);
+                        $$.treeNode = pHead;
+                    }
+                |   visibility_qualifier mod_qualifier all_type_specifiers
+                    {
+                        TreeNode_t* pHead = $3.treeNode;
+                        if ($2.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $2.treeNode);
+                        else
+                            free($2.treeNode);
+                        if ($1.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $1.treeNode);
+                        else
+                            free($1.treeNode);
+                        $$.treeNode = pHead;
+                    }
+                |   visibility_qualifier sign_qualifier all_type_specifiers
+                    {
+                        TreeNode_t* pHead = $3.treeNode;
+                        if ($2.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $2.treeNode);
+                        else
+                            free($2.treeNode);
+                        if ($1.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $1.treeNode);
+                        else
+                            free($1.treeNode);
+                        $$.treeNode = pHead;
+                    }
+                |   mod_qualifier sign_qualifier all_type_specifiers
+                    {
+                        TreeNode_t* pHead = $3.treeNode;
+                        if ($2.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $2.treeNode);
+                        else
+                            free($2.treeNode);
+                        if ($1.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $1.treeNode);
+                        else
+                            free($1.treeNode);
+                        $$.treeNode = pHead;
+                    }
+                |   visibility_qualifier mod_qualifier sign_qualifier all_type_specifiers
+                    {
+                        TreeNode_t* pHead = $4.treeNode;
+                        if ($3.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $3.treeNode);
+                        else
+                            free($3.treeNode);
+                        if ($2.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $2.treeNode);
+                        else
+                            free($2.treeNode);
+                        if ($1.treeNode->nodeType != NODE_NULL)
+                            NodeAppendSibling(&pHead, $1.treeNode);
+                        else
+                            free($1.treeNode);
                         $$.treeNode = pHead;
                     }
                 ;
 
 
-var_assignment  :   simple_var_assign TOKEN_SEMI
-                    { $$.treeNode = $1.treeNode; }
-                |   compound_var_assign TOKEN_SEMI
-                    { $$.treeNode = $1.treeNode; }
+var_assignment  :   simple_var_assign TOKEN_SEMI  { $$.treeNode = $1.treeNode; }
+                |   compound_var_assign TOKEN_SEMI  { $$.treeNode = $1.treeNode; }
                 |   array_access TOKEN_ASSIGN exp TOKEN_SEMI
                     {
                         NodeCreate(&($$.treeNode), NODE_OPERATOR);
@@ -1018,15 +1106,6 @@ exp         :   exp arithmetic_operator term  //by leaving the base case elimina
                     NodeAddChild($$.treeNode, $3.treeNode);
                     NodeAddChild($$.treeNode, $5.treeNode);
                 }
-         /*   |   TOKEN_ID TOKEN_ASSIGN exp
-                {
-                    TreeNode_t* pNode;
-                    NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                    $$.treeNode->nodeData.dVal = OP_ASSIGN;
-                    NodeAddNewChild($$.treeNode, &pNode, NODE_IDENTIFIER);
-                    pNode->nodeData.sVal = $1.nodeData.sVal;
-                    NodeAddChild($$.treeNode, $3.treeNode);
-                }*/
             |   term
                 {
                     $$.treeNode = $1.treeNode;
@@ -1040,28 +1119,27 @@ term        :   term priority_operator operand
                     NodeAddChild($2.treeNode, $3.treeNode);
                     $$.treeNode = $2.treeNode;
                 }
-            |   operand
-                { $$.treeNode = $1.treeNode; }
+            |   operand  { $$.treeNode = $1.treeNode; }
             ;
 
 //operand has higher precedence than term
-operand     :  TOKEN_MINUS operand %prec UNARY
-	 	{
-		      NodeCreate(&($$.treeNode), NODE_OPERATOR);
-		      $$.treeNode->nodeData.dVal = OP_UNARY_MINUS;
-		      NodeAddChild($$.treeNode, $2.treeNode);
-		 }
-	    | TOKEN_INCREMENT operand        // ++a
-		{
-		    NodeCreate(&($$.treeNode), NODE_PRE_INC);
-		    NodeAddChild($$.treeNode, $2.treeNode);
-		}
-	    | TOKEN_DECREMENT operand        // --a
-		{
-		    NodeCreate(&($$.treeNode), NODE_PRE_DEC);
-		    NodeAddChild($$.treeNode, $2.treeNode);
-		}
-            | TOKEN_LOGICAL_NOT factor
+operand     :   TOKEN_MINUS operand %prec UNARY
+                {
+                      NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                      $$.treeNode->nodeData.dVal = OP_UNARY_MINUS;
+                      NodeAddChild($$.treeNode, $2.treeNode);
+                }
+            |   TOKEN_INCREMENT operand        // ++a  prefix has lower precedence so stays here
+                {
+                    NodeCreate(&($$.treeNode), NODE_PRE_INC);
+                    NodeAddChild($$.treeNode, $2.treeNode);
+                }
+            |   TOKEN_DECREMENT operand        // --a
+                {
+                    NodeCreate(&($$.treeNode), NODE_PRE_DEC);
+                    NodeAddChild($$.treeNode, $2.treeNode);
+                }
+            |   TOKEN_LOGICAL_NOT factor
                 {
                     NodeCreate(&($$.treeNode), NODE_OPERATOR);
                     $$.treeNode->nodeData.dVal = OP_LOGICAL_NOT;
@@ -1130,31 +1208,30 @@ factor      :   TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES
                     NodeCreate(&($$.treeNode), NODE_REFERENCE);
                     $$.treeNode->nodeData.sVal = $2.nodeData.sVal;
                 }
-            |   TOKEN_SIZEOF TOKEN_LEFT_PARENTHESES sizeof_operand TOKEN_RIGHT_PARENTHESES
+            |   TOKEN_SIZEOF TOKEN_LEFT_PARENTHESES sizeof_operand TOKEN_RIGHT_PARENTHESES  //sizeof(a)
                 {
                     NodeCreate(&($$.treeNode), NODE_OPERATOR);
                     $$.treeNode->nodeData.dVal = OP_SIZEOF;
                     NodeAddChild($$.treeNode, $3.treeNode);
                 }
-            |   func_call
-                     { $$.treeNode = $1.treeNode; }
-            | factor TOKEN_INCREMENT        // a++
-		{
-		    NodeCreate(&($$.treeNode), NODE_POST_INC);
-		    NodeAddChild($$.treeNode, $1.treeNode);
-		}
-	    | factor TOKEN_DECREMENT        // a--
-		{
-		    NodeCreate(&($$.treeNode), NODE_POST_DEC);
-		    NodeAddChild($$.treeNode, $1.treeNode);
-		}
-            |   factor TOKEN_DOT TOKEN_ID
+            |   func_call  { $$.treeNode = $1.treeNode; }
+            |   factor TOKEN_INCREMENT        // a++
+                {
+                    NodeCreate(&($$.treeNode), NODE_POST_INC);
+                    NodeAddChild($$.treeNode, $1.treeNode);
+                }
+            |   factor TOKEN_DECREMENT        // a--
+                {
+                    NodeCreate(&($$.treeNode), NODE_POST_DEC);
+                    NodeAddChild($$.treeNode, $1.treeNode);
+                }
+            |   factor TOKEN_DOT TOKEN_ID  //p.x
                 {
                     NodeCreate(&($$.treeNode), NODE_IDENTIFIER);
                     $$.treeNode->nodeData.sVal = $3.nodeData.sVal;
                     NodeAddChild($$.treeNode, $1.treeNode);
                 }
-            |   factor TOKEN_ARROW TOKEN_ID
+            |   factor TOKEN_ARROW TOKEN_ID   //p->x
                 {
                     NodeCreate(&($$.treeNode), NODE_IDENTIFIER);
                     $$.treeNode->nodeData.sVal = $3.nodeData.sVal;
@@ -1182,7 +1259,7 @@ array_access :   TOKEN_ID TOKEN_LEFT_BRACKET exp TOKEN_RIGHT_BRACKET   ////arr[i
                     $$.treeNode = $1.treeNode;
                 }
             ;
-//for dereference  --> expression grammar
+//for dereference  --> exp grammar
 pointer_content :   TOKEN_ASTERISK pointer_content    //multiple level of dereference  e.g. **a
                     {
                         NodeCreate(&($$.treeNode), NODE_POINTER_CONTENT);
@@ -1310,56 +1387,56 @@ logic_operator      :   TOKEN_LOGICAL_AND   //&&
                     ;
 
 compound_assign_operator    :   TOKEN_PLUS_ASSIGN       //+=
-                        {
-                            NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                            $$.treeNode->nodeData.dVal = OP_PLUS_ASSIGN;
-                        }
-                    |   TOKEN_MINUS_ASSIGN      //-=
-                        {
-                            NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                            $$.treeNode->nodeData.dVal = OP_MINUS_ASSIGN;
-                        }
-                    |   TOKEN_MODULUS_ASSIGN    //%=
-                        {
-                            NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                            $$.treeNode->nodeData.dVal = OP_MODULUS_ASSIGN;
-                        }
-                    |   TOKEN_LEFT_SHIFT_ASSIGN    //<<=
-                        {
-                            NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                            $$.treeNode->nodeData.dVal = OP_LEFT_SHIFT_ASSIGN;
-                        }
-                    |   TOKEN_RIGHT_SHIFT_ASSIGN     //>>=
-                        {
-                            NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                            $$.treeNode->nodeData.dVal = OP_RIGHT_SHIFT_ASSIGN;
-                        }
-                    |   TOKEN_AND_ASSIGN        //&=
-                        {
-                            NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                            $$.treeNode->nodeData.dVal = OP_BITWISE_AND_ASSIGN;
-                        }
-                    |   TOKEN_OR_ASSIGN         //|=
-                        {
-                            NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                            $$.treeNode->nodeData.dVal = OP_BITWISE_OR_ASSIGN;
-                        }
-                    |   TOKEN_XOR_ASSIGN        //^=
-                        {
-                            NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                            $$.treeNode->nodeData.dVal = OP_BITWISE_XOR_ASSIGN;
-                        }
-                    |   TOKEN_MULTIPLY_ASSIGN   //*=
-                        {
-                            NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                            $$.treeNode->nodeData.dVal = OP_MULTIPLY_ASSIGN;
-                        }
-                    |   TOKEN_DIVIDE_ASSIGN     ///=
-                        {
-                            NodeCreate(&($$.treeNode), NODE_OPERATOR);
-                            $$.treeNode->nodeData.dVal = OP_DIVIDE_ASSIGN;
-                        }
-                    ;
+                            {
+                                NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                                $$.treeNode->nodeData.dVal = OP_PLUS_ASSIGN;
+                            }
+                        |   TOKEN_MINUS_ASSIGN      //-=
+                            {
+                                NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                                $$.treeNode->nodeData.dVal = OP_MINUS_ASSIGN;
+                            }
+                        |   TOKEN_MODULUS_ASSIGN    //%=
+                            {
+                                NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                                $$.treeNode->nodeData.dVal = OP_MODULUS_ASSIGN;
+                            }
+                        |   TOKEN_LEFT_SHIFT_ASSIGN    //<<=
+                            {
+                                NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                                $$.treeNode->nodeData.dVal = OP_LEFT_SHIFT_ASSIGN;
+                            }
+                        |   TOKEN_RIGHT_SHIFT_ASSIGN     //>>=
+                            {
+                                NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                                $$.treeNode->nodeData.dVal = OP_RIGHT_SHIFT_ASSIGN;
+                            }
+                        |   TOKEN_AND_ASSIGN        //&=
+                            {
+                                NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                                $$.treeNode->nodeData.dVal = OP_BITWISE_AND_ASSIGN;
+                            }
+                        |   TOKEN_OR_ASSIGN         //|=
+                            {
+                                NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                                $$.treeNode->nodeData.dVal = OP_BITWISE_OR_ASSIGN;
+                            }
+                        |   TOKEN_XOR_ASSIGN        //^=
+                            {
+                                NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                                $$.treeNode->nodeData.dVal = OP_BITWISE_XOR_ASSIGN;
+                            }
+                        |   TOKEN_MULTIPLY_ASSIGN   //*=
+                            {
+                                NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                                $$.treeNode->nodeData.dVal = OP_MULTIPLY_ASSIGN;
+                            }
+                        |   TOKEN_DIVIDE_ASSIGN     ///=
+                            {
+                                NodeCreate(&($$.treeNode), NODE_OPERATOR);
+                                $$.treeNode->nodeData.dVal = OP_DIVIDE_ASSIGN;
+                            }
+                        ;
 
 //--------------------------------------------------------------------------------------------------
 // Parser Support Code
