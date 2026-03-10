@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+// MUST UNCOMMENT `define SIM from constants.vh
+
 module tb_uart_mmio_word_aligned;
 
 /*************************************************************************************

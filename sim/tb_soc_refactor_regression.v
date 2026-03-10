@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+// MUST UNCOMMENT `define SIM from constants.vh
+
 module tb_soc_refactor_regression;
 
 /*************************************************************************************
