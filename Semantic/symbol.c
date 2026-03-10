@@ -26,6 +26,25 @@ static size_t hash_name(const char *name)
     return (size_t)(hash % SCOPE_BUCKET_COUNT);
 }
 
+static char *dup_cstr(const char *src)
+{
+  size_t n;
+  char *dst;
+
+  if (!src) {
+    return NULL;
+  }
+
+  n = strlen(src) + 1u;
+  dst = (char *)malloc(n);
+  if (!dst) {
+    return NULL;
+  }
+
+  (void)memcpy(dst, src, n);
+  return dst;
+}
+
 static const char *symbol_kind_to_string(symbol_kind_t kind)
 {
   switch (kind) {
@@ -189,7 +208,7 @@ symbol_t *symbol_new(const char *name, symbol_kind_t kind, type_t *type, size_t 
     return NULL; 
   }
 
-  symbol->name = strdup(name); 
+  symbol->name = dup_cstr(name); 
   if (!symbol->name) {
     type_free(type); 
     free(symbol); 

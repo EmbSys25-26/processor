@@ -4,6 +4,25 @@
 
 #include "type.h"
 
+static char *dup_cstr(const char *src)
+{
+  size_t n;
+  char *dst;
+
+  if (!src) {
+    return NULL;
+  }
+
+  n = strlen(src) + 1u;
+  dst = (char *)malloc(n);
+  if (!dst) {
+    return NULL;
+  }
+
+  (void)memcpy(dst, src, n);
+  return dst;
+}
+
 static type_t *type_alloc(type_kind_t kind, unsigned qualifiers)
 {
   type_t *type = (type_t *)calloc(1, sizeof(*type));
@@ -98,7 +117,7 @@ type_t *type_new_tagged(type_kind_t kind, const char *tag, unsigned qualifiers)
   }
 
   if (tag) {
-    type->as.aggregate.tag = strdup(tag);
+    type->as.aggregate.tag = dup_cstr(tag);
     if (!type->as.aggregate.tag) {
       free(type);
       return NULL;
