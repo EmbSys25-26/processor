@@ -37,5 +37,8 @@ test-results/
 *.xml
 *.vcd
 .ci_artifacts/
+compiler.dSYM/
+symbol.plist
+compiler
 # ignore admin documentation
 admin-docs/

@@ -35,6 +35,20 @@ If implementation and this spec disagree, update code or spec in the same PR.
 - Every IR instruction kind used by lowering must have at least one lowering test.
 - Any unsupported feature must fail with a deterministic semantic or lowering error code.
 
+## Current CI Baseline (Implemented)
+- Script: `scripts/ci/run_semantic_checks.sh`
+- Coverage:
+1. Public header/API compile smoke.
+2. Runtime API tests: `type`, `symbol`, `diagnostics`, `semantic`.
+3. Frontend build smoke (`make` with lexer/parser/semantic objects).
+4. Parser->semantic contract smoke (`minimal_ok.c` must pass, `syntax_fail.c` must fail).
+5. Memory-safety checks with `ASan/UBSan` for all API tests.
+
+Local run:
+```bash
+bash scripts/ci/run_semantic_checks.sh .ci_artifacts/semantic_checks
+```
+
 ## Garantias 
 - Todas as regras semânticas devem ter pelo menos um teste.
 - Toda instrução de IR usada pelo lowering deve ter pelo menos um teste de lowering.

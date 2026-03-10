@@ -1,6 +1,6 @@
 # Compiler Frontend State (Semantic Focus)
 
-Date: 2026-03-08
+Date: 2026-03-10
 
 ## 1) Current reality: what is already done
 
@@ -26,24 +26,29 @@ Date: 2026-03-08
 
 ## Done
 1. AST has basic per-node `nodeVarType` enum field (`VarType_t`).
-2. Parser emits enough structural nodes (scope markers, declarations, expressions) to support semantic passes.
-3. Semantic design/spec documents exist under:
-- `semantic-analysis/`
+2. Parser emits structural scope markers (`NODE_START_SCOPE` / `NODE_END_SCOPE`).
+3. Semantic core APIs exist and compile:
+- `Semantic/type.[ch]`
+- `Semantic/symbol.[ch]`
+- `Semantic/diagnostics.[ch]`
+- `Semantic/semantic.[ch]`
+4. Parser main flow now executes `semantic_run(...)` after successful parse.
+5. CI baseline validates API behavior and memory safety:
+- `scripts/ci/run_semantic_checks.sh`
+- Unit/API tests + ASan/UBSan runs.
 
 ## Not done (in compiler implementation)
-1. No semantic pass runner in the compile flow after parse.
-2. No compiler-side symbol table for C identifiers/types/functions.
-3. No lexical-scope stack for nested block/function scopes.
-4. No AST binding of identifier uses to symbol entries.
-5. No type descriptor system beyond coarse `VarType_t` enum.
-6. No expression/statement semantic checks (type legality, lvalue rules, return/break/continue legality).
-7. No deterministic semantic diagnostics layer (`SEMYYY` IDs) (here `YYY` is the ID)
+1. Pass1 binder is incomplete: no AST identifier binding to symbol entries yet.
+2. Pass2 checker is incomplete: no expression/operator/statement legality enforcement yet.
+3. Function prototype/definition compatibility checks are not implemented.
+4. Full semantic rule matrix (`SEM001..`) is not implemented; only scope integrity baseline is active.
+5. IR lowering gate is not integrated (semantic success does not yet trigger IR phase).
 
 ## 3) What this means technically
 
-1. Current compiler is parser-complete baseline, not frontend-complete.
-2. Right now it validates syntax and builds AST, but does not enforce language meaning.
-3. Invalid programs can still parse successfully because semantic constraints are not applied yet.
+1. Current compiler is parser-complete with semantic infrastructure baseline, not frontend-complete.
+2. It now validates scope marker integrity and emits semantic diagnostics.
+3. Most type/binding legality rules are still pending, so many semantically invalid programs can still pass.
 
 ## 4) Suggested path
 

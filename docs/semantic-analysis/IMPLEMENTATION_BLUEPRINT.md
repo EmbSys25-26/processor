@@ -48,25 +48,26 @@ Add these files under `compiler/`:
 
 ## 3.1 semantic.h
 ```c
-typedef struct semantic_result_s {
-    int error_count;
-    int warning_count;
+typedef struct {
+    size_t error_count;
+    size_t warning_count;
+    size_t scope_count;
 } semantic_result_t;
 
-semantic_result_t run_semantic_analysis(TreeNode_t *root, const char *path);
+semantic_result_t semantic_run(TreeNode_t *root, const char *path);
 ```
 
 ## 3.2 symbol.h
 ```c
 typedef enum {
-    SYM_OBJECT,
-    SYM_FUNCTION,
-    SYM_PARAMETER,
-    SYM_TAG_STRUCT,
-    SYM_TAG_UNION,
-    SYM_TAG_ENUM,
-    SYM_ENUM_CONST,
-    SYM_FIELD
+    SYMBOL_OBJECT,
+    SYMBOL_FUNCTION,
+    SYMBOL_PARAMETER,
+    SYMBOL_TAG_STRUCT,
+    SYMBOL_TAG_UNION,
+    SYMBOL_TAG_ENUM,
+    SYMBOL_ENUM_CONST,
+    SYMBOL_FIELD
 } symbol_kind_t;
 ```
 

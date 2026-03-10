@@ -1,40 +1,35 @@
-name: CI
+name: Semantic API Checks 
 
 on:
   pull_request:
   push:
     branches:
       - main
-      - master
+      - compiler 
 
 jobs:
-  baseline-sim:
-    name: Baseline Verification (iverilog)
+  semantic:
+    name: Semantic API + Memory Safety
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Icarus Verilog
+      - name: Install Build Toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y iverilog
+          sudo apt-get install -y build-essential bison flex
 
-      - name: Run baseline regression suite
+      - name: Run semantic checks
         run: |
-          bash scripts/ci/run_iverilog_regression.sh .ci_artifacts/sim
+          bash scripts/ci/run_semantic_checks.sh .ci_artifacts/semantic_checks
 
-      - name: Upload simulation artifacts
+      - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: baseline-sim-logs
-          path: .ci_artifacts/sim
+          name: semantic-logs
+          path: .ci_artifacts/semantic_checks
           retention-days: 14

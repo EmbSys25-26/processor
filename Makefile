@@ -4,12 +4,17 @@ CFLAGS  = -Wall -Wextra -g
 LEXER_DIR  = Lexer
 PARSER_DIR = Parser
 UTILS_DIR  = Util
+SEM_DIR    = Semantic
 
 SRCS    = $(PARSER_DIR)/parser.tab.c \
           $(LEXER_DIR)/lex.yy.c      \
           $(PARSER_DIR)/ASTree.c     \
           $(PARSER_DIR)/ASTPrint.c   \
-          $(UTILS_DIR)/logger.c
+          $(UTILS_DIR)/logger.c      \
+          $(SEM_DIR)/type.c          \
+          $(SEM_DIR)/symbol.c        \
+          $(SEM_DIR)/diagnostics.c   \
+          $(SEM_DIR)/semantic.c
 
 TARGET  = compiler
 

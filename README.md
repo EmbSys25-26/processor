@@ -652,5 +652,5 @@ Drives the full build in the correct dependency order:
 
 - `#include` and other pre-processor directives besides `#define`/`#undef` are not supported.
 - `goto` and labels are not supported by the parser (the lexer does not emit a `TOKEN_GOTO`).
-- No semantic analysis (type checking, symbol table, scope resolution) is performed — the output is a raw syntactic AST only.
+- Semantic execution is currently api-only: scope marker validation and diagnostics are active, but full identifier binding/type checking passes are not implemented yet. Next steps will be to build a symbol table in the first pass and implement semantic analysis on the second pass to catch undeclared variables, type errors, etc.
 - String concatenation of adjacent string literals (`"a" "b"`) is not supported.

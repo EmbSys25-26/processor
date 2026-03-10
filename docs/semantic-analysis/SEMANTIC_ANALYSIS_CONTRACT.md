@@ -54,14 +54,14 @@ Outputs:
 
 ## 4.1 Symbol kinds
 At minimum support:
-1. `SYM_OBJECT` (variables, including arrays).
-2. `SYM_FUNCTION` (prototype/definition).
-3. `SYM_PARAMETER`.
-4. `SYM_TAG_STRUCT`.
-5. `SYM_TAG_UNION`.
-6. `SYM_TAG_ENUM`.
-7. `SYM_ENUM_CONST`.
-8. `SYM_FIELD` (struct/union members).
+1. `SYMBOL_OBJECT` (variables, including arrays).
+2. `SYMBOL_FUNCTION` (prototype/definition).
+3. `SYMBOL_PARAMETER`.
+4. `SYMBOL_TAG_STRUCT`.
+5. `SYMBOL_TAG_UNION`.
+6. `SYMBOL_TAG_ENUM`.
+7. `SYMBOL_ENUM_CONST`.
+8. `SYMBOL_FIELD` (struct/union members).
 
 ## 4.2 Required symbol fields
 Each symbol entry must store:

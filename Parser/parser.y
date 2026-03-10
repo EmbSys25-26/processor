@@ -17,6 +17,7 @@
 #include "../Util/NodeTypes.h"
 #include "../Util/logger.h"
 #include "ASTPrint.h"
+#include "../Semantic/semantic.h"
 
 int yylex(void);
 void yyerror(const char *s);
@@ -1480,6 +1481,17 @@ int main(int argc, char* argv[])
     if (result == 0) {
         printf("Parse succeeded. AST:\n");
         ASTPrint(p_treeRoot);
+
+        semantic_result_t sem_result = semantic_run(p_treeRoot, argv[1]);
+        fprintf(stderr,
+                "Semantic summary: errors=%zu warnings=%zu scopes=%zu\n",
+                sem_result.error_count,
+                sem_result.warning_count,
+                sem_result.scope_count);
+
+        if (sem_result.error_count > 0u) {
+            return 2;
+        }
     }
     return result;
 }
