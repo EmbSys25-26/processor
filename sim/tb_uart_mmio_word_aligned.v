@@ -1,6 +1,8 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+// MUST UNCOMMENT `define SIM from constants.vh
+
 module tb_uart_mmio_word_aligned;
 
 /*************************************************************************************
@@ -45,6 +47,7 @@ module tb_uart_mmio_word_aligned;
     periph_bus dut (
         .i_clk(_clk),
         .i_rst(_rst),
+        .i_rst_ext(_rst),
         .i_sel(_sel),
         .i_we(_we),
         .i_re(_re),
@@ -62,7 +65,8 @@ module tb_uart_mmio_word_aligned;
         .i_int_en(_int_en),
         .i_irq_ret(_irq_ret),
         .o_irq_take(_irq_take),
-        .o_irq_vector(_irq_vector)
+        .o_irq_vector(_irq_vector),
+        .o_wdt_rst() 
     );
 
     always @(posedge _clk) begin
