@@ -1,7 +1,7 @@
 `ifndef CONSTANTS_VH
 `define CONSTANTS_VH
 
-`define SIM  //MUST BE DEFINED TO TEST UART TESTBENCHES
+
 
 /*************************************************************************************
  * CPU BUS WIDTHS
