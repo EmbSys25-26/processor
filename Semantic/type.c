@@ -127,6 +127,19 @@ type_t *type_new_tagged(type_kind_t kind, const char *tag, unsigned qualifiers)
   return type;
 }
 
+void type_set_aggregate_decl(type_t *type, const void *decl_node)
+{
+  if (!type) {
+    return;
+  }
+
+  if (type->kind == TYPE_STRUCT_TAG ||
+      type->kind == TYPE_UNION_TAG ||
+      type->kind == TYPE_ENUM_TAG) {
+    type->as.aggregate.decl_node = decl_node;
+  }
+}
+
 type_t *type_clone(const type_t *src)
 {
   type_t *dst = NULL;
@@ -198,6 +211,9 @@ type_t *type_clone(const type_t *src)
     case TYPE_UNION_TAG:
     case TYPE_ENUM_TAG:
       dst = type_new_tagged(src->kind, src->as.aggregate.tag, src->qualifiers);
+      if (dst) {
+        dst->as.aggregate.decl_node = src->as.aggregate.decl_node;
+      }
       break;
     default:
       errno = EINVAL;
@@ -284,6 +300,9 @@ int type_equal(const type_t *lhs, const type_t *rhs)
     case TYPE_STRUCT_TAG:
     case TYPE_UNION_TAG:
     case TYPE_ENUM_TAG:
+      if (lhs->as.aggregate.decl_node && rhs->as.aggregate.decl_node) {
+        return lhs->as.aggregate.decl_node == rhs->as.aggregate.decl_node;
+      }
       if (!lhs->as.aggregate.tag || !rhs->as.aggregate.tag) {
         return lhs->as.aggregate.tag == rhs->as.aggregate.tag;
       }

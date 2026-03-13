@@ -9,6 +9,11 @@ Each implemented rule must have at least one `ok` test and one `fail` test.
 - Semantic errors: `SEM###`
 - Semantic warnings: `SEMW###`
 
+## 1.1 Implemented now
+- Pass1: `SEM002`, `SEM003`, `SEM004`, `SEM005`
+- Pass2: `SEM001`, `SEM011`, `SEM040`, `SEM041`, `SEM043`, `SEM050`, `SEM051`, `SEM060`, `SEM061`, `SEM062`
+- Note: `SEM001` is currently enforced in pass2 lookup flow, not in pass1 binding.
+
 ## 2. Declaration and scope checks
 
 ## SEM001 - unknown identifier

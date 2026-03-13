@@ -5,7 +5,10 @@
 #include <stdlib.h> 
 
 typedef enum{
-    NODE_SIGN = 0,          // signed/unsigned qualifier
+    NODE_TRANSLATION_UNIT = 0, // program root
+    NODE_BLOCK,                // lexical block
+
+    NODE_SIGN,             // signed/unsigned qualifier
     NODE_VISIBILITY,        // static/extern/inline
     NODE_MODIFIER,          // const/volatile
     NODE_TYPE,              // int, float, char, void, struct X, etc.
@@ -20,6 +23,7 @@ typedef enum{
     NODE_CHAR,              // 'a'
 
     NODE_IF,
+    NODE_FOR,               // for loop node
     NODE_WHILE,
     NODE_DO_WHILE,
     NODE_RETURN,
@@ -50,13 +54,14 @@ typedef enum{
     NODE_ENUM_MEMBER,       // RED, GREEN = 5
     NODE_UNION_DECLARATION, // union Data { ... };
 
+    NODE_MEMBER_ACCESS,     // struct {int x;}  a; a.x
+    NODE_PTR_MEMBER_ACCESS, // struct {int x;} *a; a->x
+
     NODE_FUNCTION,          // function definition/prototype
     NODE_FUNCTION_CALL,     // func(args)
     NODE_PARAMETER,         // parameter in function signature
 
     NODE_NULL,              // empty/placeholder node
-    NODE_START_SCOPE,       // {
-    NODE_END_SCOPE,         // }
 
     NODE_PP_DEFINE,        // #define NAME [value]
     NODE_PP_UNDEF,         // #undef NAME
@@ -97,18 +102,23 @@ typedef struct TreeNode{
     VarType_t nodeVarType;
     
     /* ── Ligação à tabela de símbolos ── */
-    //SymbolEntry* p_Symbol;    /* entrada na tabela de símbolos    */
-    //SymbolTable* p_Scope;     /* scope onde o nó foi declarado    */
+    //symbol_t * p_Symbol;    /* entrada na tabela de símbolos    */
+    //scope_t* p_Scope;     /* scope onde o nó foi declarado    */
+    
+    // careful with liveness of symbol_t variables and scope_t: they mustn't be destroyed whilst the semantical analysis is still ongoing 
    
 }TreeNode_t;
 
 
 int NodeCreate(TreeNode_t** pp_NewNode, NodeType_t nodeType);
 
+int NodeFree(TreeNode_t* src);
 int NodeAddChild(TreeNode_t* p_Parent, TreeNode_t* p_Child);
 int NodeAddNewChild(TreeNode_t* p_Parent, TreeNode_t** pp_NewChild, NodeType_t nodeType);
-int NodeAddChildCopy(TreeNode_t* p_Parent, TreeNode_t *p_Child);
 int NodeAppendSibling(TreeNode_t** pp_Head, TreeNode_t* p_NewSibling);
+int NodeAddChildCloneChain(TreeNode_t *parent, const TreeNode_t *head); 
+int NodeCloneSubtree(const TreeNode_t *src, TreeNode_t **out_clone);
+int NodeAttachDeclSpecifiers(TreeNode_t *decl, const TreeNode_t *specs);
 
 typedef union{
     TreeNode_t* treeNode;
@@ -116,4 +126,3 @@ typedef union{
 }ParserObject_t;  //to use in bison for this to be the type of the tokens
 
 #endif //ASTREE_H
-

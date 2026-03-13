@@ -46,7 +46,7 @@ typedef struct {
 } scope_stack_t;
 
 /// @brief Symbol table entry.
-/// @note Function-specific metadata (arity/is_defined) is meaningful for SYMBOL_FUNCTION.
+/// @note Function-specific metadata parameters (arity/is_defined) are meaningful for analysing SYMBOL_FUNCTION.
 struct symbol_s {
   char *name;  // set at declaration. used for lookups 
   symbol_kind_t kind; // symbol kind 

@@ -69,6 +69,7 @@
 /* First part of user prologue.  */
 #line 13 "Parser/parser.y"
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include "ASTree.h"
@@ -82,17 +83,324 @@ void yyerror(const char *s);
 extern FILE* yyin; 
 
 static TreeNode_t* p_treeRoot = NULL;
-static char* currentFunction = NULL;
 
-//for define and undef directives
-extern char pp_name[256];
-extern char pp_value[512];
+static int build_tag_declaration_node(TreeNode_t **out_decl,
+                                      NodeType_t decl_kind,
+                                      const char *tag_name,
+                                      TreeNode_t *members)
+{
+    int rc;
+    TreeNode_t *decl = NULL;
 
-//for preprocessor #define/#undef directives
-extern char pp_name[256];
-extern char pp_value[512];
+    if (!out_decl || !tag_name) {
+        return -EINVAL;
+    }
 
-#line 96 "Parser/parser.tab.c"
+    *out_decl = NULL;
+
+    rc = NodeCreate(&decl, decl_kind);
+    if (rc < 0) {
+        return rc;
+    }
+
+    decl->nodeData.sVal = strdup(tag_name);
+    if (!decl->nodeData.sVal) {
+        NodeFree(decl);
+        return -ENOMEM;
+    }
+
+    if (members) {
+        rc = NodeAddChild(decl, members);
+        if (rc < 0) {
+            NodeFree(decl);
+            return rc;
+        }
+    }
+
+    *out_decl = decl;
+    return 0;
+}
+
+static int build_tag_type_node(TreeNode_t **out_type,
+                               VarType_t type_kind,
+                               NodeType_t decl_kind,
+                               char *tag_name,
+                               TreeNode_t *members)
+{
+    int rc;
+    TreeNode_t *type_node = NULL;
+    TreeNode_t *tag_ident = NULL;
+    TreeNode_t *decl_node = NULL;
+
+    if (!out_type || !tag_name) {
+        return -EINVAL;
+    }
+
+    *out_type = NULL;
+
+    rc = NodeCreate(&type_node, NODE_TYPE);
+    if (rc < 0) {
+        return rc;
+    }
+    type_node->nodeData.dVal = type_kind;
+
+    rc = NodeCreate(&tag_ident, NODE_IDENTIFIER);
+    if (rc < 0) {
+        NodeFree(type_node);
+        return rc;
+    }
+    tag_ident->nodeData.sVal = tag_name;
+
+    rc = NodeAddChild(type_node, tag_ident);
+    if (rc < 0) {
+        NodeFree(type_node);
+        return rc;
+    }
+
+    if (members) {
+        rc = build_tag_declaration_node(&decl_node, decl_kind, tag_name, members);
+        if (rc < 0) {
+            NodeFree(type_node);
+            return rc;
+        }
+
+        rc = NodeAddChild(type_node, decl_node);
+        if (rc < 0) {
+            NodeFree(type_node);
+            return rc;
+        }
+    }
+
+    *out_type = type_node;
+    return 0;
+}
+
+static int clone_or_synthesize_tag_declaration(const TreeNode_t *specs, TreeNode_t **out_decl)
+{
+    const TreeNode_t *it;
+
+    if (!out_decl) {
+        return -EINVAL;
+    }
+
+    *out_decl = NULL;
+
+    for (it = specs; it != NULL; it = it->p_sibling) {
+        const TreeNode_t *tag_ident;
+        const TreeNode_t *child;
+        NodeType_t decl_kind;
+
+        if (it->nodeType != NODE_TYPE) {
+            continue;
+        }
+
+        switch ((VarType_t)it->nodeData.dVal) {
+            case TYPE_STRUCT:
+                decl_kind = NODE_STRUCT_DECLARATION;
+                break;
+            case TYPE_UNION:
+                decl_kind = NODE_UNION_DECLARATION;
+                break;
+            case TYPE_ENUM:
+                decl_kind = NODE_ENUM_DECLARATION;
+                break;
+            default:
+                continue;
+        }
+
+        tag_ident = it->p_firstChild;
+        if (!tag_ident || tag_ident->nodeType != NODE_IDENTIFIER) {
+            continue;
+        }
+
+        for (child = tag_ident->p_sibling; child != NULL; child = child->p_sibling) {
+            if (child->nodeType == decl_kind) {
+                return NodeCloneSubtree(child, out_decl);
+            }
+        }
+
+        return build_tag_declaration_node(out_decl, decl_kind, tag_ident->nodeData.sVal, NULL);
+    }
+
+    return 0;
+}
+
+static int is_void_parameter_specifier(const TreeNode_t *specs)
+{
+    const TreeNode_t *it = specs;
+    const TreeNode_t *type_node = NULL;
+    size_t type_count = 0u;
+
+    while (it) {
+        if (it->nodeType == NODE_TYPE) {
+            type_node = it;
+            type_count++;
+        } else if (it->nodeType == NODE_MODIFIER ||
+                   it->nodeType == NODE_SIGN ||
+                   it->nodeType == NODE_VISIBILITY) {
+            return 0;
+        }
+        it = it->p_sibling;
+    }
+
+    return type_count == 1u &&
+           type_node != NULL &&
+           type_node->nodeData.dVal == TYPE_VOID &&
+           type_node->p_firstChild == NULL;
+}
+
+static int build_member_access_node(TreeNode_t **out_node,
+                                    NodeType_t access_kind,
+                                    TreeNode_t *base_expr,
+                                    char *field_name)
+{
+    int rc;
+    TreeNode_t *member_node = NULL;
+    TreeNode_t *field_ident = NULL;
+
+    if (!out_node || !base_expr || !field_name) {
+        return -EINVAL;
+    }
+
+    *out_node = NULL;
+
+    rc = NodeCreate(&member_node, access_kind);
+    if (rc < 0) {
+        return rc;
+    }
+
+    rc = NodeCreate(&field_ident, NODE_IDENTIFIER);
+    if (rc < 0) {
+        NodeFree(member_node);
+        return rc;
+    }
+    field_ident->nodeData.sVal = field_name;
+
+    rc = NodeAddChild(member_node, base_expr);
+    if (rc < 0) {
+        NodeFree(member_node);
+        return rc;
+    }
+
+    rc = NodeAddChild(member_node, field_ident);
+    if (rc < 0) {
+        NodeFree(member_node);
+        return rc;
+    }
+
+    *out_node = member_node;
+    return 0;
+}
+
+static int build_array_access_node(TreeNode_t **out_node,
+                                   TreeNode_t *base_expr,
+                                   TreeNode_t *index_expr)
+{
+    int rc;
+    TreeNode_t *array_node = NULL;
+
+    if (!out_node || !base_expr || !index_expr) {
+        return -EINVAL;
+    }
+
+    *out_node = NULL;
+
+    rc = NodeCreate(&array_node, NODE_ARRAY_ACCESS);
+    if (rc < 0) {
+        return rc;
+    }
+
+    rc = NodeAddChild(array_node, base_expr);
+    if (rc < 0) {
+        NodeFree(array_node);
+        return rc;
+    }
+
+    rc = NodeAddChild(array_node, index_expr);
+    if (rc < 0) {
+        NodeFree(array_node);
+        return rc;
+    }
+
+    *out_node = array_node;
+    return 0;
+}
+
+static int build_function_call_node(TreeNode_t **out_node,
+                                    TreeNode_t *callee_expr,
+                                    TreeNode_t *arg_head)
+{
+    int rc;
+    TreeNode_t *call_node = NULL;
+
+    if (!out_node || !callee_expr) {
+        return -EINVAL;
+    }
+
+    *out_node = NULL;
+
+    rc = NodeCreate(&call_node, NODE_FUNCTION_CALL);
+    if (rc < 0) {
+        return rc;
+    }
+
+    rc = NodeAddChild(call_node, callee_expr);
+    if (rc < 0) {
+        NodeFree(call_node);
+        return rc;
+    }
+
+    if (arg_head) {
+        rc = NodeAddChild(call_node, arg_head);
+        if (rc < 0) {
+            NodeFree(call_node);
+            return rc;
+        }
+    }
+
+    *out_node = call_node;
+    return 0;
+}
+
+static int build_operator_node(TreeNode_t **out_node,
+                               long op_kind,
+                               TreeNode_t *lhs,
+                               TreeNode_t *rhs)
+{
+    int rc;
+    TreeNode_t *op_node = NULL;
+
+    if (!out_node || !lhs) {
+        return -EINVAL;
+    }
+
+    *out_node = NULL;
+
+    rc = NodeCreate(&op_node, NODE_OPERATOR);
+    if (rc < 0) {
+        return rc;
+    }
+    op_node->nodeData.dVal = op_kind;
+
+    rc = NodeAddChild(op_node, lhs);
+    if (rc < 0) {
+        NodeFree(op_node);
+        return rc;
+    }
+
+    if (rhs) {
+        rc = NodeAddChild(op_node, rhs);
+        if (rc < 0) {
+            NodeFree(op_node);
+            return rc;
+        }
+    }
+
+    *out_node = op_node;
+    return 0;
+}
+
+#line 404 "Parser/parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -157,127 +465,130 @@ enum yysymbol_kind_t
   YYSYMBOL_TOKEN_BREAK = 34,               /* TOKEN_BREAK  */
   YYSYMBOL_TOKEN_CONTINUE = 35,            /* TOKEN_CONTINUE  */
   YYSYMBOL_TOKEN_RETURN = 36,              /* TOKEN_RETURN  */
-  YYSYMBOL_TOKEN_PP_DEFINE = 37,           /* TOKEN_PP_DEFINE  */
-  YYSYMBOL_TOKEN_PP_UNDEF = 38,            /* TOKEN_PP_UNDEF  */
-  YYSYMBOL_TOKEN_PLUS = 39,                /* TOKEN_PLUS  */
-  YYSYMBOL_TOKEN_MINUS = 40,               /* TOKEN_MINUS  */
-  YYSYMBOL_TOKEN_ASTERISK = 41,            /* TOKEN_ASTERISK  */
-  YYSYMBOL_TOKEN_DIVIDE = 42,              /* TOKEN_DIVIDE  */
-  YYSYMBOL_TOKEN_MOD = 43,                 /* TOKEN_MOD  */
-  YYSYMBOL_TOKEN_INCREMENT = 44,           /* TOKEN_INCREMENT  */
-  YYSYMBOL_TOKEN_DECREMENT = 45,           /* TOKEN_DECREMENT  */
-  YYSYMBOL_TOKEN_ASSIGN = 46,              /* TOKEN_ASSIGN  */
-  YYSYMBOL_TOKEN_PLUS_ASSIGN = 47,         /* TOKEN_PLUS_ASSIGN  */
-  YYSYMBOL_TOKEN_MINUS_ASSIGN = 48,        /* TOKEN_MINUS_ASSIGN  */
-  YYSYMBOL_TOKEN_MULTIPLY_ASSIGN = 49,     /* TOKEN_MULTIPLY_ASSIGN  */
-  YYSYMBOL_TOKEN_DIVIDE_ASSIGN = 50,       /* TOKEN_DIVIDE_ASSIGN  */
-  YYSYMBOL_TOKEN_MODULUS_ASSIGN = 51,      /* TOKEN_MODULUS_ASSIGN  */
-  YYSYMBOL_TOKEN_AND_ASSIGN = 52,          /* TOKEN_AND_ASSIGN  */
-  YYSYMBOL_TOKEN_OR_ASSIGN = 53,           /* TOKEN_OR_ASSIGN  */
-  YYSYMBOL_TOKEN_XOR_ASSIGN = 54,          /* TOKEN_XOR_ASSIGN  */
-  YYSYMBOL_TOKEN_LEFT_SHIFT_ASSIGN = 55,   /* TOKEN_LEFT_SHIFT_ASSIGN  */
-  YYSYMBOL_TOKEN_RIGHT_SHIFT_ASSIGN = 56,  /* TOKEN_RIGHT_SHIFT_ASSIGN  */
-  YYSYMBOL_TOKEN_EQUAL = 57,               /* TOKEN_EQUAL  */
-  YYSYMBOL_TOKEN_NOT_EQUAL = 58,           /* TOKEN_NOT_EQUAL  */
-  YYSYMBOL_TOKEN_LESS_THAN = 59,           /* TOKEN_LESS_THAN  */
-  YYSYMBOL_TOKEN_GREATER_THAN = 60,        /* TOKEN_GREATER_THAN  */
-  YYSYMBOL_TOKEN_LESS_THAN_OR_EQUAL = 61,  /* TOKEN_LESS_THAN_OR_EQUAL  */
-  YYSYMBOL_TOKEN_GREATER_THAN_OR_EQUAL = 62, /* TOKEN_GREATER_THAN_OR_EQUAL  */
-  YYSYMBOL_TOKEN_LOGICAL_AND = 63,         /* TOKEN_LOGICAL_AND  */
-  YYSYMBOL_TOKEN_LOGICAL_OR = 64,          /* TOKEN_LOGICAL_OR  */
-  YYSYMBOL_TOKEN_LOGICAL_NOT = 65,         /* TOKEN_LOGICAL_NOT  */
-  YYSYMBOL_TOKEN_BITWISE_AND = 66,         /* TOKEN_BITWISE_AND  */
-  YYSYMBOL_TOKEN_BITWISE_OR = 67,          /* TOKEN_BITWISE_OR  */
-  YYSYMBOL_TOKEN_BITWISE_XOR = 68,         /* TOKEN_BITWISE_XOR  */
-  YYSYMBOL_TOKEN_BITWISE_NOT = 69,         /* TOKEN_BITWISE_NOT  */
-  YYSYMBOL_TOKEN_LEFT_SHIFT = 70,          /* TOKEN_LEFT_SHIFT  */
-  YYSYMBOL_TOKEN_RIGHT_SHIFT = 71,         /* TOKEN_RIGHT_SHIFT  */
-  YYSYMBOL_TOKEN_ARROW = 72,               /* TOKEN_ARROW  */
-  YYSYMBOL_TOKEN_ELLIPSIS = 73,            /* TOKEN_ELLIPSIS  */
-  YYSYMBOL_TOKEN_DOT = 74,                 /* TOKEN_DOT  */
-  YYSYMBOL_TOKEN_SEMI = 75,                /* TOKEN_SEMI  */
-  YYSYMBOL_TOKEN_COMMA = 76,               /* TOKEN_COMMA  */
-  YYSYMBOL_TOKEN_COLON = 77,               /* TOKEN_COLON  */
-  YYSYMBOL_TOKEN_TERNARY = 78,             /* TOKEN_TERNARY  */
-  YYSYMBOL_TOKEN_LEFT_PARENTHESES = 79,    /* TOKEN_LEFT_PARENTHESES  */
-  YYSYMBOL_TOKEN_RIGHT_PARENTHESES = 80,   /* TOKEN_RIGHT_PARENTHESES  */
-  YYSYMBOL_TOKEN_LEFT_BRACE = 81,          /* TOKEN_LEFT_BRACE  */
-  YYSYMBOL_TOKEN_RIGHT_BRACE = 82,         /* TOKEN_RIGHT_BRACE  */
-  YYSYMBOL_TOKEN_LEFT_BRACKET = 83,        /* TOKEN_LEFT_BRACKET  */
-  YYSYMBOL_TOKEN_RIGHT_BRACKET = 84,       /* TOKEN_RIGHT_BRACKET  */
-  YYSYMBOL_TOKEN_EOF = 85,                 /* TOKEN_EOF  */
-  YYSYMBOL_TOKEN_ERROR = 86,               /* TOKEN_ERROR  */
-  YYSYMBOL_LOWER_THAN_ELSE = 87,           /* LOWER_THAN_ELSE  */
-  YYSYMBOL_UNARY = 88,                     /* UNARY  */
-  YYSYMBOL_YYACCEPT = 89,                  /* $accept  */
-  YYSYMBOL_program = 90,                   /* program  */
-  YYSYMBOL_global_statement = 91,          /* global_statement  */
-  YYSYMBOL_statement_sequence = 92,        /* statement_sequence  */
-  YYSYMBOL_statement = 93,                 /* statement  */
-  YYSYMBOL_def_undef_definition = 94,      /* def_undef_definition  */
-  YYSYMBOL_define = 95,                    /* define  */
-  YYSYMBOL_undef = 96,                     /* undef  */
-  YYSYMBOL_selection_statement = 97,       /* selection_statement  */
-  YYSYMBOL_jump_statement = 98,            /* jump_statement  */
-  YYSYMBOL_iteration_statement = 99,       /* iteration_statement  */
-  YYSYMBOL_type_declaration = 100,         /* type_declaration  */
-  YYSYMBOL_compound_statement = 101,       /* compound_statement  */
-  YYSYMBOL_enum_declaration = 102,         /* enum_declaration  */
-  YYSYMBOL_enum_member_list = 103,         /* enum_member_list  */
-  YYSYMBOL_enum_member = 104,              /* enum_member  */
-  YYSYMBOL_struct_declaration = 105,       /* struct_declaration  */
-  YYSYMBOL_union_declaration = 106,        /* union_declaration  */
-  YYSYMBOL_struct_union_member_list = 107, /* struct_union_member_list  */
-  YYSYMBOL_struct_member = 108,            /* struct_member  */
-  YYSYMBOL_if_statement = 109,             /* if_statement  */
-  YYSYMBOL_switch_statement = 110,         /* switch_statement  */
-  YYSYMBOL_switch_body = 111,              /* switch_body  */
-  YYSYMBOL_case_list = 112,                /* case_list  */
-  YYSYMBOL_case_clause = 113,              /* case_clause  */
-  YYSYMBOL_default_clause = 114,           /* default_clause  */
-  YYSYMBOL_continue_statement = 115,       /* continue_statement  */
-  YYSYMBOL_break_statement = 116,          /* break_statement  */
-  YYSYMBOL_return_statement = 117,         /* return_statement  */
-  YYSYMBOL_while_loop = 118,               /* while_loop  */
-  YYSYMBOL_do_while_loop = 119,            /* do_while_loop  */
-  YYSYMBOL_for_loop = 120,                 /* for_loop  */
-  YYSYMBOL_for_init_field = 121,           /* for_init_field  */
-  YYSYMBOL_for_condition = 122,            /* for_condition  */
-  YYSYMBOL_for_assignment_field = 123,     /* for_assignment_field  */
-  YYSYMBOL_simple_var_assign = 124,        /* simple_var_assign  */
-  YYSYMBOL_compound_var_assign = 125,      /* compound_var_assign  */
-  YYSYMBOL_function_prototype = 126,       /* function_prototype  */
-  YYSYMBOL_function_definition = 127,      /* function_definition  */
-  YYSYMBOL_function_signature = 128,       /* function_signature  */
-  YYSYMBOL_arg_list = 129,                 /* arg_list  */
-  YYSYMBOL_param_declaration = 130,        /* param_declaration  */
-  YYSYMBOL_func_call = 131,                /* func_call  */
-  YYSYMBOL_exp_list = 132,                 /* exp_list  */
-  YYSYMBOL_type_cast_specifier = 133,      /* type_cast_specifier  */
-  YYSYMBOL_all_type_specifiers = 134,      /* all_type_specifiers  */
-  YYSYMBOL_type_pointer = 135,             /* type_pointer  */
-  YYSYMBOL_data_type_specifier = 136,      /* data_type_specifier  */
-  YYSYMBOL_visibility_qualifier = 137,     /* visibility_qualifier  */
-  YYSYMBOL_mod_qualifier = 138,            /* mod_qualifier  */
-  YYSYMBOL_sign_qualifier = 139,           /* sign_qualifier  */
-  YYSYMBOL_var_declaration = 140,          /* var_declaration  */
-  YYSYMBOL_arr_size = 141,                 /* arr_size  */
-  YYSYMBOL_id_list = 142,                  /* id_list  */
-  YYSYMBOL_var_preamble = 143,             /* var_preamble  */
-  YYSYMBOL_var_assignment = 144,           /* var_assignment  */
-  YYSYMBOL_exp = 145,                      /* exp  */
-  YYSYMBOL_term = 146,                     /* term  */
-  YYSYMBOL_operand = 147,                  /* operand  */
-  YYSYMBOL_factor = 148,                   /* factor  */
-  YYSYMBOL_sizeof_operand = 149,           /* sizeof_operand  */
-  YYSYMBOL_array_access = 150,             /* array_access  */
-  YYSYMBOL_pointer_content = 151,          /* pointer_content  */
-  YYSYMBOL_priority_operator = 152,        /* priority_operator  */
-  YYSYMBOL_arithmetic_operator = 153,      /* arithmetic_operator  */
-  YYSYMBOL_comparison_operator = 154,      /* comparison_operator  */
-  YYSYMBOL_bitwise_operator = 155,         /* bitwise_operator  */
-  YYSYMBOL_logic_operator = 156,           /* logic_operator  */
-  YYSYMBOL_compound_assign_operator = 157  /* compound_assign_operator  */
+  YYSYMBOL_TOKEN_PLUS = 37,                /* TOKEN_PLUS  */
+  YYSYMBOL_TOKEN_MINUS = 38,               /* TOKEN_MINUS  */
+  YYSYMBOL_TOKEN_ASTERISK = 39,            /* TOKEN_ASTERISK  */
+  YYSYMBOL_TOKEN_DIVIDE = 40,              /* TOKEN_DIVIDE  */
+  YYSYMBOL_TOKEN_MOD = 41,                 /* TOKEN_MOD  */
+  YYSYMBOL_TOKEN_INCREMENT = 42,           /* TOKEN_INCREMENT  */
+  YYSYMBOL_TOKEN_DECREMENT = 43,           /* TOKEN_DECREMENT  */
+  YYSYMBOL_TOKEN_ASSIGN = 44,              /* TOKEN_ASSIGN  */
+  YYSYMBOL_TOKEN_PLUS_ASSIGN = 45,         /* TOKEN_PLUS_ASSIGN  */
+  YYSYMBOL_TOKEN_MINUS_ASSIGN = 46,        /* TOKEN_MINUS_ASSIGN  */
+  YYSYMBOL_TOKEN_MULTIPLY_ASSIGN = 47,     /* TOKEN_MULTIPLY_ASSIGN  */
+  YYSYMBOL_TOKEN_DIVIDE_ASSIGN = 48,       /* TOKEN_DIVIDE_ASSIGN  */
+  YYSYMBOL_TOKEN_MODULUS_ASSIGN = 49,      /* TOKEN_MODULUS_ASSIGN  */
+  YYSYMBOL_TOKEN_AND_ASSIGN = 50,          /* TOKEN_AND_ASSIGN  */
+  YYSYMBOL_TOKEN_OR_ASSIGN = 51,           /* TOKEN_OR_ASSIGN  */
+  YYSYMBOL_TOKEN_XOR_ASSIGN = 52,          /* TOKEN_XOR_ASSIGN  */
+  YYSYMBOL_TOKEN_LEFT_SHIFT_ASSIGN = 53,   /* TOKEN_LEFT_SHIFT_ASSIGN  */
+  YYSYMBOL_TOKEN_RIGHT_SHIFT_ASSIGN = 54,  /* TOKEN_RIGHT_SHIFT_ASSIGN  */
+  YYSYMBOL_TOKEN_EQUAL = 55,               /* TOKEN_EQUAL  */
+  YYSYMBOL_TOKEN_NOT_EQUAL = 56,           /* TOKEN_NOT_EQUAL  */
+  YYSYMBOL_TOKEN_LESS_THAN = 57,           /* TOKEN_LESS_THAN  */
+  YYSYMBOL_TOKEN_GREATER_THAN = 58,        /* TOKEN_GREATER_THAN  */
+  YYSYMBOL_TOKEN_LESS_THAN_OR_EQUAL = 59,  /* TOKEN_LESS_THAN_OR_EQUAL  */
+  YYSYMBOL_TOKEN_GREATER_THAN_OR_EQUAL = 60, /* TOKEN_GREATER_THAN_OR_EQUAL  */
+  YYSYMBOL_TOKEN_LOGICAL_AND = 61,         /* TOKEN_LOGICAL_AND  */
+  YYSYMBOL_TOKEN_LOGICAL_OR = 62,          /* TOKEN_LOGICAL_OR  */
+  YYSYMBOL_TOKEN_LOGICAL_NOT = 63,         /* TOKEN_LOGICAL_NOT  */
+  YYSYMBOL_TOKEN_BITWISE_AND = 64,         /* TOKEN_BITWISE_AND  */
+  YYSYMBOL_TOKEN_BITWISE_OR = 65,          /* TOKEN_BITWISE_OR  */
+  YYSYMBOL_TOKEN_BITWISE_XOR = 66,         /* TOKEN_BITWISE_XOR  */
+  YYSYMBOL_TOKEN_BITWISE_NOT = 67,         /* TOKEN_BITWISE_NOT  */
+  YYSYMBOL_TOKEN_LEFT_SHIFT = 68,          /* TOKEN_LEFT_SHIFT  */
+  YYSYMBOL_TOKEN_RIGHT_SHIFT = 69,         /* TOKEN_RIGHT_SHIFT  */
+  YYSYMBOL_TOKEN_ARROW = 70,               /* TOKEN_ARROW  */
+  YYSYMBOL_TOKEN_ELLIPSIS = 71,            /* TOKEN_ELLIPSIS  */
+  YYSYMBOL_TOKEN_DOT = 72,                 /* TOKEN_DOT  */
+  YYSYMBOL_TOKEN_SEMI = 73,                /* TOKEN_SEMI  */
+  YYSYMBOL_TOKEN_COMMA = 74,               /* TOKEN_COMMA  */
+  YYSYMBOL_TOKEN_COLON = 75,               /* TOKEN_COLON  */
+  YYSYMBOL_TOKEN_TERNARY = 76,             /* TOKEN_TERNARY  */
+  YYSYMBOL_TOKEN_LEFT_PARENTHESES = 77,    /* TOKEN_LEFT_PARENTHESES  */
+  YYSYMBOL_TOKEN_RIGHT_PARENTHESES = 78,   /* TOKEN_RIGHT_PARENTHESES  */
+  YYSYMBOL_TOKEN_LEFT_BRACE = 79,          /* TOKEN_LEFT_BRACE  */
+  YYSYMBOL_TOKEN_RIGHT_BRACE = 80,         /* TOKEN_RIGHT_BRACE  */
+  YYSYMBOL_TOKEN_LEFT_BRACKET = 81,        /* TOKEN_LEFT_BRACKET  */
+  YYSYMBOL_TOKEN_RIGHT_BRACKET = 82,       /* TOKEN_RIGHT_BRACKET  */
+  YYSYMBOL_TOKEN_ERROR = 83,               /* TOKEN_ERROR  */
+  YYSYMBOL_LOWER_THAN_ELSE = 84,           /* LOWER_THAN_ELSE  */
+  YYSYMBOL_UNARY = 85,                     /* UNARY  */
+  YYSYMBOL_YYACCEPT = 86,                  /* $accept  */
+  YYSYMBOL_translation_unit = 87,          /* translation_unit  */
+  YYSYMBOL_external_declaration = 88,      /* external_declaration  */
+  YYSYMBOL_statement_sequence = 89,        /* statement_sequence  */
+  YYSYMBOL_statement = 90,                 /* statement  */
+  YYSYMBOL_expression_statement = 91,      /* expression_statement  */
+  YYSYMBOL_selection_statement = 92,       /* selection_statement  */
+  YYSYMBOL_jump_statement = 93,            /* jump_statement  */
+  YYSYMBOL_iteration_statement = 94,       /* iteration_statement  */
+  YYSYMBOL_compound_statement = 95,        /* compound_statement  */
+  YYSYMBOL_enum_member_list = 96,          /* enum_member_list  */
+  YYSYMBOL_enum_member = 97,               /* enum_member  */
+  YYSYMBOL_struct_union_member_list = 98,  /* struct_union_member_list  */
+  YYSYMBOL_struct_member = 99,             /* struct_member  */
+  YYSYMBOL_if_statement = 100,             /* if_statement  */
+  YYSYMBOL_switch_statement = 101,         /* switch_statement  */
+  YYSYMBOL_switch_body = 102,              /* switch_body  */
+  YYSYMBOL_case_list = 103,                /* case_list  */
+  YYSYMBOL_case_clause = 104,              /* case_clause  */
+  YYSYMBOL_default_clause = 105,           /* default_clause  */
+  YYSYMBOL_continue_statement = 106,       /* continue_statement  */
+  YYSYMBOL_break_statement = 107,          /* break_statement  */
+  YYSYMBOL_return_statement = 108,         /* return_statement  */
+  YYSYMBOL_while_loop = 109,               /* while_loop  */
+  YYSYMBOL_do_while_loop = 110,            /* do_while_loop  */
+  YYSYMBOL_for_loop = 111,                 /* for_loop  */
+  YYSYMBOL_for_init_field = 112,           /* for_init_field  */
+  YYSYMBOL_for_condition = 113,            /* for_condition  */
+  YYSYMBOL_for_assignment_field = 114,     /* for_assignment_field  */
+  YYSYMBOL_function_definition = 115,      /* function_definition  */
+  YYSYMBOL_parameter_list_opt = 116,       /* parameter_list_opt  */
+  YYSYMBOL_param_declaration = 117,        /* param_declaration  */
+  YYSYMBOL_type_name = 118,                /* type_name  */
+  YYSYMBOL_type_cast_specifier = 119,      /* type_cast_specifier  */
+  YYSYMBOL_all_type_specifiers = 120,      /* all_type_specifiers  */
+  YYSYMBOL_type_pointer = 121,             /* type_pointer  */
+  YYSYMBOL_enum_specifier = 122,           /* enum_specifier  */
+  YYSYMBOL_struct_specifier = 123,         /* struct_specifier  */
+  YYSYMBOL_union_specifier = 124,          /* union_specifier  */
+  YYSYMBOL_type_specifier = 125,           /* type_specifier  */
+  YYSYMBOL_storage_class_specifier = 126,  /* storage_class_specifier  */
+  YYSYMBOL_function_specifier = 127,       /* function_specifier  */
+  YYSYMBOL_type_qualifier = 128,           /* type_qualifier  */
+  YYSYMBOL_sign_specifier = 129,           /* sign_specifier  */
+  YYSYMBOL_declaration_specifier = 130,    /* declaration_specifier  */
+  YYSYMBOL_declaration_specifiers = 131,   /* declaration_specifiers  */
+  YYSYMBOL_pointer_prefix = 132,           /* pointer_prefix  */
+  YYSYMBOL_declaration = 133,              /* declaration  */
+  YYSYMBOL_init_declarator_list_opt = 134, /* init_declarator_list_opt  */
+  YYSYMBOL_init_declarator_list = 135,     /* init_declarator_list  */
+  YYSYMBOL_init_declarator = 136,          /* init_declarator  */
+  YYSYMBOL_initializer = 137,              /* initializer  */
+  YYSYMBOL_declarator = 138,               /* declarator  */
+  YYSYMBOL_direct_declarator = 139,        /* direct_declarator  */
+  YYSYMBOL_arr_size = 140,                 /* arr_size  */
+  YYSYMBOL_expression = 141,               /* expression  */
+  YYSYMBOL_assignment_expression = 142,    /* assignment_expression  */
+  YYSYMBOL_conditional_expression = 143,   /* conditional_expression  */
+  YYSYMBOL_logical_or_expression = 144,    /* logical_or_expression  */
+  YYSYMBOL_logical_and_expression = 145,   /* logical_and_expression  */
+  YYSYMBOL_inclusive_or_expression = 146,  /* inclusive_or_expression  */
+  YYSYMBOL_exclusive_or_expression = 147,  /* exclusive_or_expression  */
+  YYSYMBOL_and_expression = 148,           /* and_expression  */
+  YYSYMBOL_equality_expression = 149,      /* equality_expression  */
+  YYSYMBOL_relational_expression = 150,    /* relational_expression  */
+  YYSYMBOL_shift_expression = 151,         /* shift_expression  */
+  YYSYMBOL_additive_expression = 152,      /* additive_expression  */
+  YYSYMBOL_multiplicative_expression = 153, /* multiplicative_expression  */
+  YYSYMBOL_cast_expression = 154,          /* cast_expression  */
+  YYSYMBOL_unary_expression = 155,         /* unary_expression  */
+  YYSYMBOL_postfix_expression = 156,       /* postfix_expression  */
+  YYSYMBOL_primary_expression = 157,       /* primary_expression  */
+  YYSYMBOL_argument_expression_list_opt = 158, /* argument_expression_list_opt  */
+  YYSYMBOL_argument_expression_list = 159, /* argument_expression_list  */
+  YYSYMBOL_assignment_operator = 160       /* assignment_operator  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -603,21 +914,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  47
+#define YYFINAL  35
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   1460
+#define YYLAST   716
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  89
+#define YYNTOKENS  86
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  69
+#define YYNNTS  75
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  214
+#define YYNRULES  195
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  364
+#define YYNSTATES  310
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   343
+#define YYMAXUTOK   340
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -665,35 +976,33 @@ static const yytype_int8 yytranslate[] =
       55,    56,    57,    58,    59,    60,    61,    62,    63,    64,
       65,    66,    67,    68,    69,    70,    71,    72,    73,    74,
       75,    76,    77,    78,    79,    80,    81,    82,    83,    84,
-      85,    86,    87,    88
+      85
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   129,   129,   135,   143,   150,   151,   152,   153,   154,
-     155,   159,   160,   174,   175,   176,   177,   178,   179,   180,
-     181,   188,   189,   192,   206,   219,   220,   223,   224,   225,
-     228,   229,   230,   233,   234,   235,   238,   263,   271,   272,
-     278,   282,   287,   296,   308,   317,   327,   328,   337,   343,
-     356,   362,   371,   379,   385,   389,   395,   399,   407,   418,
-     424,   432,   443,   447,   451,   456,   468,   477,   485,   515,
-     516,   525,   539,   546,   547,   550,   551,   552,   553,   556,
-     567,   581,   587,   595,   606,   608,   617,   623,   627,   635,
-     643,   652,   661,   665,   671,   683,   691,   692,   695,   700,
-     708,   713,   718,   723,   728,   733,   738,   742,   747,   752,
-     757,   766,   775,   786,   791,   796,   803,   808,   815,   820,
-     832,   849,   851,   853,   861,   866,   879,   885,   894,   905,
-     920,   924,   933,   942,   951,   964,   977,   990,  1010,  1011,
-    1012,  1019,  1026,  1032,  1043,  1054,  1060,  1070,  1087,  1093,
-    1099,  1105,  1111,  1118,  1125,  1131,  1135,  1141,  1146,  1151,
-    1157,  1163,  1168,  1175,  1179,  1183,  1188,  1193,  1195,  1200,
-    1205,  1210,  1215,  1220,  1226,  1227,  1232,  1237,  1243,  1252,
-    1254,  1259,  1265,  1272,  1277,  1282,  1287,  1298,  1303,  1308,
-    1315,  1320,  1325,  1330,  1337,  1342,  1347,  1352,  1357,  1362,
-    1369,  1374,  1379,  1386,  1391,  1398,  1403,  1408,  1413,  1418,
-    1423,  1428,  1433,  1438,  1443
+       0,   437,   437,   443,   457,   458,   462,   463,   477,   478,
+     479,   480,   481,   482,   486,   490,   500,   501,   504,   505,
+     506,   509,   510,   511,   514,   524,   525,   531,   535,   540,
+     549,   562,   563,   572,   587,   593,   602,   610,   616,   620,
+     626,   630,   638,   645,   651,   659,   670,   674,   678,   682,
+     693,   702,   710,   746,   747,   760,   765,   766,   769,   770,
+     777,   789,   791,   800,   806,   810,   816,   835,   841,   849,
+     850,   853,   858,   865,   873,   883,   891,   901,   909,   920,
+     925,   930,   935,   940,   944,   949,   954,   958,   962,   968,
+     973,   980,   987,   992,   999,  1004,  1016,  1020,  1024,  1028,
+    1032,  1038,  1042,  1057,  1061,  1068,  1094,  1098,  1104,  1108,
+    1116,  1120,  1137,  1143,  1147,  1160,  1165,  1171,  1181,  1183,
+    1185,  1199,  1203,  1209,  1213,  1222,  1226,  1235,  1239,  1245,
+    1249,  1255,  1259,  1265,  1269,  1275,  1279,  1285,  1289,  1293,
+    1299,  1303,  1307,  1311,  1315,  1321,  1325,  1329,  1335,  1339,
+    1343,  1350,  1354,  1358,  1362,  1368,  1372,  1379,  1383,  1388,
+    1393,  1398,  1403,  1407,  1411,  1415,  1419,  1423,  1429,  1433,
+    1437,  1441,  1445,  1449,  1454,  1461,  1466,  1471,  1476,  1481,
+    1486,  1493,  1497,  1504,  1508,  1516,  1521,  1526,  1531,  1536,
+    1541,  1546,  1551,  1556,  1561,  1566
 };
 #endif
 
@@ -717,12 +1026,12 @@ static const char *const yytname[] =
   "TOKEN_VOLATILE", "TOKEN_STRUCT", "TOKEN_UNION", "TOKEN_ENUM",
   "TOKEN_SIZEOF", "TOKEN_IF", "TOKEN_ELSE", "TOKEN_SWITCH", "TOKEN_CASE",
   "TOKEN_DEFAULT", "TOKEN_FOR", "TOKEN_WHILE", "TOKEN_DO", "TOKEN_BREAK",
-  "TOKEN_CONTINUE", "TOKEN_RETURN", "TOKEN_PP_DEFINE", "TOKEN_PP_UNDEF",
-  "TOKEN_PLUS", "TOKEN_MINUS", "TOKEN_ASTERISK", "TOKEN_DIVIDE",
-  "TOKEN_MOD", "TOKEN_INCREMENT", "TOKEN_DECREMENT", "TOKEN_ASSIGN",
-  "TOKEN_PLUS_ASSIGN", "TOKEN_MINUS_ASSIGN", "TOKEN_MULTIPLY_ASSIGN",
-  "TOKEN_DIVIDE_ASSIGN", "TOKEN_MODULUS_ASSIGN", "TOKEN_AND_ASSIGN",
-  "TOKEN_OR_ASSIGN", "TOKEN_XOR_ASSIGN", "TOKEN_LEFT_SHIFT_ASSIGN",
+  "TOKEN_CONTINUE", "TOKEN_RETURN", "TOKEN_PLUS", "TOKEN_MINUS",
+  "TOKEN_ASTERISK", "TOKEN_DIVIDE", "TOKEN_MOD", "TOKEN_INCREMENT",
+  "TOKEN_DECREMENT", "TOKEN_ASSIGN", "TOKEN_PLUS_ASSIGN",
+  "TOKEN_MINUS_ASSIGN", "TOKEN_MULTIPLY_ASSIGN", "TOKEN_DIVIDE_ASSIGN",
+  "TOKEN_MODULUS_ASSIGN", "TOKEN_AND_ASSIGN", "TOKEN_OR_ASSIGN",
+  "TOKEN_XOR_ASSIGN", "TOKEN_LEFT_SHIFT_ASSIGN",
   "TOKEN_RIGHT_SHIFT_ASSIGN", "TOKEN_EQUAL", "TOKEN_NOT_EQUAL",
   "TOKEN_LESS_THAN", "TOKEN_GREATER_THAN", "TOKEN_LESS_THAN_OR_EQUAL",
   "TOKEN_GREATER_THAN_OR_EQUAL", "TOKEN_LOGICAL_AND", "TOKEN_LOGICAL_OR",
@@ -732,27 +1041,31 @@ static const char *const yytname[] =
   "TOKEN_SEMI", "TOKEN_COMMA", "TOKEN_COLON", "TOKEN_TERNARY",
   "TOKEN_LEFT_PARENTHESES", "TOKEN_RIGHT_PARENTHESES", "TOKEN_LEFT_BRACE",
   "TOKEN_RIGHT_BRACE", "TOKEN_LEFT_BRACKET", "TOKEN_RIGHT_BRACKET",
-  "TOKEN_EOF", "TOKEN_ERROR", "LOWER_THAN_ELSE", "UNARY", "$accept",
-  "program", "global_statement", "statement_sequence", "statement",
-  "def_undef_definition", "define", "undef", "selection_statement",
-  "jump_statement", "iteration_statement", "type_declaration",
-  "compound_statement", "enum_declaration", "enum_member_list",
-  "enum_member", "struct_declaration", "union_declaration",
-  "struct_union_member_list", "struct_member", "if_statement",
-  "switch_statement", "switch_body", "case_list", "case_clause",
-  "default_clause", "continue_statement", "break_statement",
+  "TOKEN_ERROR", "LOWER_THAN_ELSE", "UNARY", "$accept", "translation_unit",
+  "external_declaration", "statement_sequence", "statement",
+  "expression_statement", "selection_statement", "jump_statement",
+  "iteration_statement", "compound_statement", "enum_member_list",
+  "enum_member", "struct_union_member_list", "struct_member",
+  "if_statement", "switch_statement", "switch_body", "case_list",
+  "case_clause", "default_clause", "continue_statement", "break_statement",
   "return_statement", "while_loop", "do_while_loop", "for_loop",
   "for_init_field", "for_condition", "for_assignment_field",
-  "simple_var_assign", "compound_var_assign", "function_prototype",
-  "function_definition", "function_signature", "arg_list",
-  "param_declaration", "func_call", "exp_list", "type_cast_specifier",
-  "all_type_specifiers", "type_pointer", "data_type_specifier",
-  "visibility_qualifier", "mod_qualifier", "sign_qualifier",
-  "var_declaration", "arr_size", "id_list", "var_preamble",
-  "var_assignment", "exp", "term", "operand", "factor", "sizeof_operand",
-  "array_access", "pointer_content", "priority_operator",
-  "arithmetic_operator", "comparison_operator", "bitwise_operator",
-  "logic_operator", "compound_assign_operator", YY_NULLPTR
+  "function_definition", "parameter_list_opt", "param_declaration",
+  "type_name", "type_cast_specifier", "all_type_specifiers",
+  "type_pointer", "enum_specifier", "struct_specifier", "union_specifier",
+  "type_specifier", "storage_class_specifier", "function_specifier",
+  "type_qualifier", "sign_specifier", "declaration_specifier",
+  "declaration_specifiers", "pointer_prefix", "declaration",
+  "init_declarator_list_opt", "init_declarator_list", "init_declarator",
+  "initializer", "declarator", "direct_declarator", "arr_size",
+  "expression", "assignment_expression", "conditional_expression",
+  "logical_or_expression", "logical_and_expression",
+  "inclusive_or_expression", "exclusive_or_expression", "and_expression",
+  "equality_expression", "relational_expression", "shift_expression",
+  "additive_expression", "multiplicative_expression", "cast_expression",
+  "unary_expression", "postfix_expression", "primary_expression",
+  "argument_expression_list_opt", "argument_expression_list",
+  "assignment_operator", YY_NULLPTR
 };
 
 static const char *
@@ -762,7 +1075,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-199)
+#define YYPACT_NINF (-276)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -776,43 +1089,37 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-     559,  -199,  -199,  -199,  -199,  -199,  -199,  -199,  -199,   124,
-      26,  -199,  -199,  -199,  -199,    50,    85,    91,  -199,  -199,
-    -199,    59,  -199,  -199,  -199,  -199,  -199,  -199,  -199,  -199,
-    -199,  -199,   -37,  -199,    92,    96,  1397,   258,  1414,  -199,
-     144,  -199,  -199,  -199,    72,    80,    99,  -199,  -199,  -199,
-    -199,  -199,  -199,  -199,  -199,   162,   174,   175,  -199,   258,
-    1414,  -199,  1414,  -199,   -38,    88,  1380,  1380,   176,   303,
-    -199,  -199,  -199,  -199,  1414,  -199,  -199,   481,  1380,   105,
-     103,  -199,   180,   195,  -199,   181,   343,   145,   -22,  -199,
-    -199,  -199,  -199,  -199,   574,   111,   113,   114,   115,   116,
-     383,   121,   123,   464,   481,    10,   481,   481,    81,   192,
-     481,   434,  -199,  -199,  -199,  -199,  -199,  -199,  -199,  -199,
-    -199,  -199,  -199,  -199,  -199,  -199,   126,   146,  -199,   119,
-    -199,    81,  -199,  -199,   908,   125,  -199,    -9,  1304,   538,
-    -199,    21,  1271,    82,   137,  -199,    27,  -199,   215,  -199,
-     578,   481,   -30,  -199,   148,  -199,   -51,   149,    16,   176,
-     150,   481,  -199,  -199,  -199,  -199,  -199,  -199,  -199,  -199,
-    -199,  -199,   481,   481,   481,   434,   481,   481,  1354,   481,
-     194,  -199,  -199,  -199,   941,  -199,   147,   481,   137,  -199,
-    -199,  -199,   481,    82,   147,   137,  -199,   151,   710,  -199,
-    -199,    82,  -199,  -199,  -199,  -199,  -199,  -199,  -199,  -199,
-    -199,  -199,  -199,  -199,  -199,  -199,  -199,  -199,   481,   481,
-     481,   481,   481,  -199,  -199,  -199,   481,  -199,  -199,   221,
-     227,   481,   481,   481,   481,   481,   228,   230,   590,  -199,
-     157,  -199,   611,   103,  -199,  -199,   -17,  -199,  -199,   238,
-    -199,  -199,  1271,    48,  1271,   644,  1271,  -199,  1271,   165,
-     743,   776,   201,   178,   247,   809,   177,  -199,   842,  -199,
-    -199,   974,   125,   125,   125,   125,  -199,  1393,  1404,  1007,
-     677,  1040,  1073,  1106,  -199,  -199,  -199,  -199,   103,  -199,
-    -199,  -199,   481,  -199,  -199,  -199,   383,   182,   481,   481,
-     211,   383,   481,  -199,   481,   481,   481,   481,   481,  -199,
-    -199,  -199,  -199,  -199,  1271,   231,   143,  1271,   186,  1271,
-     481,  -199,   875,  1271,  1139,  1172,  1205,  1238,   383,    15,
-     185,   196,   143,  -199,  -199,   487,  1271,   208,  -199,  -199,
-    -199,  -199,  -199,   199,   207,   209,  -199,  -199,  -199,  -199,
-     205,  -199,  -199,  1271,  -199,  -199,  -199,  -199,   383,   383,
-     383,   383,   383,  -199
+     658,  -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,
+    -276,  -276,  -276,  -276,  -276,    22,    59,    65,   692,  -276,
+    -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,
+     401,  -276,    -5,    13,    25,  -276,  -276,   -20,    67,  -276,
+      89,    48,    51,  -276,   -41,  -276,   658,   658,   127,   658,
+     204,    55,  -276,  -276,  -276,    14,   538,  -276,  -276,   132,
+    -276,   401,   324,    95,   -44,  -276,   -11,  -276,   401,  -276,
+    -276,  -276,  -276,  -276,   581,   538,   538,   538,   622,   622,
+     538,   538,   538,   490,  -276,   538,   -50,  -276,  -276,   -45,
+     107,   106,   133,   129,    28,    41,    21,    57,    40,  -276,
+     113,   -33,  -276,   538,  -276,   154,  -276,  -276,   286,  -276,
+    -276,   128,  -276,    17,   127,  -276,   242,  -276,  -276,   490,
+    -276,  -276,  -276,  -276,  -276,   538,  -276,  -276,  -276,  -276,
+    -276,   122,  -276,   163,   164,   -10,  -276,   538,  -276,   538,
+     538,   538,   538,   538,   538,   538,   538,   538,   538,   538,
+     538,   538,   538,   538,   538,   538,   538,   538,  -276,  -276,
+    -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,   538,
+    -276,  -276,   197,   199,   538,   538,   -39,   136,   137,   138,
+     139,   364,   144,   145,   531,  -276,  -276,  -276,  -276,  -276,
+    -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,
+    -276,   401,  -276,    29,  -276,  -276,   216,  -276,  -276,  -276,
+     142,  -276,  -276,  -276,  -276,  -276,   107,    45,   106,   133,
+     129,    28,    41,    41,    21,    21,    21,    21,    57,    57,
+      40,    40,  -276,  -276,  -276,  -276,  -276,  -276,  -276,   143,
+     149,   -32,  -276,   538,   538,   441,   538,   192,  -276,  -276,
+    -276,    50,  -276,  -276,  -276,   538,  -276,   538,  -276,    -9,
+      -3,   153,   401,   156,    -1,   150,  -276,  -276,  -276,   364,
+     152,   538,    51,   364,   538,   201,    98,   159,   156,  -276,
+       4,   364,    53,   158,   155,    98,  -276,  -276,   538,   165,
+    -276,   161,   162,   169,  -276,  -276,  -276,  -276,   170,   156,
+    -276,  -276,  -276,  -276,   364,   364,   364,   364,   364,  -276
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -820,67 +1127,63 @@ static const yytype_int16 yypact[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       0,   102,   100,   106,   107,   109,   115,   118,   119,   103,
-     101,   113,   114,   116,   117,     0,     0,     0,    23,    24,
-      10,     0,     4,     9,    21,    22,     5,    33,    34,    35,
-       7,     8,     0,   130,    97,    96,     0,     0,     0,     6,
-       0,   104,   108,   105,   110,   111,   112,     1,     2,     3,
-      81,    11,    82,    99,    98,     0,     0,     0,   131,     0,
-       0,   132,     0,   133,   124,     0,     0,     0,     0,     0,
-     110,   111,   112,   134,     0,   135,   136,     0,    84,     0,
-     126,   120,     0,     0,    46,     0,     0,    41,     0,    38,
-     165,   168,   169,   170,   166,     0,     0,     0,     0,     0,
+       0,    81,    79,    83,    84,    85,    91,    94,    95,    82,
+      80,    89,    90,    92,    93,     0,     0,     0,     0,     2,
+       4,    88,    86,    87,    97,    96,    99,    98,   100,   101,
+     106,     5,    75,    77,    73,     1,     3,   115,   103,   102,
+       0,     0,   107,   108,   110,   113,     0,     0,     0,    61,
+       0,   116,   104,   114,   105,     0,     0,     6,    60,     0,
+      31,     0,     0,    28,     0,    25,     0,    64,    66,   176,
+     177,   178,   179,   175,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,   119,     0,     0,   121,   123,   125,
+     127,   129,   131,   133,   135,   137,   140,   145,   148,   151,
+     155,   157,   168,     0,   109,   110,   111,   112,     0,    76,
+      32,     0,    78,     0,    27,    74,     0,   117,    65,     0,
+     166,   162,   155,   163,   161,     0,   158,   159,   164,   160,
+     165,     0,    67,    70,    69,     0,   156,     0,   118,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,    36,    12,    13,    15,    14,    16,    25,    26,
-      29,    27,    28,    31,    30,    32,     0,     0,    19,     0,
-     174,     0,    17,    18,     0,   153,   155,   162,   164,   167,
-     137,   166,   125,   162,   164,   167,     0,    87,    90,   122,
-       0,     0,   127,   129,     0,    47,     0,     0,     0,    40,
-       0,     0,   205,   206,   213,   214,   207,   210,   211,   212,
-     208,   209,    92,     0,     0,     0,     0,     0,    69,     0,
-       0,    63,    62,    64,     0,   156,   184,     0,   185,   183,
-     157,   158,     0,   159,   172,   171,   160,     0,     0,   138,
-     139,   161,   190,   191,   194,   195,   199,   196,   197,   198,
-     203,   204,   200,   201,   202,   193,   192,    20,     0,     0,
-       0,     0,     0,   187,   188,   189,     0,   175,   176,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,    83,
-      88,   121,     0,   128,    44,    48,     0,    45,    42,     0,
-      39,    37,    79,     0,    94,     0,    80,   179,   180,     0,
-       0,     0,     0,     0,     0,     0,     0,    65,     0,    95,
-     163,     0,   148,   149,   150,   151,   154,   178,   177,     0,
-       0,     0,     0,     0,   178,   177,    85,    86,    89,   123,
-      49,    43,     0,    91,   181,   173,     0,     0,     0,    73,
-      72,     0,     0,   186,     0,     0,     0,     0,     0,   140,
-     182,   142,   141,   145,    93,    50,     0,    70,     0,    74,
-       0,    66,     0,   152,     0,     0,     0,     0,     0,     0,
-       0,     0,    54,    56,    55,    75,    71,     0,   144,   147,
-     143,   146,    51,     0,     0,     0,    11,    52,    57,    53,
-       0,    76,    77,    78,    67,    11,    11,    11,    61,     0,
-      58,    59,    60,    68
+       0,     0,     0,     0,     0,     0,     0,     0,   185,   186,
+     187,   194,   195,   188,   191,   192,   193,   189,   190,     0,
+     173,   174,     0,     0,   181,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,    14,    24,     7,    13,     8,
+      10,     9,    11,    16,    17,    20,    18,    19,    22,    21,
+      23,   106,    12,     0,    33,    29,     0,    26,    62,    63,
+       0,    68,    72,    71,   180,   122,   128,     0,   130,   132,
+     134,   136,   138,   139,   141,   142,   143,   144,   146,   147,
+     149,   150,   152,   153,   154,   124,   172,   171,   183,     0,
+     182,     0,   120,     0,     0,    53,     0,     0,    47,    46,
+      48,     0,    15,    30,   167,     0,   170,     0,   169,     0,
+       0,     0,     0,    55,     0,     0,    49,   126,   184,     0,
+       0,    56,    54,     0,     0,    34,     0,     0,    57,    50,
+       0,     0,     0,     0,     0,    38,    40,    39,    58,     0,
+      35,     0,     0,     0,     6,    36,    41,    37,     0,    59,
+      51,     6,     6,     6,    45,     0,    42,    43,    44,    52
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-    -199,  -199,   266,  -198,   -99,  -199,  -199,  -199,  -199,  -199,
-    -199,  -199,   -27,  -199,  -199,   129,  -199,  -199,   233,    69,
-    -199,  -199,  -199,  -199,    -2,     0,  -199,  -199,  -199,  -199,
-    -199,  -199,  -199,  -199,  -199,   -80,   -41,  -199,    40,    93,
-    -199,    95,  -199,  -199,  -199,   -10,  -199,  -199,  -199,   304,
-      54,    94,  -141,  -199,   -53,  -199,   -56,   -81,   -97,   -69,
-    -199,   -63,   -57,  -199,  -199,  -199,  -199,  -199,  -135
+    -276,  -276,   222,  -275,  -176,  -276,  -276,  -276,  -276,   205,
+    -276,   160,   223,   -37,  -276,  -276,  -276,  -276,   -13,   -12,
+    -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,  -276,
+    -276,   166,   157,  -276,  -276,  -276,  -276,  -276,  -276,   -68,
+    -276,  -276,  -276,  -276,   -28,     0,   231,    23,  -276,    15,
+     220,  -276,   -16,   238,  -276,   -49,   -52,    24,  -276,   141,
+     146,   173,   140,   172,    -8,   -17,    18,    38,   -69,    33,
+    -276,  -276,  -276,  -276,  -276
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int16 yydefgoto[] =
 {
-       0,    21,    22,    69,   113,    23,    24,    25,   114,   115,
-     116,    26,   117,    27,    88,    89,    28,    29,    83,    84,
-     118,   119,   331,   332,   333,   334,   120,   121,   122,   123,
-     124,   125,   263,   318,   350,   126,   127,    30,   128,   129,
-     146,   147,   130,   253,   131,    33,    34,    35,    36,    37,
-      38,   132,    80,    65,    40,   133,   134,   135,   136,   143,
-     259,   144,   145,   226,   219,   220,   221,   222,   174
+       0,    18,    19,   108,   187,   188,   189,   190,   191,   192,
+      64,    65,    59,    60,   193,   194,   284,   285,   286,   287,
+     195,   196,   197,   198,   199,   200,   261,   277,   298,    20,
+      66,    67,   131,    85,   132,   133,    21,    22,    23,    24,
+      25,    26,    27,    28,    29,   201,    40,   202,    41,    42,
+      43,   106,   105,    45,    51,   203,    87,    88,    89,    90,
+      91,    92,    93,    94,    95,    96,    97,    98,    99,   100,
+     101,   102,   239,   240,   169
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -888,304 +1191,154 @@ static const yytype_int16 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int16 yytable[] =
 {
-     137,   180,   153,   233,   235,    52,   138,   185,    77,   190,
-     191,   243,   139,    85,    85,   246,   161,   186,   343,   248,
-     344,   142,   345,   150,   245,   148,    58,    61,    63,   196,
-      85,   137,    79,    85,    43,   227,   228,   138,    50,   193,
-      31,    78,   188,   139,    51,    79,   195,   184,   189,    73,
-      75,   105,    76,    79,   159,   198,   249,    44,   290,    47,
-     160,    31,   201,   229,   140,   230,   151,     1,     2,     3,
-       4,     5,     6,     7,     8,     9,    10,    11,    12,    13,
-      14,    15,    16,    17,    90,    91,    92,    93,   141,   187,
-      60,    62,    45,    32,    39,   242,    18,    19,    46,   288,
-     172,   197,    52,   238,   173,   252,    95,   239,    90,    91,
-      92,    93,   141,    74,    32,    39,   254,   255,   256,   258,
-     260,   261,   105,   265,   292,   264,   227,   228,   293,   276,
-      95,   268,    41,    53,    20,    42,   198,    54,   272,   273,
-     274,   275,   306,   308,    48,   104,   105,   109,   358,   106,
-     107,    64,   155,    66,   236,   155,   237,   360,   361,   362,
-     192,    67,   271,    81,    82,   257,   223,   224,   225,    70,
-     108,   109,   329,   330,   110,   279,   280,   281,   282,   283,
-      68,    71,    72,    87,   111,   148,   151,   152,   156,   149,
-     175,   158,   176,   177,   178,   179,   181,   315,   182,   194,
-      51,   199,   321,     1,     2,     3,     4,     5,     6,     7,
-       8,     9,    10,    11,    12,    13,    14,    55,    56,    57,
-     232,   200,   240,   244,   247,   251,   266,   137,   277,   342,
-     173,   269,   137,   138,   278,   284,   314,   285,   138,   139,
-      79,   291,   317,   319,   139,   295,   322,   298,   323,   324,
-     325,   326,   327,   299,   300,   351,   302,   320,   328,   137,
-     363,   335,   346,   316,   336,   138,     1,     2,     3,     4,
-       5,   139,     7,     8,     9,    10,   355,   154,   347,   353,
-      55,    56,    57,   354,   356,   359,   357,    49,   250,   137,
-     137,   137,   137,   137,   352,   138,   138,   138,   138,   138,
-      86,   139,   139,   139,   139,   139,    90,    91,    92,    93,
-      94,     1,     2,     3,     4,     5,     6,     7,     8,     9,
-      10,    11,    12,    13,    14,    55,    56,    57,    95,    96,
-     348,    97,   349,   287,    98,    99,   100,   101,   102,   103,
-      59,     0,     0,   104,   105,     0,     0,   106,   107,     0,
-       0,     1,     2,     3,     4,     5,     6,     7,     8,     9,
-      10,    11,    12,    13,    14,    55,    56,    57,   108,   109,
-       0,     0,   110,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,   111,     0,    51,   112,    90,    91,    92,    93,
-      94,     1,     2,     3,     4,     5,     6,     7,     8,     9,
-      10,    11,    12,    13,    14,    55,    56,    57,    95,    96,
-       0,    97,     0,     0,    98,    99,   100,   101,   102,   103,
-       0,     0,     0,   104,   105,   157,     0,   106,   107,     0,
-       0,     0,     0,     0,     0,     0,     0,    90,    91,    92,
-      93,   141,     1,     2,     3,     4,     5,     0,   108,   109,
-       9,    10,   110,     0,     0,     0,    55,    56,    57,    95,
-       0,     0,   111,     0,    51,     0,     0,    90,    91,    92,
-      93,   141,     0,     0,   104,   105,     0,     0,   106,   107,
-       0,     0,     0,     0,    90,    91,    92,    93,   141,    95,
-      90,    91,    92,    93,    94,     0,     0,     0,     0,   108,
-     109,     0,     0,   110,   104,   105,    95,     0,   106,   107,
-       0,     0,    95,   111,     0,     0,     0,     0,     0,     0,
-       0,   104,   105,     0,     0,   106,   107,   104,   105,   108,
-     109,   106,   107,   110,     0,     0,     0,     0,     0,   183,
-       0,     0,     0,   111,     0,     0,   108,   109,     0,     0,
-     110,     0,   108,   109,     0,     0,   110,     0,     0,     0,
-     111,     0,     0,     0,     0,     0,   111,     1,     2,     3,
-       4,     5,     6,     7,     8,     9,    10,    11,    12,    13,
-      14,    15,    16,    17,   234,   162,   163,   164,   165,   166,
-     167,   168,   169,   170,   171,     0,    18,    19,     1,     2,
-       3,     4,     5,     6,     7,     8,     9,    10,    11,    12,
-      13,    14,    55,    56,    57,     0,     0,   202,   203,     0,
-     161,   162,   163,   164,   165,   166,   167,   168,   169,   170,
-     171,     0,     0,     0,    20,   204,   205,   206,   207,   208,
-     209,   210,   211,     0,   212,   213,   214,     0,   215,   216,
-     202,   203,     0,   172,     0,     0,   218,   173,     0,     0,
-       0,     0,   241,   286,     0,     0,     0,     0,   204,   205,
-     206,   207,   208,   209,   210,   211,     0,   212,   213,   214,
-       0,   215,   216,   202,   203,     0,     0,     0,     0,   218,
-       0,     0,     0,     0,     0,   289,     0,     0,     0,     0,
-       0,   204,   205,   206,   207,   208,   209,   210,   211,     0,
-     212,   213,   214,     0,   215,   216,   202,   203,     0,     0,
-       0,     0,   218,     0,     0,     0,     0,     0,   294,     0,
-       0,     0,     0,     0,   204,   205,   206,   207,   208,   209,
-     210,   211,     0,   212,   213,   214,     0,   215,   216,   202,
-     203,     0,     0,     0,     0,   218,     0,     0,     0,     0,
-       0,   310,     0,     0,     0,     0,     0,   204,   205,   206,
-     207,   208,   209,   210,   211,     0,   212,   213,   214,     0,
-     215,   216,   202,   203,     0,     0,     0,     0,   218,     0,
-     270,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     204,   205,   206,   207,   208,   209,   210,   211,     0,   212,
-     213,   214,     0,   215,   216,   202,   203,     0,     0,     0,
-       0,   218,     0,   296,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,   204,   205,   206,   207,   208,   209,   210,
-     211,     0,   212,   213,   214,     0,   215,   216,   202,   203,
-       0,     0,     0,     0,   218,     0,   297,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,   204,   205,   206,   207,
-     208,   209,   210,   211,     0,   212,   213,   214,     0,   215,
-     216,   202,   203,     0,     0,     0,     0,   218,     0,   301,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,   204,
-     205,   206,   207,   208,   209,   210,   211,     0,   212,   213,
-     214,     0,   215,   216,   202,   203,     0,     0,     0,     0,
-     218,     0,   303,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,   204,   205,   206,   207,   208,   209,   210,   211,
-       0,   212,   213,   214,     0,   215,   216,   202,   203,     0,
-       0,     0,     0,   218,     0,   337,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,   204,   205,   206,   207,   208,
-     209,   210,   211,     0,   212,   213,   214,     0,   215,   216,
-     202,   203,     0,   217,     0,     0,   218,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,   204,   205,
-     206,   207,   208,   209,   210,   211,     0,   212,   213,   214,
-       0,   215,   216,   202,   203,     0,   267,     0,     0,   218,
+      30,    86,    39,    56,   107,   247,   121,   123,   124,   170,
+     171,   128,   129,   130,    44,   134,   136,   139,    30,   304,
+     205,    37,   110,    31,   137,   110,   306,   307,   308,    32,
+     114,   140,   138,    39,   135,   137,   115,   172,    57,   173,
+      39,    31,   137,   242,   174,   111,    61,    61,   175,    68,
+     258,   134,   118,    38,   176,   206,   291,    49,   292,    61,
+     293,    50,    61,   116,   137,   137,    33,   117,   214,   269,
+     135,   137,    34,   137,    46,   270,   135,   273,   137,   155,
+     156,   157,   289,   145,   146,   215,   232,   233,   234,   151,
+     152,   217,    47,   275,   153,   154,    37,   279,   147,   148,
+     149,   150,   252,   137,    48,   290,    38,   120,   122,   122,
+     122,   126,   127,   122,   122,   122,    68,   235,   122,   137,
+     255,    54,   238,   266,   137,    55,   241,   282,   283,   309,
+     224,   225,   226,   227,    63,   251,   103,   222,   223,   113,
+       1,     2,     3,     4,     5,     6,     7,     8,     9,    10,
+      11,    12,    13,    14,    15,    16,    17,   158,   159,   160,
+     161,   162,   163,   164,   165,   166,   167,   168,   141,   228,
+     229,   142,   122,    39,   122,   122,   122,   122,   122,   122,
+     122,   122,   122,   122,   122,   122,   122,   122,   122,   122,
+     122,   230,   231,   144,   259,   260,   263,   264,    56,   143,
+     211,   204,   212,   213,   236,   268,   237,    69,    70,    71,
+      72,    73,   109,   243,   244,   245,   246,   248,   249,   253,
+     254,   256,   278,   257,   265,   280,   271,   274,   281,    74,
+     137,   276,   288,   294,    39,   295,   301,   302,   300,   299,
+      36,    75,    76,    77,   303,   262,    78,    79,   305,    58,
+       1,     2,     3,     4,     5,     6,     7,     8,     9,    10,
+      11,    12,    13,    14,    15,    16,    17,    80,    81,    52,
+      62,    82,   296,   297,   207,   104,   210,   272,    53,   267,
+     216,    83,   209,   220,     0,     0,    84,   218,   122,    69,
+      70,    71,    72,    73,     1,     2,     3,     4,     5,     6,
+       7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
+      17,    74,   177,   208,   178,   219,   221,   179,   180,   181,
+     182,   183,   184,    75,    76,    77,     0,     0,    78,    79,
+       0,     0,     1,     2,     3,     4,     5,     6,     7,     8,
+       9,    10,    11,    12,    13,    14,    15,    16,    17,    80,
+      81,     0,     0,    82,     0,     0,     0,     0,     0,   185,
+       0,     0,     0,    83,     0,    57,   186,    69,    70,    71,
+      72,    73,     1,     2,     3,     4,     5,     6,     7,     8,
+       9,    10,    11,    12,    13,    14,    15,    16,    17,    74,
+     177,     0,   178,     0,     0,   179,   180,   181,   182,   183,
+     184,    75,    76,    77,   112,     0,    78,    79,    37,     1,
+       2,     3,     4,     5,     6,     7,     8,     9,    10,    11,
+      12,    13,    14,    15,    16,    17,     0,    80,    81,     0,
+       0,    82,     0,     0,     0,     0,     0,   185,     0,     0,
+      38,    83,     0,    57,    69,    70,    71,    72,    73,     1,
+       2,     3,     4,     5,     6,     7,     8,     9,    10,    11,
+      12,    13,    14,    15,    16,    17,    74,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,    75,    76,
+      77,     0,     0,    78,    79,     0,     0,     0,     0,     0,
+       0,     0,     0,    69,    70,    71,    72,    73,     1,     2,
+       3,     4,     5,     0,    80,    81,     9,    10,    82,     0,
+       0,     0,    15,    16,    17,    74,     0,     0,    83,     0,
+       0,     0,     0,     0,     0,     0,     0,    75,    76,    77,
+       0,     0,    78,    79,    69,    70,    71,    72,    73,     0,
+       0,    69,    70,    71,    72,    73,     0,     0,     0,     0,
+       0,     0,     0,    80,    81,     0,    74,    82,     0,     0,
+       0,     0,     0,    74,     0,     0,     0,    83,    75,    76,
+      77,     0,     0,    78,    79,    75,    76,    77,     0,     0,
+      78,    79,     0,     0,    69,    70,    71,    72,    73,     0,
+       0,     0,     0,     0,    80,    81,     0,     0,    82,     0,
+       0,    80,    81,     0,   250,    82,    74,     0,    83,     0,
+       0,     0,     0,     0,     0,    83,     0,     0,    75,    76,
+      77,     0,     0,    78,    79,    69,    70,    71,    72,    73,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,   204,   205,   206,   207,   208,   209,   210,   211,     0,
-     212,   213,   214,     0,   215,   216,   202,   203,     0,     0,
-       0,   304,   218,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,   204,   205,   206,   207,   208,   209,
-     210,   211,     0,   212,   213,   214,     0,   215,   216,   202,
-     203,     0,   309,     0,     0,   218,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,   204,   205,   206,
-     207,   208,   209,   210,   211,     0,   212,   213,   214,     0,
-     215,   216,   202,   203,     0,   311,     0,     0,   218,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     204,   205,   206,   207,   208,   209,   210,   211,     0,   212,
-     213,   214,     0,   215,   216,   202,   203,     0,   312,     0,
-       0,   218,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,   204,   205,   206,   207,   208,   209,   210,
-     211,     0,   212,   213,   214,     0,   215,   216,   202,   203,
-       0,   313,     0,     0,   218,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,   204,   205,   206,   207,
-     208,   209,   210,   211,     0,   212,   213,   214,     0,   215,
-     216,   202,   203,     0,   338,     0,     0,   218,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,   204,
-     205,   206,   207,   208,   209,   210,   211,     0,   212,   213,
-     214,     0,   215,   216,   202,   203,     0,   339,     0,     0,
-     218,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,   204,   205,   206,   207,   208,   209,   210,   211,
-       0,   212,   213,   214,     0,   215,   216,   202,   203,     0,
-     340,     0,     0,   218,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,   204,   205,   206,   207,   208,
-     209,   210,   211,     0,   212,   213,   214,     0,   215,   216,
-     202,   203,     0,   341,     0,     0,   218,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,   204,   205,
-     206,   207,   208,   209,   210,   211,     0,   212,   213,   214,
-       0,   215,   216,     0,     0,     0,     0,     0,     0,   218,
-     231,   162,   163,   164,   165,   166,   167,   168,   169,   170,
-     171,   262,     1,     2,     3,     4,     5,     6,     7,     8,
-       9,    10,    11,    12,    13,    14,    55,    56,    57,     0,
-       0,     0,     0,     0,     0,     0,     0,   232,     1,     2,
-       3,     4,     5,     6,     7,     8,     9,    10,    11,    12,
-      13,    14,    55,    56,    57,     1,     2,     3,     4,     5,
-       0,     7,     8,     9,    10,     0,     0,    13,    14,    55,
-      56,    57,     1,     2,     3,     4,     5,     0,     0,     0,
-       9,    10,     0,     0,     0,     0,    55,    56,    57,   305,
-     162,   163,   164,   165,   166,   167,   168,   169,   170,   171,
-     307,   162,   163,   164,   165,   166,   167,   168,   169,   170,
-     171
+       0,     0,     0,     0,    80,    81,     0,    74,    82,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,   119,    75,
+      76,    77,     0,     0,    78,    79,     1,     2,     3,     4,
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
+      15,    16,    17,     0,     0,    80,    81,     0,     0,    82,
+       0,     0,    35,     0,     0,     0,     0,     0,     0,   125,
+       1,     2,     3,     4,     5,     6,     7,     8,     9,    10,
+      11,    12,    13,    14,    15,    16,    17
 };
 
 static const yytype_int16 yycheck[] =
 {
-      69,   100,    82,   138,   139,    32,    69,   104,    46,   106,
-     107,   152,    69,    66,    67,   156,    46,     7,     3,     3,
-       5,    77,     7,    79,    75,    78,    36,    37,    38,   110,
-      83,   100,    83,    86,     8,    44,    45,   100,    75,   108,
-       0,    79,   105,   100,    81,    83,   109,   103,   105,    59,
-      60,    41,    62,    83,    76,   111,    40,     7,    75,     0,
-      82,    21,   131,    72,    74,    74,    83,     8,     9,    10,
-      11,    12,    13,    14,    15,    16,    17,    18,    19,    20,
-      21,    22,    23,    24,     3,     4,     5,     6,     7,    79,
-      36,    37,     7,     0,     0,   151,    37,    38,     7,   240,
-      79,   111,   129,    76,    83,   161,    25,    80,     3,     4,
-       5,     6,     7,    59,    21,    21,   172,   173,   174,   175,
-     176,   177,    41,   179,    76,   178,    44,    45,    80,   226,
-      25,   187,     8,    41,    75,    11,   192,    41,   219,   220,
-     221,   222,   277,   278,    85,    40,    41,    66,   346,    44,
-      45,     7,    83,    81,    72,    86,    74,   355,   356,   357,
-      79,    81,   218,    75,    76,   175,    41,    42,    43,     7,
-      65,    66,    29,    30,    69,   231,   232,   233,   234,   235,
-      81,     7,     7,     7,    79,   238,    83,     7,     7,    84,
-      79,    46,    79,    79,    79,    79,    75,   296,    75,     7,
-      81,    75,   301,     8,     9,    10,    11,    12,    13,    14,
-      15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      83,    75,     7,    75,    75,    75,    32,   296,     7,   328,
-      83,    80,   301,   296,     7,     7,   292,     7,   301,   296,
-      83,     3,   298,   299,   301,    80,   302,    46,   304,   305,
-     306,   307,   308,    75,     7,   335,    79,    46,    27,   328,
-     359,    75,    77,    81,   320,   328,     8,     9,    10,    11,
-      12,   328,    14,    15,    16,    17,    77,    82,    82,   335,
-      22,    23,    24,    75,    77,    80,    77,    21,   159,   358,
-     359,   360,   361,   362,   335,   358,   359,   360,   361,   362,
-      67,   358,   359,   360,   361,   362,     3,     4,     5,     6,
-       7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
-      17,    18,    19,    20,    21,    22,    23,    24,    25,    26,
-     332,    28,   332,   238,    31,    32,    33,    34,    35,    36,
-      36,    -1,    -1,    40,    41,    -1,    -1,    44,    45,    -1,
-      -1,     8,     9,    10,    11,    12,    13,    14,    15,    16,
-      17,    18,    19,    20,    21,    22,    23,    24,    65,    66,
-      -1,    -1,    69,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    79,    -1,    81,    82,     3,     4,     5,     6,
-       7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
-      17,    18,    19,    20,    21,    22,    23,    24,    25,    26,
-      -1,    28,    -1,    -1,    31,    32,    33,    34,    35,    36,
-      -1,    -1,    -1,    40,    41,    82,    -1,    44,    45,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,     3,     4,     5,
-       6,     7,     8,     9,    10,    11,    12,    -1,    65,    66,
-      16,    17,    69,    -1,    -1,    -1,    22,    23,    24,    25,
-      -1,    -1,    79,    -1,    81,    -1,    -1,     3,     4,     5,
-       6,     7,    -1,    -1,    40,    41,    -1,    -1,    44,    45,
-      -1,    -1,    -1,    -1,     3,     4,     5,     6,     7,    25,
-       3,     4,     5,     6,     7,    -1,    -1,    -1,    -1,    65,
-      66,    -1,    -1,    69,    40,    41,    25,    -1,    44,    45,
-      -1,    -1,    25,    79,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    40,    41,    -1,    -1,    44,    45,    40,    41,    65,
-      66,    44,    45,    69,    -1,    -1,    -1,    -1,    -1,    75,
-      -1,    -1,    -1,    79,    -1,    -1,    65,    66,    -1,    -1,
-      69,    -1,    65,    66,    -1,    -1,    69,    -1,    -1,    -1,
-      79,    -1,    -1,    -1,    -1,    -1,    79,     8,     9,    10,
-      11,    12,    13,    14,    15,    16,    17,    18,    19,    20,
-      21,    22,    23,    24,    46,    47,    48,    49,    50,    51,
-      52,    53,    54,    55,    56,    -1,    37,    38,     8,     9,
-      10,    11,    12,    13,    14,    15,    16,    17,    18,    19,
-      20,    21,    22,    23,    24,    -1,    -1,    39,    40,    -1,
-      46,    47,    48,    49,    50,    51,    52,    53,    54,    55,
-      56,    -1,    -1,    -1,    75,    57,    58,    59,    60,    61,
-      62,    63,    64,    -1,    66,    67,    68,    -1,    70,    71,
-      39,    40,    -1,    79,    -1,    -1,    78,    83,    -1,    -1,
-      -1,    -1,    84,    73,    -1,    -1,    -1,    -1,    57,    58,
-      59,    60,    61,    62,    63,    64,    -1,    66,    67,    68,
-      -1,    70,    71,    39,    40,    -1,    -1,    -1,    -1,    78,
-      -1,    -1,    -1,    -1,    -1,    84,    -1,    -1,    -1,    -1,
-      -1,    57,    58,    59,    60,    61,    62,    63,    64,    -1,
-      66,    67,    68,    -1,    70,    71,    39,    40,    -1,    -1,
-      -1,    -1,    78,    -1,    -1,    -1,    -1,    -1,    84,    -1,
-      -1,    -1,    -1,    -1,    57,    58,    59,    60,    61,    62,
-      63,    64,    -1,    66,    67,    68,    -1,    70,    71,    39,
-      40,    -1,    -1,    -1,    -1,    78,    -1,    -1,    -1,    -1,
-      -1,    84,    -1,    -1,    -1,    -1,    -1,    57,    58,    59,
-      60,    61,    62,    63,    64,    -1,    66,    67,    68,    -1,
-      70,    71,    39,    40,    -1,    -1,    -1,    -1,    78,    -1,
-      80,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      57,    58,    59,    60,    61,    62,    63,    64,    -1,    66,
-      67,    68,    -1,    70,    71,    39,    40,    -1,    -1,    -1,
-      -1,    78,    -1,    80,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    57,    58,    59,    60,    61,    62,    63,
-      64,    -1,    66,    67,    68,    -1,    70,    71,    39,    40,
-      -1,    -1,    -1,    -1,    78,    -1,    80,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    57,    58,    59,    60,
-      61,    62,    63,    64,    -1,    66,    67,    68,    -1,    70,
-      71,    39,    40,    -1,    -1,    -1,    -1,    78,    -1,    80,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    57,
-      58,    59,    60,    61,    62,    63,    64,    -1,    66,    67,
-      68,    -1,    70,    71,    39,    40,    -1,    -1,    -1,    -1,
-      78,    -1,    80,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    57,    58,    59,    60,    61,    62,    63,    64,
-      -1,    66,    67,    68,    -1,    70,    71,    39,    40,    -1,
-      -1,    -1,    -1,    78,    -1,    80,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    57,    58,    59,    60,    61,
-      62,    63,    64,    -1,    66,    67,    68,    -1,    70,    71,
-      39,    40,    -1,    75,    -1,    -1,    78,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    57,    58,
-      59,    60,    61,    62,    63,    64,    -1,    66,    67,    68,
-      -1,    70,    71,    39,    40,    -1,    75,    -1,    -1,    78,
+       0,    50,    30,    44,    56,   181,    75,    76,    77,    42,
+      43,    80,    81,    82,    30,    83,    85,    62,    18,   294,
+       3,     7,    59,     0,    74,    62,   301,   302,   303,     7,
+      74,    76,    82,    61,    83,    74,    80,    70,    79,    72,
+      68,    18,    74,    82,    77,    61,    46,    47,    81,    49,
+      82,   119,    68,    39,   103,    38,     3,    77,     5,    59,
+       7,    81,    62,    74,    74,    74,     7,    78,    78,    78,
+     119,    74,     7,    74,    79,    78,   125,    78,    74,    39,
+      40,    41,    78,    55,    56,   137,   155,   156,   157,    68,
+      69,   140,    79,   269,    37,    38,     7,   273,    57,    58,
+      59,    60,    73,    74,    79,   281,    39,    74,    75,    76,
+      77,    78,    79,    80,    81,    82,   116,   169,    85,    74,
+      75,    73,   174,    73,    74,    74,   175,    29,    30,   305,
+     147,   148,   149,   150,     7,   184,    81,   145,   146,    44,
+       8,     9,    10,    11,    12,    13,    14,    15,    16,    17,
+      18,    19,    20,    21,    22,    23,    24,    44,    45,    46,
+      47,    48,    49,    50,    51,    52,    53,    54,    61,   151,
+     152,    65,   139,   201,   141,   142,   143,   144,   145,   146,
+     147,   148,   149,   150,   151,   152,   153,   154,   155,   156,
+     157,   153,   154,    64,   243,   244,   245,   246,    44,    66,
+      78,    73,    39,    39,     7,   257,     7,     3,     4,     5,
+       6,     7,    80,    77,    77,    77,    77,    73,    73,     3,
+      78,    78,   271,    74,    32,   274,    73,    77,    27,    25,
+      74,    79,    73,    75,   262,    80,    75,    75,    73,   288,
+      18,    37,    38,    39,    75,   245,    42,    43,    78,    44,
+       8,     9,    10,    11,    12,    13,    14,    15,    16,    17,
+      18,    19,    20,    21,    22,    23,    24,    63,    64,    38,
+      47,    67,   285,   285,   114,    55,   119,   262,    40,   255,
+     139,    77,   116,   143,    -1,    -1,    82,   141,   255,     3,
+       4,     5,     6,     7,     8,     9,    10,    11,    12,    13,
+      14,    15,    16,    17,    18,    19,    20,    21,    22,    23,
+      24,    25,    26,    71,    28,   142,   144,    31,    32,    33,
+      34,    35,    36,    37,    38,    39,    -1,    -1,    42,    43,
+      -1,    -1,     8,     9,    10,    11,    12,    13,    14,    15,
+      16,    17,    18,    19,    20,    21,    22,    23,    24,    63,
+      64,    -1,    -1,    67,    -1,    -1,    -1,    -1,    -1,    73,
+      -1,    -1,    -1,    77,    -1,    79,    80,     3,     4,     5,
+       6,     7,     8,     9,    10,    11,    12,    13,    14,    15,
+      16,    17,    18,    19,    20,    21,    22,    23,    24,    25,
+      26,    -1,    28,    -1,    -1,    31,    32,    33,    34,    35,
+      36,    37,    38,    39,    80,    -1,    42,    43,     7,     8,
+       9,    10,    11,    12,    13,    14,    15,    16,    17,    18,
+      19,    20,    21,    22,    23,    24,    -1,    63,    64,    -1,
+      -1,    67,    -1,    -1,    -1,    -1,    -1,    73,    -1,    -1,
+      39,    77,    -1,    79,     3,     4,     5,     6,     7,     8,
+       9,    10,    11,    12,    13,    14,    15,    16,    17,    18,
+      19,    20,    21,    22,    23,    24,    25,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    37,    38,
+      39,    -1,    -1,    42,    43,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,     3,     4,     5,     6,     7,     8,     9,
+      10,    11,    12,    -1,    63,    64,    16,    17,    67,    -1,
+      -1,    -1,    22,    23,    24,    25,    -1,    -1,    77,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    37,    38,    39,
+      -1,    -1,    42,    43,     3,     4,     5,     6,     7,    -1,
+      -1,     3,     4,     5,     6,     7,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    63,    64,    -1,    25,    67,    -1,    -1,
+      -1,    -1,    -1,    25,    -1,    -1,    -1,    77,    37,    38,
+      39,    -1,    -1,    42,    43,    37,    38,    39,    -1,    -1,
+      42,    43,    -1,    -1,     3,     4,     5,     6,     7,    -1,
+      -1,    -1,    -1,    -1,    63,    64,    -1,    -1,    67,    -1,
+      -1,    63,    64,    -1,    73,    67,    25,    -1,    77,    -1,
+      -1,    -1,    -1,    -1,    -1,    77,    -1,    -1,    37,    38,
+      39,    -1,    -1,    42,    43,     3,     4,     5,     6,     7,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    57,    58,    59,    60,    61,    62,    63,    64,    -1,
-      66,    67,    68,    -1,    70,    71,    39,    40,    -1,    -1,
-      -1,    77,    78,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    57,    58,    59,    60,    61,    62,
-      63,    64,    -1,    66,    67,    68,    -1,    70,    71,    39,
-      40,    -1,    75,    -1,    -1,    78,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    57,    58,    59,
-      60,    61,    62,    63,    64,    -1,    66,    67,    68,    -1,
-      70,    71,    39,    40,    -1,    75,    -1,    -1,    78,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      57,    58,    59,    60,    61,    62,    63,    64,    -1,    66,
-      67,    68,    -1,    70,    71,    39,    40,    -1,    75,    -1,
-      -1,    78,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    57,    58,    59,    60,    61,    62,    63,
-      64,    -1,    66,    67,    68,    -1,    70,    71,    39,    40,
-      -1,    75,    -1,    -1,    78,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    57,    58,    59,    60,
-      61,    62,    63,    64,    -1,    66,    67,    68,    -1,    70,
-      71,    39,    40,    -1,    75,    -1,    -1,    78,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    57,
-      58,    59,    60,    61,    62,    63,    64,    -1,    66,    67,
-      68,    -1,    70,    71,    39,    40,    -1,    75,    -1,    -1,
-      78,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    57,    58,    59,    60,    61,    62,    63,    64,
-      -1,    66,    67,    68,    -1,    70,    71,    39,    40,    -1,
-      75,    -1,    -1,    78,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    57,    58,    59,    60,    61,
-      62,    63,    64,    -1,    66,    67,    68,    -1,    70,    71,
-      39,    40,    -1,    75,    -1,    -1,    78,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    57,    58,
-      59,    60,    61,    62,    63,    64,    -1,    66,    67,    68,
-      -1,    70,    71,    -1,    -1,    -1,    -1,    -1,    -1,    78,
-      46,    47,    48,    49,    50,    51,    52,    53,    54,    55,
-      56,     7,     8,     9,    10,    11,    12,    13,    14,    15,
-      16,    17,    18,    19,    20,    21,    22,    23,    24,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    83,     8,     9,
-      10,    11,    12,    13,    14,    15,    16,    17,    18,    19,
-      20,    21,    22,    23,    24,     8,     9,    10,    11,    12,
-      -1,    14,    15,    16,    17,    -1,    -1,    20,    21,    22,
-      23,    24,     8,     9,    10,    11,    12,    -1,    -1,    -1,
-      16,    17,    -1,    -1,    -1,    -1,    22,    23,    24,    46,
-      47,    48,    49,    50,    51,    52,    53,    54,    55,    56,
-      46,    47,    48,    49,    50,    51,    52,    53,    54,    55,
-      56
+      -1,    -1,    -1,    -1,    63,    64,    -1,    25,    67,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    77,    37,
+      38,    39,    -1,    -1,    42,    43,     8,     9,    10,    11,
+      12,    13,    14,    15,    16,    17,    18,    19,    20,    21,
+      22,    23,    24,    -1,    -1,    63,    64,    -1,    -1,    67,
+      -1,    -1,     0,    -1,    -1,    -1,    -1,    -1,    -1,    77,
+       8,     9,    10,    11,    12,    13,    14,    15,    16,    17,
+      18,    19,    20,    21,    22,    23,    24
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
@@ -1193,96 +1346,86 @@ static const yytype_int16 yycheck[] =
 static const yytype_uint8 yystos[] =
 {
        0,     8,     9,    10,    11,    12,    13,    14,    15,    16,
-      17,    18,    19,    20,    21,    22,    23,    24,    37,    38,
-      75,    90,    91,    94,    95,    96,   100,   102,   105,   106,
-     126,   127,   128,   134,   135,   136,   137,   138,   139,   140,
-     143,     8,    11,     8,     7,     7,     7,     0,    85,    91,
-      75,    81,   101,    41,    41,    22,    23,    24,   134,   138,
-     139,   134,   139,   134,     7,   142,    81,    81,    81,    92,
-       7,     7,     7,   134,   139,   134,   134,    46,    79,    83,
-     141,    75,    76,   107,   108,   143,   107,     7,   103,   104,
-       3,     4,     5,     6,     7,    25,    26,    28,    31,    32,
-      33,    34,    35,    36,    40,    41,    44,    45,    65,    66,
-      69,    79,    82,    93,    97,    98,    99,   101,   109,   110,
-     115,   116,   117,   118,   119,   120,   124,   125,   127,   128,
-     131,   133,   140,   144,   145,   146,   147,   148,   150,   151,
-     134,     7,   145,   148,   150,   151,   129,   130,   143,    84,
-     145,    83,     7,   124,    82,   108,     7,    82,    46,    76,
-      82,    46,    47,    48,    49,    50,    51,    52,    53,    54,
-      55,    56,    79,    83,   157,    79,    79,    79,    79,    79,
-      93,    75,    75,    75,   145,   147,     7,    79,   150,   151,
-     147,   147,    79,   148,     7,   150,   146,   134,   145,    75,
-      75,   148,    39,    40,    57,    58,    59,    60,    61,    62,
-      63,    64,    66,    67,    68,    70,    71,    75,    78,   153,
-     154,   155,   156,    41,    42,    43,   152,    44,    45,    72,
-      74,    46,    83,   157,    46,   157,    72,    74,    76,    80,
-       7,    84,   145,   141,    75,    75,   141,    75,     3,    40,
-     104,    75,   145,   132,   145,   145,   145,   134,   145,   149,
-     145,   145,     7,   121,   143,   145,    32,    75,   145,    80,
-      80,   145,   146,   146,   146,   146,   147,     7,     7,   145,
-     145,   145,   145,   145,     7,     7,    73,   130,   141,    84,
-      75,     3,    76,    80,    84,    80,    80,    80,    46,    75,
-       7,    80,    79,    80,    77,    46,   157,    46,   157,    75,
-      84,    75,    75,    75,   145,    93,    81,   145,   122,   145,
-      46,    93,   145,   145,   145,   145,   145,   145,    27,    29,
-      30,   111,   112,   113,   114,    75,   145,    80,    75,    75,
-      75,    75,    93,     3,     5,     7,    77,    82,   113,   114,
-     123,   124,   125,   145,    75,    77,    77,    77,    92,    80,
-      92,    92,    92,    93
+      17,    18,    19,    20,    21,    22,    23,    24,    87,    88,
+     115,   122,   123,   124,   125,   126,   127,   128,   129,   130,
+     131,   133,     7,     7,     7,     0,    88,     7,    39,   130,
+     132,   134,   135,   136,   138,   139,    79,    79,    79,    77,
+      81,   140,   132,   139,    73,    74,    44,    79,    95,    98,
+      99,   131,    98,     7,    96,    97,   116,   117,   131,     3,
+       4,     5,     6,     7,    25,    37,    38,    39,    42,    43,
+      63,    64,    67,    77,    82,   119,   141,   142,   143,   144,
+     145,   146,   147,   148,   149,   150,   151,   152,   153,   154,
+     155,   156,   157,    81,   136,   138,   137,   142,    89,    80,
+      99,   138,    80,    44,    74,    80,    74,    78,   138,    77,
+     155,   154,   155,   154,   154,    77,   155,   155,   154,   154,
+     154,   118,   120,   121,   125,   141,   154,    74,    82,    62,
+      76,    61,    65,    66,    64,    55,    56,    57,    58,    59,
+      60,    68,    69,    37,    38,    39,    40,    41,    44,    45,
+      46,    47,    48,    49,    50,    51,    52,    53,    54,   160,
+      42,    43,    70,    72,    77,    81,   141,    26,    28,    31,
+      32,    33,    34,    35,    36,    73,    80,    90,    91,    92,
+      93,    94,    95,   100,   101,   106,   107,   108,   109,   110,
+     111,   131,   133,   141,    73,     3,    38,    97,    71,   117,
+     118,    78,    39,    39,    78,   142,   145,   141,   146,   147,
+     148,   149,   150,   150,   151,   151,   151,   151,   152,   152,
+     153,   153,   154,   154,   154,   142,     7,     7,   142,   158,
+     159,   141,    82,    77,    77,    77,    77,    90,    73,    73,
+      73,   141,    73,     3,    78,    75,    78,    74,    82,   141,
+     141,   112,   131,   141,   141,    32,    73,   143,   142,    78,
+      78,    73,   135,    78,    77,    90,    79,   113,   141,    90,
+     141,    27,    29,    30,   102,   103,   104,   105,    73,    78,
+      90,     3,     5,     7,    75,    80,   104,   105,   114,   141,
+      73,    75,    75,    75,    89,    78,    89,    89,    89,    90
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    89,    90,    90,    90,    91,    91,    91,    91,    91,
-      91,    92,    92,    93,    93,    93,    93,    93,    93,    93,
-      93,    94,    94,    95,    96,    97,    97,    98,    98,    98,
-      99,    99,    99,   100,   100,   100,   101,   102,   103,   103,
-     103,   104,   104,   104,   105,   106,   107,   107,   108,   108,
-     109,   109,   110,   111,   111,   111,   112,   112,   113,   113,
-     113,   114,   115,   116,   117,   117,   118,   119,   120,   121,
-     121,   121,   121,   122,   122,   123,   123,   123,   123,   124,
-     125,   126,   127,   128,   129,   129,   129,   129,   130,   130,
-     130,   131,   132,   132,   132,   133,   134,   134,   135,   135,
-     136,   136,   136,   136,   136,   136,   136,   136,   136,   136,
-     136,   136,   136,   137,   137,   137,   138,   138,   139,   139,
-     140,   141,   141,   141,   142,   142,   142,   142,   142,   142,
-     143,   143,   143,   143,   143,   143,   143,   143,   144,   144,
-     144,   144,   144,   144,   144,   144,   144,   144,   145,   145,
-     145,   145,   145,   145,   146,   146,   147,   147,   147,   147,
-     147,   147,   147,   148,   148,   148,   148,   148,   148,   148,
-     148,   148,   148,   148,   148,   148,   148,   148,   148,   149,
-     149,   150,   150,   151,   151,   151,   151,   152,   152,   152,
-     153,   153,   153,   153,   154,   154,   154,   154,   154,   154,
-     155,   155,   155,   156,   156,   157,   157,   157,   157,   157,
-     157,   157,   157,   157,   157
+       0,    86,    87,    87,    88,    88,    89,    89,    90,    90,
+      90,    90,    90,    90,    91,    91,    92,    92,    93,    93,
+      93,    94,    94,    94,    95,    96,    96,    96,    97,    97,
+      97,    98,    98,    99,   100,   100,   101,   102,   102,   102,
+     103,   103,   104,   104,   104,   105,   106,   107,   108,   108,
+     109,   110,   111,   112,   112,   112,   113,   113,   114,   114,
+     115,   116,   116,   116,   116,   117,   117,   118,   119,   120,
+     120,   121,   121,   122,   122,   123,   123,   124,   124,   125,
+     125,   125,   125,   125,   125,   125,   125,   125,   125,   126,
+     126,   127,   128,   128,   129,   129,   130,   130,   130,   130,
+     130,   131,   131,   132,   132,   133,   134,   134,   135,   135,
+     136,   136,   137,   138,   138,   139,   139,   139,   140,   140,
+     140,   141,   141,   142,   142,   143,   143,   144,   144,   145,
+     145,   146,   146,   147,   147,   148,   148,   149,   149,   149,
+     150,   150,   150,   150,   150,   151,   151,   151,   152,   152,
+     152,   153,   153,   153,   153,   154,   154,   155,   155,   155,
+     155,   155,   155,   155,   155,   155,   155,   155,   156,   156,
+     156,   156,   156,   156,   156,   157,   157,   157,   157,   157,
+     157,   158,   158,   159,   159,   160,   160,   160,   160,   160,
+     160,   160,   160,   160,   160,   160
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     2,     2,     1,     1,     1,     1,     1,     1,
-       1,     0,     2,     1,     1,     1,     1,     1,     1,     1,
-       2,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     1,     3,     6,     1,     3,
-       2,     1,     3,     4,     6,     6,     1,     2,     3,     4,
-       5,     7,     7,     2,     1,     1,     1,     2,     4,     4,
-       4,     3,     2,     2,     2,     3,     5,     7,     9,     0,
-       3,     4,     2,     0,     1,     0,     1,     1,     1,     3,
-       3,     2,     2,     5,     0,     3,     3,     1,     2,     3,
-       1,     4,     0,     3,     1,     3,     1,     1,     2,     2,
-       1,     1,     1,     1,     2,     2,     1,     1,     2,     1,
-       2,     2,     2,     1,     1,     1,     1,     1,     1,     1,
-       3,     3,     2,     4,     1,     3,     2,     3,     4,     3,
-       1,     2,     2,     2,     3,     3,     3,     4,     2,     2,
-       4,     4,     4,     6,     6,     4,     6,     6,     3,     3,
-       3,     3,     5,     1,     3,     1,     2,     2,     2,     2,
-       2,     2,     1,     3,     1,     1,     1,     1,     1,     1,
-       1,     2,     2,     4,     1,     2,     2,     3,     3,     1,
-       1,     4,     4,     2,     2,     2,     4,     1,     1,     1,
+       0,     2,     1,     2,     1,     1,     0,     2,     1,     1,
+       1,     1,     1,     1,     1,     2,     1,     1,     1,     1,
+       1,     1,     1,     1,     3,     1,     3,     2,     1,     3,
+       4,     1,     2,     3,     5,     7,     7,     2,     1,     1,
+       1,     2,     4,     4,     4,     3,     2,     2,     2,     3,
+       5,     7,     9,     0,     2,     1,     0,     1,     0,     1,
+       3,     0,     3,     3,     1,     2,     1,     1,     3,     1,
+       1,     2,     2,     2,     5,     2,     5,     2,     5,     1,
        1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
        1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1
+       1,     1,     2,     1,     2,     3,     0,     1,     1,     3,
+       1,     3,     1,     1,     2,     1,     2,     4,     3,     2,
+       4,     1,     3,     1,     3,     1,     5,     1,     3,     1,
+       3,     1,     3,     1,     3,     1,     3,     1,     3,     3,
+       1,     3,     3,     3,     3,     1,     3,     3,     1,     3,
+       3,     1,     3,     3,     3,     1,     2,     1,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     4,     1,     4,
+       4,     3,     3,     2,     2,     1,     1,     1,     1,     1,
+       3,     0,     1,     1,     3,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     1
 };
 
 
@@ -1745,80 +1888,50 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 2: /* program: program TOKEN_EOF  */
-#line 130 "Parser/parser.y"
+  case 2: /* translation_unit: external_declaration  */
+#line 438 "Parser/parser.y"
                     {
-                        p_treeRoot = yyvsp[-1].treeNode;
-                        LOG_DEBUG("Reached end of file!\n");
-                        return 0;
+                        NodeCreate(&yyval.treeNode, NODE_TRANSLATION_UNIT);
+                        NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                        p_treeRoot = yyval.treeNode;
                     }
-#line 1756 "Parser/parser.tab.c"
+#line 1899 "Parser/parser.tab.c"
     break;
 
-  case 3: /* program: program global_statement  */
-#line 136 "Parser/parser.y"
+  case 3: /* translation_unit: translation_unit external_declaration  */
+#line 444 "Parser/parser.y"
                     {
-                        TreeNode_t* p_Head = yyvsp[-1].treeNode;
-                        if (yyvsp[0].treeNode != NULL) {
-                            if (NodeAppendSibling(&p_Head, yyvsp[0].treeNode)) { YYERROR; }
-                        }
-                        yyval.treeNode = p_Head;
+                        TreeNode_t* pRoot = yyvsp[-1].treeNode;
+                        TreeNode_t* pHead = pRoot->p_firstChild;
+                        if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
+                        pRoot->p_firstChild = pHead;
+                        pRoot->childNumber++;
+                        yyval.treeNode = pRoot;
+                        p_treeRoot = yyval.treeNode;
                     }
-#line 1768 "Parser/parser.tab.c"
+#line 1913 "Parser/parser.tab.c"
     break;
 
-  case 4: /* program: global_statement  */
-#line 144 "Parser/parser.y"
-                    {
-                        yyval.treeNode = yyvsp[0].treeNode;
-                    }
-#line 1776 "Parser/parser.tab.c"
+  case 4: /* external_declaration: function_definition  */
+#line 457 "Parser/parser.y"
+                                        { yyval.treeNode = yyvsp[0].treeNode; }
+#line 1919 "Parser/parser.tab.c"
     break;
 
-  case 5: /* global_statement: type_declaration  */
-#line 150 "Parser/parser.y"
-                                         { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1782 "Parser/parser.tab.c"
+  case 5: /* external_declaration: declaration  */
+#line 458 "Parser/parser.y"
+                                { yyval.treeNode = yyvsp[0].treeNode; }
+#line 1925 "Parser/parser.tab.c"
     break;
 
-  case 6: /* global_statement: var_declaration  */
-#line 151 "Parser/parser.y"
-                                                { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1788 "Parser/parser.tab.c"
-    break;
-
-  case 7: /* global_statement: function_prototype  */
-#line 152 "Parser/parser.y"
-                                           { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1794 "Parser/parser.tab.c"
-    break;
-
-  case 8: /* global_statement: function_definition  */
-#line 153 "Parser/parser.y"
-                                            { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1800 "Parser/parser.tab.c"
-    break;
-
-  case 9: /* global_statement: def_undef_definition  */
-#line 154 "Parser/parser.y"
-                                             { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1806 "Parser/parser.tab.c"
-    break;
-
-  case 10: /* global_statement: TOKEN_SEMI  */
-#line 155 "Parser/parser.y"
-                                   { yyval.treeNode = NULL; }
-#line 1812 "Parser/parser.tab.c"
-    break;
-
-  case 11: /* statement_sequence: %empty  */
-#line 159 "Parser/parser.y"
+  case 6: /* statement_sequence: %empty  */
+#line 462 "Parser/parser.y"
                                      { yyval.treeNode = NULL; }
-#line 1818 "Parser/parser.tab.c"
+#line 1931 "Parser/parser.tab.c"
     break;
 
-  case 12: /* statement_sequence: statement_sequence statement  */
-#line 161 "Parser/parser.y"
+  case 7: /* statement_sequence: statement_sequence statement  */
+#line 464 "Parser/parser.y"
                        {
                            TreeNode_t* pHead = yyvsp[-1].treeNode;
                            if (yyvsp[0].treeNode != NULL) {
@@ -1830,225 +1943,153 @@ yyreduce:
                            }
                            yyval.treeNode = pHead;
                        }
-#line 1834 "Parser/parser.tab.c"
+#line 1947 "Parser/parser.tab.c"
     break;
 
-  case 13: /* statement: selection_statement  */
-#line 174 "Parser/parser.y"
+  case 8: /* statement: selection_statement  */
+#line 477 "Parser/parser.y"
                                       { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1840 "Parser/parser.tab.c"
+#line 1953 "Parser/parser.tab.c"
     break;
 
-  case 14: /* statement: iteration_statement  */
-#line 175 "Parser/parser.y"
+  case 9: /* statement: iteration_statement  */
+#line 478 "Parser/parser.y"
                                             { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1846 "Parser/parser.tab.c"
+#line 1959 "Parser/parser.tab.c"
     break;
 
-  case 15: /* statement: jump_statement  */
-#line 176 "Parser/parser.y"
+  case 10: /* statement: jump_statement  */
+#line 479 "Parser/parser.y"
                                        { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1852 "Parser/parser.tab.c"
+#line 1965 "Parser/parser.tab.c"
     break;
 
-  case 16: /* statement: compound_statement  */
-#line 177 "Parser/parser.y"
+  case 11: /* statement: compound_statement  */
+#line 480 "Parser/parser.y"
                                            { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1858 "Parser/parser.tab.c"
+#line 1971 "Parser/parser.tab.c"
     break;
 
-  case 17: /* statement: var_declaration  */
-#line 178 "Parser/parser.y"
-                                        { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1864 "Parser/parser.tab.c"
-    break;
-
-  case 18: /* statement: var_assignment  */
-#line 179 "Parser/parser.y"
-                                       { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1870 "Parser/parser.tab.c"
-    break;
-
-  case 19: /* statement: function_definition  */
-#line 180 "Parser/parser.y"
-                                            { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1876 "Parser/parser.tab.c"
-    break;
-
-  case 20: /* statement: exp TOKEN_SEMI  */
-#line 181 "Parser/parser.y"
-                                       { yyval.treeNode = yyvsp[-1].treeNode; }
-#line 1882 "Parser/parser.tab.c"
-    break;
-
-  case 21: /* def_undef_definition: define  */
-#line 188 "Parser/parser.y"
+  case 12: /* statement: declaration  */
+#line 481 "Parser/parser.y"
                                     { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1888 "Parser/parser.tab.c"
+#line 1977 "Parser/parser.tab.c"
     break;
 
-  case 22: /* def_undef_definition: undef  */
-#line 189 "Parser/parser.y"
-                                    { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1894 "Parser/parser.tab.c"
+  case 13: /* statement: expression_statement  */
+#line 482 "Parser/parser.y"
+                                             { yyval.treeNode = yyvsp[0].treeNode; }
+#line 1983 "Parser/parser.tab.c"
     break;
 
-  case 23: /* define: TOKEN_PP_DEFINE  */
-#line 193 "Parser/parser.y"
-            {
-                NodeCreate(&(yyval.treeNode), NODE_PP_DEFINE);
-                yyval.treeNode->nodeData.sVal = strdup(pp_name);  //MAX
-
-                if (pp_value[0] != '\0') {
-                    TreeNode_t* pVal;
-                    NodeCreate(&pVal, NODE_STRING);
-                    pVal->nodeData.sVal = strdup(pp_value);  //10
-                    NodeAddChild(yyval.treeNode, pVal);
-                }
-            }
-#line 1910 "Parser/parser.tab.c"
+  case 14: /* expression_statement: TOKEN_SEMI  */
+#line 487 "Parser/parser.y"
+                    {
+                        yyval.treeNode = NULL;
+                    }
+#line 1991 "Parser/parser.tab.c"
     break;
 
-  case 24: /* undef: TOKEN_PP_UNDEF  */
-#line 207 "Parser/parser.y"
-            {
-                NodeCreate(&(yyval.treeNode), NODE_PP_UNDEF);
-                yyval.treeNode->nodeData.sVal = strdup(pp_name);
-            }
-#line 1919 "Parser/parser.tab.c"
+  case 15: /* expression_statement: expression TOKEN_SEMI  */
+#line 491 "Parser/parser.y"
+                    {
+                        yyval.treeNode = yyvsp[-1].treeNode;
+                    }
+#line 1999 "Parser/parser.tab.c"
     break;
 
-  case 25: /* selection_statement: if_statement  */
-#line 219 "Parser/parser.y"
+  case 16: /* selection_statement: if_statement  */
+#line 500 "Parser/parser.y"
                                    { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1925 "Parser/parser.tab.c"
+#line 2005 "Parser/parser.tab.c"
     break;
 
-  case 26: /* selection_statement: switch_statement  */
-#line 220 "Parser/parser.y"
+  case 17: /* selection_statement: switch_statement  */
+#line 501 "Parser/parser.y"
                                        { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1931 "Parser/parser.tab.c"
+#line 2011 "Parser/parser.tab.c"
     break;
 
-  case 27: /* jump_statement: break_statement  */
-#line 223 "Parser/parser.y"
+  case 18: /* jump_statement: break_statement  */
+#line 504 "Parser/parser.y"
                                       { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1937 "Parser/parser.tab.c"
-    break;
-
-  case 28: /* jump_statement: return_statement  */
-#line 224 "Parser/parser.y"
-                                       { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1943 "Parser/parser.tab.c"
-    break;
-
-  case 29: /* jump_statement: continue_statement  */
-#line 225 "Parser/parser.y"
-                                         { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1949 "Parser/parser.tab.c"
-    break;
-
-  case 30: /* iteration_statement: do_while_loop  */
-#line 228 "Parser/parser.y"
-                                      { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1955 "Parser/parser.tab.c"
-    break;
-
-  case 31: /* iteration_statement: while_loop  */
-#line 229 "Parser/parser.y"
-                                   { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1961 "Parser/parser.tab.c"
-    break;
-
-  case 32: /* iteration_statement: for_loop  */
-#line 230 "Parser/parser.y"
-                                 { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1967 "Parser/parser.tab.c"
-    break;
-
-  case 33: /* type_declaration: enum_declaration  */
-#line 233 "Parser/parser.y"
-                                        { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1973 "Parser/parser.tab.c"
-    break;
-
-  case 34: /* type_declaration: struct_declaration  */
-#line 234 "Parser/parser.y"
-                                          { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1979 "Parser/parser.tab.c"
-    break;
-
-  case 35: /* type_declaration: union_declaration  */
-#line 235 "Parser/parser.y"
-                                         { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1985 "Parser/parser.tab.c"
-    break;
-
-  case 36: /* compound_statement: TOKEN_LEFT_BRACE statement_sequence TOKEN_RIGHT_BRACE  */
-#line 239 "Parser/parser.y"
-                        {
-                            if (yyvsp[-1].treeNode != NULL) {
-                                TreeNode_t* pEnd;
-                                TreeNode_t* pStart;
-                                TreeNode_t* pHead;
-                                NodeCreate(&pEnd,   NODE_END_SCOPE);
-                                NodeCreate(&pStart, NODE_START_SCOPE);
-                                pHead = yyvsp[-1].treeNode;
-                                if (NodeAppendSibling(&pHead, pEnd))   { YYERROR; }
-                                if (NodeAppendSibling(&pStart, pHead)) { YYERROR; }
-                                yyval.treeNode = pStart;
-                            } else {
-                                TreeNode_t* pNull;
-                                NodeCreate(&pNull, NODE_NULL);
-                                yyval.treeNode = pNull;
-                            }
-                        }
-#line 2007 "Parser/parser.tab.c"
-    break;
-
-  case 37: /* enum_declaration: TOKEN_ENUM TOKEN_ID TOKEN_LEFT_BRACE enum_member_list TOKEN_RIGHT_BRACE TOKEN_SEMI  */
-#line 264 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_ENUM_DECLARATION);
-                            yyval.treeNode->nodeData.sVal = yyvsp[-4].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
-                        }
 #line 2017 "Parser/parser.tab.c"
     break;
 
-  case 38: /* enum_member_list: enum_member  */
-#line 271 "Parser/parser.y"
-                                    { yyval.treeNode = yyvsp[0].treeNode; }
+  case 19: /* jump_statement: return_statement  */
+#line 505 "Parser/parser.y"
+                                       { yyval.treeNode = yyvsp[0].treeNode; }
 #line 2023 "Parser/parser.tab.c"
     break;
 
-  case 39: /* enum_member_list: enum_member_list TOKEN_COMMA enum_member  */
-#line 273 "Parser/parser.y"
+  case 20: /* jump_statement: continue_statement  */
+#line 506 "Parser/parser.y"
+                                         { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2029 "Parser/parser.tab.c"
+    break;
+
+  case 21: /* iteration_statement: do_while_loop  */
+#line 509 "Parser/parser.y"
+                                      { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2035 "Parser/parser.tab.c"
+    break;
+
+  case 22: /* iteration_statement: while_loop  */
+#line 510 "Parser/parser.y"
+                                   { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2041 "Parser/parser.tab.c"
+    break;
+
+  case 23: /* iteration_statement: for_loop  */
+#line 511 "Parser/parser.y"
+                                 { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2047 "Parser/parser.tab.c"
+    break;
+
+  case 24: /* compound_statement: TOKEN_LEFT_BRACE statement_sequence TOKEN_RIGHT_BRACE  */
+#line 515 "Parser/parser.y"
+                        {
+                            NodeCreate(&(yyval.treeNode), NODE_BLOCK);
+                            if (yyvsp[-1].treeNode != NULL) {
+                                NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
+                            }
+                        }
+#line 2058 "Parser/parser.tab.c"
+    break;
+
+  case 25: /* enum_member_list: enum_member  */
+#line 524 "Parser/parser.y"
+                                    { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2064 "Parser/parser.tab.c"
+    break;
+
+  case 26: /* enum_member_list: enum_member_list TOKEN_COMMA enum_member  */
+#line 526 "Parser/parser.y"
                         {
                             TreeNode_t* pHead = yyvsp[-2].treeNode;
                             if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
                             yyval.treeNode = pHead;
                         }
-#line 2033 "Parser/parser.tab.c"
+#line 2074 "Parser/parser.tab.c"
     break;
 
-  case 40: /* enum_member_list: enum_member_list TOKEN_COMMA  */
-#line 279 "Parser/parser.y"
+  case 27: /* enum_member_list: enum_member_list TOKEN_COMMA  */
+#line 532 "Parser/parser.y"
                         { yyval.treeNode = yyvsp[-1].treeNode; }
-#line 2039 "Parser/parser.tab.c"
+#line 2080 "Parser/parser.tab.c"
     break;
 
-  case 41: /* enum_member: TOKEN_ID  */
-#line 283 "Parser/parser.y"
+  case 28: /* enum_member: TOKEN_ID  */
+#line 536 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_ENUM_MEMBER);
                             yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
                         }
-#line 2048 "Parser/parser.tab.c"
+#line 2089 "Parser/parser.tab.c"
     break;
 
-  case 42: /* enum_member: TOKEN_ID TOKEN_ASSIGN TOKEN_NUM  */
-#line 288 "Parser/parser.y"
+  case 29: /* enum_member: TOKEN_ID TOKEN_ASSIGN TOKEN_NUM  */
+#line 541 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_ENUM_MEMBER);
                             yyval.treeNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;
@@ -2057,11 +2098,11 @@ yyreduce:
                             pVal->nodeData.dVal = yyvsp[0].nodeData.dVal;  // guarda o valor!
                             NodeAddChild(yyval.treeNode, pVal);
                         }
-#line 2061 "Parser/parser.tab.c"
+#line 2102 "Parser/parser.tab.c"
     break;
 
-  case 43: /* enum_member: TOKEN_ID TOKEN_ASSIGN TOKEN_MINUS TOKEN_NUM  */
-#line 297 "Parser/parser.y"
+  case 30: /* enum_member: TOKEN_ID TOKEN_ASSIGN TOKEN_MINUS TOKEN_NUM  */
+#line 550 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_ENUM_MEMBER);
                             yyval.treeNode->nodeData.sVal = yyvsp[-3].nodeData.sVal;
@@ -2070,1687 +2111,1521 @@ yyreduce:
                             pVal->nodeData.dVal = -yyvsp[0].nodeData.dVal;
                             NodeAddChild(yyval.treeNode, pVal);
                         }
-#line 2074 "Parser/parser.tab.c"
+#line 2115 "Parser/parser.tab.c"
     break;
 
-  case 44: /* struct_declaration: TOKEN_STRUCT TOKEN_ID TOKEN_LEFT_BRACE struct_union_member_list TOKEN_RIGHT_BRACE TOKEN_SEMI  */
-#line 309 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_STRUCT_DECLARATION);
-                            yyval.treeNode->nodeData.sVal = yyvsp[-4].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
-                        }
-#line 2084 "Parser/parser.tab.c"
-    break;
-
-  case 45: /* union_declaration: TOKEN_UNION TOKEN_ID TOKEN_LEFT_BRACE struct_union_member_list TOKEN_RIGHT_BRACE TOKEN_SEMI  */
-#line 318 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_UNION_DECLARATION);
-                            yyval.treeNode->nodeData.sVal = yyvsp[-4].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
-                        }
-#line 2094 "Parser/parser.tab.c"
-    break;
-
-  case 46: /* struct_union_member_list: struct_member  */
-#line 327 "Parser/parser.y"
+  case 31: /* struct_union_member_list: struct_member  */
+#line 562 "Parser/parser.y"
                                              { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2100 "Parser/parser.tab.c"
+#line 2121 "Parser/parser.tab.c"
     break;
 
-  case 47: /* struct_union_member_list: struct_union_member_list struct_member  */
-#line 329 "Parser/parser.y"
+  case 32: /* struct_union_member_list: struct_union_member_list struct_member  */
+#line 564 "Parser/parser.y"
                               {
                                   TreeNode_t* pHead = yyvsp[-1].treeNode;
                                   if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
                                   yyval.treeNode = pHead;
                               }
-#line 2110 "Parser/parser.tab.c"
-    break;
-
-  case 48: /* struct_member: var_preamble TOKEN_ID TOKEN_SEMI  */
-#line 338 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_STRUCT_MEMBER);
-                            yyval.treeNode->nodeData.sVal = yyvsp[-1].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
-                        }
-#line 2120 "Parser/parser.tab.c"
-    break;
-
-  case 49: /* struct_member: var_preamble TOKEN_ID arr_size TOKEN_SEMI  */
-#line 344 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_ARRAY_DECLARATION);
-                            yyval.treeNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, yyvsp[-3].treeNode);
-                            NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                        }
 #line 2131 "Parser/parser.tab.c"
     break;
 
-  case 50: /* if_statement: TOKEN_IF TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES statement  */
-#line 357 "Parser/parser.y"
+  case 33: /* struct_member: declaration_specifiers declarator TOKEN_SEMI  */
+#line 573 "Parser/parser.y"
+                        {
+                            if (NodeAttachDeclSpecifiers(yyvsp[-1].treeNode, yyvsp[-2].treeNode)) { YYERROR; }
+                            if (yyvsp[-1].treeNode->nodeType == NODE_VAR_DECLARATION) {
+                                yyvsp[-1].treeNode->nodeType = NODE_STRUCT_MEMBER;
+                            }
+                            NodeFree(yyvsp[-2].treeNode);
+                            yyval.treeNode = yyvsp[-1].treeNode;
+                        }
+#line 2144 "Parser/parser.tab.c"
+    break;
+
+  case 34: /* if_statement: TOKEN_IF TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES statement  */
+#line 588 "Parser/parser.y"
                     {
                         NodeCreate(&(yyval.treeNode), NODE_IF);
                         NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);    //condition
                         NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);    //if true
                     }
-#line 2141 "Parser/parser.tab.c"
+#line 2154 "Parser/parser.tab.c"
     break;
 
-  case 51: /* if_statement: TOKEN_IF TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES statement TOKEN_ELSE statement  */
-#line 363 "Parser/parser.y"
+  case 35: /* if_statement: TOKEN_IF TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES statement TOKEN_ELSE statement  */
+#line 594 "Parser/parser.y"
                     {
                         NodeCreate(&(yyval.treeNode), NODE_IF);
                         NodeAddChild(yyval.treeNode, yyvsp[-4].treeNode);   //condition
                         NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);   //if true
                         NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);   //else
                     }
-#line 2152 "Parser/parser.tab.c"
+#line 2165 "Parser/parser.tab.c"
     break;
 
-  case 52: /* switch_statement: TOKEN_SWITCH TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES TOKEN_LEFT_BRACE switch_body TOKEN_RIGHT_BRACE  */
-#line 372 "Parser/parser.y"
+  case 36: /* switch_statement: TOKEN_SWITCH TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES TOKEN_LEFT_BRACE switch_body TOKEN_RIGHT_BRACE  */
+#line 603 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_SWITCH);
                             NodeAddChild(yyval.treeNode, yyvsp[-4].treeNode);
                             NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                         }
-#line 2162 "Parser/parser.tab.c"
+#line 2175 "Parser/parser.tab.c"
     break;
 
-  case 53: /* switch_body: case_list default_clause  */
-#line 380 "Parser/parser.y"
+  case 37: /* switch_body: case_list default_clause  */
+#line 611 "Parser/parser.y"
                     {
                         TreeNode_t* pHead = yyvsp[-1].treeNode;
                         if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
                         yyval.treeNode = pHead;
                     }
-#line 2172 "Parser/parser.tab.c"
+#line 2185 "Parser/parser.tab.c"
     break;
 
-  case 54: /* switch_body: case_list  */
-#line 386 "Parser/parser.y"
+  case 38: /* switch_body: case_list  */
+#line 617 "Parser/parser.y"
                     {
                         yyval.treeNode = yyvsp[0].treeNode;
                     }
-#line 2180 "Parser/parser.tab.c"
+#line 2193 "Parser/parser.tab.c"
     break;
 
-  case 55: /* switch_body: default_clause  */
-#line 390 "Parser/parser.y"
+  case 39: /* switch_body: default_clause  */
+#line 621 "Parser/parser.y"
                     {
                         yyval.treeNode = yyvsp[0].treeNode;
                     }
-#line 2188 "Parser/parser.tab.c"
+#line 2201 "Parser/parser.tab.c"
     break;
 
-  case 56: /* case_list: case_clause  */
-#line 396 "Parser/parser.y"
+  case 40: /* case_list: case_clause  */
+#line 627 "Parser/parser.y"
                     {
                         yyval.treeNode = yyvsp[0].treeNode;
                     }
-#line 2196 "Parser/parser.tab.c"
+#line 2209 "Parser/parser.tab.c"
     break;
 
-  case 57: /* case_list: case_list case_clause  */
-#line 400 "Parser/parser.y"
+  case 41: /* case_list: case_list case_clause  */
+#line 631 "Parser/parser.y"
                     {
                         TreeNode_t* pHead = yyvsp[-1].treeNode;
                         if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
                         yyval.treeNode = pHead;
                     }
-#line 2206 "Parser/parser.tab.c"
+#line 2219 "Parser/parser.tab.c"
     break;
 
-  case 58: /* case_clause: TOKEN_CASE TOKEN_NUM TOKEN_COLON statement_sequence  */
-#line 408 "Parser/parser.y"
+  case 42: /* case_clause: TOKEN_CASE TOKEN_NUM TOKEN_COLON statement_sequence  */
+#line 639 "Parser/parser.y"
                     {
                           NodeCreate(&(yyval.treeNode), NODE_CASE);
                           yyval.treeNode->nodeData.sVal = NULL;
                           yyval.treeNode->nodeData.dVal = yyvsp[-2].nodeData.dVal;
                           NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                          NodeCreate(&(yyval.treeNode), NODE_CASE);
-                          yyval.treeNode->nodeData.sVal = NULL;
-                          yyval.treeNode->nodeData.dVal = yyvsp[-2].nodeData.dVal;
-                          NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                     }
-#line 2221 "Parser/parser.tab.c"
+#line 2230 "Parser/parser.tab.c"
     break;
 
-  case 59: /* case_clause: TOKEN_CASE TOKEN_CNUM TOKEN_COLON statement_sequence  */
-#line 419 "Parser/parser.y"
+  case 43: /* case_clause: TOKEN_CASE TOKEN_CNUM TOKEN_COLON statement_sequence  */
+#line 646 "Parser/parser.y"
                     {
                           NodeCreate(&(yyval.treeNode), NODE_CASE);
                           yyval.treeNode->nodeData.dVal = yyvsp[-2].nodeData.dVal;
                           NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                     }
-#line 2231 "Parser/parser.tab.c"
+#line 2240 "Parser/parser.tab.c"
     break;
 
-  case 60: /* case_clause: TOKEN_CASE TOKEN_ID TOKEN_COLON statement_sequence  */
-#line 425 "Parser/parser.y"
+  case 44: /* case_clause: TOKEN_CASE TOKEN_ID TOKEN_COLON statement_sequence  */
+#line 652 "Parser/parser.y"
                     {
                           NodeCreate(&(yyval.treeNode), NODE_CASE);
                           yyval.treeNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;  /* guarda o nome */
                           NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                     }
-#line 2241 "Parser/parser.tab.c"
+#line 2250 "Parser/parser.tab.c"
     break;
 
-  case 61: /* default_clause: TOKEN_DEFAULT TOKEN_COLON statement_sequence  */
-#line 433 "Parser/parser.y"
+  case 45: /* default_clause: TOKEN_DEFAULT TOKEN_COLON statement_sequence  */
+#line 660 "Parser/parser.y"
                     {
                         NodeCreate(&(yyval.treeNode), NODE_DEFAULT);
                         NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                     }
-#line 2250 "Parser/parser.tab.c"
+#line 2259 "Parser/parser.tab.c"
     break;
 
-  case 62: /* continue_statement: TOKEN_CONTINUE TOKEN_SEMI  */
-#line 444 "Parser/parser.y"
+  case 46: /* continue_statement: TOKEN_CONTINUE TOKEN_SEMI  */
+#line 671 "Parser/parser.y"
                         { NodeCreate(&(yyval.treeNode), NODE_CONTINUE); }
-#line 2256 "Parser/parser.tab.c"
+#line 2265 "Parser/parser.tab.c"
     break;
 
-  case 63: /* break_statement: TOKEN_BREAK TOKEN_SEMI  */
-#line 448 "Parser/parser.y"
+  case 47: /* break_statement: TOKEN_BREAK TOKEN_SEMI  */
+#line 675 "Parser/parser.y"
                         { NodeCreate(&(yyval.treeNode), NODE_BREAK); }
-#line 2262 "Parser/parser.tab.c"
-    break;
-
-  case 64: /* return_statement: TOKEN_RETURN TOKEN_SEMI  */
-#line 452 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_RETURN);
-                            yyval.treeNode->nodeData.sVal = currentFunction;
-                        }
 #line 2271 "Parser/parser.tab.c"
     break;
 
-  case 65: /* return_statement: TOKEN_RETURN exp TOKEN_SEMI  */
-#line 457 "Parser/parser.y"
+  case 48: /* return_statement: TOKEN_RETURN TOKEN_SEMI  */
+#line 679 "Parser/parser.y"
+                        {
+                            NodeCreate(&(yyval.treeNode), NODE_RETURN);
+                        }
+#line 2279 "Parser/parser.tab.c"
+    break;
+
+  case 49: /* return_statement: TOKEN_RETURN expression TOKEN_SEMI  */
+#line 683 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_RETURN);
                             NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                            yyval.treeNode->nodeData.sVal = currentFunction;
                         }
-#line 2281 "Parser/parser.tab.c"
+#line 2288 "Parser/parser.tab.c"
     break;
 
-  case 66: /* while_loop: TOKEN_WHILE TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES statement  */
-#line 469 "Parser/parser.y"
+  case 50: /* while_loop: TOKEN_WHILE TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES statement  */
+#line 694 "Parser/parser.y"
                     {
                         NodeCreate(&(yyval.treeNode), NODE_WHILE);
                         NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);    // Condition
                         NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);    // if true
                     }
-#line 2291 "Parser/parser.tab.c"
+#line 2298 "Parser/parser.tab.c"
     break;
 
-  case 67: /* do_while_loop: TOKEN_DO statement TOKEN_WHILE TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES TOKEN_SEMI  */
-#line 478 "Parser/parser.y"
+  case 51: /* do_while_loop: TOKEN_DO statement TOKEN_WHILE TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES TOKEN_SEMI  */
+#line 703 "Parser/parser.y"
                     {
                         NodeCreate(&(yyval.treeNode), NODE_DO_WHILE);
                         NodeAddChild(yyval.treeNode, yyvsp[-5].treeNode);
                         NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
                     }
-#line 2301 "Parser/parser.tab.c"
+#line 2308 "Parser/parser.tab.c"
     break;
 
-  case 68: /* for_loop: TOKEN_FOR TOKEN_LEFT_PARENTHESES for_init_field TOKEN_SEMI for_condition TOKEN_SEMI for_assignment_field TOKEN_RIGHT_PARENTHESES statement  */
-#line 486 "Parser/parser.y"
+  case 52: /* for_loop: TOKEN_FOR TOKEN_LEFT_PARENTHESES for_init_field TOKEN_SEMI for_condition TOKEN_SEMI for_assignment_field TOKEN_RIGHT_PARENTHESES statement  */
+#line 711 "Parser/parser.y"
                     {
-                        TreeNode_t* pNodeWhile;
-                        TreeNode_t* pLoopBody = yyvsp[0].treeNode;
+                        TreeNode_t* pNull;
 
-                        /* só append do assignment se não for vazio */
-                        if (yyvsp[-2].treeNode != NULL) {
-                            if (NodeAppendSibling(&pLoopBody, yyvsp[-2].treeNode)) { YYERROR; }
-                        }
+                        NodeCreate(&(yyval.treeNode), NODE_FOR);
 
-                        NodeCreate(&pNodeWhile, NODE_WHILE);
-
-                        /* só adiciona condição se não for vazia */
-                        if (yyvsp[-4].treeNode != NULL) {
-                            NodeAddChild(pNodeWhile, yyvsp[-4].treeNode);
-                        }
-
-                        NodeAddChild(pNodeWhile, pLoopBody);
-
-                        /* só faz sequence se o init não for vazio */
                         if (yyvsp[-6].treeNode != NULL) {
-                            TreeNode_t* pForSequence = yyvsp[-6].treeNode;
-                            if (NodeAppendSibling(&pForSequence, pNodeWhile)) { YYERROR; }
-                            yyval.treeNode = pForSequence;
+                            NodeAddChild(yyval.treeNode, yyvsp[-6].treeNode);
                         } else {
-                            yyval.treeNode = pNodeWhile;
+                            NodeCreate(&pNull, NODE_NULL);
+                            NodeAddChild(yyval.treeNode, pNull);
+                        }
+
+                        if (yyvsp[-4].treeNode != NULL) {
+                            NodeAddChild(yyval.treeNode, yyvsp[-4].treeNode);
+                        } else {
+                            NodeCreate(&pNull, NODE_NULL);
+                            NodeAddChild(yyval.treeNode, pNull);
+                        }
+
+                        if (yyvsp[-2].treeNode != NULL) {
+                            NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
+                        } else {
+                            NodeCreate(&pNull, NODE_NULL);
+                            NodeAddChild(yyval.treeNode, pNull);
+                        }
+
+                        if (yyvsp[0].treeNode != NULL) {
+                            NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                        } else {
+                            NodeCreate(&pNull, NODE_NULL);
+                            NodeAddChild(yyval.treeNode, pNull);
                         }
                     }
-#line 2333 "Parser/parser.tab.c"
+#line 2346 "Parser/parser.tab.c"
     break;
 
-  case 69: /* for_init_field: %empty  */
-#line 515 "Parser/parser.y"
+  case 53: /* for_init_field: %empty  */
+#line 746 "Parser/parser.y"
                            { yyval.treeNode = NULL; }
-#line 2339 "Parser/parser.tab.c"
-    break;
-
-  case 70: /* for_init_field: TOKEN_ID TOKEN_ASSIGN exp  */
-#line 517 "Parser/parser.y"
-                    {
-                        TreeNode_t* pNode;
-                        NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                        yyval.treeNode->nodeData.dVal = OP_ASSIGN;
-                        NodeAddNewChild(yyval.treeNode, &pNode, NODE_IDENTIFIER);
-                        pNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;
-                        NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                    }
 #line 2352 "Parser/parser.tab.c"
     break;
 
-  case 71: /* for_init_field: var_preamble TOKEN_ID TOKEN_ASSIGN exp  */
-#line 526 "Parser/parser.y"
+  case 54: /* for_init_field: declaration_specifiers init_declarator_list  */
+#line 748 "Parser/parser.y"
                     {
-                        TreeNode_t* pNode;
-                        NodeCreate(&(yyval.treeNode), NODE_VAR_DECLARATION);
-                        yyval.treeNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;
-                        NodeAddChild(yyval.treeNode, yyvsp[-3].treeNode);
-                        TreeNode_t* pAssign;
-                        NodeCreate(&pAssign, NODE_OPERATOR);
-                        pAssign->nodeData.dVal = OP_ASSIGN;
-                        NodeAddNewChild(pAssign, &pNode, NODE_IDENTIFIER);
-                        pNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;
-                        NodeAddChild(pAssign, yyvsp[0].treeNode);
-                        if (NodeAppendSibling(&(yyval.treeNode), pAssign)) { YYERROR; }
+                        TreeNode_t *pNode = yyvsp[0].treeNode;
+                        do {
+                            if (pNode->nodeType == NODE_VAR_DECLARATION ||
+                                pNode->nodeType == NODE_ARRAY_DECLARATION) {
+                                if (NodeAttachDeclSpecifiers(pNode, yyvsp[-1].treeNode)) { YYERROR; }
+                            }
+                            pNode = pNode->p_sibling;
+                        } while (pNode != NULL);
+                        NodeFree(yyvsp[-1].treeNode);
+                        yyval.treeNode = yyvsp[0].treeNode;
                     }
-#line 2370 "Parser/parser.tab.c"
+#line 2369 "Parser/parser.tab.c"
     break;
 
-  case 72: /* for_init_field: var_preamble TOKEN_ID  */
-#line 540 "Parser/parser.y"
+  case 55: /* for_init_field: expression  */
+#line 761 "Parser/parser.y"
                     {
-                        NodeCreate(&(yyval.treeNode), NODE_VAR_DECLARATION);
-                        yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                        NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
+                        yyval.treeNode = yyvsp[0].treeNode;
                     }
-#line 2380 "Parser/parser.tab.c"
+#line 2377 "Parser/parser.tab.c"
     break;
 
-  case 73: /* for_condition: %empty  */
-#line 546 "Parser/parser.y"
+  case 56: /* for_condition: %empty  */
+#line 765 "Parser/parser.y"
                              { yyval.treeNode = NULL; }
-#line 2386 "Parser/parser.tab.c"
+#line 2383 "Parser/parser.tab.c"
     break;
 
-  case 74: /* for_condition: exp  */
-#line 547 "Parser/parser.y"
-                          { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2392 "Parser/parser.tab.c"
+  case 57: /* for_condition: expression  */
+#line 766 "Parser/parser.y"
+                                 { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2389 "Parser/parser.tab.c"
     break;
 
-  case 75: /* for_assignment_field: %empty  */
-#line 550 "Parser/parser.y"
+  case 58: /* for_assignment_field: %empty  */
+#line 769 "Parser/parser.y"
                                    { yyval.treeNode = NULL; }
-#line 2398 "Parser/parser.tab.c"
+#line 2395 "Parser/parser.tab.c"
     break;
 
-  case 76: /* for_assignment_field: simple_var_assign  */
-#line 551 "Parser/parser.y"
-                                                { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2404 "Parser/parser.tab.c"
+  case 59: /* for_assignment_field: expression  */
+#line 770 "Parser/parser.y"
+                                       { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2401 "Parser/parser.tab.c"
     break;
 
-  case 77: /* for_assignment_field: compound_var_assign  */
-#line 552 "Parser/parser.y"
-                                                { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2410 "Parser/parser.tab.c"
-    break;
-
-  case 78: /* for_assignment_field: exp  */
-#line 553 "Parser/parser.y"
-                                { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2416 "Parser/parser.tab.c"
-    break;
-
-  case 79: /* simple_var_assign: TOKEN_ID TOKEN_ASSIGN exp  */
-#line 557 "Parser/parser.y"
+  case 60: /* function_definition: declaration_specifiers declarator compound_statement  */
+#line 778 "Parser/parser.y"
                         {
-                            TreeNode_t* pNode;
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_ASSIGN;
-                            NodeAddNewChild(yyval.treeNode, &pNode, NODE_IDENTIFIER);
-                            pNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                        }
-#line 2429 "Parser/parser.tab.c"
-    break;
-
-  case 80: /* compound_var_assign: TOKEN_ID compound_assign_operator exp  */
-#line 568 "Parser/parser.y"
-                        {
-                            TreeNode_t* pNode;
-                            NodeAddNewChild(yyvsp[-1].treeNode, &pNode, NODE_IDENTIFIER);
-                            pNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;
-                            NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode);
-                            yyval.treeNode = yyvsp[-1].treeNode;
-                        }
-#line 2441 "Parser/parser.tab.c"
-    break;
-
-  case 81: /* function_prototype: function_signature TOKEN_SEMI  */
-#line 582 "Parser/parser.y"
-                        {
-                            yyval.treeNode = yyvsp[-1].treeNode;
-                        }
-#line 2449 "Parser/parser.tab.c"
-    break;
-
-  case 82: /* function_definition: function_signature compound_statement  */
-#line 588 "Parser/parser.y"
-                        {
+                            if (yyvsp[-1].treeNode->nodeType != NODE_FUNCTION) { YYERROR; }
+                            if (NodeAttachDeclSpecifiers(yyvsp[-1].treeNode, yyvsp[-2].treeNode)) { YYERROR; }
+                            NodeFree(yyvsp[-2].treeNode);
                             yyval.treeNode = yyvsp[-1].treeNode;
                             NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                         }
-#line 2458 "Parser/parser.tab.c"
+#line 2413 "Parser/parser.tab.c"
     break;
 
-  case 83: /* function_signature: var_preamble TOKEN_ID TOKEN_LEFT_PARENTHESES arg_list TOKEN_RIGHT_PARENTHESES  */
-#line 596 "Parser/parser.y"
-                        {
-                            NodeCreate(&yyval.treeNode, NODE_FUNCTION);
-                            yyval.treeNode->nodeData.sVal = yyvsp[-3].nodeData.sVal;
-                            currentFunction = yyvsp[-3].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, yyvsp[-4].treeNode);
-                            NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                        }
-#line 2470 "Parser/parser.tab.c"
-    break;
-
-  case 84: /* arg_list: %empty  */
-#line 606 "Parser/parser.y"
+  case 61: /* parameter_list_opt: %empty  */
+#line 789 "Parser/parser.y"
                             { yyval.treeNode = NULL; }
-#line 2476 "Parser/parser.tab.c"
+#line 2419 "Parser/parser.tab.c"
     break;
 
-  case 85: /* arg_list: arg_list TOKEN_COMMA TOKEN_ELLIPSIS  */
-#line 609 "Parser/parser.y"
+  case 62: /* parameter_list_opt: parameter_list_opt TOKEN_COMMA TOKEN_ELLIPSIS  */
+#line 792 "Parser/parser.y"
                     {
                         TreeNode_t* pNode;
                         TreeNode_t* p_Head = yyvsp[-2].treeNode;
                         NodeCreate(&pNode, NODE_PARAMETER);
-                        pNode->nodeData.sVal = "...";
+                        pNode->nodeData.sVal = strdup("...");
                         if (NodeAppendSibling(&p_Head, pNode)) { YYERROR; }
                         yyval.treeNode = p_Head;
                     }
-#line 2489 "Parser/parser.tab.c"
+#line 2432 "Parser/parser.tab.c"
     break;
 
-  case 86: /* arg_list: arg_list TOKEN_COMMA param_declaration  */
-#line 618 "Parser/parser.y"
+  case 63: /* parameter_list_opt: parameter_list_opt TOKEN_COMMA param_declaration  */
+#line 801 "Parser/parser.y"
                     {
                         TreeNode_t* p_Head = yyvsp[-2].treeNode;
                         if (NodeAppendSibling(&p_Head, yyvsp[0].treeNode)) { YYERROR; }
                         yyval.treeNode = p_Head;
                     }
-#line 2499 "Parser/parser.tab.c"
+#line 2442 "Parser/parser.tab.c"
     break;
 
-  case 87: /* arg_list: param_declaration  */
-#line 623 "Parser/parser.y"
+  case 64: /* parameter_list_opt: param_declaration  */
+#line 806 "Parser/parser.y"
                                        { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2505 "Parser/parser.tab.c"
+#line 2448 "Parser/parser.tab.c"
     break;
 
-  case 88: /* param_declaration: var_preamble TOKEN_ID  */
-#line 628 "Parser/parser.y"
+  case 65: /* param_declaration: declaration_specifiers declarator  */
+#line 811 "Parser/parser.y"
                         {
-                            NodeCreate(&(yyval.treeNode), NODE_VAR_DECLARATION);
-                            yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                            NodeAddChildCopy(yyval.treeNode, yyvsp[-1].treeNode);
-                            free(yyvsp[-1].treeNode);
+                            if (NodeAttachDeclSpecifiers(yyvsp[0].treeNode, yyvsp[-1].treeNode)) { YYERROR; }
+                            NodeFree(yyvsp[-1].treeNode);
+                            yyval.treeNode = yyvsp[0].treeNode;
                         }
-#line 2516 "Parser/parser.tab.c"
+#line 2458 "Parser/parser.tab.c"
     break;
 
-  case 89: /* param_declaration: var_preamble TOKEN_ID arr_size  */
-#line 636 "Parser/parser.y"
+  case 66: /* param_declaration: declaration_specifiers  */
+#line 817 "Parser/parser.y"
                         {
-                            NodeCreate(&(yyval.treeNode), NODE_ARRAY_DECLARATION);
-                            yyval.treeNode->nodeData.sVal = yyvsp[-1].nodeData.sVal;
-                            NodeAddChildCopy(yyval.treeNode, yyvsp[-2].treeNode);
-                            free(yyvsp[-2].treeNode);
-                            NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                            if (is_void_parameter_specifier(yyvsp[0].treeNode)) {
+                                yyval.treeNode = NULL;
+                            } else {
+                                NodeCreate(&(yyval.treeNode), NODE_VAR_DECLARATION);
+                                if (NodeAddChildCloneChain(yyval.treeNode, yyvsp[0].treeNode)) { YYERROR; }
+                            }
+                            NodeFree(yyvsp[0].treeNode);
                         }
-#line 2528 "Parser/parser.tab.c"
+#line 2472 "Parser/parser.tab.c"
     break;
 
-  case 90: /* param_declaration: var_preamble  */
-#line 644 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_VAR_DECLARATION);
-                            NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                        }
-#line 2537 "Parser/parser.tab.c"
-    break;
-
-  case 91: /* func_call: TOKEN_ID TOKEN_LEFT_PARENTHESES exp_list TOKEN_RIGHT_PARENTHESES  */
-#line 653 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_FUNCTION_CALL);
-                            yyval.treeNode->nodeData.sVal = yyvsp[-3].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                        }
-#line 2547 "Parser/parser.tab.c"
-    break;
-
-  case 92: /* exp_list: %empty  */
-#line 662 "Parser/parser.y"
-                        {
-                            yyval.treeNode = NULL;
-                        }
-#line 2555 "Parser/parser.tab.c"
-    break;
-
-  case 93: /* exp_list: exp_list TOKEN_COMMA exp  */
-#line 666 "Parser/parser.y"
-                        {
-                            TreeNode_t* pHead = yyvsp[-2].treeNode;
-                            if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
-                            yyval.treeNode = pHead;
-                        }
-#line 2565 "Parser/parser.tab.c"
-    break;
-
-  case 94: /* exp_list: exp  */
-#line 672 "Parser/parser.y"
+  case 67: /* type_name: all_type_specifiers  */
+#line 836 "Parser/parser.y"
                         {
                             yyval.treeNode = yyvsp[0].treeNode;
                         }
-#line 2573 "Parser/parser.tab.c"
+#line 2480 "Parser/parser.tab.c"
     break;
 
-  case 95: /* type_cast_specifier: TOKEN_LEFT_PARENTHESES all_type_specifiers TOKEN_RIGHT_PARENTHESES  */
-#line 684 "Parser/parser.y"
+  case 68: /* type_cast_specifier: TOKEN_LEFT_PARENTHESES type_name TOKEN_RIGHT_PARENTHESES  */
+#line 842 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE_CAST);
                             NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                         }
-#line 2582 "Parser/parser.tab.c"
+#line 2489 "Parser/parser.tab.c"
     break;
 
-  case 96: /* all_type_specifiers: data_type_specifier  */
-#line 691 "Parser/parser.y"
-                                             { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2588 "Parser/parser.tab.c"
+  case 69: /* all_type_specifiers: type_specifier  */
+#line 849 "Parser/parser.y"
+                                        { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2495 "Parser/parser.tab.c"
     break;
 
-  case 97: /* all_type_specifiers: type_pointer  */
-#line 692 "Parser/parser.y"
+  case 70: /* all_type_specifiers: type_pointer  */
+#line 850 "Parser/parser.y"
                                       { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2594 "Parser/parser.tab.c"
+#line 2501 "Parser/parser.tab.c"
     break;
 
-  case 98: /* type_pointer: data_type_specifier TOKEN_ASTERISK  */
-#line 696 "Parser/parser.y"
+  case 71: /* type_pointer: type_specifier TOKEN_ASTERISK  */
+#line 854 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_POINTER);
                             NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                         }
-#line 2603 "Parser/parser.tab.c"
+#line 2510 "Parser/parser.tab.c"
     break;
 
-  case 99: /* type_pointer: type_pointer TOKEN_ASTERISK  */
-#line 701 "Parser/parser.y"
+  case 72: /* type_pointer: type_pointer TOKEN_ASTERISK  */
+#line 859 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_POINTER);
                             NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                         }
-#line 2612 "Parser/parser.tab.c"
+#line 2519 "Parser/parser.tab.c"
     break;
 
-  case 100: /* data_type_specifier: TOKEN_CHAR  */
-#line 709 "Parser/parser.y"
+  case 73: /* enum_specifier: TOKEN_ENUM TOKEN_ID  */
+#line 866 "Parser/parser.y"
+                    {
+                        if (build_tag_type_node(&yyval.treeNode,
+                                                TYPE_ENUM,
+                                                NODE_ENUM_DECLARATION,
+                                                yyvsp[0].nodeData.sVal,
+                                                NULL) < 0) { YYERROR; }
+                    }
+#line 2531 "Parser/parser.tab.c"
+    break;
+
+  case 74: /* enum_specifier: TOKEN_ENUM TOKEN_ID TOKEN_LEFT_BRACE enum_member_list TOKEN_RIGHT_BRACE  */
+#line 874 "Parser/parser.y"
+                    {
+                        if (build_tag_type_node(&yyval.treeNode,
+                                                TYPE_ENUM,
+                                                NODE_ENUM_DECLARATION,
+                                                yyvsp[-3].nodeData.sVal,
+                                                yyvsp[-1].treeNode) < 0) { YYERROR; }
+                    }
+#line 2543 "Parser/parser.tab.c"
+    break;
+
+  case 75: /* struct_specifier: TOKEN_STRUCT TOKEN_ID  */
+#line 884 "Parser/parser.y"
+                    {
+                        if (build_tag_type_node(&yyval.treeNode,
+                                                TYPE_STRUCT,
+                                                NODE_STRUCT_DECLARATION,
+                                                yyvsp[0].nodeData.sVal,
+                                                NULL) < 0) { YYERROR; }
+                    }
+#line 2555 "Parser/parser.tab.c"
+    break;
+
+  case 76: /* struct_specifier: TOKEN_STRUCT TOKEN_ID TOKEN_LEFT_BRACE struct_union_member_list TOKEN_RIGHT_BRACE  */
+#line 892 "Parser/parser.y"
+                    {
+                        if (build_tag_type_node(&yyval.treeNode,
+                                                TYPE_STRUCT,
+                                                NODE_STRUCT_DECLARATION,
+                                                yyvsp[-3].nodeData.sVal,
+                                                yyvsp[-1].treeNode) < 0) { YYERROR; }
+                    }
+#line 2567 "Parser/parser.tab.c"
+    break;
+
+  case 77: /* union_specifier: TOKEN_UNION TOKEN_ID  */
+#line 902 "Parser/parser.y"
+                    {
+                        if (build_tag_type_node(&yyval.treeNode,
+                                                TYPE_UNION,
+                                                NODE_UNION_DECLARATION,
+                                                yyvsp[0].nodeData.sVal,
+                                                NULL) < 0) { YYERROR; }
+                    }
+#line 2579 "Parser/parser.tab.c"
+    break;
+
+  case 78: /* union_specifier: TOKEN_UNION TOKEN_ID TOKEN_LEFT_BRACE struct_union_member_list TOKEN_RIGHT_BRACE  */
+#line 910 "Parser/parser.y"
+                    {
+                        if (build_tag_type_node(&yyval.treeNode,
+                                                TYPE_UNION,
+                                                NODE_UNION_DECLARATION,
+                                                yyvsp[-3].nodeData.sVal,
+                                                yyvsp[-1].treeNode) < 0) { YYERROR; }
+                    }
+#line 2591 "Parser/parser.tab.c"
+    break;
+
+  case 79: /* type_specifier: TOKEN_CHAR  */
+#line 921 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_CHAR;
                         }
-#line 2621 "Parser/parser.tab.c"
+#line 2600 "Parser/parser.tab.c"
     break;
 
-  case 101: /* data_type_specifier: TOKEN_SHORT  */
-#line 714 "Parser/parser.y"
+  case 80: /* type_specifier: TOKEN_SHORT  */
+#line 926 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_SHORT;
                         }
-#line 2630 "Parser/parser.tab.c"
+#line 2609 "Parser/parser.tab.c"
     break;
 
-  case 102: /* data_type_specifier: TOKEN_INT  */
-#line 719 "Parser/parser.y"
+  case 81: /* type_specifier: TOKEN_INT  */
+#line 931 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_INT;
                         }
-#line 2639 "Parser/parser.tab.c"
+#line 2618 "Parser/parser.tab.c"
     break;
 
-  case 103: /* data_type_specifier: TOKEN_LONG  */
-#line 724 "Parser/parser.y"
+  case 82: /* type_specifier: TOKEN_LONG  */
+#line 936 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_LONG;
                         }
-#line 2648 "Parser/parser.tab.c"
+#line 2627 "Parser/parser.tab.c"
     break;
 
-  case 104: /* data_type_specifier: TOKEN_LONG TOKEN_INT  */
-#line 729 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_TYPE);
-                            yyval.treeNode->nodeData.dVal = TYPE_LONG;
-                        }
-#line 2657 "Parser/parser.tab.c"
-    break;
-
-  case 105: /* data_type_specifier: TOKEN_SHORT TOKEN_INT  */
-#line 734 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_TYPE);
-                            yyval.treeNode->nodeData.dVal = TYPE_SHORT;
-                        }
-#line 2666 "Parser/parser.tab.c"
-    break;
-
-  case 106: /* data_type_specifier: TOKEN_FLOAT  */
-#line 739 "Parser/parser.y"
+  case 83: /* type_specifier: TOKEN_FLOAT  */
+#line 941 "Parser/parser.y"
                             { NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_FLOAT;
                         }
-#line 2674 "Parser/parser.tab.c"
+#line 2635 "Parser/parser.tab.c"
     break;
 
-  case 107: /* data_type_specifier: TOKEN_DOUBLE  */
-#line 743 "Parser/parser.y"
+  case 84: /* type_specifier: TOKEN_DOUBLE  */
+#line 945 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_DOUBLE;
                         }
-#line 2683 "Parser/parser.tab.c"
+#line 2644 "Parser/parser.tab.c"
     break;
 
-  case 108: /* data_type_specifier: TOKEN_LONG TOKEN_DOUBLE  */
-#line 748 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_TYPE);
-                            yyval.treeNode->nodeData.dVal = TYPE_LONG_DOUBLE;
-                        }
-#line 2692 "Parser/parser.tab.c"
-    break;
-
-  case 109: /* data_type_specifier: TOKEN_VOID  */
-#line 753 "Parser/parser.y"
+  case 85: /* type_specifier: TOKEN_VOID  */
+#line 950 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_VOID;
                         }
-#line 2701 "Parser/parser.tab.c"
+#line 2653 "Parser/parser.tab.c"
     break;
 
-  case 110: /* data_type_specifier: TOKEN_STRUCT TOKEN_ID  */
-#line 758 "Parser/parser.y"
+  case 86: /* type_specifier: struct_specifier  */
+#line 955 "Parser/parser.y"
                         {
-                            NodeCreate(&(yyval.treeNode), NODE_TYPE);
-                            yyval.treeNode->nodeData.dVal = TYPE_STRUCT;
-                            TreeNode_t* pName;
-                            NodeCreate(&pName, NODE_IDENTIFIER);
-                            pName->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, pName);
+                            yyval.treeNode = yyvsp[0].treeNode;
                         }
-#line 2714 "Parser/parser.tab.c"
+#line 2661 "Parser/parser.tab.c"
     break;
 
-  case 111: /* data_type_specifier: TOKEN_UNION TOKEN_ID  */
-#line 767 "Parser/parser.y"
+  case 87: /* type_specifier: union_specifier  */
+#line 959 "Parser/parser.y"
                         {
-                            NodeCreate(&(yyval.treeNode), NODE_TYPE);
-                            yyval.treeNode->nodeData.dVal = TYPE_UNION;
-                            TreeNode_t* pName;
-                            NodeCreate(&pName, NODE_IDENTIFIER);
-                            pName->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, pName);
+                            yyval.treeNode = yyvsp[0].treeNode;
                         }
-#line 2727 "Parser/parser.tab.c"
+#line 2669 "Parser/parser.tab.c"
     break;
 
-  case 112: /* data_type_specifier: TOKEN_ENUM TOKEN_ID  */
-#line 776 "Parser/parser.y"
+  case 88: /* type_specifier: enum_specifier  */
+#line 963 "Parser/parser.y"
                         {
-                            NodeCreate(&(yyval.treeNode), NODE_TYPE);
-                            yyval.treeNode->nodeData.dVal = TYPE_ENUM;
-                            TreeNode_t* pName;
-                            NodeCreate(&pName, NODE_IDENTIFIER);
-                            pName->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                            NodeAddChild(yyval.treeNode, pName);
+                            yyval.treeNode = yyvsp[0].treeNode;
                         }
-#line 2740 "Parser/parser.tab.c"
+#line 2677 "Parser/parser.tab.c"
     break;
 
-  case 113: /* visibility_qualifier: TOKEN_STATIC  */
-#line 787 "Parser/parser.y"
+  case 89: /* storage_class_specifier: TOKEN_STATIC  */
+#line 969 "Parser/parser.y"
                              {
                                  NodeCreate(&(yyval.treeNode), NODE_VISIBILITY);
                                  yyval.treeNode->nodeData.dVal = VIS_STATIC;
                              }
-#line 2749 "Parser/parser.tab.c"
+#line 2686 "Parser/parser.tab.c"
     break;
 
-  case 114: /* visibility_qualifier: TOKEN_EXTERN  */
-#line 792 "Parser/parser.y"
+  case 90: /* storage_class_specifier: TOKEN_EXTERN  */
+#line 974 "Parser/parser.y"
                              {
                                  NodeCreate(&(yyval.treeNode), NODE_VISIBILITY);
                                  yyval.treeNode->nodeData.dVal = VIS_EXTERN;
                              }
-#line 2758 "Parser/parser.tab.c"
+#line 2695 "Parser/parser.tab.c"
     break;
 
-  case 115: /* visibility_qualifier: TOKEN_INLINE  */
-#line 797 "Parser/parser.y"
+  case 91: /* function_specifier: TOKEN_INLINE  */
+#line 981 "Parser/parser.y"
                              {
                                  NodeCreate(&(yyval.treeNode), NODE_VISIBILITY);
                                  yyval.treeNode->nodeData.dVal = VIS_INLINE;
                              }
-#line 2767 "Parser/parser.tab.c"
+#line 2704 "Parser/parser.tab.c"
     break;
 
-  case 116: /* mod_qualifier: TOKEN_CONST  */
-#line 804 "Parser/parser.y"
+  case 92: /* type_qualifier: TOKEN_CONST  */
+#line 988 "Parser/parser.y"
                         {
                         NodeCreate(&(yyval.treeNode), NODE_MODIFIER);
                         yyval.treeNode->nodeData.dVal = (long int) MOD_CONST;
                         }
-#line 2776 "Parser/parser.tab.c"
+#line 2713 "Parser/parser.tab.c"
     break;
 
-  case 117: /* mod_qualifier: TOKEN_VOLATILE  */
-#line 809 "Parser/parser.y"
+  case 93: /* type_qualifier: TOKEN_VOLATILE  */
+#line 993 "Parser/parser.y"
                         {
                         NodeCreate(&(yyval.treeNode), NODE_MODIFIER);
                         yyval.treeNode->nodeData.dVal = (long int) MOD_VOLATILE;
                         }
-#line 2785 "Parser/parser.tab.c"
+#line 2722 "Parser/parser.tab.c"
     break;
 
-  case 118: /* sign_qualifier: TOKEN_SIGNED  */
-#line 816 "Parser/parser.y"
+  case 94: /* sign_specifier: TOKEN_SIGNED  */
+#line 1000 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_SIGN);
                             yyval.treeNode->nodeData.dVal = (long int) SIGN_SIGNED;
                         }
-#line 2794 "Parser/parser.tab.c"
+#line 2731 "Parser/parser.tab.c"
     break;
 
-  case 119: /* sign_qualifier: TOKEN_UNSIGNED  */
-#line 821 "Parser/parser.y"
+  case 95: /* sign_specifier: TOKEN_UNSIGNED  */
+#line 1005 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_SIGN);
                             yyval.treeNode->nodeData.dVal = (long int) SIGN_UNSIGNED;
                         }
-#line 2803 "Parser/parser.tab.c"
+#line 2740 "Parser/parser.tab.c"
     break;
 
-  case 120: /* var_declaration: var_preamble id_list TOKEN_SEMI  */
-#line 833 "Parser/parser.y"
-                    {
-                        /* existing action — keep unchanged */
-                        TreeNode_t* pNode = yyvsp[-1].treeNode;
-                        do {
-                            if (pNode->nodeType == NODE_VAR_DECLARATION ||
-                                pNode->nodeType == NODE_ARRAY_DECLARATION) { 
-                                NodeAddChildCopy(pNode, yyvsp[-2].treeNode);
+  case 96: /* declaration_specifier: storage_class_specifier  */
+#line 1017 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
                             }
-                            pNode = pNode->p_sibling;
-                        } while (pNode != NULL);
-                        free(yyvsp[-2].treeNode);
-                        yyval.treeNode = yyvsp[-1].treeNode;
+#line 2748 "Parser/parser.tab.c"
+    break;
+
+  case 97: /* declaration_specifier: type_specifier  */
+#line 1021 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2756 "Parser/parser.tab.c"
+    break;
+
+  case 98: /* declaration_specifier: type_qualifier  */
+#line 1025 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2764 "Parser/parser.tab.c"
+    break;
+
+  case 99: /* declaration_specifier: function_specifier  */
+#line 1029 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2772 "Parser/parser.tab.c"
+    break;
+
+  case 100: /* declaration_specifier: sign_specifier  */
+#line 1033 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2780 "Parser/parser.tab.c"
+    break;
+
+  case 101: /* declaration_specifiers: declaration_specifier  */
+#line 1039 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2788 "Parser/parser.tab.c"
+    break;
+
+  case 102: /* declaration_specifiers: declaration_specifiers declaration_specifier  */
+#line 1043 "Parser/parser.y"
+                            {
+                                TreeNode_t *pHead = yyvsp[-1].treeNode;
+
+                                if (yyvsp[0].treeNode->nodeType == NODE_TYPE) {
+                                    yyvsp[0].treeNode->p_sibling = pHead;
+                                    pHead = yyvsp[0].treeNode;
+                                } else {
+                                    if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
+                                }
+
+                                yyval.treeNode = pHead;
+                            }
+#line 2805 "Parser/parser.tab.c"
+    break;
+
+  case 103: /* pointer_prefix: TOKEN_ASTERISK  */
+#line 1058 "Parser/parser.y"
+                    {
+                        NodeCreate(&yyval.treeNode, NODE_POINTER);
                     }
-#line 2821 "Parser/parser.tab.c"
+#line 2813 "Parser/parser.tab.c"
     break;
 
-  case 121: /* arr_size: TOKEN_LEFT_BRACKET exp TOKEN_RIGHT_BRACKET  */
-#line 850 "Parser/parser.y"
+  case 104: /* pointer_prefix: TOKEN_ASTERISK pointer_prefix  */
+#line 1062 "Parser/parser.y"
+                    {
+                        NodeCreate(&yyval.treeNode, NODE_POINTER);
+                        NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                    }
+#line 2822 "Parser/parser.tab.c"
+    break;
+
+  case 105: /* declaration: declaration_specifiers init_declarator_list_opt TOKEN_SEMI  */
+#line 1069 "Parser/parser.y"
+                    {
+                        TreeNode_t *result = NULL;
+
+                        if (yyvsp[-1].treeNode != NULL) {
+                            TreeNode_t *pNode = yyvsp[-1].treeNode;
+                            while (pNode != NULL) {
+                                if (pNode->nodeType == NODE_VAR_DECLARATION ||
+                                    pNode->nodeType == NODE_ARRAY_DECLARATION ||
+                                    pNode->nodeType == NODE_FUNCTION) {
+                                    if (NodeAttachDeclSpecifiers(pNode, yyvsp[-2].treeNode)) { YYERROR; }
+                                }
+                                pNode = pNode->p_sibling;
+                            }
+
+                            result = yyvsp[-1].treeNode;
+                        } else {
+                            if (clone_or_synthesize_tag_declaration(yyvsp[-2].treeNode, &result) < 0) { YYERROR; }
+                        }
+
+                        NodeFree(yyvsp[-2].treeNode);
+                        yyval.treeNode = result;
+                    }
+#line 2849 "Parser/parser.tab.c"
+    break;
+
+  case 106: /* init_declarator_list_opt: %empty  */
+#line 1095 "Parser/parser.y"
+                            {
+                                yyval.treeNode = NULL;
+                            }
+#line 2857 "Parser/parser.tab.c"
+    break;
+
+  case 107: /* init_declarator_list_opt: init_declarator_list  */
+#line 1099 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2865 "Parser/parser.tab.c"
+    break;
+
+  case 108: /* init_declarator_list: init_declarator  */
+#line 1105 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2873 "Parser/parser.tab.c"
+    break;
+
+  case 109: /* init_declarator_list: init_declarator_list TOKEN_COMMA init_declarator  */
+#line 1109 "Parser/parser.y"
+                            {
+                                TreeNode_t *pHead = yyvsp[-2].treeNode;
+                                if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
+                                yyval.treeNode = pHead;
+                            }
+#line 2883 "Parser/parser.tab.c"
+    break;
+
+  case 110: /* init_declarator: declarator  */
+#line 1117 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2891 "Parser/parser.tab.c"
+    break;
+
+  case 111: /* init_declarator: declarator TOKEN_ASSIGN initializer  */
+#line 1121 "Parser/parser.y"
+                            {
+                                TreeNode_t *pAssign;
+                                TreeNode_t *pId;
+                                TreeNode_t *pHead = yyvsp[-2].treeNode;
+
+                                NodeCreate(&pAssign, NODE_OPERATOR);
+                                pAssign->nodeData.dVal = OP_ASSIGN;
+                                NodeAddNewChild(pAssign, &pId, NODE_IDENTIFIER);
+                                pId->nodeData.sVal = strdup(yyvsp[-2].treeNode->nodeData.sVal);
+                                if (!pId->nodeData.sVal) { YYERROR; }
+                                NodeAddChild(pAssign, yyvsp[0].treeNode);
+                                if (NodeAppendSibling(&pHead, pAssign)) { YYERROR; }
+                                yyval.treeNode = pHead;
+                            }
+#line 2910 "Parser/parser.tab.c"
+    break;
+
+  case 112: /* initializer: assignment_expression  */
+#line 1138 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2918 "Parser/parser.tab.c"
+    break;
+
+  case 113: /* declarator: direct_declarator  */
+#line 1144 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2926 "Parser/parser.tab.c"
+    break;
+
+  case 114: /* declarator: pointer_prefix direct_declarator  */
+#line 1148 "Parser/parser.y"
+                            {
+                                if (yyvsp[0].treeNode->nodeType == NODE_FUNCTION) {
+                                    yyvsp[-1].treeNode->p_sibling = yyvsp[0].treeNode->p_firstChild;
+                                    yyvsp[0].treeNode->p_firstChild = yyvsp[-1].treeNode;
+                                    yyvsp[0].treeNode->childNumber++;
+                                } else {
+                                    NodeAddChild(yyvsp[0].treeNode, yyvsp[-1].treeNode);
+                                }
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 2941 "Parser/parser.tab.c"
+    break;
+
+  case 115: /* direct_declarator: TOKEN_ID  */
+#line 1161 "Parser/parser.y"
+                            {
+                                NodeCreate(&yyval.treeNode, NODE_VAR_DECLARATION);
+                                yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
+                            }
+#line 2950 "Parser/parser.tab.c"
+    break;
+
+  case 116: /* direct_declarator: TOKEN_ID arr_size  */
+#line 1166 "Parser/parser.y"
+                            {
+                                NodeCreate(&yyval.treeNode, NODE_ARRAY_DECLARATION);
+                                yyval.treeNode->nodeData.sVal = yyvsp[-1].nodeData.sVal;
+                                NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                            }
+#line 2960 "Parser/parser.tab.c"
+    break;
+
+  case 117: /* direct_declarator: TOKEN_ID TOKEN_LEFT_PARENTHESES parameter_list_opt TOKEN_RIGHT_PARENTHESES  */
+#line 1172 "Parser/parser.y"
+                            {
+                                NodeCreate(&yyval.treeNode, NODE_FUNCTION);
+                                yyval.treeNode->nodeData.sVal = yyvsp[-3].nodeData.sVal;
+                                if (yyvsp[-1].treeNode != NULL) {
+                                    NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
+                                }
+                            }
+#line 2972 "Parser/parser.tab.c"
+    break;
+
+  case 118: /* arr_size: TOKEN_LEFT_BRACKET expression TOKEN_RIGHT_BRACKET  */
+#line 1182 "Parser/parser.y"
                 { yyval.treeNode = yyvsp[-1].treeNode; }
-#line 2827 "Parser/parser.tab.c"
+#line 2978 "Parser/parser.tab.c"
     break;
 
-  case 122: /* arr_size: TOKEN_LEFT_BRACKET TOKEN_RIGHT_BRACKET  */
-#line 852 "Parser/parser.y"
+  case 119: /* arr_size: TOKEN_LEFT_BRACKET TOKEN_RIGHT_BRACKET  */
+#line 1184 "Parser/parser.y"
                 { NodeCreate(&(yyval.treeNode), NODE_NULL); }
-#line 2833 "Parser/parser.tab.c"
+#line 2984 "Parser/parser.tab.c"
     break;
 
-  case 123: /* arr_size: arr_size TOKEN_LEFT_BRACKET exp TOKEN_RIGHT_BRACKET  */
-#line 854 "Parser/parser.y"
+  case 120: /* arr_size: arr_size TOKEN_LEFT_BRACKET expression TOKEN_RIGHT_BRACKET  */
+#line 1186 "Parser/parser.y"
                 {
                     TreeNode_t* pHead = yyvsp[-3].treeNode;
                     if (NodeAppendSibling(&pHead, yyvsp[-1].treeNode)) { YYERROR; }
                     yyval.treeNode = pHead;
                 }
-#line 2843 "Parser/parser.tab.c"
+#line 2994 "Parser/parser.tab.c"
     break;
 
-  case 124: /* id_list: TOKEN_ID  */
-#line 862 "Parser/parser.y"
-              {
-                  NodeCreate(&(yyval.treeNode), NODE_VAR_DECLARATION);
-                  yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
-              }
-#line 2852 "Parser/parser.tab.c"
-    break;
-
-  case 125: /* id_list: TOKEN_ID TOKEN_ASSIGN exp  */
-#line 867 "Parser/parser.y"
-              {
-                  TreeNode_t* pNode;
-                  NodeCreate(&(yyval.treeNode), NODE_VAR_DECLARATION);
-                  yyval.treeNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;
-                  TreeNode_t* pAssign;
-                  NodeCreate(&pAssign, NODE_OPERATOR);
-                  pAssign->nodeData.dVal = OP_ASSIGN;
-                  NodeAddNewChild(pAssign, &pNode, NODE_IDENTIFIER);
-                  pNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;
-                  NodeAddChild(pAssign, yyvsp[0].treeNode);
-                  if (NodeAppendSibling(&(yyval.treeNode), pAssign)) { YYERROR; }
-              }
-#line 2869 "Parser/parser.tab.c"
-    break;
-
-  case 126: /* id_list: TOKEN_ID arr_size  */
-#line 880 "Parser/parser.y"
-              {
-                  NodeCreate(&(yyval.treeNode), NODE_ARRAY_DECLARATION);
-                  yyval.treeNode->nodeData.sVal = yyvsp[-1].nodeData.sVal;
-                  NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-              }
-#line 2879 "Parser/parser.tab.c"
-    break;
-
-  case 127: /* id_list: id_list TOKEN_COMMA TOKEN_ID  */
-#line 886 "Parser/parser.y"
-              {
-                   TreeNode_t* pHead = yyvsp[-2].treeNode;
-                   TreeNode_t* pNewNode;
-                   NodeCreate(&pNewNode, NODE_VAR_DECLARATION);
-                   pNewNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                   if (NodeAppendSibling(&pHead, pNewNode)) { YYERROR; }
-                   yyval.treeNode = pHead;
-              }
-#line 2892 "Parser/parser.tab.c"
-    break;
-
-  case 128: /* id_list: id_list TOKEN_COMMA TOKEN_ID arr_size  */
-#line 895 "Parser/parser.y"
-              {
-                    TreeNode_t* pHead = yyvsp[-3].treeNode;
-                    TreeNode_t* pNewNode;
-                    NodeCreate(&pNewNode, NODE_ARRAY_DECLARATION);
-                    pNewNode->nodeData.sVal = yyvsp[-1].nodeData.sVal;
-                    NodeAddChild(pNewNode, yyvsp[0].treeNode);
-                    if (NodeAppendSibling(&pHead, pNewNode)) { YYERROR; }
-                    yyval.treeNode = pHead;
-              }
-#line 2906 "Parser/parser.tab.c"
-    break;
-
-  case 129: /* id_list: id_list TOKEN_COMMA simple_var_assign  */
-#line 906 "Parser/parser.y"
-              {
-                    TreeNode_t* pHead = yyvsp[-2].treeNode;
-                    TreeNode_t* pNode = yyvsp[0].treeNode->p_firstChild;
-                    TreeNode_t* pNewNode;
-                    NodeCreate(&pNewNode, NODE_VAR_DECLARATION);
-                    pNewNode->nodeData.sVal = pNode->nodeData.sVal;
-                    if (NodeAppendSibling(&pHead, pNewNode)) { YYERROR; }
-                    if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
-                    yyval.treeNode = pHead;
-              }
-#line 2921 "Parser/parser.tab.c"
-    break;
-
-  case 130: /* var_preamble: all_type_specifiers  */
-#line 921 "Parser/parser.y"
-                    {
-                        yyval.treeNode = yyvsp[0].treeNode;
-                    }
-#line 2929 "Parser/parser.tab.c"
-    break;
-
-  case 131: /* var_preamble: visibility_qualifier all_type_specifiers  */
-#line 925 "Parser/parser.y"
-                    {
-                        TreeNode_t* pHead = yyvsp[0].treeNode;
-                        if (yyvsp[-1].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-1].treeNode);
-                        else
-                            free(yyvsp[-1].treeNode);
-                        yyval.treeNode = pHead;
-                    }
-#line 2942 "Parser/parser.tab.c"
-    break;
-
-  case 132: /* var_preamble: mod_qualifier all_type_specifiers  */
-#line 934 "Parser/parser.y"
-                    {
-                        TreeNode_t* pHead = yyvsp[0].treeNode;
-                        if (yyvsp[-1].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-1].treeNode);
-                        else
-                            free(yyvsp[-1].treeNode);
-                        yyval.treeNode = pHead;
-                    }
-#line 2955 "Parser/parser.tab.c"
-    break;
-
-  case 133: /* var_preamble: sign_qualifier all_type_specifiers  */
-#line 943 "Parser/parser.y"
-                    {
-                        TreeNode_t* pHead = yyvsp[0].treeNode;
-                        if (yyvsp[-1].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-1].treeNode);
-                        else
-                            free(yyvsp[-1].treeNode);
-                        yyval.treeNode = pHead;
-                    }
-#line 2968 "Parser/parser.tab.c"
-    break;
-
-  case 134: /* var_preamble: visibility_qualifier mod_qualifier all_type_specifiers  */
-#line 952 "Parser/parser.y"
-                    {
-                        TreeNode_t* pHead = yyvsp[0].treeNode;
-                        if (yyvsp[-1].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-1].treeNode);
-                        else
-                            free(yyvsp[-1].treeNode);
-                        if (yyvsp[-2].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-2].treeNode);
-                        else
-                            free(yyvsp[-2].treeNode);
-                        yyval.treeNode = pHead;
-                    }
-#line 2985 "Parser/parser.tab.c"
-    break;
-
-  case 135: /* var_preamble: visibility_qualifier sign_qualifier all_type_specifiers  */
-#line 965 "Parser/parser.y"
-                    {
-                        TreeNode_t* pHead = yyvsp[0].treeNode;
-                        if (yyvsp[-1].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-1].treeNode);
-                        else
-                            free(yyvsp[-1].treeNode);
-                        if (yyvsp[-2].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-2].treeNode);
-                        else
-                            free(yyvsp[-2].treeNode);
-                        yyval.treeNode = pHead;
-                    }
+  case 121: /* expression: assignment_expression  */
+#line 1200 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
 #line 3002 "Parser/parser.tab.c"
     break;
 
-  case 136: /* var_preamble: mod_qualifier sign_qualifier all_type_specifiers  */
-#line 978 "Parser/parser.y"
-                    {
-                        TreeNode_t* pHead = yyvsp[0].treeNode;
-                        if (yyvsp[-1].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-1].treeNode);
-                        else
-                            free(yyvsp[-1].treeNode);
-                        if (yyvsp[-2].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-2].treeNode);
-                        else
-                            free(yyvsp[-2].treeNode);
-                        yyval.treeNode = pHead;
-                    }
-#line 3019 "Parser/parser.tab.c"
+  case 122: /* expression: expression TOKEN_COMMA assignment_expression  */
+#line 1204 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_COMMA, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3010 "Parser/parser.tab.c"
     break;
 
-  case 137: /* var_preamble: visibility_qualifier mod_qualifier sign_qualifier all_type_specifiers  */
-#line 991 "Parser/parser.y"
-                    {
-                        TreeNode_t* pHead = yyvsp[0].treeNode;
-                        if (yyvsp[-1].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-1].treeNode);
-                        else
-                            free(yyvsp[-1].treeNode);
-                        if (yyvsp[-2].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-2].treeNode);
-                        else
-                            free(yyvsp[-2].treeNode);
-                        if (yyvsp[-3].treeNode->nodeType != NODE_NULL)
-                            NodeAppendSibling(&pHead, yyvsp[-3].treeNode);
-                        else
-                            free(yyvsp[-3].treeNode);
-                        yyval.treeNode = pHead;
-                    }
-#line 3040 "Parser/parser.tab.c"
+  case 123: /* assignment_expression: conditional_expression  */
+#line 1210 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3018 "Parser/parser.tab.c"
     break;
 
-  case 138: /* var_assignment: simple_var_assign TOKEN_SEMI  */
-#line 1010 "Parser/parser.y"
-                                                  { yyval.treeNode = yyvsp[-1].treeNode; }
-#line 3046 "Parser/parser.tab.c"
+  case 124: /* assignment_expression: unary_expression assignment_operator assignment_expression  */
+#line 1214 "Parser/parser.y"
+                            {
+                                if (yyvsp[-1].treeNode->nodeType != NODE_OPERATOR) { YYERROR; }
+                                if (NodeAddChild(yyvsp[-1].treeNode, yyvsp[-2].treeNode) < 0) { YYERROR; }
+                                if (NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                                yyval.treeNode = yyvsp[-1].treeNode;
+                            }
+#line 3029 "Parser/parser.tab.c"
     break;
 
-  case 139: /* var_assignment: compound_var_assign TOKEN_SEMI  */
-#line 1011 "Parser/parser.y"
-                                                    { yyval.treeNode = yyvsp[-1].treeNode; }
-#line 3052 "Parser/parser.tab.c"
+  case 125: /* conditional_expression: logical_or_expression  */
+#line 1223 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3037 "Parser/parser.tab.c"
     break;
 
-  case 140: /* var_assignment: array_access TOKEN_ASSIGN exp TOKEN_SEMI  */
-#line 1013 "Parser/parser.y"
-                    {
-                        NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                        yyval.treeNode->nodeData.dVal = OP_ASSIGN;
-                        NodeAddChild(yyval.treeNode, yyvsp[-3].treeNode);
-                        NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                    }
-#line 3063 "Parser/parser.tab.c"
+  case 126: /* conditional_expression: logical_or_expression TOKEN_TERNARY expression TOKEN_COLON conditional_expression  */
+#line 1227 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_TERNARY);
+                                NodeAddChild(yyval.treeNode, yyvsp[-4].treeNode);
+                                NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
+                                NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                            }
+#line 3048 "Parser/parser.tab.c"
     break;
 
-  case 141: /* var_assignment: pointer_content TOKEN_ASSIGN exp TOKEN_SEMI  */
-#line 1020 "Parser/parser.y"
-                    {
-                        NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                        yyval.treeNode->nodeData.dVal = OP_ASSIGN;
-                        NodeAddChild(yyval.treeNode, yyvsp[-3].treeNode);
-                        NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                    }
-#line 3074 "Parser/parser.tab.c"
+  case 127: /* logical_or_expression: logical_and_expression  */
+#line 1236 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3056 "Parser/parser.tab.c"
     break;
 
-  case 142: /* var_assignment: array_access compound_assign_operator exp TOKEN_SEMI  */
-#line 1027 "Parser/parser.y"
-                    {
-                        NodeAddChild(yyvsp[-2].treeNode, yyvsp[-3].treeNode);
-                        NodeAddChild(yyvsp[-2].treeNode, yyvsp[-1].treeNode);
-                        yyval.treeNode = yyvsp[-2].treeNode;
-                    }
-#line 3084 "Parser/parser.tab.c"
+  case 128: /* logical_or_expression: logical_or_expression TOKEN_LOGICAL_OR logical_and_expression  */
+#line 1240 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_LOGICAL_OR, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3064 "Parser/parser.tab.c"
     break;
 
-  case 143: /* var_assignment: factor TOKEN_DOT TOKEN_ID TOKEN_ASSIGN exp TOKEN_SEMI  */
-#line 1033 "Parser/parser.y"
-                    {
-                        NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                        yyval.treeNode->nodeData.dVal = OP_ASSIGN;
-                        TreeNode_t* pMember;
-                        NodeCreate(&pMember, NODE_IDENTIFIER);
-                        pMember->nodeData.sVal = yyvsp[-3].nodeData.sVal;
-                        NodeAddChild(yyval.treeNode, yyvsp[-5].treeNode);
-                        NodeAddChild(yyval.treeNode, pMember);
-                        NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                    }
-#line 3099 "Parser/parser.tab.c"
+  case 129: /* logical_and_expression: inclusive_or_expression  */
+#line 1246 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3072 "Parser/parser.tab.c"
     break;
 
-  case 144: /* var_assignment: factor TOKEN_ARROW TOKEN_ID TOKEN_ASSIGN exp TOKEN_SEMI  */
-#line 1044 "Parser/parser.y"
-                    {
-                        NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                        yyval.treeNode->nodeData.dVal = OP_ASSIGN;
-                        TreeNode_t* pMember;
-                        NodeCreate(&pMember, NODE_IDENTIFIER);
-                        pMember->nodeData.sVal = yyvsp[-3].nodeData.sVal;
-                        NodeAddChild(yyval.treeNode, yyvsp[-5].treeNode);
-                        NodeAddChild(yyval.treeNode, pMember);
-                        NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                    }
-#line 3114 "Parser/parser.tab.c"
+  case 130: /* logical_and_expression: logical_and_expression TOKEN_LOGICAL_AND inclusive_or_expression  */
+#line 1250 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_LOGICAL_AND, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3080 "Parser/parser.tab.c"
     break;
 
-  case 145: /* var_assignment: pointer_content compound_assign_operator exp TOKEN_SEMI  */
-#line 1055 "Parser/parser.y"
-                    {
-                        NodeAddChild(yyvsp[-2].treeNode, yyvsp[-3].treeNode);
-                        NodeAddChild(yyvsp[-2].treeNode, yyvsp[-1].treeNode);
-                        yyval.treeNode = yyvsp[-2].treeNode;
-                    }
-#line 3124 "Parser/parser.tab.c"
+  case 131: /* inclusive_or_expression: exclusive_or_expression  */
+#line 1256 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3088 "Parser/parser.tab.c"
     break;
 
-  case 146: /* var_assignment: factor TOKEN_DOT TOKEN_ID compound_assign_operator exp TOKEN_SEMI  */
-#line 1061 "Parser/parser.y"
-                    {
-                        TreeNode_t* pMember;
-                        NodeCreate(&pMember, NODE_IDENTIFIER);
-                        pMember->nodeData.sVal = yyvsp[-3].nodeData.sVal;
-                        NodeAddChild(yyvsp[-2].treeNode, yyvsp[-5].treeNode);
-                        NodeAddChild(yyvsp[-2].treeNode, pMember);
-                        NodeAddChild(yyvsp[-2].treeNode, yyvsp[-1].treeNode);
-                        yyval.treeNode = yyvsp[-2].treeNode;
-                    }
-#line 3138 "Parser/parser.tab.c"
+  case 132: /* inclusive_or_expression: inclusive_or_expression TOKEN_BITWISE_OR exclusive_or_expression  */
+#line 1260 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_BITWISE_OR, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3096 "Parser/parser.tab.c"
     break;
 
-  case 147: /* var_assignment: factor TOKEN_ARROW TOKEN_ID compound_assign_operator exp TOKEN_SEMI  */
-#line 1071 "Parser/parser.y"
-                    {
-                        TreeNode_t* pMember;
-                        NodeCreate(&pMember, NODE_IDENTIFIER);
-                        pMember->nodeData.sVal = yyvsp[-3].nodeData.sVal;
-                        NodeAddChild(yyvsp[-2].treeNode, yyvsp[-5].treeNode);
-                        NodeAddChild(yyvsp[-2].treeNode, pMember);
-                        NodeAddChild(yyvsp[-2].treeNode, yyvsp[-1].treeNode);
-                        yyval.treeNode = yyvsp[-2].treeNode;
-                    }
+  case 133: /* exclusive_or_expression: and_expression  */
+#line 1266 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3104 "Parser/parser.tab.c"
+    break;
+
+  case 134: /* exclusive_or_expression: exclusive_or_expression TOKEN_BITWISE_XOR and_expression  */
+#line 1270 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_BITWISE_XOR, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3112 "Parser/parser.tab.c"
+    break;
+
+  case 135: /* and_expression: equality_expression  */
+#line 1276 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3120 "Parser/parser.tab.c"
+    break;
+
+  case 136: /* and_expression: and_expression TOKEN_BITWISE_AND equality_expression  */
+#line 1280 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_BITWISE_AND, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3128 "Parser/parser.tab.c"
+    break;
+
+  case 137: /* equality_expression: relational_expression  */
+#line 1286 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3136 "Parser/parser.tab.c"
+    break;
+
+  case 138: /* equality_expression: equality_expression TOKEN_EQUAL relational_expression  */
+#line 1290 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_EQUAL, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3144 "Parser/parser.tab.c"
+    break;
+
+  case 139: /* equality_expression: equality_expression TOKEN_NOT_EQUAL relational_expression  */
+#line 1294 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_NOT_EQUAL, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
 #line 3152 "Parser/parser.tab.c"
     break;
 
-  case 148: /* exp: exp arithmetic_operator term  */
-#line 1088 "Parser/parser.y"
-                {
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[-2].treeNode);
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode);
-                    yyval.treeNode = yyvsp[-1].treeNode; //sets the operator as the root
-                }
-#line 3162 "Parser/parser.tab.c"
+  case 140: /* relational_expression: shift_expression  */
+#line 1300 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3160 "Parser/parser.tab.c"
     break;
 
-  case 149: /* exp: exp comparison_operator term  */
-#line 1094 "Parser/parser.y"
-                {
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[-2].treeNode);
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode);
-                    yyval.treeNode = yyvsp[-1].treeNode;
-                }
-#line 3172 "Parser/parser.tab.c"
+  case 141: /* relational_expression: relational_expression TOKEN_LESS_THAN shift_expression  */
+#line 1304 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_LESS_THAN, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3168 "Parser/parser.tab.c"
     break;
 
-  case 150: /* exp: exp bitwise_operator term  */
-#line 1100 "Parser/parser.y"
-                {
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[-2].treeNode);
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode);
-                    yyval.treeNode = yyvsp[-1].treeNode;
-                }
-#line 3182 "Parser/parser.tab.c"
+  case 142: /* relational_expression: relational_expression TOKEN_GREATER_THAN shift_expression  */
+#line 1308 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_GREATER_THAN, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3176 "Parser/parser.tab.c"
     break;
 
-  case 151: /* exp: exp logic_operator term  */
-#line 1106 "Parser/parser.y"
-                {
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[-2].treeNode);
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode);
-                    yyval.treeNode = yyvsp[-1].treeNode;
-                }
+  case 143: /* relational_expression: relational_expression TOKEN_LESS_THAN_OR_EQUAL shift_expression  */
+#line 1312 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_LESS_THAN_OR_EQUAL, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3184 "Parser/parser.tab.c"
+    break;
+
+  case 144: /* relational_expression: relational_expression TOKEN_GREATER_THAN_OR_EQUAL shift_expression  */
+#line 1316 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_GREATER_THAN_OR_EQUAL, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
 #line 3192 "Parser/parser.tab.c"
     break;
 
-  case 152: /* exp: exp TOKEN_TERNARY exp TOKEN_COLON exp  */
-#line 1112 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_TERNARY);
-                    NodeAddChild(yyval.treeNode, yyvsp[-4].treeNode);
-                    NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
-                    NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                }
-#line 3203 "Parser/parser.tab.c"
+  case 145: /* shift_expression: additive_expression  */
+#line 1322 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3200 "Parser/parser.tab.c"
     break;
 
-  case 153: /* exp: term  */
-#line 1119 "Parser/parser.y"
-                {
-                    yyval.treeNode = yyvsp[0].treeNode;
-                }
-#line 3211 "Parser/parser.tab.c"
+  case 146: /* shift_expression: shift_expression TOKEN_LEFT_SHIFT additive_expression  */
+#line 1326 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_LEFT_SHIFT, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3208 "Parser/parser.tab.c"
     break;
 
-  case 154: /* term: term priority_operator operand  */
-#line 1126 "Parser/parser.y"
-                {
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[-2].treeNode);
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode);
-                    yyval.treeNode = yyvsp[-1].treeNode;
-                }
-#line 3221 "Parser/parser.tab.c"
+  case 147: /* shift_expression: shift_expression TOKEN_RIGHT_SHIFT additive_expression  */
+#line 1330 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_RIGHT_SHIFT, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3216 "Parser/parser.tab.c"
     break;
 
-  case 155: /* term: operand  */
-#line 1131 "Parser/parser.y"
-                         { yyval.treeNode = yyvsp[0].treeNode; }
-#line 3227 "Parser/parser.tab.c"
+  case 148: /* additive_expression: multiplicative_expression  */
+#line 1336 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3224 "Parser/parser.tab.c"
     break;
 
-  case 156: /* operand: TOKEN_MINUS operand  */
-#line 1136 "Parser/parser.y"
-                {
-                      NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                      yyval.treeNode->nodeData.dVal = OP_UNARY_MINUS;
-                      NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                }
-#line 3237 "Parser/parser.tab.c"
+  case 149: /* additive_expression: additive_expression TOKEN_PLUS multiplicative_expression  */
+#line 1340 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_PLUS, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3232 "Parser/parser.tab.c"
     break;
 
-  case 157: /* operand: TOKEN_INCREMENT operand  */
-#line 1142 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_PRE_INC);
-                    NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                }
-#line 3246 "Parser/parser.tab.c"
+  case 150: /* additive_expression: additive_expression TOKEN_MINUS multiplicative_expression  */
+#line 1344 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_MINUS, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3240 "Parser/parser.tab.c"
     break;
 
-  case 158: /* operand: TOKEN_DECREMENT operand  */
-#line 1147 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_PRE_DEC);
-                    NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                }
-#line 3255 "Parser/parser.tab.c"
+  case 151: /* multiplicative_expression: cast_expression  */
+#line 1351 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3248 "Parser/parser.tab.c"
     break;
 
-  case 159: /* operand: TOKEN_LOGICAL_NOT factor  */
-#line 1152 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                    yyval.treeNode->nodeData.dVal = OP_LOGICAL_NOT;
-                    NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                }
-#line 3265 "Parser/parser.tab.c"
+  case 152: /* multiplicative_expression: multiplicative_expression TOKEN_ASTERISK cast_expression  */
+#line 1355 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_MULTIPLY, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3256 "Parser/parser.tab.c"
     break;
 
-  case 160: /* operand: TOKEN_BITWISE_NOT term  */
-#line 1158 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                    yyval.treeNode->nodeData.dVal = OP_BITWISE_NOT;
-                    NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                }
-#line 3275 "Parser/parser.tab.c"
+  case 153: /* multiplicative_expression: multiplicative_expression TOKEN_DIVIDE cast_expression  */
+#line 1359 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_DIVIDE, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3264 "Parser/parser.tab.c"
     break;
 
-  case 161: /* operand: type_cast_specifier factor  */
-#line 1164 "Parser/parser.y"
-                {
-                    NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode);
-                    yyval.treeNode = yyvsp[-1].treeNode;
-                }
-#line 3284 "Parser/parser.tab.c"
+  case 154: /* multiplicative_expression: multiplicative_expression TOKEN_MOD cast_expression  */
+#line 1363 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_MODULE, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                            }
+#line 3272 "Parser/parser.tab.c"
     break;
 
-  case 162: /* operand: factor  */
-#line 1169 "Parser/parser.y"
-                {
-                    yyval.treeNode = yyvsp[0].treeNode;
-                }
-#line 3292 "Parser/parser.tab.c"
+  case 155: /* cast_expression: unary_expression  */
+#line 1369 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3280 "Parser/parser.tab.c"
     break;
 
-  case 163: /* factor: TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES  */
-#line 1176 "Parser/parser.y"
-                {
-                    yyval.treeNode = yyvsp[-1].treeNode;
-                }
-#line 3300 "Parser/parser.tab.c"
+  case 156: /* cast_expression: type_cast_specifier cast_expression  */
+#line 1373 "Parser/parser.y"
+                            {
+                                if (NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                                yyval.treeNode = yyvsp[-1].treeNode;
+                            }
+#line 3289 "Parser/parser.tab.c"
     break;
 
-  case 164: /* factor: array_access  */
-#line 1180 "Parser/parser.y"
-                {
-                    yyval.treeNode = yyvsp[0].treeNode;
-                }
-#line 3308 "Parser/parser.tab.c"
+  case 157: /* unary_expression: postfix_expression  */
+#line 1380 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3297 "Parser/parser.tab.c"
     break;
 
-  case 165: /* factor: TOKEN_NUM  */
-#line 1184 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_INTEGER);
-                    yyval.treeNode->nodeData.dVal = yyvsp[0].nodeData.dVal;
-                }
-#line 3317 "Parser/parser.tab.c"
+  case 158: /* unary_expression: TOKEN_INCREMENT unary_expression  */
+#line 1384 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_PRE_INC);
+                                NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                            }
+#line 3306 "Parser/parser.tab.c"
     break;
 
-  case 166: /* factor: TOKEN_ID  */
-#line 1189 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_IDENTIFIER);
-                    yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                }
-#line 3326 "Parser/parser.tab.c"
+  case 159: /* unary_expression: TOKEN_DECREMENT unary_expression  */
+#line 1389 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_PRE_DEC);
+                                NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                            }
+#line 3315 "Parser/parser.tab.c"
     break;
 
-  case 167: /* factor: pointer_content  */
-#line 1194 "Parser/parser.y"
-                { yyval.treeNode = yyvsp[0].treeNode; }
-#line 3332 "Parser/parser.tab.c"
+  case 160: /* unary_expression: TOKEN_BITWISE_AND cast_expression  */
+#line 1394 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_REFERENCE);
+                                NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                            }
+#line 3324 "Parser/parser.tab.c"
     break;
 
-  case 168: /* factor: TOKEN_FNUM  */
-#line 1196 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_FLOAT);
-                    yyval.treeNode->nodeData.fVal = yyvsp[0].nodeData.fVal;
-                }
+  case 161: /* unary_expression: TOKEN_ASTERISK cast_expression  */
+#line 1399 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_POINTER_CONTENT);
+                                NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                            }
+#line 3333 "Parser/parser.tab.c"
+    break;
+
+  case 162: /* unary_expression: TOKEN_PLUS cast_expression  */
+#line 1404 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
 #line 3341 "Parser/parser.tab.c"
     break;
 
-  case 169: /* factor: TOKEN_CNUM  */
-#line 1201 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_CHAR);
-                    yyval.treeNode->nodeData.dVal = yyvsp[0].nodeData.dVal;
-                }
-#line 3350 "Parser/parser.tab.c"
+  case 163: /* unary_expression: TOKEN_MINUS cast_expression  */
+#line 1408 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_UNARY_MINUS, yyvsp[0].treeNode, NULL) < 0) { YYERROR; }
+                            }
+#line 3349 "Parser/parser.tab.c"
     break;
 
-  case 170: /* factor: TOKEN_STR  */
-#line 1206 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_STRING);
-                    yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                }
-#line 3359 "Parser/parser.tab.c"
+  case 164: /* unary_expression: TOKEN_LOGICAL_NOT cast_expression  */
+#line 1412 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_LOGICAL_NOT, yyvsp[0].treeNode, NULL) < 0) { YYERROR; }
+                            }
+#line 3357 "Parser/parser.tab.c"
     break;
 
-  case 171: /* factor: TOKEN_BITWISE_AND array_access  */
-#line 1211 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_REFERENCE);
-                    NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                }
-#line 3368 "Parser/parser.tab.c"
+  case 165: /* unary_expression: TOKEN_BITWISE_NOT cast_expression  */
+#line 1416 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_BITWISE_NOT, yyvsp[0].treeNode, NULL) < 0) { YYERROR; }
+                            }
+#line 3365 "Parser/parser.tab.c"
     break;
 
-  case 172: /* factor: TOKEN_BITWISE_AND TOKEN_ID  */
-#line 1216 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_REFERENCE);
-                    yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                }
-#line 3377 "Parser/parser.tab.c"
+  case 166: /* unary_expression: TOKEN_SIZEOF unary_expression  */
+#line 1420 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_SIZEOF, yyvsp[0].treeNode, NULL) < 0) { YYERROR; }
+                            }
+#line 3373 "Parser/parser.tab.c"
     break;
 
-  case 173: /* factor: TOKEN_SIZEOF TOKEN_LEFT_PARENTHESES sizeof_operand TOKEN_RIGHT_PARENTHESES  */
-#line 1221 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                    yyval.treeNode->nodeData.dVal = OP_SIZEOF;
-                    NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                }
-#line 3387 "Parser/parser.tab.c"
+  case 167: /* unary_expression: TOKEN_SIZEOF TOKEN_LEFT_PARENTHESES type_name TOKEN_RIGHT_PARENTHESES  */
+#line 1424 "Parser/parser.y"
+                            {
+                                if (build_operator_node(&yyval.treeNode, OP_SIZEOF, yyvsp[-1].treeNode, NULL) < 0) { YYERROR; }
+                            }
+#line 3381 "Parser/parser.tab.c"
     break;
 
-  case 174: /* factor: func_call  */
-#line 1226 "Parser/parser.y"
-                           { yyval.treeNode = yyvsp[0].treeNode; }
-#line 3393 "Parser/parser.tab.c"
+  case 168: /* postfix_expression: primary_expression  */
+#line 1430 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3389 "Parser/parser.tab.c"
     break;
 
-  case 175: /* factor: factor TOKEN_INCREMENT  */
-#line 1228 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_POST_INC);
-                    NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                }
-#line 3402 "Parser/parser.tab.c"
+  case 169: /* postfix_expression: postfix_expression TOKEN_LEFT_BRACKET expression TOKEN_RIGHT_BRACKET  */
+#line 1434 "Parser/parser.y"
+                            {
+                                if (build_array_access_node(&yyval.treeNode, yyvsp[-3].treeNode, yyvsp[-1].treeNode) < 0) { YYERROR; }
+                            }
+#line 3397 "Parser/parser.tab.c"
     break;
 
-  case 176: /* factor: factor TOKEN_DECREMENT  */
-#line 1233 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_POST_DEC);
-                    NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                }
-#line 3411 "Parser/parser.tab.c"
+  case 170: /* postfix_expression: postfix_expression TOKEN_LEFT_PARENTHESES argument_expression_list_opt TOKEN_RIGHT_PARENTHESES  */
+#line 1438 "Parser/parser.y"
+                            {
+                                if (build_function_call_node(&yyval.treeNode, yyvsp[-3].treeNode, yyvsp[-1].treeNode) < 0) { YYERROR; }
+                            }
+#line 3405 "Parser/parser.tab.c"
     break;
 
-  case 177: /* factor: factor TOKEN_DOT TOKEN_ID  */
-#line 1238 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_IDENTIFIER);
-                    yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                    NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
-                }
+  case 171: /* postfix_expression: postfix_expression TOKEN_DOT TOKEN_ID  */
+#line 1442 "Parser/parser.y"
+                            {
+                                if (build_member_access_node(&yyval.treeNode, NODE_MEMBER_ACCESS, yyvsp[-2].treeNode, yyvsp[0].nodeData.sVal) < 0) { YYERROR; }
+                            }
+#line 3413 "Parser/parser.tab.c"
+    break;
+
+  case 172: /* postfix_expression: postfix_expression TOKEN_ARROW TOKEN_ID  */
+#line 1446 "Parser/parser.y"
+                            {
+                                if (build_member_access_node(&yyval.treeNode, NODE_PTR_MEMBER_ACCESS, yyvsp[-2].treeNode, yyvsp[0].nodeData.sVal) < 0) { YYERROR; }
+                            }
 #line 3421 "Parser/parser.tab.c"
     break;
 
-  case 178: /* factor: factor TOKEN_ARROW TOKEN_ID  */
-#line 1244 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_IDENTIFIER);
-                    yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                    NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
-                }
-#line 3431 "Parser/parser.tab.c"
+  case 173: /* postfix_expression: postfix_expression TOKEN_INCREMENT  */
+#line 1450 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_POST_INC);
+                                NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
+                            }
+#line 3430 "Parser/parser.tab.c"
     break;
 
-  case 179: /* sizeof_operand: all_type_specifiers  */
-#line 1253 "Parser/parser.y"
-                    { yyval.treeNode = yyvsp[0].treeNode; }
-#line 3437 "Parser/parser.tab.c"
+  case 174: /* postfix_expression: postfix_expression TOKEN_DECREMENT  */
+#line 1455 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_POST_DEC);
+                                NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
+                            }
+#line 3439 "Parser/parser.tab.c"
     break;
 
-  case 180: /* sizeof_operand: exp  */
-#line 1255 "Parser/parser.y"
-                    { yyval.treeNode = yyvsp[0].treeNode; }
-#line 3443 "Parser/parser.tab.c"
+  case 175: /* primary_expression: TOKEN_ID  */
+#line 1462 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_IDENTIFIER);
+                                yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
+                            }
+#line 3448 "Parser/parser.tab.c"
     break;
 
-  case 181: /* array_access: TOKEN_ID TOKEN_LEFT_BRACKET exp TOKEN_RIGHT_BRACKET  */
-#line 1260 "Parser/parser.y"
-                {
-                    NodeCreate(&(yyval.treeNode), NODE_ARRAY_ACCESS);
-                    yyval.treeNode->nodeData.sVal = yyvsp[-3].nodeData.sVal;
-                    NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                }
-#line 3453 "Parser/parser.tab.c"
+  case 176: /* primary_expression: TOKEN_NUM  */
+#line 1467 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_INTEGER);
+                                yyval.treeNode->nodeData.dVal = yyvsp[0].nodeData.dVal;
+                            }
+#line 3457 "Parser/parser.tab.c"
     break;
 
-  case 182: /* array_access: array_access TOKEN_LEFT_BRACKET exp TOKEN_RIGHT_BRACKET  */
-#line 1266 "Parser/parser.y"
-                {
-                    NodeAddChild(yyvsp[-3].treeNode, yyvsp[-1].treeNode);
-                    yyval.treeNode = yyvsp[-3].treeNode;
-                }
-#line 3462 "Parser/parser.tab.c"
+  case 177: /* primary_expression: TOKEN_FNUM  */
+#line 1472 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_FLOAT);
+                                yyval.treeNode->nodeData.fVal = yyvsp[0].nodeData.fVal;
+                            }
+#line 3466 "Parser/parser.tab.c"
     break;
 
-  case 183: /* pointer_content: TOKEN_ASTERISK pointer_content  */
-#line 1273 "Parser/parser.y"
-                    {
-                        NodeCreate(&(yyval.treeNode), NODE_POINTER_CONTENT);
-                        NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                    }
-#line 3471 "Parser/parser.tab.c"
+  case 178: /* primary_expression: TOKEN_CNUM  */
+#line 1477 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_CHAR);
+                                yyval.treeNode->nodeData.dVal = yyvsp[0].nodeData.dVal;
+                            }
+#line 3475 "Parser/parser.tab.c"
     break;
 
-  case 184: /* pointer_content: TOKEN_ASTERISK TOKEN_ID  */
-#line 1278 "Parser/parser.y"
-                    {
-                        NodeCreate(&(yyval.treeNode), NODE_POINTER_CONTENT);
-                        yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
-                    }
-#line 3480 "Parser/parser.tab.c"
+  case 179: /* primary_expression: TOKEN_STR  */
+#line 1482 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_STRING);
+                                yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
+                            }
+#line 3484 "Parser/parser.tab.c"
     break;
 
-  case 185: /* pointer_content: TOKEN_ASTERISK array_access  */
-#line 1283 "Parser/parser.y"
-                    {
-                        NodeCreate(&(yyval.treeNode), NODE_POINTER_CONTENT);
-                        NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
-                    }
-#line 3489 "Parser/parser.tab.c"
+  case 180: /* primary_expression: TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES  */
+#line 1487 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[-1].treeNode;
+                            }
+#line 3492 "Parser/parser.tab.c"
     break;
 
-  case 186: /* pointer_content: TOKEN_ASTERISK TOKEN_LEFT_PARENTHESES exp TOKEN_RIGHT_PARENTHESES  */
-#line 1288 "Parser/parser.y"
-                    {
-                        NodeCreate(&(yyval.treeNode), NODE_POINTER_CONTENT);
-                        NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
-                    }
-#line 3498 "Parser/parser.tab.c"
+  case 181: /* argument_expression_list_opt: %empty  */
+#line 1494 "Parser/parser.y"
+                            {
+                                yyval.treeNode = NULL;
+                            }
+#line 3500 "Parser/parser.tab.c"
     break;
 
-  case 187: /* priority_operator: TOKEN_ASTERISK  */
-#line 1299 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_MULTIPLY;
-                        }
-#line 3507 "Parser/parser.tab.c"
+  case 182: /* argument_expression_list_opt: argument_expression_list  */
+#line 1498 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3508 "Parser/parser.tab.c"
     break;
 
-  case 188: /* priority_operator: TOKEN_DIVIDE  */
-#line 1304 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_DIVIDE;
-                        }
+  case 183: /* argument_expression_list: assignment_expression  */
+#line 1505 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
 #line 3516 "Parser/parser.tab.c"
     break;
 
-  case 189: /* priority_operator: TOKEN_MOD  */
-#line 1309 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_MODULE;
-                        }
-#line 3525 "Parser/parser.tab.c"
+  case 184: /* argument_expression_list: argument_expression_list TOKEN_COMMA assignment_expression  */
+#line 1509 "Parser/parser.y"
+                            {
+                                TreeNode_t *pHead = yyvsp[-2].treeNode;
+                                if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
+                                yyval.treeNode = pHead;
+                            }
+#line 3526 "Parser/parser.tab.c"
     break;
 
-  case 190: /* arithmetic_operator: TOKEN_PLUS  */
-#line 1316 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_PLUS;
-                        }
-#line 3534 "Parser/parser.tab.c"
+  case 185: /* assignment_operator: TOKEN_ASSIGN  */
+#line 1517 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
+                                yyval.treeNode->nodeData.dVal = OP_ASSIGN;
+                            }
+#line 3535 "Parser/parser.tab.c"
     break;
 
-  case 191: /* arithmetic_operator: TOKEN_MINUS  */
-#line 1321 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_MINUS;
-                        }
-#line 3543 "Parser/parser.tab.c"
-    break;
-
-  case 192: /* arithmetic_operator: TOKEN_RIGHT_SHIFT  */
-#line 1326 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_RIGHT_SHIFT;
-                        }
-#line 3552 "Parser/parser.tab.c"
-    break;
-
-  case 193: /* arithmetic_operator: TOKEN_LEFT_SHIFT  */
-#line 1331 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_LEFT_SHIFT;
-                        }
-#line 3561 "Parser/parser.tab.c"
-    break;
-
-  case 194: /* comparison_operator: TOKEN_EQUAL  */
-#line 1338 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_EQUAL;
-                        }
-#line 3570 "Parser/parser.tab.c"
-    break;
-
-  case 195: /* comparison_operator: TOKEN_NOT_EQUAL  */
-#line 1343 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_NOT_EQUAL;
-                        }
-#line 3579 "Parser/parser.tab.c"
-    break;
-
-  case 196: /* comparison_operator: TOKEN_GREATER_THAN  */
-#line 1348 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_GREATER_THAN;
-                        }
-#line 3588 "Parser/parser.tab.c"
-    break;
-
-  case 197: /* comparison_operator: TOKEN_LESS_THAN_OR_EQUAL  */
-#line 1353 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_LESS_THAN_OR_EQUAL;
-                        }
-#line 3597 "Parser/parser.tab.c"
-    break;
-
-  case 198: /* comparison_operator: TOKEN_GREATER_THAN_OR_EQUAL  */
-#line 1358 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_GREATER_THAN_OR_EQUAL;
-                        }
-#line 3606 "Parser/parser.tab.c"
-    break;
-
-  case 199: /* comparison_operator: TOKEN_LESS_THAN  */
-#line 1363 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_LESS_THAN;
-                        }
-#line 3615 "Parser/parser.tab.c"
-    break;
-
-  case 200: /* bitwise_operator: TOKEN_BITWISE_AND  */
-#line 1370 "Parser/parser.y"
-                        {
-                             NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                             yyval.treeNode->nodeData.dVal = OP_BITWISE_AND;
-                         }
-#line 3624 "Parser/parser.tab.c"
-    break;
-
-  case 201: /* bitwise_operator: TOKEN_BITWISE_OR  */
-#line 1375 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_BITWISE_OR;
-                        }
-#line 3633 "Parser/parser.tab.c"
-    break;
-
-  case 202: /* bitwise_operator: TOKEN_BITWISE_XOR  */
-#line 1380 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_BITWISE_XOR;
-                        }
-#line 3642 "Parser/parser.tab.c"
-    break;
-
-  case 203: /* logic_operator: TOKEN_LOGICAL_AND  */
-#line 1387 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_LOGICAL_AND;
-                        }
-#line 3651 "Parser/parser.tab.c"
-    break;
-
-  case 204: /* logic_operator: TOKEN_LOGICAL_OR  */
-#line 1392 "Parser/parser.y"
-                        {
-                            NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
-                            yyval.treeNode->nodeData.dVal = OP_LOGICAL_OR;
-                        }
-#line 3660 "Parser/parser.tab.c"
-    break;
-
-  case 205: /* compound_assign_operator: TOKEN_PLUS_ASSIGN  */
-#line 1399 "Parser/parser.y"
+  case 186: /* assignment_operator: TOKEN_PLUS_ASSIGN  */
+#line 1522 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_PLUS_ASSIGN;
                             }
-#line 3669 "Parser/parser.tab.c"
+#line 3544 "Parser/parser.tab.c"
     break;
 
-  case 206: /* compound_assign_operator: TOKEN_MINUS_ASSIGN  */
-#line 1404 "Parser/parser.y"
+  case 187: /* assignment_operator: TOKEN_MINUS_ASSIGN  */
+#line 1527 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_MINUS_ASSIGN;
                             }
-#line 3678 "Parser/parser.tab.c"
+#line 3553 "Parser/parser.tab.c"
     break;
 
-  case 207: /* compound_assign_operator: TOKEN_MODULUS_ASSIGN  */
-#line 1409 "Parser/parser.y"
+  case 188: /* assignment_operator: TOKEN_MODULUS_ASSIGN  */
+#line 1532 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_MODULUS_ASSIGN;
                             }
-#line 3687 "Parser/parser.tab.c"
+#line 3562 "Parser/parser.tab.c"
     break;
 
-  case 208: /* compound_assign_operator: TOKEN_LEFT_SHIFT_ASSIGN  */
-#line 1414 "Parser/parser.y"
+  case 189: /* assignment_operator: TOKEN_LEFT_SHIFT_ASSIGN  */
+#line 1537 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_LEFT_SHIFT_ASSIGN;
                             }
-#line 3696 "Parser/parser.tab.c"
+#line 3571 "Parser/parser.tab.c"
     break;
 
-  case 209: /* compound_assign_operator: TOKEN_RIGHT_SHIFT_ASSIGN  */
-#line 1419 "Parser/parser.y"
+  case 190: /* assignment_operator: TOKEN_RIGHT_SHIFT_ASSIGN  */
+#line 1542 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_RIGHT_SHIFT_ASSIGN;
                             }
-#line 3705 "Parser/parser.tab.c"
+#line 3580 "Parser/parser.tab.c"
     break;
 
-  case 210: /* compound_assign_operator: TOKEN_AND_ASSIGN  */
-#line 1424 "Parser/parser.y"
+  case 191: /* assignment_operator: TOKEN_AND_ASSIGN  */
+#line 1547 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_BITWISE_AND_ASSIGN;
                             }
-#line 3714 "Parser/parser.tab.c"
+#line 3589 "Parser/parser.tab.c"
     break;
 
-  case 211: /* compound_assign_operator: TOKEN_OR_ASSIGN  */
-#line 1429 "Parser/parser.y"
+  case 192: /* assignment_operator: TOKEN_OR_ASSIGN  */
+#line 1552 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_BITWISE_OR_ASSIGN;
                             }
-#line 3723 "Parser/parser.tab.c"
+#line 3598 "Parser/parser.tab.c"
     break;
 
-  case 212: /* compound_assign_operator: TOKEN_XOR_ASSIGN  */
-#line 1434 "Parser/parser.y"
+  case 193: /* assignment_operator: TOKEN_XOR_ASSIGN  */
+#line 1557 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_BITWISE_XOR_ASSIGN;
                             }
-#line 3732 "Parser/parser.tab.c"
+#line 3607 "Parser/parser.tab.c"
     break;
 
-  case 213: /* compound_assign_operator: TOKEN_MULTIPLY_ASSIGN  */
-#line 1439 "Parser/parser.y"
+  case 194: /* assignment_operator: TOKEN_MULTIPLY_ASSIGN  */
+#line 1562 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_MULTIPLY_ASSIGN;
                             }
-#line 3741 "Parser/parser.tab.c"
+#line 3616 "Parser/parser.tab.c"
     break;
 
-  case 214: /* compound_assign_operator: TOKEN_DIVIDE_ASSIGN  */
-#line 1444 "Parser/parser.y"
+  case 195: /* assignment_operator: TOKEN_DIVIDE_ASSIGN  */
+#line 1567 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_DIVIDE_ASSIGN;
                             }
-#line 3750 "Parser/parser.tab.c"
+#line 3625 "Parser/parser.tab.c"
     break;
 
 
-#line 3754 "Parser/parser.tab.c"
+#line 3629 "Parser/parser.tab.c"
 
       default: break;
     }
@@ -3943,7 +3818,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 1453 "Parser/parser.y"
+#line 1576 "Parser/parser.y"
 
 
 void yyerror(const char *s)

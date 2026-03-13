@@ -9,7 +9,7 @@ Semantic analysis must:
 2. Infer and validate expression/result types.
 3. Enforce language legality for the chosen C subset.
 4. Emit deterministic diagnostics.
-5. Annotate AST so IR generation has zero ambiguity.
+5. Resolve enough symbol/type information to support later IR generation without parser ambiguity.
 
 ## 2. Current frontend surface (from parser)
 Parser currently builds AST for:
@@ -17,7 +17,7 @@ Parser currently builds AST for:
 2. Qualifiers/specifiers: `signed`, `unsigned`, `const`, `volatile`, `static`, `extern`, `inline`.
 3. Statements: `if/else`, `switch/case/default`, `while`, `do-while`, `for`, `break`, `continue`, `return`, block scope.
 4. Expressions: arithmetic, comparison, logical, bitwise, ternary, casts, pre/post inc/dec, address-of, dereference, array access, function calls.
-5. Preprocessor tokens handled in grammar: `#define`, `#undef`.
+5. Preprocessor directives are currently excluded from the supported subset-C grammar and are rejected.
 
 ## 3. Semantic phase architecture
 Two mandatory passes:
@@ -25,7 +25,7 @@ Two mandatory passes:
 ## 3.1 Pass 1: symbol binding + scope construction
 Traversal: preorder (enter node before children).
 Responsibilities:
-1. Enter/exit lexical scopes using AST scope markers (`NODE_START_SCOPE`, `NODE_END_SCOPE`) and function boundaries.
+1. Enter/exit lexical scopes using structural AST nodes (`NODE_BLOCK`, and `NODE_FOR` for loop-init declaration scope) plus function boundaries.
 2. Register declarations in symbol tables.
 3. Track prototypes and definitions for functions.
 4. Bind identifier-use nodes to resolved symbol entries.
@@ -223,12 +223,8 @@ For all `NODE_OPERATOR` with operator enum in `NodeTypes.h`:
 4. `extern` declarations cannot include invalid initializers under chosen subset policy.
 
 ## 14. Preprocessor node policy
-Current parser emits AST nodes for `#define/#undef`.
-Semantic stage must decide one mode and enforce consistently:
-1. Mode A: treat as metadata only (no effect on later tokens).
-2. Mode B: maintain simple symbol macro table for diagnostics/reporting.
-
-This contract for now: Mode A (metadata only), because lexing already consumed tokens and no macro expansion pipeline exists in compiler frontend.
+Preprocessor directives are currently rejected before AST construction.
+No macro-expansion or macro-metadata semantic path exists in the current subset-C frontend.
 
 ## 15. Diagnostics contract
 

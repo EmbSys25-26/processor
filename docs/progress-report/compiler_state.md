@@ -26,7 +26,7 @@ Date: 2026-03-10
 
 ## Done
 1. AST has basic per-node `nodeVarType` enum field (`VarType_t`).
-2. Parser emits structural scope markers (`NODE_START_SCOPE` / `NODE_END_SCOPE`).
+2. Parser emits real structural scope nodes (`NODE_BLOCK`, `NODE_FOR`) instead of synthetic scope markers.
 3. Semantic core APIs exist and compile:
 - `Semantic/type.[ch]`
 - `Semantic/symbol.[ch]`
@@ -36,19 +36,28 @@ Date: 2026-03-10
 5. CI baseline validates API behavior and memory safety:
 - `scripts/ci/run_semantic_checks.sh`
 - Unit/API tests + ASan/UBSan runs.
+6. Pass1 currently implements:
+- `SEM002`, `SEM003`, `SEM004`, `SEM005`
+7. Pass2 currently implements:
+- `SEM001`, `SEM011`, `SEM040`, `SEM041`, `SEM043`, `SEM050`, `SEM051`, `SEM060`, `SEM061`, `SEM062`
+8. Parser and semantic regressions now cover:
+- declarator refactor
+- aggregate declarations
+- AST cleanup nodes
+- C11 expression ladder
+- targeted semantic pass examples
 
 ## Not done (in compiler implementation)
 1. Pass1 binder is incomplete: no AST identifier binding to symbol entries yet.
-2. Pass2 checker is incomplete: no expression/operator/statement legality enforcement yet.
-3. Function prototype/definition compatibility checks are not implemented.
-4. Full semantic rule matrix (`SEM001..`) is not implemented; only scope integrity baseline is active.
+2. Pass2 checker is incomplete: many expression/operator/statement legality rules are still missing.
+3. Full semantic rule matrix (`SEM001..`) is not implemented yet; only a subset is active.
 5. IR lowering gate is not integrated (semantic success does not yet trigger IR phase).
 
 ## 3) What this means technically
 
-1. Current compiler is parser-complete with semantic infrastructure baseline, not frontend-complete.
-2. It now validates scope marker integrity and emits semantic diagnostics.
-3. Most type/binding legality rules are still pending, so many semantically invalid programs can still pass.
+1. Current compiler is parser-complete with a working semantic backbone, not frontend-complete.
+2. It now validates real declaration/type/control-flow cases and emits deterministic semantic diagnostics.
+3. Most of the rule matrix is still pending, so semantically invalid programs can still pass outside the implemented subset.
 
 ## 4) Suggested path
 

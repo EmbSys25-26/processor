@@ -14,6 +14,9 @@ SRCS    = $(PARSER_DIR)/parser.tab.c \
           $(SEM_DIR)/type.c          \
           $(SEM_DIR)/symbol.c        \
           $(SEM_DIR)/diagnostics.c   \
+          $(SEM_DIR)/semantic_ast_helpers.c\
+          $(SEM_DIR)/semantic_pass1.c\
+          $(SEM_DIR)/semantic_pass2.c\
           $(SEM_DIR)/semantic.c
 
 TARGET  = compiler

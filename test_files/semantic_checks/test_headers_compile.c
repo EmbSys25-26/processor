@@ -2,6 +2,8 @@
 #include "Semantic/symbol.h"
 #include "Semantic/diagnostics.h"
 #include "Semantic/semantic.h"
+#include "Semantic/semantic_pass1.h"
+#include "Semantic/semantic_pass2.h"
 
 /* Compile-time smoke only: verifies API surface and typedef consistency. */
 int main(void)

@@ -92,12 +92,10 @@ The sections below describe exactly what you can write in a `.c` file that this 
 ### Pre-processor Directives
 
 ```c
-#define MAX 10        // define a macro name with a value
-#define FLAG          // define a macro name without a value
-#undef MAX            // undefine a macro
+#define MAX 10
 ```
 
-Only `#define` and `#undef` are supported. Other directives (`#include`, `#ifdef`, etc.) are **not** supported.
+Preprocessor directives are currently outside the supported subset-C surface. The lexer/parser reject them explicitly rather than building AST nodes for them.
 
 ---
 
@@ -498,50 +496,42 @@ Both styles are supported and fully ignored by the parser:
 ## File Descriptions
 
 ### `Lexer/lexer.l`
-The Flex tokeniser. It defines regular expressions for every token the language uses — keywords, identifiers, numeric literals (decimal, hexadecimal, float), character literals (including escape sequences like `\n`, `\t`, `\\`, `\'`, `\0`), string literals, all operators, and punctuation. It also handles `#define` and `#undef` directives by reading the name and optional value off the rest of the line before returning the token. Line numbers are tracked for error reporting. Single-line (`//`) and block (`/* */`) comments are silently consumed. Unknown characters produce a `TOKEN_ERROR`.
+The Flex tokeniser. It defines regular expressions for every token the language uses — keywords, identifiers, numeric literals (decimal, hexadecimal, float), character literals (including escape sequences like `\n`, `\t`, `\\`, `\'`, `\0`), string literals, all operators, and punctuation. Line numbers are tracked for error reporting. Single-line (`//`) and block (`/* */`) comments are silently consumed. Unknown characters produce a `TOKEN_ERROR`. `#define` and `#undef` are currently rejected explicitly as outside the supported subset-C surface.
 
 ### `Parser/parser.y`
 The Bison grammar. It is organised into the following groups of rules:
 
-- **`program`** — the top-level rule. A program is a sequence of `global_statement` nodes followed by `TOKEN_EOF`. Each statement becomes a sibling node hanging off the root of the AST.
+- **`translation_unit`** — the C11-aligned top-level rule. It builds an explicit `NODE_TRANSLATION_UNIT` root whose children are the file-scope external declarations.
 
-- **`global_statement`** — things that are valid at file scope: type declarations (`struct`/`union`/`enum`), variable declarations, function prototypes, function definitions, and pre-processor definitions.
+- **`external_declaration`** — things valid at file scope in the supported subset: `function_definition` or `declaration`.
 
-- **`local_statement_list`** — an ordered list of statements inside a function body. Statements are stored as sibling nodes (a flat linked list), not nested.
+- **`statement_sequence`** — an ordered list of statements inside a block. Statements are stored as sibling nodes (a flat linked list), not nested.
 
-- **`local_statement`** — a single statement valid inside a function: selection (`if`/`switch`), iteration (`for`/`while`/`do-while`), jump (`break`/`continue`/`return`), compound block (`{...}`), variable declaration, variable assignment, function definition, or a bare expression followed by `;`.
+- **`statement`** — a single statement valid inside a block: selection (`if`/`switch`), iteration (`for`/`while`/`do-while`), jump (`break`/`continue`/`return`), compound block (`{...}`), declaration, or expression statement.
 
-- **`compound_statement`** — a `{ local_statement_list }` block. It wraps the inner list with `NODE_START_SCOPE` and `NODE_END_SCOPE` sentinel nodes so that the semantic analysis phase can track scope boundaries.
+- **`compound_statement`** — a `{ statement_sequence }` block. It becomes a real `NODE_BLOCK`, and semantic analysis uses that structural node as the lexical-scope boundary.
 
 - **`selection_statement`** — delegates to `if_statement` or `switch_statement`.
 
-- **`if_statement`** — `if (exp) stmt` or `if (exp) stmt else stmt`. The dangling-else ambiguity is resolved with the `LOWER_THAN_ELSE` precedence trick, ensuring `else` always binds to the closest `if`.
+- **`if_statement`** — `if (expression) stmt` or `if (expression) stmt else stmt`. The dangling-else ambiguity is resolved with the `LOWER_THAN_ELSE` precedence trick, ensuring `else` always binds to the closest `if`.
 
-- **`switch_statement`** — `switch (exp) { case_list [default_clause] }`. Cases can match integer literals, character literals, or enum identifiers.
+- **`switch_statement`** — `switch (expression) { case_list [default_clause] }`. Cases still need later work to become full C11 constant-expression cases.
 
-- **`iteration_statement`** — delegates to `while_loop`, `do_while_loop`, or `for_loop`.
+- **`iteration_statement`** — delegates to `while_loop`, `do_while_loop`, or `for_loop`. `NODE_FOR` is treated as its own lexical scope during semantic analysis so declarations in the init clause remain loop-local.
 
-- **`for_loop`** — desugared internally into a `NODE_WHILE` node preceded by the init statement. The update expression is appended as the last sibling inside the loop body.
+- **`for_loop`** — preserved as a real `NODE_FOR` with four ordered children: init, condition, step, and body. Semantic analysis treats the `NODE_FOR` as the loop scope boundary so declarations in the init clause remain visible through the condition, step, and loop body, matching C11 `6.8.5.3`.
 
-- **`jump_statement`** — `return`, `break`, `continue`.
+- **`jump_statement`** — `return`, `break`, `continue`. `return` is now a plain jump node; function ownership is inferred structurally during semantic analysis rather than copied from parser-global state.
 
-- **`type_declaration`** — `struct`, `union`, or `enum` declarations at global scope.
+- **`declaration`** / **`function_definition`** — declarations now flow through C11-style `declaration-specifiers` plus declarators, while function definitions use `declaration_specifiers declarator compound_statement`.
 
-- **`function_prototype`** / **`function_definition`** / **`function_signature`** — a prototype ends with `;`; a definition follows the signature with a `compound_statement`. The signature captures the function name, return type preamble, and parameter list.
+- **Expression ladder (`expression` through `primary_expression`)** — expressions now follow the C11 `6.5` hierarchy: comma, assignment, conditional, logical-or, logical-and, inclusive-or, exclusive-or, bitwise-and, equality, relational, shift, additive, multiplicative, cast, unary, postfix, and primary. This fixes the old precedence bugs where shifts were grouped with addition, comparisons were flattened with bitwise/logical operators, and assignment was not a real expression family.
 
-- **`var_declaration`** / **`var_assignment`** — variable declarations (optionally initialised) and standalone assignments.
+- **`expression_statement`** — a bare `;` or `expression ;`. Assignment no longer lives in a separate statement-only grammar path; it is parsed as `assignment_expression`, which matches C11.
 
-- **`exp`** — general expressions, lowest precedence. Handles binary `arithmetic_operator`, `comparison_operator`, `bitwise_operator`, `logic_operator`, and the ternary `? :`. The left-recursive structure (base case is `term`) eliminates shift/reduce ambiguity and enforces left-associativity naturally.
+- **Postfix/unary nodes** — function calls, array access, address-of, dereference, casts, `sizeof`, and member access now use child-based expression trees instead of the older identifier-special-case encodings. That keeps the AST structurally aligned with C11 postfix/unary expression rules and simplifies later semantic checks.
 
-- **`term`** — higher precedence than `exp`. Handles `priority_operator` (`*`, `/`, `%`), again left-recursive with `operand` as base case.
-
-- **`operand`** — higher precedence than `term`. Handles all **prefix** unary operators: unary minus (`-`), `++a`, `--a`, `!`, `~`, type casts, and `sizeof`. Being above `term` in the hierarchy makes these bind tighter than binary operators but looser than postfix.
-
-- **`factor`** — the highest-precedence level; the "atoms" of an expression. Contains: parenthesised sub-expressions, array access, integer/float/char/string literals, identifiers, pointer dereference (`*x`), address-of (`&x`), function calls, **postfix** `++`/`--`, struct member access (`.` and `->`). Postfix operators live here (not in `operand`) precisely so they bind tighter than prefix operators.
-
-- **Operator non-terminals** (`arithmetic_operator`, `comparison_operator`, `bitwise_operator`, `logic_operator`, `priority_operator`, `compound_assign_operator`) — each one creates a `NODE_OPERATOR` node and sets the appropriate `OperatorType_t` value so the tree encodes which operator was used.
-
-- **Type non-terminals** (`data_type_specifier`, `type_pointer`, `all_type_specifiers`, `type_cast_specifier`, `var_preamble`) — build the chain of type/qualifier/pointer nodes that describes a variable or function return type.
+- **Type non-terminals** (`declaration_specifiers`, `type_specifier`, `type_pointer`, `all_type_specifiers`, `type_name`, `type_cast_specifier`) — build the chain of type/qualifier/pointer nodes that describes a declaration, cast target, or function return type.
 
 ### `Parser/ASTree.h` / `Parser/ASTree.c`
 The AST data structures and manipulation functions.
@@ -640,17 +630,13 @@ Drives the full build in the correct dependency order:
 | `NODE_POST_DEC`        | postfix `x--`                                   |
 | `NODE_PRE_INC`         | prefix `++x`                                    |
 | `NODE_PRE_DEC`         | prefix `--x`                                    |
-| `NODE_START_SCOPE`     | `{` scope boundary marker                       |
-| `NODE_END_SCOPE`       | `}` scope boundary marker                       |
-| `NODE_PP_DEFINE`       | `#define` directive                             |
-| `NODE_PP_UNDEF`        | `#undef` directive                              |
 | `NODE_NULL`            | empty / placeholder (e.g. empty block)          |
 
 ---
 
 ## Known Limitations
 
-- `#include` and other pre-processor directives besides `#define`/`#undef` are not supported.
+- Preprocessor directives are outside the supported subset-C surface and are rejected.
 - `goto` and labels are not supported by the parser (the lexer does not emit a `TOKEN_GOTO`).
-- Semantic execution is currently api-only: scope marker validation and diagnostics are active, but full identifier binding/type checking passes are not implemented yet. Next steps will be to build a symbol table in the first pass and implement semantic analysis on the second pass to catch undeclared variables, type errors, etc.
+- Semantic execution now runs two passes. Implemented checks currently include `SEM001`, `SEM002`, `SEM003`, `SEM004`, `SEM005`, `SEM011`, `SEM040`, `SEM041`, `SEM043`, `SEM050`, `SEM051`, `SEM060`, `SEM061`, and `SEM062`. The full semantic matrix is still incomplete.
 - String concatenation of adjacent string literals (`"a" "b"`) is not supported.

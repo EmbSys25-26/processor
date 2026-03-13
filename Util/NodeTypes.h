@@ -37,6 +37,7 @@ typedef enum
     OP_SIZEOF,                  // 31
     OP_NEGATIVE,
     OP_UNARY_MINUS,
+    OP_COMMA,
     OP_NOT_DEFINED
 }OperatorType_t;
 

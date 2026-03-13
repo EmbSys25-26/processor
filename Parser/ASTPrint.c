@@ -10,6 +10,8 @@
 static const char* NodeTypeToStr(NodeType_t t)
 {
     switch (t) {
+        case NODE_TRANSLATION_UNIT:  return "TRANSLATION_UNIT";
+        case NODE_BLOCK:             return "BLOCK";
         case NODE_SIGN:              return "SIGN";
         case NODE_VISIBILITY:        return "VISIBILITY";
         case NODE_MODIFIER:          return "MODIFIER";
@@ -22,6 +24,7 @@ static const char* NodeTypeToStr(NodeType_t t)
         case NODE_FLOAT:             return "FLOAT";
         case NODE_CHAR:              return "CHAR";
         case NODE_IF:                return "IF";
+        case NODE_FOR:               return "FOR";
         case NODE_WHILE:             return "WHILE";
         case NODE_DO_WHILE:          return "DO_WHILE";
         case NODE_RETURN:            return "RETURN";
@@ -46,12 +49,12 @@ static const char* NodeTypeToStr(NodeType_t t)
         case NODE_ENUM_DECLARATION:  return "ENUM_DECL";
         case NODE_ENUM_MEMBER:       return "ENUM_MEMBER";
         case NODE_UNION_DECLARATION: return "UNION_DECL";
+        case NODE_MEMBER_ACCESS:     return "MEMBER_ACCESS";
+        case NODE_PTR_MEMBER_ACCESS: return "PTR_MEMBER_ACCESS";
         case NODE_FUNCTION:          return "FUNCTION";
         case NODE_FUNCTION_CALL:     return "FUNC_CALL";
         case NODE_PARAMETER:         return "PARAMETER";
         case NODE_NULL:              return "NULL";
-        case NODE_START_SCOPE:       return "{";
-        case NODE_END_SCOPE:         return "}";
         case NODE_PP_DEFINE:         return "PP_DEFINE";
         case NODE_PP_UNDEF:          return "PP_UNDEF";
         default:                     return "???";
@@ -65,10 +68,6 @@ static void NodeValueSuffix(const TreeNode_t* p, char* buf, size_t buflen)
         case NODE_IDENTIFIER:
         case NODE_STRING:
         case NODE_FUNCTION:
-        case NODE_FUNCTION_CALL:
-        case NODE_ARRAY_ACCESS:
-        case NODE_POINTER_CONTENT:
-        case NODE_REFERENCE:
         case NODE_POST_INC: case NODE_PRE_INC:
         case NODE_POST_DEC: case NODE_PRE_DEC:
         case NODE_VAR_DECLARATION:
@@ -81,6 +80,16 @@ static void NodeValueSuffix(const TreeNode_t* p, char* buf, size_t buflen)
         case NODE_ENUM_MEMBER:
             if (p->nodeData.sVal)
                 snprintf(buf, buflen, " (%s)", p->nodeData.sVal);
+            break;
+        case NODE_FUNCTION_CALL:
+        case NODE_ARRAY_ACCESS:
+        case NODE_POINTER_CONTENT:
+        case NODE_REFERENCE:
+            if (p->p_firstChild &&
+                p->p_firstChild->nodeType == NODE_IDENTIFIER &&
+                p->p_firstChild->nodeData.sVal) {
+                snprintf(buf, buflen, " (%s)", p->p_firstChild->nodeData.sVal);
+            }
             break;
         case NODE_INTEGER:
             snprintf(buf, buflen, " (%ld)", p->nodeData.dVal);
@@ -148,8 +157,9 @@ static void NodeValueSuffix(const TreeNode_t* p, char* buf, size_t buflen)
                 case OP_BITWISE_XOR_ASSIGN:    snprintf(buf, buflen, " (^=)");     break;
                 case OP_SIZEOF:                snprintf(buf, buflen, " (sizeof)"); break;
                 case OP_NEGATIVE:              snprintf(buf, buflen, " (neg)");    break;
-                case OP_UNARY_MINUS:            snprintf(buf, buflen, " (-)");    break;
-                case OP_NOT_DEFINED: snprintf(buf, buflen, " (undefined)");    break;
+                case OP_UNARY_MINUS:           snprintf(buf, buflen, " (-)");      break;
+                case OP_COMMA:                 snprintf(buf, buflen, " (,)");      break;
+                case OP_NOT_DEFINED:           snprintf(buf, buflen, " (undefined)"); break;
             }
             break;
         case NODE_VISIBILITY:

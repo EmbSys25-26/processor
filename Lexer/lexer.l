@@ -59,8 +59,12 @@ newline     \n
 "enum"      { return TOKEN_ENUM;     }
 "sizeof"    { return TOKEN_SIZEOF;   }
 
-"#define"[ \t]+       { read_pp_define();      return TOKEN_PP_DEFINE;      }
-"#undef"[ \t]+        { read_pp_undef();       return TOKEN_PP_UNDEF;        }
+"#define"[ \t]+       { read_pp_define();
+                        fprintf(stderr, "Line %d: preprocessor directives are not supported in this subset C parser\n", line_number);
+                        return TOKEN_ERROR; }
+"#undef"[ \t]+        { read_pp_undef();
+                        fprintf(stderr, "Line %d: preprocessor directives are not supported in this subset C parser\n", line_number);
+                        return TOKEN_ERROR; }
 
 "<<="   { return TOKEN_LEFT_SHIFT_ASSIGN;     }
 ">>="   { return TOKEN_RIGHT_SHIFT_ASSIGN;    }
@@ -160,7 +164,7 @@ newline     \n
     "*"     { }
 }
 
-<<EOF>> { return TOKEN_EOF; }
+<<EOF>> { return 0; }
 
 . { fprintf(stderr, "Line %d: unknown token '%s'\n", line_number, yytext);
     return TOKEN_ERROR; }
@@ -190,4 +194,3 @@ static void read_pp_undef(void) {
         if (ni < (int)sizeof(pp_name)-1) pp_name[ni++] = c;
     if (c == '\n') line_number++;
 }
-

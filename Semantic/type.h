@@ -68,6 +68,7 @@ struct type_s {
     } function;
     struct {
       char *tag;
+      const void *decl_node;
     } aggregate;
   } as;
 };
@@ -78,6 +79,7 @@ type_t *type_new_pointer(type_t *base, unsigned qualifiers);
 type_t *type_new_array(type_t *elem, size_t size, int is_known_size, unsigned qualifiers);
 type_t *type_new_function(type_t *return_type, type_t **params, size_t param_count, int is_variadic, unsigned qualifiers);
 type_t *type_new_tagged(type_kind_t kind, const char *tag, unsigned qualifiers);
+void type_set_aggregate_decl(type_t *type, const void *decl_node);
 
 type_t *type_clone(const type_t *src);
 void type_free(type_t *type);

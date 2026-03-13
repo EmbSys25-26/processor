@@ -4,6 +4,8 @@
 #include "ASTree.h"
 #include "../Util/logger.h"
 
+extern int line_number;
+
 /*
  * NodeCreate
  * ----------
@@ -26,9 +28,50 @@ int NodeCreate(TreeNode_t** pp_NewNode, NodeType_t nodeType){
 
 	pNode = *pp_NewNode;
 	pNode->nodeType = nodeType;
-	//pNode->lineNumber = getLineNumber();
+	pNode->lineNumber = (line_number > 0) ? (size_t)line_number : 0u;
 	//pNode->pSymbol = NULL;
 	return 0;
+}
+
+/*
+ * NodeFree
+ * ----------
+ * Deallocates a node in the AST, recursively deallocating its children and siblings as well. 
+ * Returns 0 on success, negative errno on failure.
+ */
+int NodeFree(TreeNode_t* src){
+	
+	if (!src) { 
+		return 0; 
+	}
+
+	switch (src->nodeType) {
+		case NODE_STRING:
+		case NODE_IDENTIFIER:
+		case NODE_FUNCTION:
+		case NODE_FUNCTION_CALL:
+		case NODE_VAR_DECLARATION:
+		case NODE_ARRAY_DECLARATION:
+		case NODE_PARAMETER:
+		case NODE_PP_DEFINE:
+		case NODE_PP_UNDEF:
+		case NODE_STRUCT_DECLARATION:
+		case NODE_UNION_DECLARATION:
+		case NODE_ENUM_DECLARATION:
+		case NODE_ENUM_MEMBER:
+		case NODE_STRUCT_MEMBER:
+				if (src->nodeData.sVal) {
+						free(src->nodeData.sVal); 
+				}
+				break;
+		default: 
+			break;
+	}
+
+	NodeFree(src->p_firstChild); 
+	NodeFree(src->p_sibling); 
+	free(src); 
+	return 0; 
 }
 
 /*
@@ -91,62 +134,12 @@ int NodeAddNewChild(TreeNode_t* p_Parent, TreeNode_t** pp_NewChild, NodeType_t n
 	}
 
 	(*pp_NewChild)->nodeType = nodeType;
-	//(*pp_NewChild)->lineNumber = getLineNumber();
 
 	int ret = NodeAddChild(p_Parent, *pp_NewChild);
 	if (ret < 0) {
 		free(*pp_NewChild);
 		*pp_NewChild = NULL;
 	}
-
-	return ret;
-}
-
-int NodeAddChildCopy(TreeNode_t* p_Parent, TreeNode_t* p_Child) {
-	if (!p_Parent || !p_Child)
-	return -EINVAL;
-
-	TreeNode_t* pCopy = malloc(sizeof(TreeNode_t));
-	if (!pCopy) {
-	LOG_ERROR("Failed to allocate memory in NodeAddChildCopy!\n");
-	return -ENOMEM;
-	}
-
-	// Copy primitive fields
-	pCopy->childNumber = 0;  // leaf copy
-	pCopy->lineNumber  = p_Child->lineNumber;
-	pCopy->nodeType    = p_Child->nodeType;
-	pCopy->nodeVarType = p_Child->nodeVarType;
-
-	// Copy nodeData safely (deep copy strings)
-	switch (p_Child->nodeType) {
-	case NODE_INTEGER:
-	case NODE_CHAR:
-	    pCopy->nodeData.dVal = p_Child->nodeData.dVal;
-	    break;
-	case NODE_FLOAT:
-	    pCopy->nodeData.fVal = p_Child->nodeData.fVal;
-	    break;
-	case NODE_STRING:
-	    pCopy->nodeData.sVal = strdup(p_Child->nodeData.sVal);
-	    if (!pCopy->nodeData.sVal) {
-		free(pCopy);
-		return -ENOMEM;  // allocation failed
-	    }
-	    break;
-	default:
-	    pCopy->nodeData = p_Child->nodeData;
-	    break;
-	}
-
-	// Reset links to make it a leaf
-	pCopy->p_firstChild = NULL;
-	pCopy->p_sibling    = NULL;
-
-	// Add to parent
-	int ret = NodeAddChild(p_Parent, pCopy);
-	if (ret < 0)
-	free(pCopy);  // clean up if add failed
 
 	return ret;
 }
@@ -181,4 +174,168 @@ int NodeAppendSibling(TreeNode_t** pp_Head, TreeNode_t* p_NewSibling){
 
 	pNode->p_sibling = p_NewSibling;
 	return 0;
+}
+
+
+int NodeCloneSubtree(const TreeNode_t *src, TreeNode_t **out_clone)
+{
+    TreeNode_t *copy = NULL;
+    const TreeNode_t *child = NULL;
+
+    if (!src || !out_clone) {
+        return -EINVAL;
+    }
+
+    *out_clone = NULL;
+
+    copy = calloc(1, sizeof(*copy));
+    if (!copy) {
+        return -ENOMEM;
+    }
+
+    copy->lineNumber = src->lineNumber;
+    copy->nodeType = src->nodeType;
+    copy->nodeVarType = src->nodeVarType;
+    copy->childNumber = 0;
+    copy->p_firstChild = NULL;
+    copy->p_sibling = NULL;
+
+    switch (src->nodeType) {
+			case NODE_STRING:
+			case NODE_IDENTIFIER:
+			case NODE_FUNCTION:
+			case NODE_FUNCTION_CALL:
+			case NODE_VAR_DECLARATION:
+			case NODE_ARRAY_DECLARATION:
+			case NODE_PARAMETER:
+			case NODE_PP_DEFINE:
+			case NODE_PP_UNDEF:
+			case NODE_STRUCT_DECLARATION:
+			case NODE_UNION_DECLARATION:
+			case NODE_ENUM_DECLARATION:
+			case NODE_ENUM_MEMBER:
+			case NODE_STRUCT_MEMBER:
+					if (src->nodeData.sVal) {
+							copy->nodeData.sVal = strdup(src->nodeData.sVal);
+							if (!copy->nodeData.sVal) {
+									free(copy);
+									return -ENOMEM;
+							}
+					}
+					break;
+			default:
+					copy->nodeData = src->nodeData;
+					break;
+    }
+
+    child = src->p_firstChild;
+    while (child) {
+        TreeNode_t *child_copy = NULL;
+        int rc = NodeCloneSubtree(child, &child_copy);
+        if (rc < 0) {
+            NodeFree(copy);
+            return rc;
+        }
+        NodeAddChild(copy, child_copy);
+        child = child->p_sibling;
+    }
+
+    *out_clone = copy;
+    return 0;
+}
+
+int NodeAddChildCloneChain(TreeNode_t *parent, const TreeNode_t *head)
+{
+    const TreeNode_t *it = head;
+
+    if (!parent || !head) {
+        return -EINVAL;
+    }
+
+    while (it) {
+        TreeNode_t *copy = NULL;
+        int rc = NodeCloneSubtree(it, &copy);
+        if (rc < 0) {
+            return rc;
+        }
+
+        rc = NodeAddChild(parent, copy);
+        if (rc < 0) {
+            NodeFree(copy);
+            return rc;
+        }
+
+        it = it->p_sibling;
+    }
+
+    return 0;
+}
+
+int NodeAttachDeclSpecifiers(TreeNode_t *decl, const TreeNode_t *specs)
+{
+    TreeNode_t *it;
+    TreeNode_t *pointer_node = NULL;
+    TreeNode_t *clone_head = NULL;
+    TreeNode_t *clone_tail = NULL;
+    const TreeNode_t *spec_it;
+    size_t clone_count = 0u;
+
+    if (!decl || !specs) {
+        return -EINVAL;
+    }
+
+    if (decl->nodeType == NODE_FUNCTION) {
+        if (decl->p_firstChild && decl->p_firstChild->nodeType == NODE_POINTER) {
+            pointer_node = decl->p_firstChild;
+            while (pointer_node->p_firstChild && pointer_node->p_firstChild->nodeType == NODE_POINTER) {
+                pointer_node = pointer_node->p_firstChild;
+            }
+            return NodeAddChildCloneChain(pointer_node, specs);
+        }
+
+        spec_it = specs;
+        while (spec_it) {
+            TreeNode_t *clone = NULL;
+            int rc = NodeCloneSubtree(spec_it, &clone);
+            if (rc < 0) {
+                NodeFree(clone_head);
+                return rc;
+            }
+
+            if (!clone_head) {
+                clone_head = clone;
+                clone_tail = clone;
+            } else {
+                clone_tail->p_sibling = clone;
+                clone_tail = clone;
+            }
+
+            clone_count++;
+            spec_it = spec_it->p_sibling;
+        }
+
+        clone_tail->p_sibling = decl->p_firstChild;
+        decl->p_firstChild = clone_head;
+        decl->childNumber += clone_count;
+        return 0;
+    }
+
+    it = decl->p_firstChild;
+    while (it) {
+        if (it->nodeType == NODE_POINTER) {
+            pointer_node = it;
+            break;
+        }
+        it = it->p_sibling;
+    }
+
+    if (!pointer_node) {
+        return NodeAddChildCloneChain(decl, specs);
+    }
+
+    while (pointer_node->p_firstChild && pointer_node->p_firstChild->nodeType == NODE_POINTER) {
+        pointer_node = pointer_node->p_firstChild;
+    }
+
+    return NodeAddChildCloneChain(pointer_node, specs);
 }

@@ -42,3 +42,5 @@ symbol.plist
 compiler
 # ignore admin documentation
 admin-docs/
+tasks/
+todo/
