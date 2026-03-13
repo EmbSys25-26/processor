@@ -1,0 +1,1 @@
+return 5; // Error: return statement outside of a function (SEM046)

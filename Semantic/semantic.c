@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "semantic.h"
+#include "check_stmt.h" //added for check_stmt
 
 static int walk_scope_markers(TreeNode_t *node, semantic_context_t *ctx)
 {
@@ -126,6 +127,8 @@ semantic_result_t semantic_run(TreeNode_t *root, const char *path)
                       0u,
                       "semantic traversal failed");
     }
+    // not finished
+    check_stmt(root, &ctx);
   }
 
   while (scope_current(&ctx.scope_stack) && scope_current(&ctx.scope_stack)->parent) {

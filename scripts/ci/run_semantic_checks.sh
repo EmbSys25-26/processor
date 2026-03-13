@@ -162,6 +162,7 @@ compile_and_run_test regular test_diagnostics_api \
 compile_and_run_test regular test_semantic_api \
   "$ROOT_DIR/test_files/semantic_checks/test_semantic_api.c" \
   "$ROOT_DIR/Semantic/semantic.c" \
+  "$ROOT_DIR/Semantic/check_stmt.c" \
   "$ROOT_DIR/Semantic/symbol.c" \
   "$ROOT_DIR/Semantic/type.c" \
   "$ROOT_DIR/Semantic/diagnostics.c"
@@ -200,6 +201,7 @@ compile_and_run_test san test_diagnostics_api \
 compile_and_run_test san test_semantic_api \
   "$ROOT_DIR/test_files/semantic_checks/test_semantic_api.c" \
   "$ROOT_DIR/Semantic/semantic.c" \
+  "$ROOT_DIR/Semantic/check_stmt.c" \
   "$ROOT_DIR/Semantic/symbol.c" \
   "$ROOT_DIR/Semantic/type.c" \
   "$ROOT_DIR/Semantic/diagnostics.c"

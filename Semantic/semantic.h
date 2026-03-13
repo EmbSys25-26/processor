@@ -13,6 +13,9 @@ typedef struct {
   diagnostic_list_t diagnostics;
   size_t scope_enter_count;
   size_t scope_leave_count;
+
+  type_t *current_fn_ret; // (Current Function Return)Keeps track of the current function's return type, needed for validating return statements (SEM044 SEM046)
+
 } semantic_context_t;
 
 typedef struct {
