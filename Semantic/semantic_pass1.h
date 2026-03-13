@@ -30,3 +30,8 @@ typedef struct {
 int semantic_pass1_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass1_result_t *out_result);
 
 #endif
+
+
+// @TODO 
+// SEM001: Identificador desconhecido deve resolver para um símbolo visível
+// SEM006: Uso de identificador antes da declaração no mesmo bloco

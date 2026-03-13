@@ -79,6 +79,8 @@ run_case "pass2_return_type_fail.c" 2 "SEM043"
 run_case "pass2_break_outside_fail.c" 2 "SEM050"
 run_case "pass2_continue_outside_fail.c" 2 "SEM051"
 run_case "pass2_unknown_identifier_line_fail.c" 2 "SEM001" "pass2_unknown_identifier_line_fail\\.c:4:0"
+run_case "sem_006_check.c" 2 "SEM006" "sem_006_check\\.c:7:0"
+run_case "sem_007_check.c" 2 "SEM007" "sem_007_check\\.c:2:0"
 
 echo "[SUMMARY] semantic_pass_examples total=$total passed=$passed failed=$((total - passed))" | tee -a "$LOG"
 echo "PASS semantic_pass_examples" | tee -a "$LOG"

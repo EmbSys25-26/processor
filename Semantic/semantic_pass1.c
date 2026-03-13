@@ -31,6 +31,177 @@ static void pass1_emit(pass1_state_t *state,
   (void)diag_emit(&state->ctx->diagnostics, code, DIAG_ERROR, line, 0u, "%s", message);
 }
 
+/**
+ * @brief Check whether one object declaration carries a given visibility specifier.
+ * @param decl_node Object declaration node.
+ * @param visibility Visibility enum value to search for.
+ * @return Non-zero when the specifier is present in the declaration chain.
+ */
+static int declaration_has_visibility(const TreeNode_t *decl_node, VisQualifier_t visibility)
+{
+  const TreeNode_t *child;
+
+  if (!decl_node) {
+    return 0;
+  }
+
+  child = decl_node->p_firstChild;
+  while (child) {
+    if (child->nodeType == NODE_VISIBILITY && child->nodeData.dVal == visibility) {
+      return 1;
+    }
+    child = child->p_sibling;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Enforce pass1 visibility restrictions on object declarations.
+ * @param decl_node Object declaration node.
+ * @param state pass1 execution state.
+ * @return 0 on success, negative errno-like value on semantic violation.
+ */
+static int check_inline_on_object_declaration(TreeNode_t *decl_node, pass1_state_t *state)
+{
+  if (!decl_node || !state) {
+    return -EINVAL;
+  }
+
+  if (declaration_has_visibility(decl_node, VIS_INLINE)) {
+    pass1_emit(state, "SEM007", decl_node->lineNumber, "inline não é válido para declaração de variáveis");
+    return -EINVAL;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Check whether one AST node kind should be treated as an expression root.
+ * @param node_type AST node kind.
+ * @return Non-zero when the node belongs to the expression subset.
+ */
+static int is_expression_node_type(NodeType_t node_type)
+{
+  switch (node_type) {
+    case NODE_INTEGER:
+    case NODE_CHAR:
+    case NODE_FLOAT:
+    case NODE_STRING:
+    case NODE_FUNCTION_CALL:
+    case NODE_OPERATOR:
+    case NODE_ARRAY_ACCESS:
+    case NODE_POINTER_CONTENT:
+    case NODE_POST_INC:
+    case NODE_PRE_INC:
+    case NODE_POST_DEC:
+    case NODE_PRE_DEC:
+    case NODE_MEMBER_ACCESS:
+    case NODE_PTR_MEMBER_ACCESS:
+    case NODE_TERNARY:
+    case NODE_REFERENCE:
+    case NODE_TYPE_CAST:
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+static int check_expression_identifier_uses(TreeNode_t *node,
+                                            TreeNode_t *later_chain,
+                                            pass1_state_t *state);
+
+/**
+ * @brief Check whether one later sibling chain contains a matching declaration.
+ * @param node First sibling to inspect.
+ * @param name Identifier name to search for.
+ * @return Non-zero if a later declaration for the same name exists in the chain.
+ */
+static int declaration_exists_later_in_chain(TreeNode_t *node, const char *name)
+{
+  TreeNode_t *it = node;
+
+  if (!name) {
+    return 0;
+  }
+
+  while (it) {
+    if ((it->nodeType == NODE_VAR_DECLARATION || it->nodeType == NODE_ARRAY_DECLARATION) &&
+        it->nodeData.sVal &&
+        strcmp(it->nodeData.sVal, name) == 0) {
+      return 1;
+    }
+    it = it->p_sibling;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Walk one sibling chain that belongs to a single expression subtree.
+ * @param node First node in the chain.
+ * @param state pass1 execution state.
+ * @return 0 on success, negative errno-like value on semantic violation.
+ */
+static int check_expression_chain(TreeNode_t *node,
+                                  TreeNode_t *later_chain,
+                                  pass1_state_t *state)
+{
+  TreeNode_t *it = node;
+
+  while (it) {
+    int rc = check_expression_identifier_uses(it, later_chain, state);
+    if (rc < 0) {
+      return rc;
+    }
+    it = it->p_sibling;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Check identifier uses inside expression trees for same-block use-before-declaration.
+ * @param node Expression subtree root.
+ * @param state pass1 execution state.
+ * @return 0 on success, negative errno-like value when an identifier is not yet visible.
+ */
+static int check_expression_identifier_uses(TreeNode_t *node,
+                                            TreeNode_t *later_chain,
+                                            pass1_state_t *state)
+{
+  scope_t *scope;
+
+  if (!node || !state) {
+    return 0;
+  }
+
+  if (node->nodeType == NODE_IDENTIFIER) {
+    scope = scope_current(&state->ctx->scope_stack);
+    if (!scope || !symbol_lookup_visible(scope, node->nodeData.sVal)) {
+      if (declaration_exists_later_in_chain(later_chain, node->nodeData.sVal)) {
+        pass1_emit(state, "SEM006", node->lineNumber, "uso antes da declaração na ordem do mesmo bloco");
+        return -EEXIST;
+      }
+      return 0;
+    }
+    return 0;
+  }
+
+  if (node->nodeType == NODE_MEMBER_ACCESS || node->nodeType == NODE_PTR_MEMBER_ACCESS) {
+    return check_expression_identifier_uses(node->p_firstChild, later_chain, state);
+  }
+
+  if (node->nodeType == NODE_TYPE_CAST) {
+    if (!node->p_firstChild) {
+      return 0;
+    }
+    return check_expression_chain(node->p_firstChild->p_sibling, later_chain, state);
+  }
+
+  return check_expression_chain(node->p_firstChild, later_chain, state);
+}
+
 
 /**
  * @brief Push scope and account metrics for pass1.
@@ -410,6 +581,16 @@ static int walk_pass1(TreeNode_t *node, pass1_state_t *state)
       if (handle_object_declaration(it, state) < 0) {
         return -ENOMEM;
       }
+      if (check_inline_on_object_declaration(it, state) < 0) {
+        return -EINVAL;
+      }
+    } else if (is_expression_node_type(it->nodeType)) {
+      int rc = check_expression_identifier_uses(it, it->p_sibling, state);
+      if (rc < 0) {
+        return rc;
+      }
+      it = it->p_sibling;
+      continue;
     }
 
     if (it->p_firstChild) {
@@ -479,18 +660,18 @@ int semantic_pass1_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass1
  * 2) se virem que falta algum importante, avisar! e colocar aqui e no docs da drive!
  *
  * PASSE 1 - Declaracoes, scopes, simbolos
- * [ ] SEM001 Identificador desconhecido deve resolver para simbolo visivel (feito no fluxo de lookup do pass2)
+ * [ ] SEM001 Identificador desconhecido deve resolver para simbolo visivel (feito no fluxo de lookup do pass2) <----- 
  * [x] SEM002 Redeclaracao no mesmo scope e rejeitada
  * [x] SEM003 Shadowing em scope aninhado e permitido
  * [x] SEM004 Compatibilidade entre prototipo e definicao de funcao
  * [x] SEM005 Definicao duplicada de funcao e rejeitada
- * [ ] SEM006 Uso antes da declaracao na ordem do mesmo bloco
+ * [x] SEM006 Uso antes da declaracao na ordem do mesmo bloco <----- start with this one first 
  * [ ] SEM007 'inline' invalido para declaracao de variaveis
  * [ ] SEM063 Redeclaracao de membro em enum
  * [ ] SEM064 Redefinicao incompativel de tag struct/union
  *
  * Checks prioritarios ainda em falta no pass1:
- * [ ] SEM006
+ * [x] SEM006
  * [ ] SEM007
  * [ ] SEM063
  * [ ] SEM064
