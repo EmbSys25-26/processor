@@ -520,6 +520,188 @@ static int handle_object_declaration(TreeNode_t *decl_node, pass1_state_t *state
 }
 
 /**
+ * @brief Register enum tag and enum members, checking for duplicate members (SEM063).
+ * @param decl_node NODE_ENUM_DECLARATION node.
+ * @param state pass1 execution state.
+ * @return 0 on success, negative errno-like value on failure.
+ */
+static int handle_enum_declaration(TreeNode_t *decl_node, pass1_state_t *state)
+{
+  const TreeNode_t *member;
+  scope_t *scope;
+  symbol_t *existing;
+  symbol_t *sym;
+  type_t *tag_type;
+  type_t *member_type;
+  int rc;
+
+  if (!decl_node || !state) {
+    return -EINVAL;
+  }
+
+  if (decl_node->nodeData.sVal) {
+    tag_type = type_new_tagged(TYPE_ENUM_TAG, decl_node->nodeData.sVal, 0u);
+    if (!tag_type) {
+      pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to allocate enum tag type");
+      return -ENOMEM;
+    }
+
+    type_set_aggregate_decl(tag_type, decl_node);
+
+    (void)register_symbol(state,
+                          decl_node->nodeData.sVal,
+                          SYMBOL_TAG_ENUM,
+                          tag_type,
+                          decl_node->lineNumber,
+                          0,
+                          0u);
+  }
+
+  scope = scope_current(&state->ctx->scope_stack);
+  if (!scope) {
+    pass1_emit(state, "SEM900", decl_node->lineNumber, "no active scope for enum members");
+    return -EINVAL;
+  }
+
+  member = decl_node->p_firstChild;
+  while (member) {
+    if (member->nodeType != NODE_ENUM_MEMBER || !member->nodeData.sVal) {
+      member = member->p_sibling;
+      continue;
+    }
+
+    /* check for duplicates before insert */
+    existing = symbol_lookup_current(scope, member->nodeData.sVal);
+    if (existing) {
+      pass1_emit(state, "SEM063", member->lineNumber,
+                 "duplicate enum member in same scope");
+      member = member->p_sibling;
+      continue;
+    }
+
+    member_type = type_new_builtin(BUILTIN_INT, 0u);
+    if (!member_type) {
+      pass1_emit(state, "SEM900", member->lineNumber, "failed to allocate enum member type");
+      return -ENOMEM;
+    }
+
+    sym = symbol_new(member->nodeData.sVal,
+                     SYMBOL_ENUM_CONST,
+                     member_type,
+                     member->lineNumber,
+                     0u);
+    if (!sym) {
+      pass1_emit(state, "SEM900", member->lineNumber, "failed to allocate enum member symbol");
+      return -ENOMEM;
+    }
+
+    rc = symbol_insert(scope, sym);
+    if (rc < 0) {
+      symbol_free(sym);
+      pass1_emit(state, "SEM900", member->lineNumber, "failed to insert enum member symbol");
+      return rc;
+    }
+
+    state->result.declaration_count++;
+    member = member->p_sibling;
+  }
+
+  return 0;
+}
+
+
+/**
+ * @brief Register struct/union tag and check for incompatible redefinitions (SEM064).
+ * @param decl_node NODE_STRUCT_DECLARATION or NODE_UNION_DECLARATION node.
+ * @param state pass1 execution state.
+ * @return 0 on success, negative errno-like value on failure.
+ */
+static int handle_tag_declaration(TreeNode_t *decl_node, pass1_state_t *state)
+{
+  scope_t *scope;
+  symbol_t *existing;
+  symbol_t *sym;
+  type_t *tag_type;
+  type_kind_t kind;
+  symbol_kind_t sym_kind;
+  int has_body;
+
+  if (!decl_node || !state) {
+    return -EINVAL;
+  }
+
+  if (decl_node->nodeType == NODE_STRUCT_DECLARATION) {
+    kind     = TYPE_STRUCT_TAG;
+    sym_kind = SYMBOL_TAG_STRUCT;
+  } else if (decl_node->nodeType == NODE_UNION_DECLARATION) {
+    kind     = TYPE_UNION_TAG;
+    sym_kind = SYMBOL_TAG_UNION;
+  } else {
+    return -EINVAL;
+  }
+
+  /*check if this tag has a body */
+  has_body = (decl_node->p_firstChild != NULL);
+
+  if (!decl_node->nodeData.sVal) {
+    return 0;
+  }
+
+  scope = scope_current(&state->ctx->scope_stack);
+  if (!scope) {
+    pass1_emit(state, "SEM900", decl_node->lineNumber, "no active scope for tag declaration");
+    return -EINVAL;
+  }
+
+  existing = symbol_lookup_current(scope, decl_node->nodeData.sVal);
+  if (existing) {
+    if (has_body) {
+      const TreeNode_t *prev_decl = (const TreeNode_t *)existing->type->as.aggregate.decl_node;
+      int prev_has_body = (prev_decl && prev_decl->p_firstChild != NULL);
+
+      if (prev_has_body) {
+        /* two definitions with bodies in the same scope → SEM064 */
+        pass1_emit(state, "SEM064", decl_node->lineNumber,
+                   "conflicting redefinition of struct/union tag");
+        return -EINVAL;
+      }
+
+      type_set_aggregate_decl(existing->type, decl_node);
+    }
+
+    return 0;
+  }
+
+  tag_type = type_new_tagged(kind, decl_node->nodeData.sVal, 0u);
+  if (!tag_type) {
+    pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to allocate tag type");
+    return -ENOMEM;
+  }
+
+  type_set_aggregate_decl(tag_type, decl_node);
+
+  sym = symbol_new(decl_node->nodeData.sVal,
+                   sym_kind,
+                   tag_type,
+                   decl_node->lineNumber,
+                   0u);
+  if (!sym) {
+    pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to allocate tag symbol");
+    return -ENOMEM;
+  }
+
+  if (symbol_insert(scope, sym) < 0) {
+    symbol_free(sym);
+    pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to insert tag symbol");
+    return -EINVAL;
+  }
+
+  state->result.declaration_count++;
+  return 0;
+}
+
+
+/**
  * @brief Recursive pass1 traversal over AST siblings/children.
  * @param node first node in traversal chain.
  * @param state pass1 execution state.
@@ -536,40 +718,36 @@ static int walk_pass1(TreeNode_t *node, pass1_state_t *state)
       if (push_scope(state, it->lineNumber) < 0) {
         return -EINVAL;
       }
-
       if (it->p_firstChild) {
         rc = walk_pass1(it->p_firstChild, state);
         if (rc < 0) {
           return rc;
         }
       }
-
       if (pop_scope(state, it->lineNumber, "SEM901", "scope stack underflow while leaving block scope") < 0) {
         return -EINVAL;
       }
-
       it = it->p_sibling;
       continue;
+
     } else if (it->nodeType == NODE_FOR) {
       int rc;
 
       if (push_scope(state, it->lineNumber) < 0) {
         return -EINVAL;
       }
-
       if (it->p_firstChild) {
         rc = walk_pass1(it->p_firstChild, state);
         if (rc < 0) {
           return rc;
         }
       }
-
       if (pop_scope(state, it->lineNumber, "SEM901", "scope stack underflow while leaving for scope") < 0) {
         return -EINVAL;
       }
-
       it = it->p_sibling;
       continue;
+
     } else if (it->nodeType == NODE_FUNCTION) {
       int rc = handle_function_node(it, state);
       if (rc < 0) {
@@ -577,17 +755,34 @@ static int walk_pass1(TreeNode_t *node, pass1_state_t *state)
       }
       it = it->p_sibling;
       continue;
-    } else if (it->nodeType == NODE_VAR_DECLARATION || it->nodeType == NODE_ARRAY_DECLARATION) {
+
+    } else if (it->nodeType == NODE_VAR_DECLARATION ||
+               it->nodeType == NODE_ARRAY_DECLARATION) {
+      if (check_inline_on_object_declaration(it, state) < 0) {
+        it = it->p_sibling;
+        continue;
+      }
       if (handle_object_declaration(it, state) < 0) {
         return -ENOMEM;
       }
-      if (check_inline_on_object_declaration(it, state) < 0) {
+
+    } else if (it->nodeType == NODE_ENUM_DECLARATION) {
+      if (handle_enum_declaration(it, state) < 0) {
         return -EINVAL;
       }
-    } else if (is_expression_node_type(it->nodeType)) {
-      int rc = check_expression_identifier_uses(it, it->p_sibling, state);
-      if (rc < 0) {
-        return rc;
+      it = it->p_sibling;
+      continue;
+
+    } else if (it->nodeType == NODE_STRUCT_DECLARATION) {
+      if (handle_tag_declaration(it, state) < 0) {
+        return -EINVAL;
+      }
+      it = it->p_sibling;
+      continue;
+
+    } else if (it->nodeType == NODE_UNION_DECLARATION) {
+      if (handle_tag_declaration(it, state) < 0) {
+        return -EINVAL;
       }
       it = it->p_sibling;
       continue;
@@ -660,18 +855,18 @@ int semantic_pass1_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass1
  * 2) se virem que falta algum importante, avisar! e colocar aqui e no docs da drive!
  *
  * PASSE 1 - Declaracoes, scopes, simbolos
- * [ ] SEM001 Identificador desconhecido deve resolver para simbolo visivel (feito no fluxo de lookup do pass2) <----- 
+ * [ ] SEM001 Identificador desconhecido deve resolver para simbolo visivel (feito no fluxo de lookup do pass2)
  * [x] SEM002 Redeclaracao no mesmo scope e rejeitada
  * [x] SEM003 Shadowing em scope aninhado e permitido
  * [x] SEM004 Compatibilidade entre prototipo e definicao de funcao
  * [x] SEM005 Definicao duplicada de funcao e rejeitada
- * [x] SEM006 Uso antes da declaracao na ordem do mesmo bloco <----- start with this one first 
+ * [ ] SEM006 Uso antes da declaracao na ordem do mesmo bloco
  * [ ] SEM007 'inline' invalido para declaracao de variaveis
  * [ ] SEM063 Redeclaracao de membro em enum
  * [ ] SEM064 Redefinicao incompativel de tag struct/union
  *
  * Checks prioritarios ainda em falta no pass1:
- * [x] SEM006
+ * [ ] SEM006
  * [ ] SEM007
  * [ ] SEM063
  * [ ] SEM064
