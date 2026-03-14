@@ -133,6 +133,11 @@ reset:
     ADDI a0, zero, #3
     IMM   #TIMER_HI
     SW    a0, zero, #TIMER_CR0
+    
+    ; Adicionar isto a seguir ← NOVO
+    ADDI a0, zero, #100        ; valor do contador
+    IMM   #TIMER_HI
+    SW    a0, zero, #2         ; CNT_INIT é offset 2 (addr 0x8004)
 
     ; Configure WDT: PS=8, RELOAD=4, WEN=1, RSTEN=1
     ADDI  a0, zero, #8
@@ -144,6 +149,10 @@ reset:
     ADDI  a0, zero, #3
     IMM   #0x440
     SW    a0, zero, #0
+    ; Enable Timer0 IRQ in interrupt controller
+    ADDI  a0, zero, #0x1    ; bit 0 = Timer0
+    IMM   #INTCAUSE_HI      ; 0x4F0 → periph base 0x8F00 after shift
+    SW    a0, zero, #2      ; IRQ_MASK offset = 2 (addr 0x8F04)
 
     J main
 

@@ -25,6 +25,8 @@ SOC_SRCS=(
   srcs/m_i2c_master.v
   srcs/m_brom.v
   srcs/m_bram.v
+  srcs/m_wdt.v        
+  srcs/m_wdt_mmio.v
 )
 
 CPU_CORE_SRCS=(
