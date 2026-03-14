@@ -65,7 +65,7 @@ module soc(
     wire _io_rdy;
 
     wire _rdy;
-
+    wire _wdt_rst_req; 
     wire _irq_take;
     wire [15:0] _irq_vector;
     (* mark_debug = "true" *) wire _in_irq;
