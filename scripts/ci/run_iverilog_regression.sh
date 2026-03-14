@@ -25,7 +25,7 @@ SOC_SRCS=(
   srcs/m_i2c_master.v
   srcs/m_brom.v
   srcs/m_bram.v
-  srcs/m_wdt.v        
+  srcs/m_wdt.v
   srcs/m_wdt_mmio.v
 )
 
@@ -129,7 +129,7 @@ require_log_contains "${ARTIFACT_DIR}/tb_anchor_preemption_abi.run.log" "ANCHOR 
 require_log_contains "${ARTIFACT_DIR}/tb_anchor_preemption_abi.run.log" "ANCHOR ABI restored"
 
 info "running peripheral-bus UART MMIO word-aligned decode regression"
-compile_tb "tb_uart_mmio_word_aligned" sim/tb_uart_mmio_word_aligned.v srcs/m_periph_bus.v srcs/m_timer16.v srcs/m_timerH.v srcs/m_pario.v srcs/m_uart_mmio.v srcs/m_uart_rx.v srcs/m_uart_tx.v srcs/m_i2c_mmio.v srcs/m_i2c_master.v srcs/m_irq_ctrl.v
+compile_tb "tb_uart_mmio_word_aligned" sim/tb_uart_mmio_word_aligned.v srcs/m_periph_bus.v srcs/m_timer16.v srcs/m_timerH.v srcs/m_pario.v srcs/m_uart_mmio.v srcs/m_uart_rx.v srcs/m_uart_tx.v srcs/m_i2c_mmio.v srcs/m_i2c_master.v srcs/m_irq_ctrl.v srcs/m_wdt.v srcs/m_wdt_mmio.v
 run_tb "tb_uart_mmio_word_aligned"
 require_log_contains "${ARTIFACT_DIR}/tb_uart_mmio_word_aligned.run.log" "PASS tb_uart_mmio_word_aligned"
 
@@ -144,18 +144,11 @@ run_tb "tb_i2c_master_write"
 require_log_contains "${ARTIFACT_DIR}/tb_i2c_master_write.run.log" "PASS tb_i2c_master_write"
 
 info "running I2C IRQ vector regression"
-compile_tb "tb_i2c_irq_vector" sim/tb_i2c_irq_vector.v sim/i2c_slave_model.v srcs/m_periph_bus.v srcs/m_timer16.v srcs/m_timerH.v srcs/m_pario.v srcs/m_uart_mmio.v srcs/m_uart_rx.v srcs/m_uart_tx.v srcs/m_i2c_mmio.v srcs/m_i2c_master.v srcs/m_irq_ctrl.v
+compile_tb "tb_i2c_irq_vector" sim/tb_i2c_irq_vector.v sim/i2c_slave_model.v srcs/m_periph_bus.v srcs/m_timer16.v srcs/m_timerH.v srcs/m_pario.v srcs/m_uart_mmio.v srcs/m_uart_rx.v srcs/m_uart_tx.v srcs/m_i2c_mmio.v srcs/m_i2c_master.v srcs/m_irq_ctrl.v srcs/m_wdt.v srcs/m_wdt_mmio.v
 run_tb "tb_i2c_irq_vector"
 require_log_contains "${ARTIFACT_DIR}/tb_i2c_irq_vector.run.log" "PASS tb_i2c_irq_vector"
 
 info "NOT running SoC smoke with bounded runtime"
-#info "running SoC smoke with bounded runtime"
-#iverilog -g2012 -DSIM=1 -DCI=1 -DTB_USE_INTERNALS=1 -Isrcs -o "${ARTIFACT_DIR}/tb_soc_smoke.vvp" sim/tb_Soc.v "${SOC_SRCS[@]}" >"${ARTIFACT_DIR}/tb_soc_smoke.compile.log" 2>&1
-#vvp "${ARTIFACT_DIR}/tb_soc_smoke.vvp" +max-cycles=1200 >"${ARTIFACT_DIR}/tb_soc_smoke.run.log" 2>&1
-#require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "IRQ take"
-#require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "vector=0x0020"
-#require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "vector=0x0040"
-#require_log_contains "${ARTIFACT_DIR}/tb_soc_smoke.run.log" "TB timeout/guard reached"
 
 for log in "${ARTIFACT_DIR}"/*.run.log; do
   require_log_not_contains "${log}" "FAIL"
