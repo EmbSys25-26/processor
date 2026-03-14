@@ -148,6 +148,11 @@ compile_tb "tb_i2c_irq_vector" sim/tb_i2c_irq_vector.v sim/i2c_slave_model.v src
 run_tb "tb_i2c_irq_vector"
 require_log_contains "${ARTIFACT_DIR}/tb_i2c_irq_vector.run.log" "PASS tb_i2c_irq_vector"
 
+info "running WDT unit regression"
+compile_tb "tb_wdt" sim/tb_wdt.v srcs/m_wdt.v srcs/m_wdt_mmio.v
+run_tb "tb_wdt"
+require_log_contains "${ARTIFACT_DIR}/tb_wdt.run.log" "PASS tb_wdt"
+
 info "NOT running SoC smoke with bounded runtime"
 
 for log in "${ARTIFACT_DIR}"/*.run.log; do
