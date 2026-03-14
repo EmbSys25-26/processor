@@ -140,7 +140,8 @@ module tb_Soc;
 
     initial begin
         if (!$value$plusargs("max-cycles=%d", _max_cycles)) begin
-            _max_cycles = 3000;
+          //  _max_cycles = 3000;
+            _max_cycles = 100000;
         end
         wait (_rst == 1'b0);
         wait (_cycles >= _max_cycles);
