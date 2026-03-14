@@ -3,35 +3,21 @@
 `include "constants.vh"
 
 module ctrl_unit(
-    input wire i_clk,
-    input wire i_rst,
     input wire [`CPU_IN:0] i_insn,
-    input wire i_hit,
-    input wire i_rdy,
-    input wire i_ccz,
-    input wire i_ccn,
-    input wire i_ccc,
-    input wire i_ccv,
-    input wire i_irq_take,
-    output wire o_irq_save,
     output wire [3:0] o_rd,
     output wire [3:0] o_rs,
+    output wire [3:0] o_fn,
     output wire [3:0] o_imm,
+    output wire [3:0] o_cond,
     output wire [7:0] o_disp,
-    output wire o_insn_ce,
-    output wire o_imm_pre,
-    output wire [11:0] o_i12_pre,
-    output wire o_rf_we,
-    output wire o_lw,
-    output wire o_lb,
-    output wire o_sw,
-    output wire o_sb,
-    output wire o_int_en,
-    output wire o_br_taken,
-    output wire o_iret_detected,
-    output wire o_valid_insn_ce,
-    output wire o_exec_ce,
-    output wire o_restore_cc,
+    output wire [11:0] o_i12,
+
+    output wire o_is_imm,
+    output wire o_is_bx,
+    output wire o_is_sys,
+    output wire o_is_cli,
+    output wire o_is_sti,
+
     output wire o_is_jal,
     output wire o_is_addi,
     output wire o_is_rr,
@@ -39,17 +25,36 @@ module ctrl_unit(
     output wire o_is_lw,
     output wire o_is_lb,
     output wire o_is_sw,
+    output wire o_is_sb,
+
     output wire o_is_alu,
+    output wire o_is_add,
     output wire o_is_sub,
+    output wire o_is_and,
     output wire o_is_xor,
     output wire o_is_adc,
     output wire o_is_sbc,
     output wire o_is_cmp,
+    output wire o_is_srl,
     output wire o_is_sra,
+
     output wire o_is_sum,
     output wire o_is_log,
     output wire o_is_sr,
+
+    output wire o_is_setcc,
     output wire o_is_getcc
+    ,
+    output wire o_is_iret,
+    output wire o_reads_rd,
+    output wire o_reads_rs,
+    output wire o_writes_rd,
+    output wire o_is_load,
+    output wire o_is_store,
+    output wire o_uses_cc,
+    output wire o_uses_carry,
+    output wire o_updates_cc,
+    output wire o_irq_interlock
 );
 
 /*************************************************************************************
@@ -75,8 +80,8 @@ module ctrl_unit(
     wire _is_imm;
     wire _is_bx;
     wire _is_sys;
-    wire _is_cli_op;
-    wire _is_sti_op;
+    wire _is_cli;
+    wire _is_sti;
 
     wire _is_add;
     wire _is_sub;
@@ -89,16 +94,9 @@ module ctrl_unit(
     wire _is_sra;
 
     wire _is_alu;
-    wire _mem;
-
-    reg _imm_pre;
-    reg [11:0] _i12_pre;
-    reg _irq_save;
-    reg _gie;
-    reg _t;
-
-    wire _is_cli;
-    wire _is_sti;
+    wire _is_sum;
+    wire _is_log;
+    wire _is_sr;
     wire _interlocked_insns;
     wire _is_getcc;
     wire _is_setcc;
@@ -121,8 +119,11 @@ module ctrl_unit(
 
     assign o_rd = _rd;
     assign o_rs = _rs;
+    assign o_fn = _fn;
     assign o_imm = _imm;
+    assign o_cond = _cond;
     assign o_disp = _disp;
+    assign o_i12 = _i12;
 
     assign _is_jal = (_op == `OP_JAL);
     assign _is_addi = (_op == `OP_ADDI);
@@ -135,8 +136,8 @@ module ctrl_unit(
     assign _is_imm = (_op == `OP_IMM);
     assign _is_bx = (_op == `OP_BX);
     assign _is_sys = (_op == `OP_SYS);
-    assign _is_cli_op = (_op == `OP_CLI);
-    assign _is_sti_op = (_op == `OP_STI);
+    assign _is_cli = (_op == `OP_CLI);
+    assign _is_sti = (_op == `OP_STI);
 
     assign _is_add = (_fn == `FN_ADD);
     assign _is_sub = (_fn == `FN_SUB);
@@ -152,6 +153,12 @@ module ctrl_unit(
     assign _is_getcc = _is_sys & (_fn == `FN_GETCC);
     assign _is_setcc = _is_sys & (_fn == `FN_SETCC);
 
+    assign o_is_imm = _is_imm;
+    assign o_is_bx = _is_bx;
+    assign o_is_sys = _is_sys;
+    assign o_is_cli = _is_cli;
+    assign o_is_sti = _is_sti;
+
     assign o_is_jal = _is_jal;
     assign o_is_addi = _is_addi;
     assign o_is_rr = _is_rr;
@@ -159,103 +166,41 @@ module ctrl_unit(
     assign o_is_lw = _is_lw;
     assign o_is_lb = _is_lb;
     assign o_is_sw = _is_sw;
+    assign o_is_sb = _is_sb;
     assign o_is_alu = _is_alu;
+    assign o_is_add = _is_add;
     assign o_is_sub = _is_sub;
+    assign o_is_and = _is_and;
     assign o_is_xor = _is_xor;
     assign o_is_adc = _is_adc;
     assign o_is_sbc = _is_sbc;
     assign o_is_cmp = _is_cmp;
+    assign o_is_srl = _is_srl;
     assign o_is_sra = _is_sra;
-    assign o_is_sum = _is_add | _is_sub | _is_adc | _is_sbc;
-    assign o_is_log = _is_and | _is_xor;
-    assign o_is_sr = _is_srl | _is_sra;
+    assign _is_sum = _is_add | _is_sub | _is_adc | _is_sbc;
+    assign _is_log = _is_and | _is_xor;
+    assign _is_sr = _is_srl | _is_sra;
+    assign o_is_sum = _is_sum;
+    assign o_is_log = _is_log;
+    assign o_is_sr = _is_sr;
+    assign o_is_setcc = _is_setcc;
     assign o_is_getcc = _is_getcc;
+    assign o_is_iret = (i_insn == `CPU_IRET_INSN);
 
 /*************************************************************************************
- * 2.2 Memory and Instruction Enables
+ * 2.2 Side-Effect and Hazard Qualifiers
  ************************************************************************************/
-    assign o_lw = i_hit & _is_lw;
-    assign o_lb = i_hit & _is_lb;
-    assign o_sw = i_hit & _is_sw;
-    assign o_sb = i_hit & _is_sb;
-    assign _mem = i_hit & (_is_lb | _is_lw | _is_sb | _is_sw);
-
-    assign o_insn_ce = i_rst | ~(_mem & ~i_rdy);
-    assign o_exec_ce = i_hit & o_insn_ce;
-    assign o_valid_insn_ce = o_exec_ce & ~i_irq_take;
-
-/*************************************************************************************
- * 2.3 Prefix Tracking
- ************************************************************************************/
-    always @(posedge i_clk) begin
-        if (i_rst) begin
-            _imm_pre <= 1'b0;
-        end else if (o_exec_ce) begin
-            _imm_pre <= _is_imm;
-        end
-    end
-
-    always @(posedge i_clk) begin
-        if (o_exec_ce) begin
-            _i12_pre <= _i12;
-        end
-    end
-
-    assign o_imm_pre = _imm_pre;
-    assign o_i12_pre = _i12_pre;
-
-/*************************************************************************************
- * 2.4 Branch and Writeback Controls
- ************************************************************************************/
-    assign o_rf_we = i_hit & o_insn_ce & ~i_rst & ((_is_alu & ~_is_cmp) | _is_addi | _is_lb | _is_lw | _is_jal);
-
-    always @(*) begin
-        if (i_rst) begin
-            _t = 1'b0;
-        end else begin
-            case (_cond & 4'b1110)
-                `BR_BR:   _t = 1'b1;
-                `BR_BEQ:  _t = i_ccz;
-                `BR_BC:   _t = i_ccc;
-                `BR_BV:   _t = i_ccv;
-                `BR_BLT:  _t = i_ccn ^ i_ccv;
-                `BR_BLE:  _t = (i_ccn ^ i_ccv) | i_ccz;
-                `BR_BLTU: _t = ~i_ccz & ~i_ccc;
-                `BR_BLEU: _t = i_ccz | ~i_ccc;
-                default:  _t = 1'b0;
-            endcase
-        end
-    end
-
-    assign o_br_taken = o_exec_ce & ~_irq_save & (_is_jal | (i_hit & _is_bx & (_cond[0] ? ~_t : _t)));
-
-/*************************************************************************************
- * 2.5 Interrupt Controls
- ************************************************************************************/
-    assign _is_cli = i_hit & o_exec_ce & _is_cli_op;
-    assign _is_sti = i_hit & o_exec_ce & _is_sti_op;
     assign _interlocked_insns = _is_imm | (_is_alu & (_is_adc | _is_sbc | _is_cmp));
 
-    always @(posedge i_clk) begin
-        if (i_rst) begin
-            _gie <= 1'b1;
-        end else if (i_irq_take) begin
-            _gie <= 1'b0;
-        end else if (_is_cli) begin
-            _gie <= 1'b0;
-        end else if (_is_sti) begin
-            _gie <= 1'b1;
-        end
-    end
+    assign o_reads_rd = _is_rr | _is_ri | _is_sw | _is_sb;
+    assign o_reads_rs = _is_rr | _is_addi | _is_lw | _is_lb | _is_sw | _is_sb | _is_jal | _is_setcc;
+    assign o_writes_rd = (_is_alu & ~_is_cmp) | _is_addi | _is_lb | _is_lw | _is_jal | _is_getcc;
+    assign o_is_load = _is_lw | _is_lb;
+    assign o_is_store = _is_sw | _is_sb;
 
-    assign o_int_en = i_hit & _gie & ~_interlocked_insns;
-
-    always @(posedge i_clk) begin
-        _irq_save <= i_irq_take;
-    end
-
-    assign o_irq_save = _irq_save;
-    assign o_iret_detected = i_hit & (i_insn == `CPU_IRET_INSN);
-    assign o_restore_cc = _is_setcc;
+    assign o_uses_cc = _is_bx;
+    assign o_uses_carry = _is_alu & (_is_adc | _is_sbc);
+    assign o_updates_cc = ((_is_alu & (_is_sum | _is_cmp)) | _is_addi | _is_setcc);
+    assign o_irq_interlock = _interlocked_insns;
 
 endmodule

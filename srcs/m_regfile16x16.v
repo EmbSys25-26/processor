@@ -6,11 +6,12 @@
 module regfile16x16(
     input wire i_clk,
     input wire i_we,
-    input wire [3:0] i_wr_ad,
-    input wire [3:0] i_ad,
-    input wire [`CPU_N:0] i_d,
-    output wire [`CPU_N:0] o_wr_o,
-    output wire [`CPU_N:0] o_o
+    input wire [3:0] i_wa,
+    input wire [3:0] i_ra,
+    input wire [3:0] i_rb,
+    input wire [`CPU_N:0] i_wd,
+    output wire [`CPU_N:0] o_ra,
+    output wire [`CPU_N:0] o_rb
 );
 
 /*************************************************************************************
@@ -73,15 +74,15 @@ module regfile16x16(
     end
 
     always @(posedge i_clk) begin
-        if (i_we && (i_wr_ad != 4'b0000)) begin
-            _mem[i_wr_ad] <= i_d;
+        if (i_we && (i_wa != 4'b0000)) begin
+            _mem[i_wa] <= i_wd;
         end
     end
 
 /*************************************************************************************
  * 2.3 Read Path
  ************************************************************************************/
-    assign o_o = _mem[i_ad];
-    assign o_wr_o = _mem[i_wr_ad];
+    assign o_ra = _mem[i_ra];
+    assign o_rb = _mem[i_rb];
 
 endmodule

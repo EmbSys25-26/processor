@@ -31,6 +31,26 @@ module tb_cpu_irq_depth;
  * SECTION 2. IMPLEMENTATION
  ************************************************************************************/
 
+    task wait_depth(input [1:0] i_depth, input i_in_irq, input integer i_max, input [127:0] i_tag);
+        integer _k;
+        reg _found;
+        begin
+            _found = 1'b0;
+            for (_k = 0; _k < i_max; _k = _k + 1) begin
+                @(posedge _clk);
+                if ((dut._irq_depth == i_depth) && (_in_irq === i_in_irq)) begin
+                    _found = 1'b1;
+                    _k = i_max;
+                end
+            end
+            if (!_found) begin
+                $display("FAIL %0s: depth=%0d in_irq=%0b expected depth=%0d in_irq=%0b",
+                    i_tag, dut._irq_depth, _in_irq, i_depth, i_in_irq);
+                $fatal(1);
+            end
+        end
+    endtask
+
 /*************************************************************************************
  * 2.1 DUT and Clock
  ************************************************************************************/
@@ -41,7 +61,7 @@ module tb_cpu_irq_depth;
         .i_rst(_rst),
         .i_i_ad_rst(16'h0100),
         .o_insn_ce(_insn_ce),
-        .o_PC(_i_ad),
+        .o_i_ad(_i_ad),
         .i_insn(_insn),
         .i_hit(1'b1),
         .o_d_ad(_d_ad),
@@ -75,60 +95,38 @@ module tb_cpu_irq_depth;
             $fatal(1);
         end
         $display("WAVE depth-guard depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
+        _insn = 16'hF000;
+        repeat (8) @(posedge _clk);
 
         // 2) Single IRQ entry/exit.
         _irq_take = 1'b1;
-        _insn = 16'hF000;
-        @(posedge _clk);
+        repeat (2) @(posedge _clk);
         _irq_take = 1'b0;
-        @(posedge _clk);
-        if (dut._irq_depth != 2'b01 || _in_irq !== 1'b1) begin
-            $display("FAIL single irq enter: depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
-            $fatal(1);
-        end
+        wait_depth(2'b01, 1'b1, 12, "single irq enter");
         $display("WAVE single-enter depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
 
         _insn = `CPU_IRET_INSN;
-        @(posedge _clk);
-        @(posedge _clk);
-        if (dut._irq_depth != 2'b00 || _in_irq !== 1'b0) begin
-            $display("FAIL single irq exit: depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
-            $fatal(1);
-        end
+        wait_depth(2'b00, 1'b0, 12, "single irq exit");
         $display("WAVE single-exit depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
+        _insn = 16'hF000;
+        repeat (6) @(posedge _clk);
 
         // 3) Nested entry and ordered exits.
         _insn = 16'hF000;
         _irq_take = 1'b1;
-        @(posedge _clk);
+        repeat (2) @(posedge _clk);
         _irq_take = 1'b0;
-        @(posedge _clk);
+        wait_depth(2'b01, 1'b1, 12, "nested first enter");
 
         _irq_take = 1'b1;
-        @(posedge _clk);
+        repeat (2) @(posedge _clk);
         _irq_take = 1'b0;
-        @(posedge _clk);
-
-        if (dut._irq_depth != 2'b10 || _in_irq !== 1'b1) begin
-            $display("FAIL nested enter: depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
-            $fatal(1);
-        end
+        wait_depth(2'b10, 1'b1, 12, "nested second enter");
         $display("WAVE nested-enter depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
 
         _insn = `CPU_IRET_INSN;
-        @(posedge _clk);
-        @(posedge _clk);
-        if (dut._irq_depth != 2'b01 || _in_irq !== 1'b1) begin
-            $display("FAIL nested exit #1: depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
-            $fatal(1);
-        end
-
-        @(posedge _clk);
-        @(posedge _clk);
-        if (dut._irq_depth != 2'b00 || _in_irq !== 1'b0) begin
-            $display("FAIL nested exit #2: depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
-            $fatal(1);
-        end
+        wait_depth(2'b01, 1'b1, 12, "nested exit #1");
+        wait_depth(2'b00, 1'b0, 12, "nested exit #2");
         $display("WAVE nested-exit depth=%0d in_irq=%0b", dut._irq_depth, _in_irq);
 
         $display("PASS tb_cpu_irq_depth");

@@ -147,7 +147,7 @@ module soc(
         .i_rst(_total_rst),
         .i_i_ad_rst(_i_ad_rst),
         .o_insn_ce(_insn_ce),
-        .o_PC(_PC),
+        .o_i_ad(_PC),
         .i_insn(_insn_q),
         .i_hit(_hit),
         .o_d_ad(_d_ad),
