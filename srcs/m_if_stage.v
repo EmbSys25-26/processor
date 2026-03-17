@@ -25,10 +25,11 @@
 //    meaning the IF stage should not update its PC or output a 
 //    valid insn.
 //
-// The 3-deep PC shift register (_pc → _pc_d1 → _pc_d2 → o_pc) SHOULD
-// model the instruction-memory latency: the PC is presented
-// to the memory some cycles before the instruction arrives,
-// so o_pc tracks which instruction actually came back.
+// The 2-deep PC shift register (_pc → _pc_d1 → o_pc) SHOULD
+// model the instruction-memory latency + the path until IF 
+// module : the PC is presented to the memory some cycles 
+// before the instruction arrives,so o_pc tracks which 
+// instruction actually came back.
 // ============================================================
 
 
@@ -51,17 +52,13 @@ module if_stage(
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
 
-    // Two-stage PC pipeline to align the returned instruction word with its PC.
-    // Because the instruction memory is assumed to have a pipeline of at least 2 cycles,
-    // the PC that was sent to the memory (_pc_d1, _pc_d2) must be tracked so that o_pc
-    // matches the instruction that just came back.
+    // One intermediate register to align the PC with the instruction on insn
     reg [15:0] _pc_d1;          // PC delayed by 1 cycle
-    reg [15:0] _pc_d2;          // PC delayed by 2 cycles → used as o_pc
 
-    // Counter for post-flush bubble cycles.
-    // After a flush, 2 bubble slots must be injected to drain the pipeline
+    // Counter for post-flush bubble cycles (flush bad inflight instructions)
+    // After a flush, 1 bubble slot must be injected to drain the pipeline
     // before a valid instruction from the new PC can appear.
-    reg [1:0] _flush_bubble;    // Counts down from 2 to 0 after a flush
+    reg _flush_bubble;    // Counts down from 1 to 0 after a flush
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
@@ -72,7 +69,7 @@ module if_stage(
 
     // Output is valid only when: instruction memory has a hit AND there are
     // no outstanding flush bubbles still being drained.
-    assign o_valid = i_hit & (_flush_bubble == 2'd0);
+    assign o_valid = i_hit & (_flush_bubble == 1'd0);
 
     // Pass the instruction word directly — no registered stage here.
     assign o_insn = i_insn;
@@ -82,23 +79,20 @@ module if_stage(
             // On reset, seed the entire PC pipeline with the reset address
             // so there is no spurious old-PC instruction in flight.
             _pc_d1 <= i_pc;
-            _pc_d2 <= i_pc;
             o_pc   <= i_pc;
             _flush_bubble <= 2'd0;
         end else if (i_flush) begin
             // Redirect: load the flush target into all pipeline stages immediately,
-            // and arm the 2-cycle bubble counter.
+            // and arm the 1-cycle bubble counter.
             _pc_d1 <= i_flush_pc;
-            _pc_d2 <= i_flush_pc;
             o_pc   <= i_flush_pc;
-            _flush_bubble <= 2'd2;
+            _flush_bubble <= 1'd1;
         end else begin
             if (i_hit & ~i_stall) begin
                 // Normal advance: shift the PC pipeline forward and
                 // decrement the bubble counter if it is non-zero.
                 _pc_d1 <= i_pc;
-                _pc_d2 <= _pc_d1;
-                o_pc   <= _pc_d2;
+                o_pc   <= _pc_d1;
                 if (_flush_bubble != 2'd0) begin
                     _flush_bubble <= _flush_bubble - 2'd1;
                 end
