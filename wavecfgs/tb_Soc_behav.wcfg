@@ -11,15 +11,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="1,331.666 ns"></ZoomStartTime>
-      <ZoomEndTime time="1,533.667 ns"></ZoomEndTime>
-      <Cursor1Time time="1,500.000 ns"></Cursor1Time>
+      <ZoomStartTime time="3.121 ns"></ZoomStartTime>
+      <ZoomEndTime time="146.122 ns"></ZoomEndTime>
+      <Cursor1Time time="221.121 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="146"></NameColumnWidth>
+      <NameColumnWidth column_width="142"></NameColumnWidth>
       <ValueColumnWidth column_width="66"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="25" />
+   <WVObjectSize size="24" />
    <wvobject type="logic" fp_name="/tb_Soc/_clk">
       <obj_property name="ElementShortName">_clk</obj_property>
       <obj_property name="ObjectShortName">_clk</obj_property>
@@ -28,9 +28,9 @@
       <obj_property name="ElementShortName">_rst</obj_property>
       <obj_property name="ObjectShortName">_rst</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_rom/i_addr">
-      <obj_property name="ElementShortName">i_addr[9:1]</obj_property>
-      <obj_property name="ObjectShortName">i_addr[9:1]</obj_property>
+   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/i_pc">
+      <obj_property name="ElementShortName">i_pc[15:0]</obj_property>
+      <obj_property name="ObjectShortName">i_pc[15:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_rom/o_dout_h">
       <obj_property name="ElementShortName">o_dout_h[7:0]</obj_property>
@@ -43,10 +43,6 @@
    <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/i_insn">
       <obj_property name="ElementShortName">i_insn[15:0]</obj_property>
       <obj_property name="ObjectShortName">i_insn[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/i_pc">
-      <obj_property name="ElementShortName">i_pc[15:0]</obj_property>
-      <obj_property name="ObjectShortName">i_pc[15:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/o_insn">
       <obj_property name="ElementShortName">o_insn[15:0]</obj_property>

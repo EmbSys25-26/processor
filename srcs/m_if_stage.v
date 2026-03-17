@@ -93,8 +93,8 @@ module if_stage(
                 // decrement the bubble counter if it is non-zero.
                 _pc_d1 <= i_pc;
                 o_pc   <= _pc_d1;
-                if (_flush_bubble != 2'd0) begin
-                    _flush_bubble <= _flush_bubble - 2'd1;
+                if (_flush_bubble != 1'd0) begin
+                    _flush_bubble <= _flush_bubble - 1'd1;
                 end
             end
             // If stalled (i_stall asserted) or no hit: hold everything frozen.
