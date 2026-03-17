@@ -1,18 +1,25 @@
 `timescale 1ns / 1ps
 
-/*
-EX/MEM pipeline register
-Transfers EX results/control into MEM.
-- Flush/reset clears valid and all side-effecting controls.
-- Stall freezes EX/MEM state while upstream/downstream settle.
-- Otherwise captures address/data/writeback/flag metadata.
-*/
-
+// ============================================================
+// EX/MEM pipeline register
+//
+// Captures the EX stage outputs between the Execute and Memory
+// access stages.
+//
+// Flush behaviour: the EX/MEM register is flushed on IRQ accept
+// (_accept_irq) to squash the instruction that completed EX while
+// the interrupt is being taken.  Note that it is NOT flushed on
+// branch commits — by the time a branch fires in ID, the instruction
+// that was in EX is unrelated to the branch and should retire normally.
+//
+// Stall behaviour: frozen during a MEM wait (_stall_ex), keeping
+// the same instruction visible to MEM until it completes.
+// ============================================================
 module pipe_ex_mem(
     input wire i_clk,
     input wire i_rst,
-    input wire i_stall,
-    input wire i_flush,
+    input wire i_stall,             // Freeze: MEM wait in progress
+    input wire i_flush,             // Squash: IRQ accepted
     input wire i_valid,
     input wire [15:0] i_pc,
     input wire [3:0] i_rd,
@@ -21,9 +28,9 @@ module pipe_ex_mem(
     input wire i_lb,
     input wire i_sw,
     input wire i_sb,
-    input wire [15:0] i_d_ad,
-    input wire [15:0] i_store_data,
-    input wire [15:0] i_wb_pre_data,
+    input wire [15:0] i_d_ad,       // Data-memory address from EX
+    input wire [15:0] i_store_data, // Store data from EX
+    input wire [15:0] i_wb_pre_data,// Pre-writeback ALU result from EX
     input wire i_flag_we,
     input wire i_new_ccz,
     input wire i_new_ccn,
@@ -72,52 +79,55 @@ module pipe_ex_mem(
  ************************************************************************************/
     always @(posedge i_clk) begin
         if (i_rst || i_flush) begin
-            o_valid <= 1'b0;
-            o_pc <= 16'h0000;
-            o_rd <= 4'h0;
-            o_rf_we <= 1'b0;
-            o_lw <= 1'b0;
-            o_lb <= 1'b0;
-            o_sw <= 1'b0;
-            o_sb <= 1'b0;
-            o_d_ad <= 16'h0000;
-            o_store_data <= 16'h0000;
-            o_wb_pre_data <= 16'h0000;
-            o_flag_we <= 1'b0;
-            o_new_ccz <= 1'b0;
-            o_new_ccn <= 1'b0;
-            o_new_ccc <= 1'b0;
-            o_new_ccv <= 1'b0;
-            o_carry_we <= 1'b0;
-            o_new_c <= 1'b0;
-            o_updates_cc_hz <= 1'b0;
+            // Clear to NOP on reset or IRQ accept
+            o_valid            <= 1'b0;
+            o_pc               <= 16'h0000;
+            o_rd               <= 4'h0;
+            o_rf_we            <= 1'b0;
+            o_lw               <= 1'b0;
+            o_lb               <= 1'b0;
+            o_sw               <= 1'b0;
+            o_sb               <= 1'b0;
+            o_d_ad             <= 16'h0000;
+            o_store_data       <= 16'h0000;
+            o_wb_pre_data      <= 16'h0000;
+            o_flag_we          <= 1'b0;
+            o_new_ccz          <= 1'b0;
+            o_new_ccn          <= 1'b0;
+            o_new_ccc          <= 1'b0;
+            o_new_ccv          <= 1'b0;
+            o_carry_we         <= 1'b0;
+            o_new_c            <= 1'b0;
+            o_updates_cc_hz    <= 1'b0;
             o_updates_carry_hz <= 1'b0;
-            o_is_load <= 1'b0;
-            o_is_iret <= 1'b0;
+            o_is_load          <= 1'b0;
+            o_is_iret          <= 1'b0;
         end else if (!i_stall) begin
-            o_valid <= i_valid;
-            o_pc <= i_pc;
-            o_rd <= i_rd;
-            o_rf_we <= i_rf_we;
-            o_lw <= i_lw;
-            o_lb <= i_lb;
-            o_sw <= i_sw;
-            o_sb <= i_sb;
-            o_d_ad <= i_d_ad;
-            o_store_data <= i_store_data;
-            o_wb_pre_data <= i_wb_pre_data;
-            o_flag_we <= i_flag_we;
-            o_new_ccz <= i_new_ccz;
-            o_new_ccn <= i_new_ccn;
-            o_new_ccc <= i_new_ccc;
-            o_new_ccv <= i_new_ccv;
-            o_carry_we <= i_carry_we;
-            o_new_c <= i_new_c;
-            o_updates_cc_hz <= i_updates_cc_hz;
+            // Normal advance: capture all EX outputs
+            o_valid            <= i_valid;
+            o_pc               <= i_pc;
+            o_rd               <= i_rd;
+            o_rf_we            <= i_rf_we;
+            o_lw               <= i_lw;
+            o_lb               <= i_lb;
+            o_sw               <= i_sw;
+            o_sb               <= i_sb;
+            o_d_ad             <= i_d_ad;
+            o_store_data       <= i_store_data;
+            o_wb_pre_data      <= i_wb_pre_data;
+            o_flag_we          <= i_flag_we;
+            o_new_ccz          <= i_new_ccz;
+            o_new_ccn          <= i_new_ccn;
+            o_new_ccc          <= i_new_ccc;
+            o_new_ccv          <= i_new_ccv;
+            o_carry_we         <= i_carry_we;
+            o_new_c            <= i_new_c;
+            o_updates_cc_hz    <= i_updates_cc_hz;
             o_updates_carry_hz <= i_updates_carry_hz;
-            o_is_load <= i_is_load;
-            o_is_iret <= i_is_iret;
+            o_is_load          <= i_is_load;
+            o_is_iret          <= i_is_iret;
         end
+        // If stalled: hold all outputs frozen
     end
 
 endmodule

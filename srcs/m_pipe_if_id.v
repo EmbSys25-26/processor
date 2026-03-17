@@ -2,14 +2,16 @@
 
 `include "constants.vh"
 
-/*
-IF/ID pipeline register
-Captures fetched PC and instruction between IF and ID.
-- Flush/reset clears valid and injects NOP into the instruction field.
-- Stall freezes current contents (no register update).
-- Otherwise forwards i_valid/i_pc/i_insn to decode.
-*/
-
+// ============================================================
+// IF/ID pipeline register
+//
+// Sits between the IF and ID stages.
+// Standard pipeline register behaviour:
+//   - Reset or flush  → clears valid, writes NOP to instruction field
+//                       (ensures ID never sees a garbage instruction)
+//   - Stall           → register frozen (contents unchanged)
+//   - Normal          → captures IF outputs on the rising clock edge: forwards i_valid/i_pc/i_insn to decode
+// ============================================================
 module pipe_if_id(
     input wire i_clk,
     input wire i_rst,
@@ -44,6 +46,7 @@ module pipe_if_id(
             o_pc <= i_pc;
             o_insn <= i_insn;
         end
+        // If stalled: all outputs hold their current values (implicit register freeze)
     end
 
 endmodule

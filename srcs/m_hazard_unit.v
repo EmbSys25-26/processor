@@ -1,36 +1,97 @@
 `timescale 1ns / 1ps
 
+// ============================================================
+// Hazard Unit
+//
+// Pure combinational unit. Monitors the pipeline stages and
+// computes all stall, bubble, and flush signals required to
+// maintain correct in-order execution.
+//
+// Hazard types detected:
+//
+//   1. RAW (Read-After-Write) data hazard:
+//      An instruction in ID reads a register that is being
+//      written by an instruction still in EX, MEM, or WB.
+//      The instruction in ID cannot proceed until the producer
+//      retires. Since there is no forwarding, a stall is issued
+//      until the register value is committed to the register file.
+//      Detection: compare Rd/Rs in ID against the destination
+//      register of each downstream pending write.
+//
+//   2. Load-use hazard:
+//      A load instruction in EX/ID-EX will not have its result
+//      available until after the MEM stage. If the immediately
+//      following instruction needs that value, an extra stall
+//      cycle is required (even with forwarding this would be 1
+//      stall; here it falls under the RAW detection as well,
+//      but is separately identified).
+//      Detection: ID/EX is a load AND its destination matches
+//      what the current ID instruction reads.
+//
+//   3. CC (Condition Code) hazard:
+//      An instruction in ID reads the condition codes (e.g. BX),
+//      but an in-flight instruction in EX, MEM, or WB will update
+//      them. ID must stall until the update is committed.
+//
+//   4. Carry hazard:
+//      Similar to CC hazard but for the carry bit, which is used
+//      by ADC/SBC. Stall if any in-flight instruction updates carry.
+//
+// Control outputs:
+//
+//   o_stall_if   — Stall the IF stage (freeze PC register)
+//   o_stall_id   — Stall the ID stage (freeze IF/ID register)
+//   o_stall_ex   — Stall the EX stage (freeze ID/EX and EX/MEM)
+//   o_bubble_ex  — Inject a NOP bubble into ID/EX (decode hazard only)
+//   o_flush_ifid — Flush IF/ID (branch taken or IRQ accepted)
+//   o_flush_idex — Flush ID/EX (IRQ accepted)
+//   o_accept_irq — Acknowledge an interrupt this cycle
+//
+// Stall vs bubble distinction:
+//   When a decode hazard occurs without a concurrent MEM wait,
+//   only a bubble is needed in ID/EX — the IF and ID stages
+//   stall but EX/MEM keeps moving. When a MEM wait is active,
+//   the entire pipeline upstream of MEM must freeze (stall_ex);
+//   no bubble is injected because EX/MEM is frozen in place.
+// ============================================================
 module hazard_unit(
+    // ---- Instruction in ID ----
     input wire i_id_valid,
-    input wire [3:0] i_id_rd,
-    input wire [3:0] i_id_rs,
-    input wire i_id_reads_rd,
-    input wire i_id_reads_rs,
-    input wire i_id_uses_cc,
-    input wire i_id_uses_carry,
-    input wire i_branch_take,
-    input wire i_mem_wait,
-    input wire i_irq_take,
+    input wire [3:0] i_id_rd,          // Rd field of instruction in ID
+    input wire [3:0] i_id_rs,          // Rs field
+    input wire i_id_reads_rd,          // Instruction reads Rd as a source
+    input wire i_id_reads_rs,          // Instruction reads Rs as a source
+    input wire i_id_uses_cc,           // Instruction reads condition codes
+    input wire i_id_uses_carry,        // Instruction reads carry bit
 
+    // ---- External control events ----
+    input wire i_branch_take,          // A branch/jump was committed in ID this cycle
+    input wire i_mem_wait,             // MEM stage is waiting for data memory
+    input wire i_irq_take,             // An interrupt request is pending (one-shot)
+
+    // ---- ID/EX stage state (instruction in EX) ----
     input wire i_idex_valid,
-    input wire i_idex_rf_we,
-    input wire [3:0] i_idex_rd,
-    input wire i_idex_is_load,
-    input wire i_idex_updates_cc,
-    input wire i_idex_updates_carry,
+    input wire i_idex_rf_we,           // EX instruction writes a register
+    input wire [3:0] i_idex_rd,        // Destination register of EX instruction
+    input wire i_idex_is_load,         // EX instruction is a load (extra latency)
+    input wire i_idex_updates_cc,      // EX instruction updates condition codes
+    input wire i_idex_updates_carry,   // EX instruction updates carry
 
+    // ---- EX/MEM stage state (instruction in MEM) ----
     input wire i_exmem_valid,
     input wire i_exmem_rf_we,
     input wire [3:0] i_exmem_rd,
     input wire i_exmem_updates_cc,
     input wire i_exmem_updates_carry,
 
+    // ---- MEM/WB stage state (instruction in WB) ----
     input wire i_memwb_valid,
     input wire i_memwb_rf_we,
     input wire [3:0] i_memwb_rd,
     input wire i_memwb_updates_cc,
     input wire i_memwb_updates_carry,
 
+    // ---- Control outputs ----
     output wire o_stall_if,
     output wire o_stall_id,
     output wire o_stall_ex,
@@ -43,18 +104,26 @@ module hazard_unit(
 /*************************************************************************************
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
-    wire _idex_pending;
-    wire _exmem_pending;
-    wire _memwb_pending;
+
+    // "Pending" = a downstream stage has a valid instruction that writes a register
+    wire _idex_pending;   // EX stage has a pending register write
+    wire _exmem_pending;  // MEM stage has a pending register write
+    wire _memwb_pending;  // WB stage has a pending register write
+
+    // Register address match: ID instruction reads a register that a downstream
+    // stage is about to write
     wire _match_idex;
     wire _match_exmem;
     wire _match_memwb;
-    wire _raw_hazard;
-    wire _load_use_hazard;
-    wire _cc_hazard;
-    wire _carry_hazard;
-    wire _decode_hazard;
-    wire _accept_irq;
+
+    // Hazard type flags
+    wire _raw_hazard;       // Any RAW register data hazard
+    wire _load_use_hazard;  // Load-use subset of RAW (extra stall cycle needed)
+    wire _cc_hazard;        // Condition-code read-after-write
+    wire _carry_hazard;     // Carry-bit read-after-write
+    wire _decode_hazard;    // Any hazard that requires stalling the decode stage
+
+    wire _accept_irq;       // Internal IRQ accept signal
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
@@ -63,34 +132,78 @@ module hazard_unit(
 /*************************************************************************************
  * 2.1 Data/CC Hazard Predicates
  ************************************************************************************/
-    assign _idex_pending = i_idex_valid & i_idex_rf_we & (i_idex_rd != 4'h0);
+
+    // A downstream stage is "pending" only when it is valid, writing a register,
+    // and the destination is not R0 (R0 is read-only/zero and never hazardous).
+    assign _idex_pending  = i_idex_valid  & i_idex_rf_we  & (i_idex_rd  != 4'h0);
     assign _exmem_pending = i_exmem_valid & i_exmem_rf_we & (i_exmem_rd != 4'h0);
     assign _memwb_pending = i_memwb_valid & i_memwb_rf_we & (i_memwb_rd != 4'h0);
 
-    assign _match_idex = (i_id_reads_rd & (i_id_rd == i_idex_rd)) | (i_id_reads_rs & (i_id_rs == i_idex_rd));
+    // A "match" means the instruction in ID reads a register that the downstream
+    // stage will write.  Both Rd and Rs are checked because some instructions
+    // (e.g. RR ALU, SW/SB) use Rd as a source operand.
+    assign _match_idex  = (i_id_reads_rd & (i_id_rd == i_idex_rd))  | (i_id_reads_rs & (i_id_rs == i_idex_rd));
     assign _match_exmem = (i_id_reads_rd & (i_id_rd == i_exmem_rd)) | (i_id_reads_rs & (i_id_rs == i_exmem_rd));
     assign _match_memwb = (i_id_reads_rd & (i_id_rd == i_memwb_rd)) | (i_id_reads_rs & (i_id_rs == i_memwb_rd));
 
-    assign _raw_hazard = i_id_valid & ((_idex_pending & _match_idex) | (_exmem_pending & _match_exmem) | (_memwb_pending & _match_memwb));
+    // RAW hazard: ID instruction has a match against any pending downstream write
+    assign _raw_hazard = i_id_valid & (
+        (_idex_pending  & _match_idex)  |
+        (_exmem_pending & _match_exmem) |
+        (_memwb_pending & _match_memwb)
+    );
+
+    // Load-use hazard: the instruction immediately following a load reads the loaded
+    // register.  The load result is only available after MEM, so an extra stall is
+    // needed.  R0 destination excluded — writes to R0 are discarded.
     // Ignore load-use hazards on rd=r0, since r0 is architecturally constant zero.
-    assign _load_use_hazard = i_id_valid & i_idex_valid & i_idex_is_load & (i_idex_rd != 4'h0) & _match_idex;
-    assign _cc_hazard = i_id_valid & i_id_uses_cc & (i_idex_updates_cc | i_exmem_updates_cc | i_memwb_updates_cc);
-    assign _carry_hazard = i_id_valid & i_id_uses_carry & (i_idex_updates_carry | i_exmem_updates_carry | i_memwb_updates_carry);
+    assign _load_use_hazard = i_id_valid & i_idex_valid & i_idex_is_load &
+                              (i_idex_rd != 4'h0) & _match_idex;
+
+    // CC hazard: ID instruction consumes condition codes but a downstream instruction
+    // will update them.  Must stall until the update is committed.
+    assign _cc_hazard = i_id_valid & i_id_uses_cc &
+                        (i_idex_updates_cc | i_exmem_updates_cc | i_memwb_updates_cc);
+
+    // Carry hazard: same concept for the carry bit used by ADC/SBC.
+    assign _carry_hazard = i_id_valid & i_id_uses_carry &
+                           (i_idex_updates_carry | i_exmem_updates_carry | i_memwb_updates_carry);
+
+    // Any hazard that requires inserting a stall/bubble at the decode boundary
     assign _decode_hazard = _raw_hazard | _load_use_hazard | _cc_hazard | _carry_hazard;
 
 /*************************************************************************************
  * 2.2 Control Outputs
  ************************************************************************************/
+
+    // An IRQ can only be accepted when:
+    //   - The interrupt line is asserted (one-shot pulse), AND
+    //   - The MEM stage is not stalling (we don't want to disturb an in-flight
+    //     memory operation by also trying to save PC into R14 simultaneously)
     assign _accept_irq = i_irq_take & ~i_mem_wait;
 
-    assign o_stall_if = i_mem_wait | _decode_hazard;
-    assign o_stall_id = i_mem_wait | _decode_hazard;
-    assign o_stall_ex = i_mem_wait;
+    // IF stalls when data memory is busy OR there is a decode hazard.
+    // Both cases freeze the PC so the same instruction is re-fetched.
+    assign o_stall_if  = i_mem_wait | _decode_hazard;
+
+    // ID stalls for the same reasons as IF (they are always stalled together).
+    assign o_stall_id  = i_mem_wait | _decode_hazard;
+
+    // EX stalls only during a MEM wait (the pipeline above MEM freezes).
+    assign o_stall_ex  = i_mem_wait;
+
     // During a MEM wait, EX/MEM is frozen and ID/EX must be preserved.
     // Inject bubbles only for pure decode hazards when MEM is not stalling.
     assign o_bubble_ex = _decode_hazard & ~i_mem_wait;
+
+    // Flush IF/ID on branch commit or IRQ accept (both redirect the PC).
     assign o_flush_ifid = i_branch_take | _accept_irq;
+
+    // Flush ID/EX on IRQ accept to squash the instruction that was about to enter EX.
+    // (A branch commit does NOT need to flush ID/EX because the instruction in ID
+    //  is the branch itself — it has already been handled.)
     assign o_flush_idex = _accept_irq;
+
     assign o_accept_irq = _accept_irq;
 
 endmodule
