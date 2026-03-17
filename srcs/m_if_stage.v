@@ -80,7 +80,7 @@ module if_stage(
             // so there is no spurious old-PC instruction in flight.
             _pc_d1 <= i_pc;
             o_pc   <= i_pc;
-            _flush_bubble <= 2'd0;
+            _flush_bubble <= 1'd0;
         end else if (i_flush) begin
             // Redirect: load the flush target into all pipeline stages immediately,
             // and arm the 1-cycle bubble counter.
