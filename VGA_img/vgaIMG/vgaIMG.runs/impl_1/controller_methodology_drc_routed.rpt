@@ -1,0 +1,150 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
+| Date         : Tue Mar 17 17:18:38 2026
+| Host         : panda running 64-bit Ubuntu 22.04.5 LTS
+| Command      : report_methodology -file controller_methodology_drc_routed.rpt -pb controller_methodology_drc_routed.pb -rpx controller_methodology_drc_routed.rpx
+| Design       : controller
+| Device       : xc7z010clg400-1
+| Speed File   : -1
+| Design State : Fully Routed
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Report Methodology
+
+Table of Contents
+-----------------
+1. REPORT SUMMARY
+2. REPORT DETAILS
+
+1. REPORT SUMMARY
+-----------------
+            Netlist: netlist
+          Floorplan: design_1
+      Design limits: <entire design considered>
+             Max checks: <unlimited>
+             Checks found: 17
++-----------+----------+------------------------------------------------------+--------+
+| Rule      | Severity | Description                                          | Checks |
++-----------+----------+------------------------------------------------------+--------+
+| LUTAR-1   | Warning  | LUT drives async reset alert                         | 1      |
+| TIMING-28 | Warning  | Auto-derived clock referenced by a timing constraint | 2      |
+| XDCH-2    | Warning  | Same min and max delay values on IO port             | 14     |
++-----------+----------+------------------------------------------------------+--------+
+
+2. REPORT DETAILS
+-----------------
+LUTAR-1#1 Warning
+LUT drives async reset alert  
+LUT cell periph_vga/u_system/vga_system_i/axi_vdma_0/U0/GEN_SPRT_FOR_MM2S.MM2S_LINEBUFFER_I/GEN_LINEBUF_NO_SOF.GEN_LINEBUFFER.GEN_ASYNC_FIFO.LB_BUILT_IN.I_LINEBUFFER_FIFO/fg_builtin_fifo_inst/inst_fifo_gen/gconvfifo.rf/gbi.bi/g7ser_birst.rstbt/gf36e1_inst.sngfifo36e1_i_1, with 2 or more inputs, drives asynchronous preset/clear pin(s) periph_vga/u_system/vga_system_i/axi_vdma_0/U0/GEN_SPRT_FOR_MM2S.MM2S_LINEBUFFER_I/GEN_LINEBUF_NO_SOF.GEN_LINEBUFFER.GEN_ASYNC_FIFO.LB_BUILT_IN.I_LINEBUFFER_FIFO/fg_builtin_fifo_inst/inst_fifo_gen/gconvfifo.rf/gbi.bi/v7_bi_fifo.fblk/gextw[1].gnll_fifo.inst_extd/gonep.inst_prim/gf36e1_inst.sngfifo36e1/RST. The LUT may glitch and trigger an unexpected reset, even if it is a properly timed path.
+Related violations: <none>
+
+TIMING-28#1 Warning
+Auto-derived clock referenced by a timing constraint  
+The auto-derived clock clk_pixel_vga_system_clk_wiz_0_1 is referenced by name inside timing constraint (see constraint position 10 in the Timing Constraint window in Vivado IDE). It is recommended to reference an auto-derived clock by the pin name attached to the clock: get_clocks -of_objects [get_pins periph_vga/u_system/vga_system_i/clk_wiz_0/inst/mmcm_adv_inst/CLKOUT0]
+Related violations: <none>
+
+TIMING-28#2 Warning
+Auto-derived clock referenced by a timing constraint  
+The auto-derived clock clk_pixel_vga_system_clk_wiz_0_1 is referenced by name inside timing constraint (see constraint position 9 in the Timing Constraint window in Vivado IDE). It is recommended to reference an auto-derived clock by the pin name attached to the clock: get_clocks -of_objects [get_pins periph_vga/u_system/vga_system_i/clk_wiz_0/inst/mmcm_adv_inst/CLKOUT0]
+Related violations: <none>
+
+XDCH-2#1 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_hsync' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#2 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_blue[0]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#3 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_blue[1]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#4 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_blue[2]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#5 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_blue[3]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#6 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_green[0]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#7 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_green[1]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#8 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_green[2]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#9 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_green[3]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#10 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_red[0]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#11 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_red[1]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#12 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_red[2]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#13 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vga_red[3]' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+XDCH-2#14 Warning
+Same min and max delay values on IO port  
+The same output delay of 0.000 ns has been defined on port 'o_vsync' relative to clock clk_pixel_vga_system_clk_wiz_0_1 for both max and min. Make sure this reflects the design intent.
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc (Line: 42)
+Related violations: <none>
+
+

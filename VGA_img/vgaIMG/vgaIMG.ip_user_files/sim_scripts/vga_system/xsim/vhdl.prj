@@ -1,0 +1,8 @@
+vhdl xil_defaultlib  \
+"../../../bd/vga_system/ip/vga_system_axi_vdma_0_0/sim/vga_system_axi_vdma_0_0.vhd" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_1/sim/bd_654d_psr_aclk_0.vhd" \
+"../../../bd/vga_system/ip/vga_system_rst_ps7_0_50M_0/sim/vga_system_rst_ps7_0_50M_0.vhd" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_1/sim/bd_ead3_psr_aclk_0.vhd" \
+
+# Do not sort compile order
+nosort

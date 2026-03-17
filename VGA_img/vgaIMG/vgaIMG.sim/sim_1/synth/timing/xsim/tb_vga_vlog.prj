@@ -1,0 +1,9 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  --include "../../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "../../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/ec67/hdl" --include "../../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/6cfa/hdl" --include "../../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl" --include "../../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/f0b6/hdl/verilog" --include "../../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a8e4/hdl/verilog" --include "../../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a9be" --include "../../../../../vgaIMG.srcs/sources_1/new" --include "../../../../../vgaIMG.ip_user_files/ipstatic" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" \
+"tb_vga_time_synth.v" \
+"../../../../../vgaIMG.srcs/sources_1/new/hsync_module.v" \
+"../../../../../vgaIMG.srcs/sources_1/new/vsync_module.v" \
+"../../../../../vgaIMG.srcs/sim_1/new/tb_vga.v" \
+
+# Do not sort compile order
+nosort

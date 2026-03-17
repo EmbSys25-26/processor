@@ -1,0 +1,1457 @@
+#-----------------------------------------------------------
+# Vivado v2025.1 (64-bit)
+# SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
+# IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
+# SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
+# Start of session at: Tue Mar 17 17:17:18 2026
+# Process ID         : 455688
+# Current directory  : /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1
+# Command line       : vivado -log controller.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source controller.tcl
+# Log file           : /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/controller.vds
+# Journal file       : /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/vivado.jou
+# Running On         : panda
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : AMD Ryzen AI 9 365 w/ Radeon 880M
+# CPU Frequency      : 1932.610 MHz
+# CPU Physical cores : 10
+# CPU Logical cores  : 20
+# Host memory        : 32715 MB
+# Swap memory        : 2147 MB
+# Total Virtual      : 34863 MB
+# Available Virtual  : 25969 MB
+#-----------------------------------------------------------
+source controller.tcl -notrace
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/mariana/Vivado/2025.1/Vivado/data/ip'.
+Command: read_checkpoint -auto_incremental -incremental /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/utils_1/imports/synth_1/vga_system_wrapper.dcp
+INFO: [Vivado 12-5825] Read reference checkpoint from /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/utils_1/imports/synth_1/vga_system_wrapper.dcp for incremental synthesis
+INFO: [Vivado 12-7989] Please ensure there are no constraint changes
+Command: synth_design -top controller -part xc7z010clg400-1
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7z010'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7z010'
+INFO: [Device 21-403] Loading part xc7z010clg400-1
+INFO: [Designutils 20-5440] No compile time benefit to using incremental synthesis; A full resynthesis will be run
+INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 7 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Synth 8-7075] Helper process launched with PID 455818
+---------------------------------------------------------------------------------
+Starting RTL Elaboration : Time (s): cpu = 00:00:03 ; elapsed = 00:00:03 . Memory (MB): peak = 2162.020 ; gain = 441.828 ; free physical = 14162 ; free virtual = 23443
+---------------------------------------------------------------------------------
+INFO: [Synth 8-6157] synthesizing module 'controller' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/controller.v:4]
+INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-455688-panda/realtime/clk_wiz_0_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-455688-panda/realtime/clk_wiz_0_stub.v:6]
+INFO: [Synth 8-6157] synthesizing module 'm_vga_mmio' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:5]
+INFO: [Synth 8-6157] synthesizing module 'vga_system_wrapper' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/hdl/vga_system_wrapper.v:13]
+INFO: [Synth 8-6157] synthesizing module 'vga_system' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:13]
+INFO: [Synth 8-6157] synthesizing module 'vga_system_axi_smc_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/synth/vga_system_axi_smc_0.v:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:10]
+INFO: [Synth 8-6157] synthesizing module 'clk_map_imp_CNZZ62' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:660]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_one_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_0/synth/bd_654d_one_0.v:53]
+INFO: [Synth 8-6157] synthesizing module 'xlconstant_v1_1_10_xlconstant' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/a165/hdl/xlconstant_v1_1_vl_rfs.v:68]
+INFO: [Synth 8-6155] done synthesizing module 'xlconstant_v1_1_10_xlconstant' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/a165/hdl/xlconstant_v1_1_vl_rfs.v:68]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_one_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_0/synth/bd_654d_one_0.v:53]
+INFO: [Synth 8-638] synthesizing module 'bd_654d_psr_aclk_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_1/synth/bd_654d_psr_aclk_0.vhd:74]
+	Parameter C_FAMILY bound to: zynq - type: string 
+	Parameter C_EXT_RST_WIDTH bound to: 4 - type: integer 
+	Parameter C_AUX_RST_WIDTH bound to: 1 - type: integer 
+	Parameter C_EXT_RESET_HIGH bound to: 1'b0 
+	Parameter C_AUX_RESET_HIGH bound to: 1'b0 
+	Parameter C_NUM_BUS_RST bound to: 1 - type: integer 
+	Parameter C_NUM_PERP_RST bound to: 1 - type: integer 
+	Parameter C_NUM_INTERCONNECT_ARESETN bound to: 1 - type: integer 
+	Parameter C_NUM_PERP_ARESETN bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'proc_sys_reset' declared at '/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1243' bound to instance 'U0' of component 'proc_sys_reset' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_1/synth/bd_654d_psr_aclk_0.vhd:139]
+INFO: [Synth 8-638] synthesizing module 'proc_sys_reset' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1302]
+	Parameter INIT bound to: 1'b1 
+INFO: [Synth 8-113] binding component instance 'FDRE_inst' to cell 'FDRE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1371]
+	Parameter INIT bound to: 1'b1 
+INFO: [Synth 8-113] binding component instance 'FDRE_BSR' to cell 'FDRE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1387]
+	Parameter INIT bound to: 1'b0 
+INFO: [Synth 8-113] binding component instance 'FDRE_BSR_N' to cell 'FDRE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1413]
+	Parameter INIT bound to: 1'b1 
+INFO: [Synth 8-113] binding component instance 'FDRE_PER' to cell 'FDRE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1436]
+	Parameter INIT bound to: 1'b0 
+INFO: [Synth 8-113] binding component instance 'FDRE_PER_N' to cell 'FDRE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1460]
+INFO: [Synth 8-638] synthesizing module 'lpf' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:821]
+INFO: [Synth 8-3491] module 'SRL16' declared at '/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:158596' bound to instance 'POR_SRL_I' of component 'SRL16' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:873]
+INFO: [Synth 8-6157] synthesizing module 'SRL16' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:158596]
+INFO: [Synth 8-6155] done synthesizing module 'SRL16' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:158596]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'ACT_LO_EXT' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:968]
+INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_single' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_single' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'ACT_LO_AUX' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1015]
+INFO: [Synth 8-256] done synthesizing module 'lpf' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:821]
+INFO: [Synth 8-638] synthesizing module 'sequence_psr' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:304]
+INFO: [Synth 8-638] synthesizing module 'upcnt_n' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:126]
+INFO: [Synth 8-256] done synthesizing module 'upcnt_n' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:126]
+INFO: [Synth 8-256] done synthesizing module 'sequence_psr' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:304]
+INFO: [Synth 8-256] done synthesizing module 'proc_sys_reset' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1302]
+INFO: [Synth 8-256] done synthesizing module 'bd_654d_psr_aclk_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_1/synth/bd_654d_psr_aclk_0.vhd:74]
+WARNING: [Synth 8-7071] port 'mb_reset' of module 'bd_654d_psr_aclk_0' is unconnected for instance 'psr_aclk' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:692]
+WARNING: [Synth 8-7071] port 'bus_struct_reset' of module 'bd_654d_psr_aclk_0' is unconnected for instance 'psr_aclk' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:692]
+WARNING: [Synth 8-7071] port 'peripheral_reset' of module 'bd_654d_psr_aclk_0' is unconnected for instance 'psr_aclk' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:692]
+WARNING: [Synth 8-7071] port 'peripheral_aresetn' of module 'bd_654d_psr_aclk_0' is unconnected for instance 'psr_aclk' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:692]
+WARNING: [Synth 8-7023] instance 'psr_aclk' of module 'bd_654d_psr_aclk_0' has 10 connections declared, but only 6 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:692]
+INFO: [Synth 8-6155] done synthesizing module 'clk_map_imp_CNZZ62' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:660]
+INFO: [Synth 8-6157] synthesizing module 'm00_exit_pipeline_imp_1N3ZFGX' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:701]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_m00e_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_12/synth/bd_654d_m00e_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_async_rst' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:1175]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_async_rst' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:1175]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_m00e_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_12/synth/bd_654d_m00e_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'm00_exit_pipeline_imp_1N3ZFGX' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:701]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_m00s2a_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_11/synth/bd_654d_m00s2a_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_m00s2a_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_11/synth/bd_654d_m00s2a_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_s00a2s_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_5/synth/bd_654d_s00a2s_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_s00a2s_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_5/synth/bd_654d_s00a2s_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 's00_entry_pipeline_imp_NWA2OI' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:943]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_s00mmu_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_2/synth/bd_654d_s00mmu_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_s00mmu_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_2/synth/bd_654d_s00mmu_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_s00sic_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_4/synth/bd_654d_s00sic_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_s00sic_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_4/synth/bd_654d_s00sic_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_s00tr_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_3/synth/bd_654d_s00tr_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_s00tr_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_3/synth/bd_654d_s00tr_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 's00_entry_pipeline_imp_NWA2OI' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:943]
+INFO: [Synth 8-6157] synthesizing module 's00_nodes_imp_IR8360' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:1519]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_sarn_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_6/synth/bd_654d_sarn_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_sarn_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_6/synth/bd_654d_sarn_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_sawn_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_8/synth/bd_654d_sawn_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_sawn_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_8/synth/bd_654d_sawn_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_sbn_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_10/synth/bd_654d_sbn_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_sbn_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_10/synth/bd_654d_sbn_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_srn_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_7/synth/bd_654d_srn_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_srn_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_7/synth/bd_654d_srn_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_654d_swn_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_9/synth/bd_654d_swn_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d_swn_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_9/synth/bd_654d_swn_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 's00_nodes_imp_IR8360' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:1519]
+INFO: [Synth 8-6155] done synthesizing module 'bd_654d' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:10]
+INFO: [Synth 8-6155] done synthesizing module 'vga_system_axi_smc_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/synth/vga_system_axi_smc_0.v:53]
+WARNING: [Synth 8-7071] port 'M00_AXI_awprot' of module 'vga_system_axi_smc_0' is unconnected for instance 'axi_smc' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:190]
+WARNING: [Synth 8-7071] port 'M00_AXI_wstrb' of module 'vga_system_axi_smc_0' is unconnected for instance 'axi_smc' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:190]
+WARNING: [Synth 8-7071] port 'M00_AXI_arprot' of module 'vga_system_axi_smc_0' is unconnected for instance 'axi_smc' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:190]
+WARNING: [Synth 8-7023] instance 'axi_smc' of module 'vga_system_axi_smc_0' has 59 connections declared, but only 56 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:190]
+INFO: [Synth 8-638] synthesizing module 'vga_system_axi_vdma_0_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_vdma_0_0/synth/vga_system_axi_vdma_0_0.vhd:105]
+	Parameter C_S_AXI_LITE_ADDR_WIDTH bound to: 9 - type: integer 
+	Parameter C_S_AXI_LITE_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_DLYTMR_RESOLUTION bound to: 125 - type: integer 
+	Parameter C_PRMRY_IS_ACLK_ASYNC bound to: 1 - type: integer 
+	Parameter C_ENABLE_VIDPRMTR_READS bound to: 1 - type: integer 
+	Parameter C_DYNAMIC_RESOLUTION bound to: 1 - type: integer 
+	Parameter C_NUM_FSTORES bound to: 1 - type: integer 
+	Parameter C_USE_FSYNC bound to: 1 - type: integer 
+	Parameter C_USE_MM2S_FSYNC bound to: 0 - type: integer 
+	Parameter C_USE_S2MM_FSYNC bound to: 2 - type: integer 
+	Parameter C_FLUSH_ON_FSYNC bound to: 1 - type: integer 
+	Parameter C_INCLUDE_INTERNAL_GENLOCK bound to: 1 - type: integer 
+	Parameter C_INCLUDE_SG bound to: 0 - type: integer 
+	Parameter C_M_AXI_SG_ADDR_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_SG_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_INCLUDE_MM2S bound to: 1 - type: integer 
+	Parameter C_MM2S_GENLOCK_MODE bound to: 0 - type: integer 
+	Parameter C_MM2S_GENLOCK_NUM_MASTERS bound to: 1 - type: integer 
+	Parameter C_MM2S_GENLOCK_REPEAT_EN bound to: 0 - type: integer 
+	Parameter C_MM2S_SOF_ENABLE bound to: 1 - type: integer 
+	Parameter C_INCLUDE_MM2S_DRE bound to: 0 - type: integer 
+	Parameter C_INCLUDE_MM2S_SF bound to: 0 - type: integer 
+	Parameter C_MM2S_LINEBUFFER_DEPTH bound to: 2048 - type: integer 
+	Parameter C_MM2S_LINEBUFFER_THRESH bound to: 4 - type: integer 
+	Parameter C_MM2S_MAX_BURST_LENGTH bound to: 256 - type: integer 
+	Parameter C_M_AXI_MM2S_ADDR_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_MM2S_DATA_WIDTH bound to: 64 - type: integer 
+	Parameter C_M_AXIS_MM2S_TDATA_WIDTH bound to: 16 - type: integer 
+	Parameter C_M_AXIS_MM2S_TUSER_BITS bound to: 1 - type: integer 
+	Parameter C_INCLUDE_S2MM bound to: 0 - type: integer 
+	Parameter C_S2MM_GENLOCK_MODE bound to: 0 - type: integer 
+	Parameter C_S2MM_GENLOCK_NUM_MASTERS bound to: 1 - type: integer 
+	Parameter C_S2MM_GENLOCK_REPEAT_EN bound to: 1 - type: integer 
+	Parameter C_S2MM_SOF_ENABLE bound to: 1 - type: integer 
+	Parameter C_INCLUDE_S2MM_DRE bound to: 0 - type: integer 
+	Parameter C_INCLUDE_S2MM_SF bound to: 1 - type: integer 
+	Parameter C_S2MM_LINEBUFFER_DEPTH bound to: 512 - type: integer 
+	Parameter C_S2MM_LINEBUFFER_THRESH bound to: 4 - type: integer 
+	Parameter C_S2MM_MAX_BURST_LENGTH bound to: 8 - type: integer 
+	Parameter C_M_AXI_S2MM_ADDR_WIDTH bound to: 32 - type: integer 
+	Parameter C_M_AXI_S2MM_DATA_WIDTH bound to: 64 - type: integer 
+	Parameter C_S_AXIS_S2MM_TDATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_S_AXIS_S2MM_TUSER_BITS bound to: 1 - type: integer 
+	Parameter C_ENABLE_DEBUG_ALL bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_0 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_1 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_2 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_3 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_4 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_5 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_6 bound to: 1 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_7 bound to: 1 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_8 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_9 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_10 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_11 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_12 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_13 bound to: 0 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_14 bound to: 1 - type: integer 
+	Parameter C_ENABLE_DEBUG_INFO_15 bound to: 1 - type: integer 
+	Parameter C_INSTANCE bound to: axi_vdma - type: string 
+	Parameter C_SELECT_XPM bound to: 0 - type: integer 
+	Parameter C_ENABLE_VERT_FLIP bound to: 0 - type: integer 
+	Parameter C_FAMILY bound to: zynq - type: string 
+INFO: [Synth 8-3491] module 'axi_vdma' declared at '/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:68582' bound to instance 'U0' of component 'axi_vdma' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_vdma_0_0/synth/vga_system_axi_vdma_0_0.vhd:347]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:69021]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_rst_module' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:16221]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_reset' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:14734]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'LITE_RESET_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:14942]
+INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_pulse' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714]
+INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_single__parameterized1' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_single__parameterized1' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_pulse' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'LITE_IDLE_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:14988]
+INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_single__parameterized3' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_single__parameterized3' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'LITE_MIN_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:15055]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'LITE_CLR_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:15097]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'AXIS_RESET_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:15147]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'AXIS_IDLE_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:15194]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'AXIS_MIN_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:15256]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'AXIS_CLR_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:15299]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'HARD_RESET_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:15769]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'AXIS_RESET_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:15901]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_reset' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:14734]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_rst_module' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:16221]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_reg_if' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:39626]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_lite_if' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:16708]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 1 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'LITE_WVALID_MM2S_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:17956]
+INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_pulse__parameterized2' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_pulse__parameterized2' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_lite_if' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:16708]
+	Parameter DEST_SYNC_FF bound to: 3 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'MM2S_INTRPT_CROSSING_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:39844]
+INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_single__parameterized5' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_single__parameterized5' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_reg_if' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:39626]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_intrpt' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:40326]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_intrpt' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:40326]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_reg_module' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:38785]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_register' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:18449]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_register' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:18449]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_regdirect' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:20259]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_regdirect' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:20259]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_reg_mux' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:29316]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_reg_mux' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:29316]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_reg_module' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:38785]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_mngr' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:63367]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_sm' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:61047]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_sm' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:61047]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_cmdsts_if' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:62256]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_cmdsts_if' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:62256]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_sts_mngr' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:62757]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_sts_mngr' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:62757]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_vidreg_module' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:55268]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_vregister' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:53192]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_vregister' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:53192]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_vaddrreg_mux' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:54757]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_vaddrreg_mux' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:54757]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_vidreg_module' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:55268]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_genlock_mngr' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:57783]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_genlock_mngr' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:57783]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_mngr' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:63367]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_fsync_gen' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:52331]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_fsync_gen' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:52331]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_vid_cdc' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:13230]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 1 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'M_PTR_OUT_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:13339]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 1 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'OTHR_FSYNC_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:13462]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 1 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'SOF_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:13511]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 1 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'FSYNC_IN_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:13562]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 1 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'FSYNC_OUT_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:13611]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter REG_OUTPUT bound to: 0 - type: integer 
+	Parameter RST_USED bound to: 1 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_pulse' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:714' bound to instance 'PRMTR_UPDT_CDC_I' of component 'xpm_cdc_pulse' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:13659]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_vid_cdc' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:13230]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_sof_gen' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:40930]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_sof_gen' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:40930]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_mm2s_linebuf' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:46006]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_afifo_builtin' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:43231]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_afifo_builtin' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:43231]
+INFO: [Synth 8-638] synthesizing module 'axi_vdma_skid_buf' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:41171]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_skid_buf' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:41171]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'SHUTDOWN_RST_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:46752]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'ALL_LINES_XFRED_P_S_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:46773]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'ALL_LINES_XFRED_S_P_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:46795]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'STOP_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:46827]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'HALT_CDC_I' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:46867]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma_mm2s_linebuf' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:46006]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:55430]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_mm2s_full_wrap' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:53569]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_reset' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:259]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_reset' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:259]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_cmd_status' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2913]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_fifo' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2109]
+INFO: [Synth 8-638] synthesizing module 'srl_fifo' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1881]
+INFO: [Synth 8-256] done synthesizing module 'srl_fifo' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1881]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_fifo' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2109]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_fifo__parameterized0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2109]
+INFO: [Synth 8-638] synthesizing module 'srl_fifo__parameterized0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1881]
+INFO: [Synth 8-256] done synthesizing module 'srl_fifo__parameterized0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1881]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_fifo__parameterized0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2109]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_cmd_status' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2913]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_rd_status_cntl' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:13919]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_rd_status_cntl' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:13919]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_pcc' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:7613]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_strb_gen2' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:4545]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_strb_gen2' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:4545]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_strb_gen2__parameterized0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:4545]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_strb_gen2__parameterized0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:4545]
+INFO: [Synth 8-226] default block is never used [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:9687]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_pcc' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:7613]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_addr_cntl' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:10191]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_fifo__parameterized1' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2109]
+INFO: [Synth 8-638] synthesizing module 'srl_fifo__parameterized1' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1881]
+INFO: [Synth 8-256] done synthesizing module 'srl_fifo__parameterized1' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1881]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_fifo__parameterized1' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2109]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_addr_cntl' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:10191]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_rddata_cntl' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:12364]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_rdmux' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:10866]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_rdmux' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:10866]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_fifo__parameterized2' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2109]
+INFO: [Synth 8-638] synthesizing module 'srl_fifo__parameterized2' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1881]
+INFO: [Synth 8-256] done synthesizing module 'srl_fifo__parameterized2' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1881]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_fifo__parameterized2' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2109]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_rddata_cntl' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:12364]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_rd_sf' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:20342]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_fifo__parameterized3' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2109]
+INFO: [Synth 8-638] synthesizing module 'srl_fifo__parameterized3' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1881]
+INFO: [Synth 8-256] done synthesizing module 'srl_fifo__parameterized3' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1881]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_fifo__parameterized3' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:2109]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_sfifo_autord' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1372]
+	Parameter FIFO_MEMORY_TYPE bound to: block - type: string 
+	Parameter FIFO_WRITE_DEPTH bound to: 2048 - type: integer 
+	Parameter WRITE_DATA_WIDTH bound to: 67 - type: integer 
+	Parameter READ_MODE bound to: fwft - type: string 
+	Parameter FIFO_READ_LATENCY bound to: 0 - type: integer 
+	Parameter FULL_RESET_VALUE bound to: 1 - type: integer 
+	Parameter USE_ADV_FEATURES bound to: 1F1F - type: string 
+	Parameter READ_DATA_WIDTH bound to: 67 - type: integer 
+	Parameter WR_DATA_COUNT_WIDTH bound to: 12 - type: integer 
+	Parameter PROG_FULL_THRESH bound to: 10 - type: integer 
+	Parameter RD_DATA_COUNT_WIDTH bound to: 12 - type: integer 
+	Parameter PROG_EMPTY_THRESH bound to: 10 - type: integer 
+	Parameter DOUT_RESET_VALUE bound to: 0 - type: string 
+	Parameter ECC_MODE bound to: no_ecc - type: string 
+	Parameter WAKEUP_TIME bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_fifo_sync' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1975' bound to instance 'I_SYNC_FIFOGEN_FIFO' of component 'xpm_fifo_sync' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1498]
+INFO: [Synth 8-6157] synthesizing module 'xpm_fifo_sync' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1975]
+INFO: [Synth 8-6157] synthesizing module 'xpm_fifo_base' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'xpm_counter_updn' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1879]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_counter_updn' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1879]
+INFO: [Synth 8-6157] synthesizing module 'xpm_counter_updn__parameterized0' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1879]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_counter_updn__parameterized0' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1879]
+INFO: [Synth 8-6157] synthesizing module 'xpm_memory_base' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:54]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_memory_base' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:54]
+INFO: [Synth 8-226] default block is never used [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1220]
+INFO: [Synth 8-226] default block is never used [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1287]
+INFO: [Synth 8-226] default block is never used [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1309]
+INFO: [Synth 8-6157] synthesizing module 'xpm_fifo_reg_bit' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1927]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_fifo_reg_bit' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1927]
+INFO: [Synth 8-6157] synthesizing module 'xpm_counter_updn__parameterized1' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1879]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_counter_updn__parameterized1' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1879]
+INFO: [Synth 8-6157] synthesizing module 'xpm_fifo_rst' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1639]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_fifo_rst' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1639]
+INFO: [Synth 8-6157] synthesizing module 'xpm_counter_updn__parameterized2' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1879]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_counter_updn__parameterized2' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1879]
+INFO: [Synth 8-6157] synthesizing module 'xpm_counter_updn__parameterized3' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1879]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_counter_updn__parameterized3' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1879]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_fifo_base' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_fifo_sync' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1975]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_sfifo_autord' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1372]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_rd_sf' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:20342]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_mm2s_full_wrap' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:53569]
+INFO: [Synth 8-638] synthesizing module 'axi_datamover_s2mm_omit_wrap' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:49625]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover_s2mm_omit_wrap' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:49625]
+INFO: [Synth 8-256] done synthesizing module 'axi_datamover' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:55430]
+INFO: [Synth 8-256] done synthesizing module 'axi_vdma' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:69021]
+INFO: [Synth 8-256] done synthesizing module 'vga_system_axi_vdma_0_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_vdma_0_0/synth/vga_system_axi_vdma_0_0.vhd:105]
+WARNING: [Synth 8-7071] port 'mm2s_frame_ptr_out' of module 'vga_system_axi_vdma_0_0' is unconnected for instance 'axi_vdma_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:247]
+WARNING: [Synth 8-7071] port 'mm2s_introut' of module 'vga_system_axi_vdma_0_0' is unconnected for instance 'axi_vdma_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:247]
+WARNING: [Synth 8-7023] instance 'axi_vdma_0' of module 'vga_system_axi_vdma_0_0' has 41 connections declared, but only 39 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:247]
+INFO: [Synth 8-6157] synthesizing module 'vga_system_clk_wiz_0_1' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1.v:65]
+INFO: [Synth 8-6157] synthesizing module 'vga_system_clk_wiz_0_1_clk_wiz' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1_clk_wiz.v:65]
+INFO: [Synth 8-6157] synthesizing module 'MMCME2_ADV' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:89421]
+	Parameter BANDWIDTH bound to: OPTIMIZED - type: string 
+	Parameter CLKFBOUT_MULT_F bound to: 47.125000 - type: double 
+	Parameter CLKFBOUT_PHASE bound to: 0.000000 - type: double 
+	Parameter CLKFBOUT_USE_FINE_PS bound to: FALSE - type: string 
+	Parameter CLKIN1_PERIOD bound to: 8.000000 - type: double 
+	Parameter CLKOUT0_DIVIDE_F bound to: 39.000000 - type: double 
+	Parameter CLKOUT0_DUTY_CYCLE bound to: 0.500000 - type: double 
+	Parameter CLKOUT0_PHASE bound to: 0.000000 - type: double 
+	Parameter CLKOUT0_USE_FINE_PS bound to: FALSE - type: string 
+	Parameter CLKOUT4_CASCADE bound to: FALSE - type: string 
+	Parameter COMPENSATION bound to: ZHOLD - type: string 
+	Parameter DIVCLK_DIVIDE bound to: 6 - type: integer 
+	Parameter STARTUP_WAIT bound to: FALSE - type: string 
+INFO: [Synth 8-6155] done synthesizing module 'MMCME2_ADV' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:89421]
+INFO: [Synth 8-6157] synthesizing module 'BUFG' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:2678]
+INFO: [Synth 8-6155] done synthesizing module 'BUFG' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:2678]
+INFO: [Synth 8-6155] done synthesizing module 'vga_system_clk_wiz_0_1_clk_wiz' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1_clk_wiz.v:65]
+INFO: [Synth 8-6155] done synthesizing module 'vga_system_clk_wiz_0_1' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1.v:65]
+INFO: [Synth 8-6157] synthesizing module 'vga_system_processing_system7_0_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:53]
+INFO: [Synth 8-6157] synthesizing module 'processing_system7_v5_5_processing_system7' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/hdl/verilog/processing_system7_v5_5_processing_system7.v:152]
+INFO: [Synth 8-6157] synthesizing module 'BIBUF' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:2325]
+INFO: [Synth 8-6155] done synthesizing module 'BIBUF' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:2325]
+INFO: [Synth 8-6157] synthesizing module 'PS7' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:133572]
+INFO: [Synth 8-6155] done synthesizing module 'PS7' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:133572]
+INFO: [Synth 8-6155] done synthesizing module 'processing_system7_v5_5_processing_system7' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/hdl/verilog/processing_system7_v5_5_processing_system7.v:152]
+WARNING: [Synth 8-7071] port 'M_AXI_GP0_ARESETN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'M_AXI_GP1_ARESETN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'S_AXI_GP0_ARESETN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'S_AXI_GP1_ARESETN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'S_AXI_ACP_ARESETN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_ARESETN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'S_AXI_HP1_ARESETN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'S_AXI_HP2_ARESETN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'S_AXI_HP3_ARESETN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'DMA0_RSTN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'DMA1_RSTN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'DMA2_RSTN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7071] port 'DMA3_RSTN' of module 'processing_system7_v5_5_processing_system7' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+WARNING: [Synth 8-7023] instance 'inst' of module 'processing_system7_v5_5_processing_system7' has 685 connections declared, but only 672 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:471]
+INFO: [Synth 8-6155] done synthesizing module 'vga_system_processing_system7_0_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/synth/vga_system_processing_system7_0_0.v:53]
+WARNING: [Synth 8-7071] port 'USB0_PORT_INDCTL' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'USB0_VBUS_PWRSELECT' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_AWREADY' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_BVALID' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_WREADY' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_BRESP' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_BID' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_RID' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_RCOUNT' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_WCOUNT' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_RACOUNT' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7071] port 'S_AXI_HP0_WACOUNT' of module 'vga_system_processing_system7_0_0' is unconnected for instance 'processing_system7_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+WARNING: [Synth 8-7023] instance 'processing_system7_0' of module 'vga_system_processing_system7_0_0' has 110 connections declared, but only 98 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:292]
+INFO: [Synth 8-638] synthesizing module 'vga_system_rst_ps7_0_50M_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_rst_ps7_0_50M_0/synth/vga_system_rst_ps7_0_50M_0.vhd:74]
+	Parameter C_FAMILY bound to: zynq - type: string 
+	Parameter C_EXT_RST_WIDTH bound to: 4 - type: integer 
+	Parameter C_AUX_RST_WIDTH bound to: 4 - type: integer 
+	Parameter C_EXT_RESET_HIGH bound to: 1'b0 
+	Parameter C_AUX_RESET_HIGH bound to: 1'b0 
+	Parameter C_NUM_BUS_RST bound to: 1 - type: integer 
+	Parameter C_NUM_PERP_RST bound to: 1 - type: integer 
+	Parameter C_NUM_INTERCONNECT_ARESETN bound to: 1 - type: integer 
+	Parameter C_NUM_PERP_ARESETN bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'proc_sys_reset' declared at '/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1243' bound to instance 'U0' of component 'proc_sys_reset' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_rst_ps7_0_50M_0/synth/vga_system_rst_ps7_0_50M_0.vhd:139]
+INFO: [Synth 8-638] synthesizing module 'proc_sys_reset__parameterized1' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1302]
+	Parameter INIT bound to: 1'b1 
+INFO: [Synth 8-113] binding component instance 'FDRE_inst' to cell 'FDRE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1371]
+	Parameter INIT bound to: 1'b1 
+INFO: [Synth 8-113] binding component instance 'FDRE_BSR' to cell 'FDRE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1387]
+	Parameter INIT bound to: 1'b0 
+INFO: [Synth 8-113] binding component instance 'FDRE_BSR_N' to cell 'FDRE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1413]
+	Parameter INIT bound to: 1'b1 
+INFO: [Synth 8-113] binding component instance 'FDRE_PER' to cell 'FDRE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1436]
+	Parameter INIT bound to: 1'b0 
+INFO: [Synth 8-113] binding component instance 'FDRE_PER_N' to cell 'FDRE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1460]
+INFO: [Synth 8-638] synthesizing module 'lpf__parameterized0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:821]
+INFO: [Synth 8-3491] module 'SRL16' declared at '/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:158596' bound to instance 'POR_SRL_I' of component 'SRL16' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:873]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'ACT_LO_EXT' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:968]
+	Parameter DEST_SYNC_FF bound to: 4 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 0 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 0 - type: integer 
+INFO: [Synth 8-3491] module 'xpm_cdc_single' declared at '/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152' bound to instance 'ACT_LO_AUX' of component 'xpm_cdc_single' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1015]
+INFO: [Synth 8-256] done synthesizing module 'lpf__parameterized0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:821]
+INFO: [Synth 8-256] done synthesizing module 'proc_sys_reset__parameterized1' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1302]
+INFO: [Synth 8-256] done synthesizing module 'vga_system_rst_ps7_0_50M_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_rst_ps7_0_50M_0/synth/vga_system_rst_ps7_0_50M_0.vhd:74]
+WARNING: [Synth 8-7071] port 'mb_reset' of module 'vga_system_rst_ps7_0_50M_0' is unconnected for instance 'rst_ps7_0_50M' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:391]
+WARNING: [Synth 8-7071] port 'bus_struct_reset' of module 'vga_system_rst_ps7_0_50M_0' is unconnected for instance 'rst_ps7_0_50M' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:391]
+WARNING: [Synth 8-7071] port 'peripheral_reset' of module 'vga_system_rst_ps7_0_50M_0' is unconnected for instance 'rst_ps7_0_50M' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:391]
+WARNING: [Synth 8-7071] port 'interconnect_aresetn' of module 'vga_system_rst_ps7_0_50M_0' is unconnected for instance 'rst_ps7_0_50M' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:391]
+WARNING: [Synth 8-7023] instance 'rst_ps7_0_50M' of module 'vga_system_rst_ps7_0_50M_0' has 10 connections declared, but only 6 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:391]
+INFO: [Synth 8-6157] synthesizing module 'vga_system_smartconnect_0_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/synth/vga_system_smartconnect_0_0.v:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_ead3' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:10]
+INFO: [Synth 8-6157] synthesizing module 'clk_map_imp_1LQVRVT' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:336]
+INFO: [Synth 8-6157] synthesizing module 'bd_ead3_one_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_0/synth/bd_ead3_one_0.v:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_ead3_one_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_0/synth/bd_ead3_one_0.v:53]
+INFO: [Synth 8-638] synthesizing module 'bd_ead3_psr_aclk_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_1/synth/bd_ead3_psr_aclk_0.vhd:74]
+	Parameter C_FAMILY bound to: zynq - type: string 
+	Parameter C_EXT_RST_WIDTH bound to: 4 - type: integer 
+	Parameter C_AUX_RST_WIDTH bound to: 1 - type: integer 
+	Parameter C_EXT_RESET_HIGH bound to: 1'b0 
+	Parameter C_AUX_RESET_HIGH bound to: 1'b0 
+	Parameter C_NUM_BUS_RST bound to: 1 - type: integer 
+	Parameter C_NUM_PERP_RST bound to: 1 - type: integer 
+	Parameter C_NUM_INTERCONNECT_ARESETN bound to: 1 - type: integer 
+	Parameter C_NUM_PERP_ARESETN bound to: 1 - type: integer 
+INFO: [Synth 8-3491] module 'proc_sys_reset' declared at '/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/9438/hdl/proc_sys_reset_v5_0_vh_rfs.vhd:1243' bound to instance 'U0' of component 'proc_sys_reset' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_1/synth/bd_ead3_psr_aclk_0.vhd:139]
+INFO: [Synth 8-256] done synthesizing module 'bd_ead3_psr_aclk_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_1/synth/bd_ead3_psr_aclk_0.vhd:74]
+WARNING: [Synth 8-7071] port 'mb_reset' of module 'bd_ead3_psr_aclk_0' is unconnected for instance 'psr_aclk' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:368]
+WARNING: [Synth 8-7071] port 'bus_struct_reset' of module 'bd_ead3_psr_aclk_0' is unconnected for instance 'psr_aclk' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:368]
+WARNING: [Synth 8-7071] port 'peripheral_reset' of module 'bd_ead3_psr_aclk_0' is unconnected for instance 'psr_aclk' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:368]
+WARNING: [Synth 8-7071] port 'peripheral_aresetn' of module 'bd_ead3_psr_aclk_0' is unconnected for instance 'psr_aclk' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:368]
+WARNING: [Synth 8-7023] instance 'psr_aclk' of module 'bd_ead3_psr_aclk_0' has 10 connections declared, but only 6 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:368]
+INFO: [Synth 8-6155] done synthesizing module 'clk_map_imp_1LQVRVT' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:336]
+INFO: [Synth 8-6157] synthesizing module 'm00_exit_pipeline_imp_BAFGHE' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:377]
+INFO: [Synth 8-6157] synthesizing module 'bd_ead3_m00e_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_9/synth/bd_ead3_m00e_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_ead3_m00e_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_9/synth/bd_ead3_m00e_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'm00_exit_pipeline_imp_BAFGHE' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:377]
+INFO: [Synth 8-6157] synthesizing module 'bd_ead3_m00s2a_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_8/synth/bd_ead3_m00s2a_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_ead3_m00s2a_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_8/synth/bd_ead3_m00s2a_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_ead3_s00a2s_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_5/synth/bd_ead3_s00a2s_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_ead3_s00a2s_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_5/synth/bd_ead3_s00a2s_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 's00_entry_pipeline_imp_1BM2HIP' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:519]
+INFO: [Synth 8-6157] synthesizing module 'bd_ead3_s00mmu_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_2/synth/bd_ead3_s00mmu_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_ead3_s00mmu_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_2/synth/bd_ead3_s00mmu_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_ead3_s00sic_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_4/synth/bd_ead3_s00sic_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_ead3_s00sic_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_4/synth/bd_ead3_s00sic_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_ead3_s00tr_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_3/synth/bd_ead3_s00tr_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 'bd_ead3_s00tr_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_3/synth/bd_ead3_s00tr_0.sv:53]
+WARNING: [Synth 8-7071] port 'm_axi_arburst' of module 'bd_ead3_s00tr_0' is unconnected for instance 's00_transaction_regulator' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:732]
+WARNING: [Synth 8-7023] instance 's00_transaction_regulator' of module 'bd_ead3_s00tr_0' has 38 connections declared, but only 37 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:732]
+INFO: [Synth 8-6155] done synthesizing module 's00_entry_pipeline_imp_1BM2HIP' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:519]
+INFO: [Synth 8-6157] synthesizing module 's00_nodes_imp_1GR56AZ' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:772]
+INFO: [Synth 8-6157] synthesizing module 'bd_ead3_sarn_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_6/synth/bd_ead3_sarn_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'xpm_memory_sdpram' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:8994]
+INFO: [Synth 8-6157] synthesizing module 'xpm_memory_base__parameterized0' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:54]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_memory_base__parameterized0' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:54]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_memory_sdpram' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:8994]
+INFO: [Synth 8-6155] done synthesizing module 'bd_ead3_sarn_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_6/synth/bd_ead3_sarn_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'bd_ead3_srn_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_7/synth/bd_ead3_srn_0.sv:53]
+INFO: [Synth 8-6157] synthesizing module 'xpm_memory_sdpram__parameterized0' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:8994]
+INFO: [Synth 8-6157] synthesizing module 'xpm_memory_base__parameterized1' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:54]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_memory_base__parameterized1' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:54]
+INFO: [Synth 8-6155] done synthesizing module 'xpm_memory_sdpram__parameterized0' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:8994]
+INFO: [Synth 8-6155] done synthesizing module 'bd_ead3_srn_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_7/synth/bd_ead3_srn_0.sv:53]
+INFO: [Synth 8-6155] done synthesizing module 's00_nodes_imp_1GR56AZ' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:772]
+INFO: [Synth 8-6155] done synthesizing module 'bd_ead3' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:10]
+INFO: [Synth 8-6155] done synthesizing module 'vga_system_smartconnect_0_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/synth/vga_system_smartconnect_0_0.v:53]
+INFO: [Synth 8-6155] done synthesizing module 'vga_system' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:13]
+INFO: [Synth 8-6155] done synthesizing module 'vga_system_wrapper' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/hdl/vga_system_wrapper.v:13]
+WARNING: [Synth 8-7071] port 'M_AXIS_MM2S_0_tkeep' of module 'vga_system_wrapper' is unconnected for instance 'u_system' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:101]
+WARNING: [Synth 8-7071] port 'M_AXIS_MM2S_0_tuser' of module 'vga_system_wrapper' is unconnected for instance 'u_system' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:101]
+WARNING: [Synth 8-7023] instance 'u_system' of module 'vga_system_wrapper' has 29 connections declared, but only 27 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:101]
+INFO: [Synth 8-6157] synthesizing module 'm_hsync_vga' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/hsync_module.v:5]
+INFO: [Synth 8-6155] done synthesizing module 'm_hsync_vga' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/hsync_module.v:5]
+INFO: [Synth 8-6157] synthesizing module 'm_vsync_vga' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/vsync_module.v:5]
+INFO: [Synth 8-6155] done synthesizing module 'm_vsync_vga' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/vsync_module.v:5]
+INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_async_rst__parameterized0' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:1175]
+	Parameter DEST_SYNC_FF bound to: 2 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 1 - type: integer 
+	Parameter RST_ACTIVE_HIGH bound to: 1 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_async_rst__parameterized0' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:1175]
+INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_single__parameterized6' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
+	Parameter DEST_SYNC_FF bound to: 2 - type: integer 
+	Parameter INIT_SYNC_FF bound to: 1 - type: integer 
+	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 0 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_single__parameterized6' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
+INFO: [Synth 8-155] case statement is not full and has no default [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:207]
+INFO: [Synth 8-6155] done synthesizing module 'm_vga_mmio' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:5]
+INFO: [Synth 8-155] case statement is not full and has no default [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/controller.v:141]
+INFO: [Synth 8-6155] done synthesizing module 'controller' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/controller.v:4]
+WARNING: [Synth 8-3848] Net aresetn_out in module/entity clk_map_imp_CNZZ62 does not have driver. [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/synth/bd_654d.v:676]
+WARNING: [Synth 8-6014] Unused sequential element dest_pulse_ff_reg was removed.  [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:860]
+WARNING: [Synth 8-6014] Unused sequential element dest_pulse_ff_reg was removed.  [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:860]
+WARNING: [Synth 8-6014] Unused sequential element GEN_LINEBUF_NO_SOF.m_skid_reset_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl/axi_vdma_v6_3_rfs.vhd:47024]
+WARNING: [Synth 8-6014] Unused sequential element sig_input_reg_full_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:8245]
+WARNING: [Synth 8-6014] Unused sequential element sig_xfer_reg_full_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:8556]
+WARNING: [Synth 8-6014] Unused sequential element sig_next_tag_reg_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:10601]
+WARNING: [Synth 8-6014] Unused sequential element sig_next_cmd_cmplt_reg_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:10608]
+WARNING: [Synth 8-6014] Unused sequential element sig_next_strt_strb_reg_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:12997]
+WARNING: [Synth 8-6014] Unused sequential element sig_next_last_strb_reg_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:12998]
+WARNING: [Synth 8-6014] Unused sequential element sig_next_dre_src_align_reg_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:13065]
+WARNING: [Synth 8-6014] Unused sequential element sig_next_dre_dest_align_reg_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:13066]
+WARNING: [Synth 8-6014] Unused sequential element sig_first_dbeat_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:13236]
+WARNING: [Synth 8-6014] Unused sequential element sig_coelsc_reg_empty_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:13404]
+WARNING: [Synth 8-6014] Unused sequential element gen_rd_b.gen_doutb_pipe.enb_pipe_reg[0] was removed.  [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv:3085]
+WARNING: [Synth 8-6014] Unused sequential element gdvld.data_valid_std_reg was removed.  [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:550]
+WARNING: [Synth 8-6014] Unused sequential element gen_pntr_flags_cc.gae_cc_std.ram_aempty_i_reg was removed.  [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:982]
+WARNING: [Synth 8-6014] Unused sequential element gen_fwft.empty_fwft_fb_reg was removed.  [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv:1404]
+WARNING: [Synth 8-6014] Unused sequential element hold_ff_q_reg was removed.  [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ipshared/d44a/hdl/axi_datamover_v5_1_vh_rfs.vhd:1586]
+WARNING: [Synth 8-3848] Net aresetn_out in module/entity clk_map_imp_1LQVRVT does not have driver. [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/synth/bd_ead3.v:352]
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+WARNING: [Synth 8-7129] Port src_clk in module xpm_cdc_single__parameterized6 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port i_axis_tdata[3] in module m_hsync_vga is either unconnected or has no load
+WARNING: [Synth 8-7129] Port i_axis_tdata[2] in module m_hsync_vga is either unconnected or has no load
+WARNING: [Synth 8-7129] Port i_axis_tdata[1] in module m_hsync_vga is either unconnected or has no load
+WARNING: [Synth 8-7129] Port i_axis_tdata[0] in module m_hsync_vga is either unconnected or has no load
+WARNING: [Synth 8-7129] Port din[0] in module sc_util_v1_0_4_onehot_to_binary is either unconnected or has no load
+WARNING: [Synth 8-7129] Port aclk in module sc_util_v1_0_4_pipeline__parameterized0 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port aclken in module sc_util_v1_0_4_pipeline__parameterized0 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port areset in module sc_util_v1_0_4_pipeline__parameterized0 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port sleep in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rsta in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port regcea in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port injectsbiterra in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port injectdbiterra in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port clkb in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port regceb in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port web[0] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[100] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[99] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[98] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[97] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[96] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[95] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[94] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[93] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[92] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[91] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[90] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[89] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[88] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[87] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[86] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[85] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[84] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[83] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[82] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[81] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[80] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[79] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[78] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[77] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[76] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[75] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[74] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[73] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[72] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[71] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[70] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[69] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[68] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[67] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[66] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[65] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[64] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[63] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[62] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[61] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[60] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[59] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[58] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[57] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[56] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[55] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[54] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[53] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[52] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[51] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[50] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[49] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[48] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[47] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[46] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[45] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[44] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[43] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[42] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[41] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[40] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[39] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[38] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[37] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[36] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[35] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[34] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[33] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[32] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[31] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[30] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[29] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[28] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[27] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[26] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[25] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[24] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[23] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[22] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[21] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[20] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[19] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port dinb[18] in module xpm_memory_base__parameterized1 is either unconnected or has no load
+INFO: [Common 17-14] Message 'Synth 8-7129' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
+---------------------------------------------------------------------------------
+Finished RTL Elaboration : Time (s): cpu = 00:00:08 ; elapsed = 00:00:09 . Memory (MB): peak = 2563.496 ; gain = 843.305 ; free physical = 13727 ; free virtual = 23015
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:08 ; elapsed = 00:00:09 . Memory (MB): peak = 2563.496 ; gain = 843.305 ; free physical = 13736 ; free virtual = 23023
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:08 ; elapsed = 00:00:09 . Memory (MB): peak = 2563.496 ; gain = 843.305 ; free physical = 13736 ; free virtual = 23023
+---------------------------------------------------------------------------------
+Netlist sorting complete. Time (s): cpu = 00:00:00.67 ; elapsed = 00:00:00.67 . Memory (MB): peak = 2563.496 ; gain = 0.000 ; free physical = 13771 ; free virtual = 23060
+INFO: [Netlist 29-17] Analyzing 5 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+
+Processing XDC Constraints
+Initializing timing engine
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0/clk_wiz_0_in_context.xdc] for cell 'u_clk_wiz'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0/clk_wiz_0_in_context.xdc] for cell 'u_clk_wiz'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/vga_system_processing_system7_0_0.xdc] for cell 'periph_vga/u_system/vga_system_i/processing_system7_0/inst'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/vga_system_processing_system7_0_0.xdc] for cell 'periph_vga/u_system/vga_system_i/processing_system7_0/inst'
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/vga_system_processing_system7_0_0.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/controller_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_vdma_0_0/vga_system_axi_vdma_0_0.xdc] for cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_vdma_0_0/vga_system_axi_vdma_0_0.xdc] for cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0'
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_vdma_0_0/vga_system_axi_vdma_0_0.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/controller_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_1/bd_654d_psr_aclk_0_board.xdc] for cell 'periph_vga/u_system/vga_system_i/axi_smc/inst/clk_map/psr_aclk/U0'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_1/bd_654d_psr_aclk_0_board.xdc] for cell 'periph_vga/u_system/vga_system_i/axi_smc/inst/clk_map/psr_aclk/U0'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/smartconnect.xdc] for cell 'periph_vga/u_system/vga_system_i/axi_smc/inst'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_smc_0/smartconnect.xdc] for cell 'periph_vga/u_system/vga_system_i/axi_smc/inst'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_rst_ps7_0_50M_0/vga_system_rst_ps7_0_50M_0_board.xdc] for cell 'periph_vga/u_system/vga_system_i/rst_ps7_0_50M/U0'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_rst_ps7_0_50M_0/vga_system_rst_ps7_0_50M_0_board.xdc] for cell 'periph_vga/u_system/vga_system_i/rst_ps7_0_50M/U0'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1_board.xdc] for cell 'periph_vga/u_system/vga_system_i/clk_wiz_0/inst'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1_board.xdc] for cell 'periph_vga/u_system/vga_system_i/clk_wiz_0/inst'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1.xdc] for cell 'periph_vga/u_system/vga_system_i/clk_wiz_0/inst'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1.xdc] for cell 'periph_vga/u_system/vga_system_i/clk_wiz_0/inst'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_1/bd_ead3_psr_aclk_0_board.xdc] for cell 'periph_vga/u_system/vga_system_i/smartconnect_0/inst/clk_map/psr_aclk/U0'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_1/bd_ead3_psr_aclk_0_board.xdc] for cell 'periph_vga/u_system/vga_system_i/smartconnect_0/inst/clk_map/psr_aclk/U0'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/smartconnect.xdc] for cell 'periph_vga/u_system/vga_system_i/smartconnect_0/inst'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/smartconnect.xdc] for cell 'periph_vga/u_system/vga_system_i/smartconnect_0/inst'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc]
+INFO: [Timing 38-2] Deriving generated clocks [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc:38]
+WARNING: [Vivado_Tcl 4-252] No drc_checks matched for command 'get_drc_checks LUTAR-1' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc:46]
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc]
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/controller_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/dont_touch.xdc]
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/dont_touch.xdc]
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/dont_touch.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/controller_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_vdma_0_0/vga_system_axi_vdma_0_0_clocks.xdc] for cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_axi_vdma_0_0/vga_system_axi_vdma_0_0_clocks.xdc] for cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1_late.xdc] for cell 'periph_vga/u_system/vga_system_i/clk_wiz_0/inst'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1_late.xdc] for cell 'periph_vga/u_system/vga_system_i/clk_wiz_0/inst'
+INFO: [Vivado 12-3272] Current instance is the top level cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0/AXI_LITE_REG_INTERFACE_I/GEN_AXI_LITE_IF.AXI_LITE_IF_I/GEN_LITE_IS_ASYNC.GEN_MM2S_ONLY_ASYNC_LITE_ACCESS.LITE_WVALID_MM2S_CDC_I/xpm_cdc_single_inst' of design 'preSynthElab_1' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+WARNING: [XPM_CDC_SINGLE: TCL-1000] The source and destination clocks are the same. 
+     Instance: periph_vga/u_system/vga_system_i/axi_vdma_0/U0/AXI_LITE_REG_INTERFACE_I/GEN_AXI_LITE_IF.AXI_LITE_IF_I/GEN_LITE_IS_ASYNC.GEN_MM2S_ONLY_ASYNC_LITE_ACCESS.LITE_WVALID_MM2S_CDC_I/xpm_cdc_single_inst 
+  This will add unnecessary latency to the design. Please check the design for the following: 
+ 1) Manually instantiated XPM_CDC modules: AMD recommends that you remove these modules. 
+ 2) AMD IP that contains XPM_CDC modules: Verify the connections to the IP to determine whether you can safely ignore this message.
+ [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+INFO: [Vivado 12-3272] Current instance is the top level cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0/I_RST_MODULE/GEN_RESET_FOR_MM2S.RESET_I/GEN_MIN_FOR_ASYNC.LITE_CLR_CDC_I/xpm_cdc_single_inst' of design 'preSynthElab_1' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+WARNING: [XPM_CDC_SINGLE: TCL-1000] The source and destination clocks are the same. 
+     Instance: periph_vga/u_system/vga_system_i/axi_vdma_0/U0/I_RST_MODULE/GEN_RESET_FOR_MM2S.RESET_I/GEN_MIN_FOR_ASYNC.LITE_CLR_CDC_I/xpm_cdc_single_inst 
+  This will add unnecessary latency to the design. Please check the design for the following: 
+ 1) Manually instantiated XPM_CDC modules: AMD recommends that you remove these modules. 
+ 2) AMD IP that contains XPM_CDC modules: Verify the connections to the IP to determine whether you can safely ignore this message.
+ [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+INFO: [Vivado 12-3272] Current instance is the top level cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0/I_RST_MODULE/GEN_RESET_FOR_MM2S.RESET_I/GEN_MIN_FOR_ASYNC.LITE_RESET_CDC_I/xpm_cdc_single_inst' of design 'preSynthElab_1' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+WARNING: [XPM_CDC_SINGLE: TCL-1000] The source and destination clocks are the same. 
+     Instance: periph_vga/u_system/vga_system_i/axi_vdma_0/U0/I_RST_MODULE/GEN_RESET_FOR_MM2S.RESET_I/GEN_MIN_FOR_ASYNC.LITE_RESET_CDC_I/xpm_cdc_single_inst 
+  This will add unnecessary latency to the design. Please check the design for the following: 
+ 1) Manually instantiated XPM_CDC modules: AMD recommends that you remove these modules. 
+ 2) AMD IP that contains XPM_CDC modules: Verify the connections to the IP to determine whether you can safely ignore this message.
+ [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+INFO: [Vivado 12-3272] Current instance is the top level cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0/I_RST_MODULE/GEN_RESET_FOR_MM2S.RESET_I/GEN_MIN_FOR_ASYNC.LITE_IDLE_CDC_I' of design 'preSynthElab_1' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+WARNING: [XPM_CDC_SINGLE: TCL-1000] The source and destination clocks are the same. 
+     Instance: periph_vga/u_system/vga_system_i/axi_vdma_0/U0/I_RST_MODULE/GEN_RESET_FOR_MM2S.RESET_I/GEN_MIN_FOR_ASYNC.LITE_IDLE_CDC_I 
+  This will add unnecessary latency to the design. Please check the design for the following: 
+ 1) Manually instantiated XPM_CDC modules: AMD recommends that you remove these modules. 
+ 2) AMD IP that contains XPM_CDC modules: Verify the connections to the IP to determine whether you can safely ignore this message.
+ [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+INFO: [Vivado 12-3272] Current instance is the top level cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0/I_RST_MODULE/GEN_RESET_FOR_MM2S.RESET_I/GEN_MIN_FOR_ASYNC.LITE_MIN_CDC_I' of design 'preSynthElab_1' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+WARNING: [XPM_CDC_SINGLE: TCL-1000] The source and destination clocks are the same. 
+     Instance: periph_vga/u_system/vga_system_i/axi_vdma_0/U0/I_RST_MODULE/GEN_RESET_FOR_MM2S.RESET_I/GEN_MIN_FOR_ASYNC.LITE_MIN_CDC_I 
+  This will add unnecessary latency to the design. Please check the design for the following: 
+ 1) Manually instantiated XPM_CDC modules: AMD recommends that you remove these modules. 
+ 2) AMD IP that contains XPM_CDC modules: Verify the connections to the IP to determine whether you can safely ignore this message.
+ [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+INFO: [Vivado 12-3272] Current instance is the top level cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0/I_RST_MODULE/GEN_RESET_FOR_MM2S.RESET_I/GEN_RESET_FOR_ASYNC.HARD_RESET_CDC_I' of design 'preSynthElab_1' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+WARNING: [XPM_CDC_SINGLE: TCL-1000] The source and destination clocks are the same. 
+     Instance: periph_vga/u_system/vga_system_i/axi_vdma_0/U0/I_RST_MODULE/GEN_RESET_FOR_MM2S.RESET_I/GEN_RESET_FOR_ASYNC.HARD_RESET_CDC_I 
+  This will add unnecessary latency to the design. Please check the design for the following: 
+ 1) Manually instantiated XPM_CDC modules: AMD recommends that you remove these modules. 
+ 2) AMD IP that contains XPM_CDC modules: Verify the connections to the IP to determine whether you can safely ignore this message.
+ [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+INFO: [Vivado 12-3272] Current instance is the top level cell 'periph_vga/u_system/vga_system_i/axi_vdma_0/U0/AXI_LITE_REG_INTERFACE_I/GEN_MM2S_LITE_CROSSINGS.GEN_MM2S_CROSSINGS_ASYNC.MM2S_INTRPT_CROSSING_I' of design 'preSynthElab_1' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+WARNING: [XPM_CDC_SINGLE: TCL-1000] The source and destination clocks are the same. 
+     Instance: periph_vga/u_system/vga_system_i/axi_vdma_0/U0/AXI_LITE_REG_INTERFACE_I/GEN_MM2S_LITE_CROSSINGS.GEN_MM2S_CROSSINGS_ASYNC.MM2S_INTRPT_CROSSING_I 
+  This will add unnecessary latency to the design. Please check the design for the following: 
+ 1) Manually instantiated XPM_CDC modules: AMD recommends that you remove these modules. 
+ 2) AMD IP that contains XPM_CDC modules: Verify the connections to the IP to determine whether you can safely ignore this message.
+ [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl:5]
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/tcl/xpm_cdc_single.tcl]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/controller_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_fifo/tcl/xpm_fifo_rst.tcl]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/controller_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_memory/tcl/xpm_memory_xdc.tcl]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/controller_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+INFO: [Project 1-1714] 56 XPM XDC files have been applied to the design.
+Completed Processing XDC Constraints
+
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2829.922 ; gain = 0.000 ; free physical = 13706 ; free virtual = 22999
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 3 instances were transformed.
+  SRL16 => SRL16E: 3 instances
+
+Constraint Validation Runtime : Time (s): cpu = 00:00:00.09 ; elapsed = 00:00:00.09 . Memory (MB): peak = 2829.957 ; gain = 0.000 ; free physical = 13701 ; free virtual = 22995
+INFO: [Designutils 20-5440] No compile time benefit to using incremental synthesis; A full resynthesis will be run
+INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
+---------------------------------------------------------------------------------
+Finished Constraint Validation : Time (s): cpu = 00:00:19 ; elapsed = 00:00:19 . Memory (MB): peak = 2829.957 ; gain = 1109.766 ; free physical = 13610 ; free virtual = 22900
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Loading Part and Timing Information
+---------------------------------------------------------------------------------
+Loading part: xc7z010clg400-1
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:19 ; elapsed = 00:00:19 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13610 ; free virtual = 22900
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying 'set_property' XDC Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:19 ; elapsed = 00:00:19 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13610 ; free virtual = 22900
+---------------------------------------------------------------------------------
+INFO: [Synth 8-802] inferred FSM for state register 'gen_axi.gen_write.write_cs_reg' in module 'sc_mmu_v1_0_15_decerr_slave'
+INFO: [Synth 8-802] inferred FSM for state register 'gen_endpoint.w_state_reg' in module 'sc_mmu_v1_0_15_top'
+INFO: [Synth 8-802] inferred FSM for state register 'gen_endpoint.r_state_reg' in module 'sc_mmu_v1_0_15_top'
+INFO: [Synth 8-802] inferred FSM for state register 'w_state_reg' in module 'sc_si_converter_v1_0_15_axilite_conv'
+INFO: [Synth 8-802] inferred FSM for state register 'r_state_reg' in module 'sc_si_converter_v1_0_15_axilite_conv'
+INFO: [Synth 8-802] inferred FSM for state register 'dmacntrl_cs_reg' in module 'axi_vdma_sm'
+INFO: [Synth 8-802] inferred FSM for state register 'sig_pcc_sm_state_reg' in module 'axi_datamover_pcc'
+INFO: [Synth 8-802] inferred FSM for state register 'gen_fwft.curr_fwft_state_reg' in module 'xpm_fifo_base'
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-802] inferred FSM for state register 'gen_axi.gen_write.write_cs_reg' in module 'sc_mmu_v1_0_15_decerr_slave__parameterized0'
+INFO: [Synth 8-802] inferred FSM for state register 'gen_endpoint.w_state_reg' in module 'sc_mmu_v1_0_15_top__parameterized0'
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
+INFO: [Synth 8-802] inferred FSM for state register '_state_reg' in module 'm_hsync_vga'
+INFO: [Synth 8-802] inferred FSM for state register '_state_reg' in module 'm_vsync_vga'
+INFO: [Synth 8-802] inferred FSM for state register '_state_reg' in module 'controller'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+            P_WRITE_IDLE |                              001 |                               00
+            P_WRITE_DATA |                              010 |                               01
+            P_WRITE_RESP |                              100 |                               10
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'gen_axi.gen_write.write_cs_reg' using encoding 'one-hot' in module 'sc_mmu_v1_0_15_decerr_slave'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                  iSTATE |                               00 | 00000000000000000000000000000000
+*
+                 W_STALL |                               01 | 00000000000000000000000000000001
+               W_PENDING |                               10 | 00000000000000000000000000000010
+                W_DECERR |                               11 | 00000000000000000000000000000011
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'gen_endpoint.w_state_reg' using encoding 'sequential' in module 'sc_mmu_v1_0_15_top'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                  iSTATE |                               00 | 00000000000000000000000000000000
+*
+                 R_STALL |                               01 | 00000000000000000000000000000001
+               R_PENDING |                               10 | 00000000000000000000000000000010
+                R_DECERR |                               11 | 00000000000000000000000000000011
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'gen_endpoint.r_state_reg' using encoding 'sequential' in module 'sc_mmu_v1_0_15_top'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                  W_IDLE |                              000 | 00000000000000000000000000000000
+                    W_RX |                              001 | 00000000000000000000000000000001
+                    W_TX |                              010 | 00000000000000000000000000000010
+              W_COMPLETE |                              011 | 00000000000000000000000000000100
+               W_RECOVER |                              100 | 00000000000000000000000000000011
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'w_state_reg' using encoding 'sequential' in module 'sc_si_converter_v1_0_15_axilite_conv'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                  R_IDLE |                             0001 | 00000000000000000000000000000000
+               R_PENDING |                             0010 | 00000000000000000000000000000001
+                    R_RX |                             0100 | 00000000000000000000000000000010
+                    R_TX |                             1000 | 00000000000000000000000000000011
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'r_state_reg' using encoding 'one-hot' in module 'sc_si_converter_v1_0_15_axilite_conv'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    idle |                              000 |                              000
+              wait_pipe1 |                              001 |                              001
+              wait_pipe2 |                              010 |                              010
+            execute_xfer |                              011 |                              100
+              check_done |                              100 |                              101
+           calc_cmd_addr |                              101 |                              011
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'dmacntrl_cs_reg' using encoding 'sequential' in module 'axi_vdma_sm'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    init |                         00000001 |                              000
+            wait_for_cmd |                         00000010 |                              001
+                  calc_1 |                         00000100 |                              010
+                  calc_2 |                         00001000 |                              011
+                  calc_3 |                         00010000 |                              100
+       wait_on_xfer_push |                         00100000 |                              101
+             chk_if_done |                         01000000 |                              110
+              error_trap |                         10000000 |                              111
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'sig_pcc_sm_state_reg' using encoding 'one-hot' in module 'axi_datamover_pcc'
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                 invalid |                               00 |                               00
+            stage1_valid |                               01 |                               10
+       both_stages_valid |                               10 |                               11
+            stage2_valid |                               11 |                               01
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'gen_fwft.curr_fwft_state_reg' using encoding 'sequential' in module 'xpm_fifo_base'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+            P_WRITE_IDLE |                              001 |                               00
+            P_WRITE_DATA |                              010 |                               01
+            P_WRITE_RESP |                              100 |                               10
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'gen_axi.gen_write.write_cs_reg' using encoding 'one-hot' in module 'sc_mmu_v1_0_15_decerr_slave__parameterized0'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                  iSTATE |                               00 | 00000000000000000000000000000000
+*
+                 W_STALL |                               01 | 00000000000000000000000000000001
+               W_PENDING |                               10 | 00000000000000000000000000000010
+                W_DECERR |                               11 | 00000000000000000000000000000011
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'gen_endpoint.w_state_reg' using encoding 'sequential' in module 'sc_mmu_v1_0_15_top__parameterized0'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+             FRONT_PORCH |                               00 |                               00
+                    SYNC |                               01 |                               01
+              BACK_PORCH |                               10 |                               10
+                 VISIBLE |                               11 |                               11
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register '_state_reg' using encoding 'sequential' in module 'm_hsync_vga'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+             FRONT_PORCH |                               00 |                               00
+                    SYNC |                               01 |                               01
+              BACK_PORCH |                               10 |                               10
+                 VISIBLE |                               11 |                               11
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register '_state_reg' using encoding 'sequential' in module 'm_vsync_vga'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                  S_IDLE |                              000 |                              000
+          S_WRITE_VGASEL |                              001 |                              001
+           S_WAIT_VGASEL |                              010 |                              010
+           S_WRITE_CNTRL |                              011 |                              011
+            S_WAIT_CNTRL |                              100 |                              100
+                  S_DONE |                              101 |                              101
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register '_state_reg' using encoding 'sequential' in module 'controller'
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13597 ; free virtual = 22892
+---------------------------------------------------------------------------------
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+---------------------------------------------------------------------------------
+Start RTL Component Statistics 
+---------------------------------------------------------------------------------
+Detailed RTL Component Info : 
++---Adders : 
+	   2 Input   32 Bit       Adders := 2     
+	   2 Input   16 Bit       Adders := 2     
+	   2 Input   13 Bit       Adders := 2     
+	   2 Input   12 Bit       Adders := 7     
+	   4 Input   12 Bit       Adders := 4     
+	   2 Input   11 Bit       Adders := 1     
+	   4 Input   11 Bit       Adders := 5     
+	   3 Input   11 Bit       Adders := 1     
+	   2 Input   10 Bit       Adders := 2     
+	   2 Input    9 Bit       Adders := 6     
+	   2 Input    8 Bit       Adders := 10    
+	   3 Input    8 Bit       Adders := 2     
+	   2 Input    7 Bit       Adders := 5     
+	   2 Input    6 Bit       Adders := 15    
+	   2 Input    5 Bit       Adders := 8     
+	   2 Input    4 Bit       Adders := 21    
+	   3 Input    4 Bit       Adders := 1     
+	   2 Input    3 Bit       Adders := 14    
+	   2 Input    2 Bit       Adders := 2     
+	   3 Input    2 Bit       Adders := 1     
+	   4 Input    2 Bit       Adders := 1     
+	   2 Input    1 Bit       Adders := 5     
+	   3 Input    1 Bit       Adders := 3     
++---XORs : 
+	   2 Input     12 Bit         XORs := 2     
+	   2 Input      1 Bit         XORs := 74    
++---Registers : 
+	             2178 Bit    Registers := 8     
+	              512 Bit    Registers := 6     
+	              156 Bit    Registers := 3     
+	              101 Bit    Registers := 1     
+	               72 Bit    Registers := 2     
+	               70 Bit    Registers := 1     
+	               69 Bit    Registers := 1     
+	               67 Bit    Registers := 2     
+	               64 Bit    Registers := 8     
+	               47 Bit    Registers := 2     
+	               33 Bit    Registers := 2     
+	               32 Bit    Registers := 15    
+	               23 Bit    Registers := 1     
+	               16 Bit    Registers := 15    
+	               14 Bit    Registers := 1     
+	               13 Bit    Registers := 6     
+	               12 Bit    Registers := 11    
+	               11 Bit    Registers := 10    
+	               10 Bit    Registers := 1     
+	                9 Bit    Registers := 8     
+	                8 Bit    Registers := 21    
+	                7 Bit    Registers := 8     
+	                6 Bit    Registers := 23    
+	                5 Bit    Registers := 22    
+	                4 Bit    Registers := 67    
+	                3 Bit    Registers := 57    
+	                2 Bit    Registers := 20    
+	                1 Bit    Registers := 553   
++---RAMs : 
+	             134K Bit	(2048 X 67 bit)          RAMs := 1     
++---Muxes : 
+	   2 Input 2178 Bit        Muxes := 5     
+	   2 Input  512 Bit        Muxes := 2     
+	   2 Input   72 Bit        Muxes := 2     
+	   2 Input   64 Bit        Muxes := 4     
+	   2 Input   47 Bit        Muxes := 1     
+	   2 Input   33 Bit        Muxes := 1     
+	   2 Input   32 Bit        Muxes := 18    
+	   4 Input   32 Bit        Muxes := 2     
+	   2 Input   16 Bit        Muxes := 4     
+	   4 Input   16 Bit        Muxes := 1     
+	   6 Input   16 Bit        Muxes := 1     
+	   2 Input   14 Bit        Muxes := 1     
+	   2 Input   13 Bit        Muxes := 3     
+	   2 Input   12 Bit        Muxes := 14    
+	   5 Input   12 Bit        Muxes := 1     
+	   2 Input   11 Bit        Muxes := 1     
+	   2 Input   10 Bit        Muxes := 3     
+	   4 Input   10 Bit        Muxes := 1     
+	   5 Input    9 Bit        Muxes := 1     
+	   2 Input    9 Bit        Muxes := 10    
+	   4 Input    9 Bit        Muxes := 1     
+	   2 Input    8 Bit        Muxes := 31    
+	   4 Input    8 Bit        Muxes := 1     
+	   8 Input    8 Bit        Muxes := 5     
+	   4 Input    7 Bit        Muxes := 5     
+	   2 Input    7 Bit        Muxes := 20    
+	   2 Input    6 Bit        Muxes := 5     
+	   2 Input    5 Bit        Muxes := 3     
+	   4 Input    4 Bit        Muxes := 4     
+	   2 Input    4 Bit        Muxes := 9     
+	   3 Input    4 Bit        Muxes := 1     
+	   2 Input    3 Bit        Muxes := 36    
+	   5 Input    3 Bit        Muxes := 1     
+	   4 Input    3 Bit        Muxes := 8     
+	   6 Input    3 Bit        Muxes := 2     
+	   2 Input    2 Bit        Muxes := 75    
+	   4 Input    2 Bit        Muxes := 16    
+	   5 Input    2 Bit        Muxes := 2     
+	   3 Input    2 Bit        Muxes := 1     
+	   2 Input    1 Bit        Muxes := 246   
+	   3 Input    1 Bit        Muxes := 17    
+	   6 Input    1 Bit        Muxes := 62    
+	   4 Input    1 Bit        Muxes := 42    
+	   7 Input    1 Bit        Muxes := 6     
+	   5 Input    1 Bit        Muxes := 27    
+	  12 Input    1 Bit        Muxes := 8     
+	   8 Input    1 Bit        Muxes := 3     
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 80 (col length:40)
+BRAMs: 120 (col length: RAMB18 40 RAMB36 20)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+WARNING: [Synth 8-7080] Parallel synthesis criteria is not met
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+INFO: [Synth 8-5784] Optimized 1 bits of RAM "gen_wr_a.gen_word_narrow.mem_reg" due to constant propagation. Old ram width 67 bits, new ram width 66 bits.
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+WARNING: [Synth 8-3332] Sequential element (clk_map/psr_aclk/U0/FDRE_inst) is unused and will be removed from module bd_654d.
+WARNING: [Synth 8-3332] Sequential element (clk_map/psr_aclk/U0/BSR_OUT_DFF[0].FDRE_BSR) is unused and will be removed from module bd_654d.
+WARNING: [Synth 8-3332] Sequential element (clk_map/psr_aclk/U0/PR_OUT_DFF[0].FDRE_PER) is unused and will be removed from module bd_654d.
+WARNING: [Synth 8-3332] Sequential element (clk_map/psr_aclk/U0/ACTIVE_LOW_PR_OUT_DFF[0].FDRE_PER_N) is unused and will be removed from module bd_654d.
+WARNING: [Synth 8-3332] Sequential element (clk_map/psr_aclk/U0/FDRE_inst) is unused and will be removed from module bd_ead3.
+WARNING: [Synth 8-3332] Sequential element (clk_map/psr_aclk/U0/BSR_OUT_DFF[0].FDRE_BSR) is unused and will be removed from module bd_ead3.
+WARNING: [Synth 8-3332] Sequential element (clk_map/psr_aclk/U0/PR_OUT_DFF[0].FDRE_PER) is unused and will be removed from module bd_ead3.
+WARNING: [Synth 8-3332] Sequential element (clk_map/psr_aclk/U0/ACTIVE_LOW_PR_OUT_DFF[0].FDRE_PER_N) is unused and will be removed from module bd_ead3.
+INFO: [Synth 8-3332] Sequential element (gen_endpoint.decerr_slave_inst/FSM_onehot_gen_axi.gen_write.write_cs_reg[2]) is unused and will be removed from module sc_mmu_v1_0_15_top__parameterized0.
+INFO: [Synth 8-3332] Sequential element (gen_endpoint.decerr_slave_inst/FSM_onehot_gen_axi.gen_write.write_cs_reg[1]) is unused and will be removed from module sc_mmu_v1_0_15_top__parameterized0.
+INFO: [Synth 8-3332] Sequential element (gen_endpoint.decerr_slave_inst/FSM_onehot_gen_axi.gen_write.write_cs_reg[0]) is unused and will be removed from module sc_mmu_v1_0_15_top__parameterized0.
+INFO: [Synth 8-3332] Sequential element (FSM_sequential_gen_endpoint.w_state_reg[1]) is unused and will be removed from module sc_mmu_v1_0_15_top__parameterized0.
+INFO: [Synth 8-3332] Sequential element (FSM_sequential_gen_endpoint.w_state_reg[0]) is unused and will be removed from module sc_mmu_v1_0_15_top__parameterized0.
+WARNING: [Synth 8-3332] Sequential element (FDRE_inst) is unused and will be removed from module proc_sys_reset__parameterized1.
+WARNING: [Synth 8-3332] Sequential element (BSR_OUT_DFF[0].FDRE_BSR) is unused and will be removed from module proc_sys_reset__parameterized1.
+WARNING: [Synth 8-3332] Sequential element (ACTIVE_LOW_BSR_OUT_DFF[0].FDRE_BSR_N) is unused and will be removed from module proc_sys_reset__parameterized1.
+WARNING: [Synth 8-3332] Sequential element (PR_OUT_DFF[0].FDRE_PER) is unused and will be removed from module proc_sys_reset__parameterized1.
+---------------------------------------------------------------------------------
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:32 ; elapsed = 00:00:32 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13599 ; free virtual = 22940
+---------------------------------------------------------------------------------
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Block RAM: Preliminary Mapping Report (see note below)
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name                                                                                                                                                                                                                         | RTL Object                       | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|\periph_vga/u_system/vga_system_i /i_0/axi_vdma_0/U0/\I_PRMRY_DATAMOVER/GEN_MM2S_FULL.I_MM2S_FULL_WRAPPER/GEN_INCLUDE_MM2S_SF.I_RD_SF/I_DATA_FIFO/BLK_MEM.I_SYNC_FIFOGEN_FIFO /xpm_fifo_base_inst/\gen_sdpram.xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | 2 K x 67(NO_CHANGE)    | W |   | 2 K x 67(NO_CHANGE)    |   | R | Port A and B     | 0      | 4      | 
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+
+Note: The table above is a preliminary report that shows the Block RAMs at the current stage of the synthesis flow. Some Block RAMs may be reimplemented as non Block RAM primitives later in the synthesis flow. Multiple instantiated Block RAMs are reported only once. 
+
+Distributed RAM: Preliminary Mapping Report (see note below)
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
+|Module Name                                                                                                                                                                                                                      | RTL Object                       | Inference      | Size (Depth x Width) | Primitives   | 
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
+|\periph_vga/u_system/vga_system_i /i_0/smartconnect_0/inst/\s00_nodes/s00_ar_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 156             | RAM32M x 26  | 
+|\periph_vga/u_system/vga_system_i /i_0/smartconnect_0/inst/\s00_nodes/s00_r_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 101             | RAM32M x 17  | 
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
+
+Note: The table above is a preliminary report that shows the Distributed RAMs at the current stage of the synthesis flow. Some Distributed RAMs may be reimplemented as non Distributed RAM primitives later in the synthesis flow. Multiple instantiated RAMs are reported only once.
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying XDC Timing Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:35 ; elapsed = 00:00:35 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13588 ; free virtual = 22929
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Timing Optimization
+---------------------------------------------------------------------------------
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
+---------------------------------------------------------------------------------
+Finished Timing Optimization : Time (s): cpu = 00:00:36 ; elapsed = 00:00:36 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13962 ; free virtual = 23267
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Block RAM: Final Mapping Report
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name                                                                                                                                                                                                                         | RTL Object                       | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|\periph_vga/u_system/vga_system_i /i_0/axi_vdma_0/U0/\I_PRMRY_DATAMOVER/GEN_MM2S_FULL.I_MM2S_FULL_WRAPPER/GEN_INCLUDE_MM2S_SF.I_RD_SF/I_DATA_FIFO/BLK_MEM.I_SYNC_FIFOGEN_FIFO /xpm_fifo_base_inst/\gen_sdpram.xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | 2 K x 67(NO_CHANGE)    | W |   | 2 K x 67(NO_CHANGE)    |   | R | Port A and B     | 0      | 4      | 
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+
+
+Distributed RAM: Final Mapping Report
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
+|Module Name                                                                                                                                                                                                                      | RTL Object                       | Inference      | Size (Depth x Width) | Primitives   | 
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
+|\periph_vga/u_system/vga_system_i /i_0/smartconnect_0/inst/\s00_nodes/s00_ar_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 156             | RAM32M x 26  | 
+|\periph_vga/u_system/vga_system_i /i_0/smartconnect_0/inst/\s00_nodes/s00_r_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 101             | RAM32M x 17  | 
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
+
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Technology Mapping : Time (s): cpu = 00:00:37 ; elapsed = 00:00:37 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13930 ; free virtual = 23237
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:00:39 ; elapsed = 00:00:39 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14130 ; free virtual = 23429
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:39 ; elapsed = 00:00:39 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14130 ; free virtual = 23428
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Rebuilding User Hierarchy
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14074 ; free virtual = 23374
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Ports
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14074 ; free virtual = 23374
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14068 ; free virtual = 23366
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Nets
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14065 ; free virtual = 23364
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Static Shift Register Report:
++------------------------+-----------------------------------------------------------------------------------------------------------------------------------------+--------+-------+--------------+--------------------+-------------------+--------+---------+
+|Module Name             | RTL Name                                                                                                                                | Length | Width | Reset Signal | Pull out first Reg | Pull out last Reg | SRL16E | SRLC32E | 
++------------------------+-----------------------------------------------------------------------------------------------------------------------------------------+--------+-------+--------------+--------------------+-------------------+--------+---------+
+|fifo_generator_v13_2_13 | inst_fifo_gen/gconvfifo.rf/gbi.bi/g7ser_birst.rstbt/rsync.ric.rd_rst_fb_reg[0]                                                          | 5      | 1     | NO           | NO                 | YES               | 1      | 0       | 
+|axi_vdma                | AXI_LITE_REG_INTERFACE_I/GEN_AXI_LITE_IF.AXI_LITE_IF_I/GEN_LITE_IS_ASYNC.GEN_MM2S_ONLY_ASYNC_LITE_ACCESS.prepare_wrce_pulse_lite_d6_reg | 6      | 1     | NO           | NO                 | NO                | 1      | 0       | 
+|axi_vdma                | AXI_LITE_REG_INTERFACE_I/GEN_AXI_LITE_IF.AXI_LITE_IF_I/GEN_LITE_IS_ASYNC.GEN_MM2S_ONLY_ASYNC_LITE_ACCESS.sig_arvalid_arrived_d4_reg     | 3      | 1     | NO           | NO                 | NO                | 1      | 0       | 
++------------------------+-----------------------------------------------------------------------------------------------------------------------------------------+--------+-------+--------------+--------------------+-------------------+--------+---------+
+
+
+Dynamic Shift Register Report:
++------------+---------------+--------+------------+--------+---------+--------+--------+--------+
+|Module Name | RTL Name      | Length | Data Width | SRL16E | SRLC32E | Mux F7 | Mux F8 | Mux F9 | 
++------------+---------------+--------+------------+--------+---------+--------+--------+--------+
+|dsrl        | data_reg[3]   | 68     | 68         | 68     | 0       | 0      | 0      | 0      | 
+|dsrl__1     | data_reg[3]   | 8      | 8          | 8      | 0       | 0      | 0      | 0      | 
+|dsrl__2     | data_reg[3]   | 59     | 59         | 59     | 0       | 0      | 0      | 0      | 
+|dsrl__3     | data_reg[3]   | 38     | 38         | 38     | 0       | 0      | 0      | 0      | 
+|dsrl__4     | data_reg[3]   | 9      | 9          | 9      | 0       | 0      | 0      | 0      | 
+|dsrl__5     | shift_reg_reg | 16     | 1          | 1      | 0       | 0      | 0      | 0      | 
++------------+---------------+--------+------------+--------+---------+--------+--------+--------+
+
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+Report BlackBoxes: 
++------+--------------+----------+
+|      |BlackBox name |Instances |
++------+--------------+----------+
+|1     |clk_wiz_0     |         1|
++------+--------------+----------+
+
+Report Cell Usage: 
++------+-----------+------+
+|      |Cell       |Count |
++------+-----------+------+
+|1     |clk_wiz    |     1|
+|2     |BIBUF      |   130|
+|3     |BUFG       |     3|
+|4     |CARRY4     |    79|
+|5     |FIFO36E1   |     1|
+|6     |LUT1       |   312|
+|7     |LUT2       |   303|
+|8     |LUT3       |   392|
+|9     |LUT4       |   338|
+|10    |LUT5       |   305|
+|11    |LUT6       |   560|
+|12    |MMCME2_ADV |     1|
+|13    |PS7        |     1|
+|14    |RAM32M     |    25|
+|15    |RAMB36E1   |     4|
+|16    |SRL16      |     3|
+|17    |SRL16E     |   118|
+|18    |FDCE       |    66|
+|19    |FDPE       |     8|
+|20    |FDRE       |  2240|
+|21    |FDSE       |    80|
+|22    |IBUF       |     2|
+|23    |OBUF       |    14|
++------+-----------+------+
+---------------------------------------------------------------------------------
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14067 ; free virtual = 23365
+---------------------------------------------------------------------------------
+Synthesis finished with 0 errors, 0 critical warnings and 13 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:32 ; elapsed = 00:00:33 . Memory (MB): peak = 2960.738 ; gain = 974.086 ; free physical = 14084 ; free virtual = 23382
+Synthesis Optimization Complete : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.746 ; gain = 1240.547 ; free physical = 14084 ; free virtual = 23382
+INFO: [Project 1-571] Translating synthesized netlist
+Netlist sorting complete. Time (s): cpu = 00:00:00.12 ; elapsed = 00:00:00.11 . Memory (MB): peak = 2963.707 ; gain = 0.000 ; free physical = 14188 ; free virtual = 23486
+INFO: [Netlist 29-17] Analyzing 113 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 3028.641 ; gain = 0.000 ; free physical = 14190 ; free virtual = 23489
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 28 instances were transformed.
+  RAM32M => RAM32M (RAMD32(x6), RAMS32(x2)): 25 instances
+  SRL16 => SRL16E: 3 instances
+
+Synth Design complete | Checksum: 15ce25ec
+INFO: [Common 17-83] Releasing license: Synthesis
+418 Infos, 195 Warnings, 0 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:00:45 ; elapsed = 00:00:44 . Memory (MB): peak = 3028.676 ; gain = 1442.117 ; free physical = 14208 ; free virtual = 23499
+INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 2171.859; main = 2149.040; forked = 268.208
+INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3801.484; main = 3028.645; forked = 963.555
+Write ShapeDB Complete: Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00 . Memory (MB): peak = 3052.652 ; gain = 0.000 ; free physical = 14207 ; free virtual = 23499
+INFO: [Common 17-1381] The checkpoint '/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/controller.dcp' has been generated.
+INFO: [Vivado 12-24828] Executing command : report_utilization -file controller_utilization_synth.rpt -pb controller_utilization_synth.pb
+INFO: [Common 17-206] Exiting Vivado at Tue Mar 17 17:18:05 2026...

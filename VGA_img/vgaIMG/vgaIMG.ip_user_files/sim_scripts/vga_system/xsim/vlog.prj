@@ -1,0 +1,51 @@
+verilog xil_defaultlib -i "../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/ec67/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/6cfa/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/f0b6/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a8e4/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a9be" \
+"../../../bd/vga_system/ip/vga_system_processing_system7_0_0/sim/vga_system_processing_system7_0_0.v" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_0/sim/bd_654d_one_0.v" \
+
+sv xil_defaultlib -i "../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/ec67/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/6cfa/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/f0b6/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a8e4/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a9be" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_2/sim/bd_654d_s00mmu_0.sv" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_3/sim/bd_654d_s00tr_0.sv" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_4/sim/bd_654d_s00sic_0.sv" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_5/sim/bd_654d_s00a2s_0.sv" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_6/sim/bd_654d_sarn_0.sv" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_7/sim/bd_654d_srn_0.sv" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_8/sim/bd_654d_sawn_0.sv" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_9/sim/bd_654d_swn_0.sv" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_10/sim/bd_654d_sbn_0.sv" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_11/sim/bd_654d_m00s2a_0.sv" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/ip/ip_12/sim/bd_654d_m00e_0.sv" \
+
+verilog xil_defaultlib -i "../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/ec67/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/6cfa/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/f0b6/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a8e4/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a9be" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/bd_0/sim/bd_654d.v" \
+
+sv xil_defaultlib -i "../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/ec67/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/6cfa/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/f0b6/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a8e4/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a9be" \
+"../../../bd/vga_system/ip/vga_system_axi_smc_0/sim/vga_system_axi_smc_0.sv" \
+
+verilog xil_defaultlib -i "../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/ec67/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/6cfa/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/f0b6/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a8e4/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a9be" \
+"../../../bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1_clk_wiz.v" \
+"../../../bd/vga_system/ip/vga_system_clk_wiz_0_1/vga_system_clk_wiz_0_1.v" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_0/sim/bd_ead3_one_0.v" \
+
+sv xil_defaultlib -i "../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/ec67/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/6cfa/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/f0b6/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a8e4/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a9be" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_2/sim/bd_ead3_s00mmu_0.sv" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_3/sim/bd_ead3_s00tr_0.sv" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_4/sim/bd_ead3_s00sic_0.sv" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_5/sim/bd_ead3_s00a2s_0.sv" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_6/sim/bd_ead3_sarn_0.sv" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_7/sim/bd_ead3_srn_0.sv" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_8/sim/bd_ead3_m00s2a_0.sv" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/ip/ip_9/sim/bd_ead3_m00e_0.sv" \
+
+verilog xil_defaultlib -i "../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/ec67/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/6cfa/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/f0b6/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a8e4/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a9be" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/bd_0/sim/bd_ead3.v" \
+
+sv xil_defaultlib -i "../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/ec67/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/6cfa/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/f0b6/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a8e4/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a9be" \
+"../../../bd/vga_system/ip/vga_system_smartconnect_0_0/sim/vga_system_smartconnect_0_0.sv" \
+
+verilog xil_defaultlib -i "../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/ec67/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/6cfa/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/5fb3/hdl" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/f0b6/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a8e4/hdl/verilog" --include "../../../../vgaIMG.gen/sources_1/bd/vga_system/ipshared/a9be" \
+"../../../bd/vga_system/sim/vga_system.v" \
+
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
