@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -12,6 +13,14 @@ typedef struct {
   semantic_context_t *ctx;
   semantic_pass1_result_t result;
 } pass1_state_t;
+
+static int register_symbol(pass1_state_t *state,
+                           const char *name,
+                           symbol_kind_t kind,
+                           type_t *type,
+                           size_t line,
+                           int is_function_definition,
+                           size_t arity);
 
 
 /// @brief emit pass 1 diagnostic message into the diagnostics list 
@@ -29,6 +38,261 @@ static void pass1_emit(pass1_state_t *state,
   }
 
   (void)diag_emit(&state->ctx->diagnostics, code, DIAG_ERROR, line, 0u, "%s", message);
+}
+
+/**
+ * @brief Compose a canonical symbol-table key for one tag name.
+ * @param kind tag type kind.
+ * @param tag_name raw source tag identifier.
+ * @param buffer output buffer for the prefixed key.
+ * @param buffer_size size of output buffer.
+ * @return 0 on success, negative errno-like value on error.
+ */
+static int build_tag_symbol_name(type_kind_t kind,
+                                 const char *tag_name,
+                                 char *buffer,
+                                 size_t buffer_size)
+{
+  const char *prefix;
+
+  if (!tag_name || !buffer || buffer_size == 0u) {
+    return -EINVAL;
+  }
+
+  switch (kind) {
+    case TYPE_STRUCT_TAG:
+      prefix = "struct:";
+      break;
+    case TYPE_UNION_TAG:
+      prefix = "union:";
+      break;
+    case TYPE_ENUM_TAG:
+      prefix = "enum:";
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  if ((size_t)snprintf(buffer, buffer_size, "%s%s", prefix, tag_name) >= buffer_size) {
+    return -ENAMETOOLONG;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Check whether one tag declaration node carries a body.
+ * @param decl_node aggregate declaration node.
+ * @return non-zero when the declaration defines members.
+ */
+static int tag_decl_has_body(const TreeNode_t *decl_node)
+{
+  return decl_node && decl_node->p_firstChild != NULL;
+}
+
+/**
+ * @brief Check whether the current enum member name already appeared earlier in the same enum.
+ * @param enum_decl enum declaration node.
+ * @param member current enum member node.
+ * @return non-zero if a previous sibling enum member uses the same identifier.
+ */
+static int enum_member_seen_earlier(const TreeNode_t *enum_decl, const TreeNode_t *member)
+{
+  const TreeNode_t *it;
+
+  if (!enum_decl || !member || !member->nodeData.sVal) {
+    return 0;
+  }
+
+  it = enum_decl->p_firstChild;
+  while (it && it != member) {
+    if (it->nodeType == NODE_ENUM_MEMBER &&
+        it->nodeData.sVal &&
+        strcmp(it->nodeData.sVal, member->nodeData.sVal) == 0) {
+      return 1;
+    }
+    it = it->p_sibling;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Register enum tag and enum members, checking duplicate members in the same enum.
+ * @param decl_node enum declaration node.
+ * @param state pass1 execution state.
+ * @return 0 on success, negative errno-like value on failure.
+ */
+static int handle_enum_declaration(TreeNode_t *decl_node, pass1_state_t *state)
+{
+  const TreeNode_t *member;
+
+  if (!decl_node || !state) {
+    return -EINVAL;
+  }
+
+  if (decl_node->nodeData.sVal) {
+    char key[256];
+    type_t *tag_type;
+    int rc;
+
+    rc = build_tag_symbol_name(TYPE_ENUM_TAG, decl_node->nodeData.sVal, key, sizeof(key));
+    if (rc < 0) {
+      pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to build enum tag key");
+      return rc;
+    }
+
+    tag_type = type_new_tagged(TYPE_ENUM_TAG, decl_node->nodeData.sVal, 0u);
+    if (!tag_type) {
+      pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to allocate enum tag type");
+      return -ENOMEM;
+    }
+    type_set_aggregate_decl(tag_type, decl_node);
+
+    rc = register_symbol(state,
+                         key,
+                         SYMBOL_TAG_ENUM,
+                         tag_type,
+                         decl_node->lineNumber,
+                         0,
+                         0u);
+    if (rc < 0 && rc != -EEXIST) {
+      return rc;
+    }
+  }
+
+  member = decl_node->p_firstChild;
+  while (member) {
+    type_t *member_type;
+    int rc;
+
+    if (member->nodeType != NODE_ENUM_MEMBER || !member->nodeData.sVal) {
+      member = member->p_sibling;
+      continue;
+    }
+
+    if (enum_member_seen_earlier(decl_node, member)) {
+      pass1_emit(state, "SEM063", member->lineNumber, "duplicate enum member in same enum");
+      member = member->p_sibling;
+      continue;
+    }
+
+    member_type = type_new_builtin(BUILTIN_INT, 0u);
+    if (!member_type) {
+      pass1_emit(state, "SEM900", member->lineNumber, "failed to allocate enum member type");
+      return -ENOMEM;
+    }
+
+    rc = register_symbol(state,
+                         member->nodeData.sVal,
+                         SYMBOL_ENUM_CONST,
+                         member_type,
+                         member->lineNumber,
+                         0,
+                         0u);
+    if (rc < 0 && rc != -EEXIST) {
+      return rc;
+    }
+
+    member = member->p_sibling;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Register one struct/union tag and detect incompatible same-scope redefinition.
+ * @param decl_node struct/union declaration node.
+ * @param state pass1 execution state.
+ * @return 0 on success, negative errno-like value on failure.
+ */
+static int handle_tag_declaration(TreeNode_t *decl_node, pass1_state_t *state)
+{
+  scope_t *scope;
+  symbol_t *existing;
+  type_kind_t kind;
+  symbol_kind_t symbol_kind;
+  char key[256];
+  int rc;
+
+  if (!decl_node || !state) {
+    return -EINVAL;
+  }
+
+  switch (decl_node->nodeType) {
+    case NODE_STRUCT_DECLARATION:
+      kind = TYPE_STRUCT_TAG;
+      symbol_kind = SYMBOL_TAG_STRUCT;
+      break;
+    case NODE_UNION_DECLARATION:
+      kind = TYPE_UNION_TAG;
+      symbol_kind = SYMBOL_TAG_UNION;
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  if (!decl_node->nodeData.sVal) {
+    return 0;
+  }
+
+  rc = build_tag_symbol_name(kind, decl_node->nodeData.sVal, key, sizeof(key));
+  if (rc < 0) {
+    pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to build tag symbol key");
+    return rc;
+  }
+
+  scope = scope_current(&state->ctx->scope_stack);
+  if (!scope) {
+    pass1_emit(state, "SEM900", decl_node->lineNumber, "tag declaration without active scope");
+    return -EINVAL;
+  }
+
+  existing = symbol_lookup_current(scope, key);
+  if (existing) {
+    const TreeNode_t *prev_decl = NULL;
+
+    if (existing->kind != symbol_kind ||
+        !existing->type ||
+        existing->type->kind != kind) {
+      pass1_emit(state, "SEM064", decl_node->lineNumber, "conflicting redefinition of struct/union tag");
+      return -EEXIST;
+    }
+
+    prev_decl = (const TreeNode_t *)existing->type->as.aggregate.decl_node;
+    if (tag_decl_has_body(decl_node) && tag_decl_has_body(prev_decl)) {
+      pass1_emit(state, "SEM064", decl_node->lineNumber, "conflicting redefinition of struct/union tag");
+      return -EEXIST;
+    }
+
+    if (tag_decl_has_body(decl_node) && !tag_decl_has_body(prev_decl)) {
+      type_set_aggregate_decl(existing->type, decl_node);
+    }
+
+    return 0;
+  }
+
+  {
+    type_t *tag_type = type_new_tagged(kind, decl_node->nodeData.sVal, 0u);
+    if (!tag_type) {
+      pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to allocate tag type");
+      return -ENOMEM;
+    }
+
+    type_set_aggregate_decl(tag_type, decl_node);
+    rc = register_symbol(state,
+                         key,
+                         symbol_kind,
+                         tag_type,
+                         decl_node->lineNumber,
+                         0,
+                         0u);
+    if (rc < 0) {
+      return rc;
+    }
+  }
+
+  return 0;
 }
 
 /**
@@ -577,6 +841,21 @@ static int walk_pass1(TreeNode_t *node, pass1_state_t *state)
       }
       it = it->p_sibling;
       continue;
+    } else if (it->nodeType == NODE_ENUM_DECLARATION) {
+      int rc = handle_enum_declaration(it, state);
+      if (rc < 0) {
+        return rc;
+      }
+      it = it->p_sibling;
+      continue;
+    } else if (it->nodeType == NODE_STRUCT_DECLARATION ||
+               it->nodeType == NODE_UNION_DECLARATION) {
+      int rc = handle_tag_declaration(it, state);
+      if (rc < 0) {
+        return rc;
+      }
+      it = it->p_sibling;
+      continue;
     } else if (it->nodeType == NODE_VAR_DECLARATION || it->nodeType == NODE_ARRAY_DECLARATION) {
       if (handle_object_declaration(it, state) < 0) {
         return -ENOMEM;
@@ -660,20 +939,20 @@ int semantic_pass1_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass1
  * 2) se virem que falta algum importante, avisar! e colocar aqui e no docs da drive!
  *
  * PASSE 1 - Declaracoes, scopes, simbolos
- * [ ] SEM001 Identificador desconhecido deve resolver para simbolo visivel (feito no fluxo de lookup do pass2) <----- 
+ * [x] SEM001 Identificador desconhecido deve resolver para simbolo visivel (feito no fluxo de lookup do pass2) 
  * [x] SEM002 Redeclaracao no mesmo scope e rejeitada
  * [x] SEM003 Shadowing em scope aninhado e permitido
  * [x] SEM004 Compatibilidade entre prototipo e definicao de funcao
  * [x] SEM005 Definicao duplicada de funcao e rejeitada
- * [x] SEM006 Uso antes da declaracao na ordem do mesmo bloco <----- start with this one first 
- * [ ] SEM007 'inline' invalido para declaracao de variaveis
- * [ ] SEM063 Redeclaracao de membro em enum
- * [ ] SEM064 Redefinicao incompativel de tag struct/union
+ * [x] SEM006 Uso antes da declaracao na ordem do mesmo bloco
+ * [x] SEM007 'inline' invalido para declaracao de variaveis
+ * [x] SEM063 Redeclaracao de membro em enum
+ * [x] SEM064 Redefinicao incompativel de tag struct/union
  *
  * Checks prioritarios ainda em falta no pass1:
  * [x] SEM006
- * [ ] SEM007
- * [ ] SEM063
- * [ ] SEM064
+ * [x] SEM007
+ * [x] SEM063
+ * [x] SEM064
  *
  */

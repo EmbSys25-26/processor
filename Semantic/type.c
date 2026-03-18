@@ -259,6 +259,7 @@ void type_free(type_t *type)
   free(type);
 }
 
+// TODO: how to compare (char*) and BUILTING_STRING
 int type_equal(const type_t *lhs, const type_t *rhs)
 {
   if (lhs == rhs) {
