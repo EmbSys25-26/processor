@@ -861,9 +861,9 @@ int semantic_pass1_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass1
  * [x] SEM004 Compatibilidade entre prototipo e definicao de funcao
  * [x] SEM005 Definicao duplicada de funcao e rejeitada
  * [ ] SEM006 Uso antes da declaracao na ordem do mesmo bloco
- * [ ] SEM007 'inline' invalido para declaracao de variaveis
- * [ ] SEM063 Redeclaracao de membro em enum
- * [ ] SEM064 Redefinicao incompativel de tag struct/union
+ * [x] SEM007 'inline' invalido para declaracao de variaveis
+ * [x] SEM063 Redeclaracao de membro em enum
+ * [x] SEM064 Redefinicao incompativel de tag struct/union
  *
  * Checks prioritarios ainda em falta no pass1:
  * [ ] SEM006

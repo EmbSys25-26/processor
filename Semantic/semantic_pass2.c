@@ -908,6 +908,29 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
 }
 
 /**
+ * @brief Check for multiple default labels inside one switch body (SEM056).
+ * @param switch_first_child first child node of the NODE_SWITCH.
+ * @param state pass2 execution state.
+ */
+static void check_mutiple_defaults(TreeNode_t *switch_first_child, pass2_state_t *state)
+{
+  TreeNode_t *it = switch_first_child;
+  int default_count = 0;
+
+  while (it) {
+    if (it->nodeType == NODE_DEFAULT) {
+      default_count++;
+      if (default_count > 1) {
+        pass2_emit(state, "SEM056", it->lineNumber,
+                   "multiple default labels in one switch body are not allowed");
+      }
+    }
+    it = it->p_sibling;
+  }
+}
+
+
+/**
  * @brief Register local declaration into current non-global scope for pass2 lookups.
  * @param decl_node declaration node.
  * @param state pass2 execution state.
@@ -1103,11 +1126,14 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
     } else if (it->nodeType == NODE_SWITCH) {
       int rc;
 
+      if(it->p_firstChild) {
+        check_mutiple_defaults(it->p_firstChild, state);
+      }
       state->switch_depth++;
       rc = it->p_firstChild ? walk_pass2(it->p_firstChild, state) : 0;
       state->switch_depth--;
       if (rc < 0) {
-        return rc;
+        return rc;  
       }
       it = it->p_sibling;
       continue;
@@ -1250,7 +1276,7 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
  * [ ] SEM053 Expressao de switch deve ser integral ou enum
  * [ ] SEM054 Label case deve ser expressao constante integral
  * [ ] SEM055 Label case duplicado no mesmo switch
- * [ ] SEM056 Multiplos default no mesmo switch
+ * [x] SEM056 Multiplos default no mesmo switch
  * [x] SEM060 Acesso a membro inexistente em struct/union
  * [x] SEM061 Operador '.' requer objeto struct/union
  * [x] SEM062 Operador '->' requer ponteiro para struct/union
