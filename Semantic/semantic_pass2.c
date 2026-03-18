@@ -187,6 +187,35 @@ static int type_is_scalar(const type_t *type)
 }
 
 /**
+ * @brief Verifies whether two types are compatible for comparison operators.
+ * @param lhs left-hand side type.
+ * @param rhs right-hand side type.
+ * @return non-zero (1) if they are compatible, 0 otherwise.
+ */
+static int is_comparison_compatible(const type_t *lhs, const type_t *rhs)
+{
+  if (!lhs || !rhs) {
+    return 0;
+  }
+
+  if (type_equal(lhs, rhs)) {
+    return 1;
+  }
+
+  if(type_is_numeric(lhs) && type_is_numeric(rhs)) {
+    return 1;
+  }
+
+  if (lhs->kind == TYPE_POINTER && rhs->kind == TYPE_POINTER) {
+    return 1;
+  }
+  
+  return 0;
+}
+
+
+
+/**
  * @brief Check whether an AST node kind should be treated as an expression root.
  * @param node_type AST node type.
  * @return non-zero if the node kind represents an expression.
@@ -785,12 +814,18 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       op_kind == OP_LESS_THAN ||
       op_kind == OP_GREATER_THAN ||
       op_kind == OP_LESS_THAN_OR_EQUAL ||
-      op_kind == OP_GREATER_THAN_OR_EQUAL ) {
+      op_kind == OP_GREATER_THAN_OR_EQUAL) {
     if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
+      return &g_type_invalid;
+    }
+
+    if (!is_comparison_compatible(lhs_type, rhs_type)) {
+      pass2_emit(state, "SEM025", op_node->lineNumber, "Incompatible types for comparison operator");
       return &g_type_invalid;
     }
     return &g_type_int;
   }
+  
     // SEM024 lOGICAL OPERATORS (&&, ||, !):
   if (op_kind == OP_LOGICAL_AND || op_kind == OP_LOGICAL_OR) {
     if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
@@ -962,15 +997,19 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
       }
       return &g_type_invalid;
         
+    case NODE_TERNARY:
       if (node->p_firstChild) {
+        const type_t *cond_type;
         const type_t *true_type;
         const type_t *false_type;
-        (void)infer_expr_type(node->p_firstChild, state);
+
+        cond_type = infer_expr_type(node->p_firstChild, state);
         true_type = infer_expr_type(node->p_firstChild->p_sibling, state);
         false_type = infer_expr_type(node->p_firstChild->p_sibling ?
                                      node->p_firstChild->p_sibling->p_sibling : NULL,
                                      state);
-        if (true_type->kind == TYPE_INVALID || false_type->kind == TYPE_INVALID) {
+
+        if (cond_type->kind == TYPE_INVALID || true_type->kind == TYPE_INVALID || false_type->kind == TYPE_INVALID) {
           return &g_type_invalid;
         }
         if (assignment_compatible(true_type, false_type)) {
@@ -979,6 +1018,8 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
         if (assignment_compatible(false_type, true_type)) {
           return false_type;
         }
+        
+        pass2_emit(state, "SEM026", node->lineNumber, "Incompatible types in ternary operator");
       }
       return &g_type_invalid;
     case NODE_MEMBER_ACCESS:
