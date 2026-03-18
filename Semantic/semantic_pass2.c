@@ -1194,12 +1194,12 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
     case NODE_POST_DEC:
     case NODE_PRE_DEC:
       if (node->p_firstChild) {
-        const type_t *operand_type= infer_expr_type(node->p_firstChild, state);
-        if (operand_type->kind != TYPE_INVALID){
-          // Verify if the operand is a modifiable object
+        const type_t *operand_type = infer_expr_type(node->p_firstChild, state);
+        if (operand_type->kind != TYPE_INVALID) {
+          /* Verify that the operand is a modifiable object. */
           if (operand_type->qualifiers & TYPE_QUAL_CONST) {
             pass2_emit(state, "SEM009", node->lineNumber, "Increment/decrement of a const object");
-          }else if (!(
+          } else if (!(
               node->p_firstChild->nodeType == NODE_IDENTIFIER ||
               node->p_firstChild->nodeType == NODE_ARRAY_ACCESS ||
               node->p_firstChild->nodeType == NODE_POINTER_CONTENT ||
@@ -1209,9 +1209,10 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
             pass2_emit(state, "SEM028", node->lineNumber, "Increment/decrement requires modifiable lvalue");
           }
           return operand_type;
-         }
-         return &g_type_invalid;
+        }
+        return &g_type_invalid;
       }
+      return &g_type_invalid;
     case NODE_TERNARY:
       if (node->p_firstChild) {
         const type_t *true_type;
