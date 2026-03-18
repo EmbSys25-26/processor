@@ -1555,7 +1555,7 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
  * PASSE 2 - Tipos, expressoes, chamadas e controlo de fluxo
  * [x] SEM001 Identificador desconhecido deve resolver para simbolo visivel (implementado no fluxo de lookup do pass2)
  * [ ] SEM008 Atribuicao a objeto qualificado como const
- * [ ] SEM009 inc/dec em objeto qualificado como const
+ * [x] SEM009 inc/dec em objeto qualificado como const
  * [ ] SEM010 Remocao implicita de qualificador const em atribuicao de ponteiros
  * [x] SEM011 Compatibilidade de tipos em atribuicoes
  * [ ] SEM012 Conversao implicita ponteiro <-> inteiro nao permitida
@@ -1563,18 +1563,18 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
  * [ ] SEM014 Atribuicao entre struct/union exige tipos identicos
  * [ ] SEM015 Cast envolvendo struct/union incompleta
  * [ ] SEM016 Cast ponteiro <-> float proibido (modo estrito)
- * [ ] SEM020 Operadores aritmeticos requerem operandos aritmeticos
- * [ ] SEM021 '%' apenas para operandos integrais
+ * [x] SEM020 Operadores aritmeticos requerem operandos aritmeticos
+ * [x] SEM021 '%' apenas para operandos integrais
  * [ ] SEM022 Divisao/modulo por zero constante
- * [ ] SEM023 Operadores bitwise requerem operandos integrais
- * [ ] SEM024 Operadores logicos requerem operandos escalares
+ * [x] SEM023 Operadores bitwise requerem operandos integrais
+ * [x] SEM024 Operadores logicos requerem operandos escalares
  * [ ] SEM025 Compatibilidade de operandos em comparacoes
  * [ ] SEM026 Compatibilidade dos ramos do operador ternario
- * [ ] SEM027 LHS da atribuicao deve ser lvalue modificavel
- * [ ] SEM028 inc/dec requer lvalue modificavel
+ * [x] SEM027 LHS da atribuicao deve ser lvalue modificavel
+ * [x] SEM028 inc/dec requer lvalue modificavel
  * [ ] SEM029 '&' requer operando lvalue
  * [ ] SEM030 '*' requer operando do tipo ponteiro
- * [ ] SEM031 Indice de array deve ser integral
+ * [x] SEM031 Indice de array deve ser integral
  * [ ] SEM032 Base de [] deve ser array ou ponteiro
  * [x] SEM040 Alvo de chamada deve ser uma funcao
  * [x] SEM041 Numero de argumentos deve coincidir com a assinatura
