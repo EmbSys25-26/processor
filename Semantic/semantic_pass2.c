@@ -228,6 +228,19 @@ static int type_is_numeric(const type_t *type)
   }
   return is_numeric_builtin(type->as.builtin);
 }
+/**
+ * @brief Check whether a semantic type is scalar.
+ * @param type semantic type pointer.
+ * @return non-zero if scalar.
+ */
+static int type_is_scalar(const type_t *type)
+{
+  if (!type) {
+    return 0;
+  }
+  //Is scalar if it's numeric or pointer
+  return type_is_numeric(type) || type->kind == TYPE_POINTER;
+}
 
 /**
  * @brief Check whether one semantic type is a builtin integral type.
@@ -907,15 +920,32 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       }
     }
 
-    return lhs_type;
-  }
+    if (lhs_type->kind != TYPE_INVALID && (lhs_type->qualifiers & TYPE_QUAL_CONST)) {
+      int is_initialization = 0;
+
+      /* If the LHS is a variable identifier, look it up in the Symbol Table */
+    if (lhs && lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
+        scope_t *scope = scope_current(&state->ctx->scope_stack);
+        symbol_t *sym = symbol_lookup_visible(scope, lhs->nodeData.sVal);
+
+        if (sym && sym->decl_line == op_node->lineNumber) {
+          is_initialization = 1;
+        }
+      }
+      if (!is_initialization) {
+        pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
+      }
+    }
+
+  return lhs_type;
+  } 
 
   if (op_kind == OP_PLUS ||
       op_kind == OP_MINUS ||
       op_kind == OP_MULTIPLY ||
-      op_kind == OP_DIVIDE ||
-      op_kind == OP_MODULE) {
+      op_kind == OP_DIVIDE ) {
     if (!type_is_numeric(lhs_type) || !type_is_numeric(rhs_type)) {
+      pass2_emit(state, "SEM020", op_node->lineNumber, "Arithmetic operators require arithmetic operands");
       return &g_type_invalid;
     }
     if (lhs_type->kind == TYPE_BUILTIN && rhs_type->kind == TYPE_BUILTIN) {
@@ -928,6 +958,19 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       if (lhs_type->as.builtin == BUILTIN_FLOAT || rhs_type->as.builtin == BUILTIN_FLOAT) {
         return &g_type_float;
       }
+    }
+    return &g_type_int;
+  }
+
+   else if (op_kind == OP_MODULE) {
+    if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
+      return &g_type_invalid;
+    }
+
+    /* SEM021: Module only allows integral types (int, char, etc.) */
+    if (!type_is_integral(lhs_type) || !type_is_integral(rhs_type)) {
+      pass2_emit(state, "SEM021", op_node->lineNumber, "Operator '%' only for integral operands");
+      return &g_type_invalid;
     }
     return &g_type_int;
   }
@@ -950,12 +993,22 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     return lhs_type;
   }
 
+
   if (op_kind == OP_LEFT_SHIFT ||
       op_kind == OP_RIGHT_SHIFT ||
       op_kind == OP_BITWISE_AND ||
       op_kind == OP_BITWISE_OR ||
       op_kind == OP_BITWISE_XOR) {
     if (!type_is_integral(lhs_type) || !type_is_integral(rhs_type)) {
+      pass2_emit(state, "SEM023", op_node->lineNumber, "Bitwise operators require integral operands");
+      return &g_type_invalid;
+    }
+    return lhs_type;
+  }
+
+  if (op_kind == OP_BITWISE_NOT) {
+    if (!type_is_integral(lhs_type)) {
+      pass2_emit(state, "SEM023", op_node->lineNumber, "Bitwise operators require integral operands");
       return &g_type_invalid;
     }
     if ((op_kind == OP_BITWISE_AND ||
@@ -967,14 +1020,13 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     return lhs_type;
   }
 
+
   if (op_kind == OP_EQUAL ||
       op_kind == OP_NOT_EQUAL ||
       op_kind == OP_LESS_THAN ||
       op_kind == OP_GREATER_THAN ||
       op_kind == OP_LESS_THAN_OR_EQUAL ||
-      op_kind == OP_GREATER_THAN_OR_EQUAL ||
-      op_kind == OP_LOGICAL_AND ||
-      op_kind == OP_LOGICAL_OR) {
+      op_kind == OP_GREATER_THAN_OR_EQUAL ) {
     if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
       return &g_type_invalid;
     }
@@ -985,19 +1037,31 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     }
     return &g_type_int;
   }
-
+    // SEM024 lOGICAL OPERATORS (&&, ||, !):
+  if (op_kind == OP_LOGICAL_AND || op_kind == OP_LOGICAL_OR) {
+    if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
+      return &g_type_invalid;
+    }
+    
+    if (!type_is_scalar(lhs_type) || !type_is_scalar(rhs_type)) {
+      pass2_emit(state, "SEM024", op_node->lineNumber, "Logical operators require scalar operands");
+      return &g_type_invalid;
+    }
+    
+    return &g_type_int;
+  }
+  // SEM024: Logical NOT operator (!)
   if (op_kind == OP_LOGICAL_NOT) {
     if (lhs_type->kind == TYPE_INVALID) {
       return &g_type_invalid;
     }
-    return &g_type_int;
-  }
-
-  if (op_kind == OP_BITWISE_NOT) {
-    if (!type_is_integral(lhs_type)) {
+    
+    if (!type_is_scalar(lhs_type)) {
+      pass2_emit(state, "SEM024", op_node->lineNumber, "Logical operator requires scalar operand");
       return &g_type_invalid;
     }
-    return lhs_type;
+    
+    return &g_type_int; 
   }
 
   if (op_kind == OP_UNARY_MINUS) {
@@ -1056,7 +1120,13 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
         const type_t *base = infer_expr_type(node->p_firstChild, state);
         const TreeNode_t *index_expr = node->p_firstChild->p_sibling;
         if (index_expr) {
-          (void)infer_expr_type((TreeNode_t *)index_expr, state);
+          /* 1. Save the returned type */
+          const type_t *index_type = infer_expr_type((TreeNode_t *)index_expr, state);
+          
+          /* 2. SEM031: Throw an error if the index is not an integer */
+          if (index_type->kind != TYPE_INVALID && !type_is_integral(index_type)) {
+            pass2_emit(state, "SEM031", node->lineNumber, "Array index must be integral");
+          }
         }
         if (base->kind == TYPE_ARRAY && base->as.array.elem) {
           return base->as.array.elem;
@@ -1124,9 +1194,24 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
     case NODE_POST_DEC:
     case NODE_PRE_DEC:
       if (node->p_firstChild) {
-        return infer_expr_type(node->p_firstChild, state);
+        const type_t *operand_type= infer_expr_type(node->p_firstChild, state);
+        if (operand_type->kind != TYPE_INVALID){
+          // Verify if the operand is a modifiable object
+          if (operand_type->qualifiers & TYPE_QUAL_CONST) {
+            pass2_emit(state, "SEM009", node->lineNumber, "Increment/decrement of a const object");
+          }else if (!(
+              node->p_firstChild->nodeType == NODE_IDENTIFIER ||
+              node->p_firstChild->nodeType == NODE_ARRAY_ACCESS ||
+              node->p_firstChild->nodeType == NODE_POINTER_CONTENT ||
+              node->p_firstChild->nodeType == NODE_MEMBER_ACCESS ||
+              node->p_firstChild->nodeType == NODE_PTR_MEMBER_ACCESS
+          )) {
+            pass2_emit(state, "SEM028", node->lineNumber, "Increment/decrement requires modifiable lvalue");
+          }
+          return operand_type;
+         }
+         return &g_type_invalid;
       }
-      return &g_type_invalid;
     case NODE_TERNARY:
       if (node->p_firstChild) {
         const type_t *true_type;
