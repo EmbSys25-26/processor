@@ -72,6 +72,12 @@ module ex_stage(
     input wire i_is_getcc,
     input wire i_restore_cc,        // SETCC: restore PSW from Rs
     input wire i_is_iret,
+    
+    input wire [1:0] i_forward_a,
+    input wire [1:0] i_forward_b,
+    input wire [15:0] i_exmem_wb_data,
+    input wire [15:0] i_memwb_wb_data,
+    
     // Current committed condition-code state (read directly from top-level regs)
     input wire i_c,     // Carry bit (for ADC/SBC)
     input wire i_ccz,   // Zero flag
@@ -112,6 +118,11 @@ module ex_stage(
     wire [15:0] _b;         // ALU right operand
     wire _add;              // 1 = perform addition; 0 = subtraction (fed to ALU)
     wire _ci;               // Carry-in to the ALU adder
+    
+    // Forwarded operand values: select between EX/MEM result (10), MEM/WB result (01),
+    // or the original register-file value (00) based on forwarding control signals.
+    wire [15:0] _rd_fwd;  // Forwarded value for Rd (ALU operand A / store source)
+    wire [15:0] _rs_fwd; // Forwarded value for Rs (ALU operand B)
 
     // ALU outputs
     wire [15:0] _sum;       // Arithmetic result (add/sub)
@@ -137,6 +148,19 @@ module ex_stage(
 /*************************************************************************************
  * 2.1 ALU Datapath
  ************************************************************************************/
+ 
+    // muxes for the forwarding
+    
+    assign _rd_fwd = (i_forward_a == 2'b10) ? i_exmem_wb_data :
+                     (i_forward_a == 2'b01) ? i_memwb_wb_data :
+                     i_rd_data;
+
+    assign _rs_fwd = (i_forward_b == 2'b10) ? i_exmem_wb_data :
+                     (i_forward_b == 2'b01) ? i_memwb_wb_data :
+                     i_rs_data;
+ 
+ 
+ 
 
     // Operand mux for RI vs RR:
     //   RI: Rd is the destination AND the left source; Rs is unused.
@@ -145,8 +169,8 @@ module ex_stage(
     //   RR: Rd is left, Rs is right.
     //       _src = Rs_data
     //       _a   = Rd_data
-    assign _src = i_is_ri ? i_rd_data : i_rs_data;
-    assign _a   = i_is_rr ? i_rd_data : i_imm16;
+    assign _src = i_is_ri ? _rd_fwd : _rs_fwd;
+    assign _a   = i_is_rr ? _rd_fwd : i_imm16;
     assign _b   = _src;
 
     // Add/subtract control:
@@ -211,7 +235,7 @@ module ex_stage(
     assign o_d_ad = (_sum << 1);
 
     // Store data is always the Rd register value (the source for SW/SB)
-    assign o_store_data = i_rd_data;
+    assign o_store_data = _rd_fwd;
 
     // Flag write-enable: set for arithmetic that updates CCs, or for SETCC restore
     assign o_flag_we = _update_cc | (i_valid & i_restore_cc);
@@ -219,15 +243,15 @@ module ex_stage(
     // New flag values:
     //   SETCC (restore_cc): unpack from Rs[3:0]
     //   Otherwise: computed from ALU result
-    assign o_new_ccz = i_restore_cc ? i_rs_data[3] : _z;
-    assign o_new_ccn = i_restore_cc ? i_rs_data[2] : _n;
-    assign o_new_ccc = i_restore_cc ? i_rs_data[1] : _co;
-    assign o_new_ccv = i_restore_cc ? i_rs_data[0] : _v;
+    assign o_new_ccz = i_restore_cc ? _rs_fwd[3] : _z;
+    assign o_new_ccn = i_restore_cc ? _rs_fwd[2] : _n;
+    assign o_new_ccc = i_restore_cc ? _rs_fwd[1] : _co;
+    assign o_new_ccv = i_restore_cc ? _rs_fwd[0] : _v;
 
     // Carry write: always asserted for valid instructions.
     // carry value: SETCC restores from Rs[4]; ADC/SBC sets from carry-out; others clear it.
     assign o_carry_we = i_valid;
-    assign o_new_c = i_restore_cc ? i_rs_data[4]
+    assign o_new_c = i_restore_cc ? _rs_fwd[4]
                                   : (_co & (i_is_alu & (i_is_adc | i_is_sbc)));
 
 /*************************************************************************************

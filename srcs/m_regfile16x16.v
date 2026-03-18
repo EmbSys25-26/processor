@@ -82,7 +82,9 @@ module regfile16x16(
 /*************************************************************************************
  * 2.3 Read Path
  ************************************************************************************/
-    assign o_ra = _mem[i_ra];
-    assign o_rb = _mem[i_rb];
+ 
+    assign o_ra = (i_we && (i_wa != 4'b0000) && (i_ra == i_wa)) ? i_wd : _mem[i_ra];
+    assign o_rb = (i_we && (i_wa != 4'b0000) && (i_rb == i_wa)) ? i_wd : _mem[i_rb];
+             
 
 endmodule

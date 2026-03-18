@@ -277,8 +277,12 @@ module id_stage(
 
     // ---- Output assignments ----
     assign o_valid       = i_valid;
+    
+    
     // Exclude IMM/CLI/STI/BX from the EX pipeline: they are handled entirely in ID
     assign o_exec_valid  = i_valid & ~(_is_imm | _is_cli | _is_sti | _is_bx);
+    
+    
     assign o_pc          = i_pc;    // Pass data Unchanged
     assign o_rd          = _rd;
     assign o_rs          = _rs;

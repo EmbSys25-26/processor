@@ -10,13 +10,9 @@
 // Hazard types detected:
 //
 //   1. RAW (Read-After-Write) data hazard:
-//      An instruction in ID reads a register that is being
-//      written by an instruction still in EX, MEM, or WB.
-//      The instruction in ID cannot proceed until the producer
-//      retires. Since there is no forwarding, a stall is issued
-//      until the register value is committed to the register file.
-//      Detection: compare Rd/Rs in ID against the destination
-//      register of each downstream pending write.
+//      Resolved by the forwarding unit in the EX stage.
+//      No stall is required for standard RAW hazards.
+//      Only the load-use case still requires a stall (see point 2).
 //
 //   2. Load-use hazard:
 //      A load instruction in EX/ID-EX will not have its result
@@ -105,19 +101,11 @@ module hazard_unit(
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
 
-    // "Pending" = a downstream stage has a valid instruction that writes a register
-    wire _idex_pending;   // EX stage has a pending register write
-    wire _exmem_pending;  // MEM stage has a pending register write
-    wire _memwb_pending;  // WB stage has a pending register write
-
     // Register address match: ID instruction reads a register that a downstream
     // stage is about to write
     wire _match_idex;
-    wire _match_exmem;
-    wire _match_memwb;
 
     // Hazard type flags
-    wire _raw_hazard;       // Any RAW register data hazard
     wire _load_use_hazard;  // Load-use subset of RAW (extra stall cycle needed)
     wire _cc_hazard;        // Condition-code read-after-write
     wire _carry_hazard;     // Carry-bit read-after-write
@@ -133,25 +121,11 @@ module hazard_unit(
  * 2.1 Data/CC Hazard Predicates
  ************************************************************************************/
 
-    // A downstream stage is "pending" only when it is valid, writing a register,
-    // and the destination is not R0 (R0 is read-only/zero and never hazardous).
-    assign _idex_pending  = i_idex_valid  & i_idex_rf_we  & (i_idex_rd  != 4'h0);
-    assign _exmem_pending = i_exmem_valid & i_exmem_rf_we & (i_exmem_rd != 4'h0);
-    assign _memwb_pending = i_memwb_valid & i_memwb_rf_we & (i_memwb_rd != 4'h0);
 
-    // A "match" means the instruction in ID reads a register that the downstream
-    // stage will write.  Both Rd and Rs are checked because some instructions
-    // (e.g. RR ALU, SW/SB) use Rd as a source operand.
+    // Register address match: ID instruction reads a register that the EX stage
+    // is about to write. Used exclusively for load-use hazard detection.
     assign _match_idex  = (i_id_reads_rd & (i_id_rd == i_idex_rd))  | (i_id_reads_rs & (i_id_rs == i_idex_rd));
-    assign _match_exmem = (i_id_reads_rd & (i_id_rd == i_exmem_rd)) | (i_id_reads_rs & (i_id_rs == i_exmem_rd));
-    assign _match_memwb = (i_id_reads_rd & (i_id_rd == i_memwb_rd)) | (i_id_reads_rs & (i_id_rs == i_memwb_rd));
 
-    // RAW hazard: ID instruction has a match against any pending downstream write
-    assign _raw_hazard = i_id_valid & (
-        (_idex_pending  & _match_idex)  |
-        (_exmem_pending & _match_exmem) |
-        (_memwb_pending & _match_memwb)
-    );
 
     // Load-use hazard: the instruction immediately following a load reads the loaded
     // register.  The load result is only available after MEM, so an extra stall is
@@ -170,7 +144,7 @@ module hazard_unit(
                            (i_idex_updates_carry | i_exmem_updates_carry | i_memwb_updates_carry);
 
     // Any hazard that requires inserting a stall/bubble at the decode boundary
-    assign _decode_hazard = _raw_hazard | _load_use_hazard | _cc_hazard | _carry_hazard;
+    assign _decode_hazard =  _load_use_hazard | _cc_hazard | _carry_hazard;
 
 /*************************************************************************************
  * 2.2 Control Outputs
