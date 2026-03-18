@@ -48,21 +48,21 @@ typedef struct {
 /// @brief Symbol table entry.
 /// @note Function-specific metadata parameters (arity/is_defined) are meaningful for analysing SYMBOL_FUNCTION.
 struct symbol_s {
-  char *name;  // set at declaration. used for lookups 
-  symbol_kind_t kind; // symbol kind 
-  storage_class_t storage_class; // set from specifiers in declaration  
-  unsigned qualifiers; // set from specifiers in declaration 
-  type_t *type; // type descriptor for type checks 
+  char *name;
+  symbol_kind_t kind; 
+  storage_class_t storage_class; 
+  unsigned qualifiers;
+  type_t *type;
 
-  size_t decl_line; // source line of capture
-  size_t decl_col;  // source column of capture
+  size_t decl_line;
+  size_t decl_col;
 
-  size_t scope_id; // scope identifier for traceability
-  size_t scope_depth;  // current nesting level. use to check for redeclaration or shadowing 
+  size_t scope_id;
+  size_t scope_depth;
   scope_t *decl_scope; // owner scope pointer
 
-  size_t arity; // counts the no. of params in SYMBOL_FUNCTION
-  int is_defined; // set when function has been defined (as opposed to declared)
+  size_t arity;
+  int is_defined;
   symbol_t* next; // next symbol in the same bucket entry 
 };
 
