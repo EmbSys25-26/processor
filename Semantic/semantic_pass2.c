@@ -941,7 +941,6 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
     case NODE_PRE_INC:
     case NODE_POST_DEC:
     case NODE_PRE_DEC:
-      case NODE_PRE_DEC:
       if (node->p_firstChild) {
         const type_t *operand_type= infer_expr_type(node->p_firstChild, state);
         if (operand_type->kind != TYPE_INVALID){
