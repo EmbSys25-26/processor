@@ -961,7 +961,7 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
          }
          return &g_type_invalid;
       }
-        return &g_type_invalid;
+      return &g_type_invalid;
         
       if (node->p_firstChild) {
         const type_t *true_type;
