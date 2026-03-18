@@ -203,7 +203,28 @@ static int is_expression_node_type(NodeType_t node_type)
       return 0;
   }
 }
+/**
+ * David 2026-06-01
+ * @brief Check whether a semantic type is scalar (arithmetic or pointer).
+ * @param lhs left-hand side type.
+ * @param rhs right-hand side type.
+ * @return non-zero if the type is scalar.
+ */
+static int type_is_scalar(const type_t *type)
+{
+  if (!type) {
+    return 0;
+  }
 
+  switch (type->kind) {
+    case TYPE_BUILTIN:
+    case TYPE_POINTER:
+    case TYPE_ENUM_TAG:
+      return 1;
+    default:
+      return 0;
+  }
+}
 /**
  * @brief Assignment compatibility predicate used by pass2 checks.
  * @param lhs left-hand side type.
@@ -673,15 +694,19 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
         !assignment_compatible(lhs_type, rhs_type)) {
       pass2_emit(state, "SEM011", op_node->lineNumber, "assignment type mismatch");
     }
+ 
+  if (lhs_type->kind != TYPE_INVALID && (lhs_type->qualifiers & TYPE_QUAL_CONST)) {
+    pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
+    }
     return lhs_type;
   }
 
   if (op_kind == OP_PLUS ||
       op_kind == OP_MINUS ||
       op_kind == OP_MULTIPLY ||
-      op_kind == OP_DIVIDE ||
-      op_kind == OP_MODULE) {
+      op_kind == OP_DIVIDE ) {
     if (!type_is_numeric(lhs_type) || !type_is_numeric(rhs_type)) {
+      pass2_emit(state, "SEM020", op_node->lineNumber, "Arithmetic operators require arithmetic operands");
       return &g_type_invalid;
     }
     if (lhs_type->kind == TYPE_BUILTIN && rhs_type->kind == TYPE_BUILTIN) {
@@ -691,6 +716,19 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       if (lhs_type->as.builtin == BUILTIN_FLOAT || rhs_type->as.builtin == BUILTIN_FLOAT) {
         return &g_type_float;
       }
+    }
+    return &g_type_int;
+  }
+
+  else if (op_kind == OP_MODULE) {
+    if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
+      return &g_type_invalid;
+    }
+
+    /* SEM021: Module only allows integral types (int, char, etc.) */
+    if (!type_is_integral(lhs_type) || !type_is_integral(rhs_type)) {
+      pass2_emit(state, "SEM021", op_node->lineNumber, "Operator '%' only for integral operands");
+      return &g_type_invalid;
     }
     return &g_type_int;
   }
@@ -719,6 +757,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       op_kind == OP_BITWISE_OR ||
       op_kind == OP_BITWISE_XOR) {
     if (!type_is_integral(lhs_type) || !type_is_integral(rhs_type)) {
+      pass2_emit(state, "SEM023", op_node->lineNumber, "Bitwise operators require integral operands");
       return &g_type_invalid;
     }
     return lhs_type;
@@ -747,6 +786,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
 
   if (op_kind == OP_BITWISE_NOT) {
     if (!type_is_integral(lhs_type)) {
+      pass2_emit(state, "SEM023", op_node->lineNumber, "Bitwise operators require integral operands");
       return &g_type_invalid;
     }
     return lhs_type;
@@ -1017,6 +1057,14 @@ static int handle_function_node(TreeNode_t *fn_node, pass2_state_t *state)
   state->in_function = prev_in_function;
   return 0;
 }
+/**
+ * David 2026-06-01
+ * @brief Check control condition expression type for if/while/do-while/switch statements.
+ * @param node condition expression AST node.
+ * @param state pass2 execution state.
+ * @return 0 on success, negative errno-like value on fatal traversal error.
+ */
+
 
 /**
  * @brief Recursive pass2 traversal over AST siblings/children.
@@ -1053,10 +1101,31 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
       continue;
     } else if (it->nodeType == NODE_FOR) {
       int rc;
+      TreeNode_t *cond = NULL;
 
       if (scope_push(&state->ctx->scope_stack) < 0) {
         pass2_emit(state, "SEM900", it->lineNumber, "failed to enter for-loop scope");
         return -EINVAL;
+      }
+      
+      cond = it->p_firstChild;
+      if (cond) {
+        cond = cond->p_sibling;
+        // David 2026-06-01: check condition before for-loop body to avoid cascading errors when condition is invalid
+        const type_t *cond_type;
+
+        if (!cond || !state) {
+          return;
+        }
+
+        cond_type = infer_expr_type(cond, state);
+        if (cond_type->kind == TYPE_INVALID) {
+          return;
+        }
+
+        if (!type_is_scalar(cond_type)) {
+          pass2_emit(state, "SEM052", it->lineNumber, "control condition must be scalar");
+        }
       }
 
       state->loop_depth++;
@@ -1091,6 +1160,33 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
       register_tag_declaration(it, state);
     } else if (it->nodeType == NODE_WHILE || it->nodeType == NODE_DO_WHILE) {
       int rc;
+      TreeNode_t *cond = NULL;
+
+      // David 2026-06-01: WHILE and DO_WHILE store the condition in different
+      // child positions. Select it first so the rest of the loop handling stays shared.
+      if (it->nodeType == NODE_WHILE) {
+        cond = it->p_firstChild;
+      } else {
+        cond = it->p_firstChild ? it->p_firstChild->p_sibling : NULL;
+      }
+
+      if (cond) {
+        // David 2026-06-01: check condition before while-loop body to avoid cascading errors when condition is invalid
+        const type_t *cond_type;
+
+        if (!cond || !state) {
+          return;
+        }
+
+        cond_type = infer_expr_type(cond, state);
+        if (cond_type->kind == TYPE_INVALID) {
+          return;
+        }
+
+        if (!type_is_scalar(cond_type)) {
+          pass2_emit(state, "SEM052", it->lineNumber, "control condition must be scalar");
+        }
+      }
 
       state->loop_depth++;
       rc = it->p_firstChild ? walk_pass2(it->p_firstChild, state) : 0;
@@ -1098,10 +1194,25 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
       if (rc < 0) {
         return rc;
       }
+
       it = it->p_sibling;
       continue;
+
     } else if (it->nodeType == NODE_SWITCH) {
       int rc;
+  
+      if (it->p_firstChild) {
+        const type_t *switch_type = infer_expr_type(it->p_firstChild, state);
+
+        if (switch_type &&
+            switch_type->kind != TYPE_INVALID &&
+            !type_is_integral(switch_type)) {
+          pass2_emit(state,
+                    "SEM053",
+                    it->lineNumber,
+                    "switch expression must be integral or enum");
+        }
+      }
 
       state->switch_depth++;
       rc = it->p_firstChild ? walk_pass2(it->p_firstChild, state) : 0;
@@ -1111,6 +1222,26 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
       }
       it = it->p_sibling;
       continue;
+    } else if (it->nodeType == NODE_IF) {
+        if (it->p_firstChild) {
+
+        TreeNode_t *cond = NULL;
+        const type_t *cond_type;
+
+        if (!it->p_firstChild || !state) {
+          return;
+        }
+
+        cond = it->p_firstChild;
+        cond_type = infer_expr_type(cond, state);
+        if (cond_type->kind == TYPE_INVALID) {
+          return;
+        }
+
+        if (!type_is_scalar(cond_type)) {
+          pass2_emit(state, "SEM052", it->lineNumber, "control condition must be scalar");
+        }
+        } 
     } else if (it->nodeType == NODE_VAR_DECLARATION || it->nodeType == NODE_ARRAY_DECLARATION) {
       register_local_decl(it, state, SYMBOL_OBJECT);
     } else if (it->nodeType == NODE_BREAK) {
@@ -1246,8 +1377,8 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
  * [ ] SEM046 return fora do contexto de funcao
  * [x] SEM050 break apenas valido dentro de loop ou switch
  * [x] SEM051 continue apenas valido dentro de loop
- * [ ] SEM052 Condicao de controlo (if/while/for) deve ser escalar
- * [ ] SEM053 Expressao de switch deve ser integral ou enum
+ * [x] SEM052 Condicao de controlo (if/while/for) deve ser escalar
+ * [x] SEM053 Expressao de switch deve ser integral ou enum
  * [ ] SEM054 Label case deve ser expressao constante integral
  * [ ] SEM055 Label case duplicado no mesmo switch
  * [ ] SEM056 Multiplos default no mesmo switch
