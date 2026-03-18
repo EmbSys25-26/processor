@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# Vivado v2025.1 (64-bit)
+# SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
+# IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
+# SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
+# Start of session at: Wed Mar 18 18:08:22 2026
+# Process ID         : 25857
+# Current directory  : /home/mendes/VGA_cararter_display/VGA_cararter_display.sim/sim_1/behav/xsim
+# Command line       : vivado
+# Log file           : /home/mendes/VGA_cararter_display/VGA_cararter_display.sim/sim_1/behav/xsim/vivado.log
+# Journal file       : /home/mendes/VGA_cararter_display/VGA_cararter_display.sim/sim_1/behav/xsim/vivado.jou
+# Running On         : mendes-Katana-GF66-12UGS
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : 12th Gen Intel(R) Core(TM) i7-12700H
+# CPU Frequency      : 979.386 MHz
+# CPU Physical cores : 14
+# CPU Logical cores  : 20
+# Host memory        : 16455 MB
+# Swap memory        : 2147 MB
+# Total Virtual      : 18603 MB
+# Available Virtual  : 11786 MB
+#-----------------------------------------------------------
+start_gui

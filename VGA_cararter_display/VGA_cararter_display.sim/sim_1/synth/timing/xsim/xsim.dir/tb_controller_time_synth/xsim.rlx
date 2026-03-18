@@ -1,0 +1,12 @@
+
+{ 
+    crc :  10220335027875447948  , 
+    ccp_crc :  0  , 
+    cmdline : " --incr --debug typical --relax --mt 8 --maxdelay -L xil_defaultlib -L simprims_ver -L secureip --snapshot tb_controller_time_synth -transport_int_delays -pulse_r 0 -pulse_int_r 0 -pulse_e 0 -pulse_int_e 0 xil_defaultlib.tb_controller xil_defaultlib.glbl" , 
+    buildDate : "May 21 2025" , 
+    buildTime : "22:59:56" , 
+    linkCmd : "/tools/Xilinx/2025.1/Vivado/lib/lnx64.o/../../tps/lnx64/gcc-9.3.0/bin/g++ -Wa,-W  -O -fPIC  -m64  -Wl,--no-as-needed  -Wl,--unresolved-symbols=ignore-all  -o \"xsim.dir/tb_controller_time_synth/xsimk\"   \"xsim.dir/tb_controller_time_synth/obj/xsim_0.lnx64.o\" \"xsim.dir/tb_controller_time_synth/obj/xsim_1.lnx64.o\" \"xsim.dir/tb_controller_time_synth/obj/xsim_2.lnx64.o\" \"xsim.dir/tb_controller_time_synth/obj/xsim_3.lnx64.o\" \"xsim.dir/tb_controller_time_synth/obj/xsim_4.lnx64.o\" \"xsim.dir/tb_controller_time_synth/obj/xsim_5.lnx64.o\" \"xsim.dir/tb_controller_time_synth/obj/xsim_6.lnx64.o\" \"xsim.dir/tb_controller_time_synth/obj/xsim_7.lnx64.o\" \"xsim.dir/tb_controller_time_synth/obj/xsim_8.lnx64.o\" \"xsim.dir/tb_controller_time_synth/obj/xsim_9.lnx64.o\" -L\"/tools/Xilinx/2025.1/Vivado/lib/lnx64.o\" -lxv_simulator_kernel    -L/tools/Xilinx/2025.1/Vivado/lib/lnx64.o/../../tps/lnx64/gcc-9.3.0/bin/../lib64 -Wl,--disable-new-dtags -Wl,-rpath=/tools/Xilinx/2025.1/Vivado/lib/lnx64.o/../../tps/lnx64/gcc-9.3.0/bin/../lib64 -lxv_simbridge_kernel" , 
+    aggregate_nets : 
+    [ 
+    ] 
+} 
