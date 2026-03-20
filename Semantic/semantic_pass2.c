@@ -748,6 +748,9 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
 
   if (op_kind == OP_ASSIGN) {
     if (lhs_type->kind != TYPE_INVALID && rhs_type->kind != TYPE_INVALID) {
+      if (lhs_type->qualifiers & TYPE_QUAL_CONST){
+          pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
+      }
       if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER && 
           !(lhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST) && 
           (rhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST)) {  
@@ -758,7 +761,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       }
     }
 
-
+    
     if (lhs_type->kind != TYPE_INVALID && (lhs_type->qualifiers & TYPE_QUAL_CONST)) {
       int is_initialization = 0;
 
@@ -1006,8 +1009,14 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
     case NODE_POINTER_CONTENT:
       if (node->p_firstChild) {
         const type_t *ptr_type = infer_expr_type(node->p_firstChild, state);
+        if (ptr_type->kind == TYPE_INVALID) {
+            return &g_type_invalid;
+        }
         if (ptr_type->kind == TYPE_POINTER && ptr_type->as.pointer.base) {
           return ptr_type->as.pointer.base;
+        }
+        else if(ptr_type->kind != TYPE_POINTER){
+          pass2_emit(state, "SEM030", node->lineNumber, "The operator * requires an operand of type pointer.");
         }
       }
       return &g_type_invalid;
