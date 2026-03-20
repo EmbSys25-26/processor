@@ -3,8 +3,8 @@
 # SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
 # IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
 # SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
-# Start of session at: Tue Mar 17 17:17:18 2026
-# Process ID         : 455688
+# Start of session at: Fri Mar 20 11:25:51 2026
+# Process ID         : 880266
 # Current directory  : /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1
 # Command line       : vivado -log controller.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source controller.tcl
 # Log file           : /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/controller.vds
@@ -13,13 +13,13 @@
 # Platform           : Ubuntu
 # Operating System   : Ubuntu 22.04.5 LTS
 # Processor Detail   : AMD Ryzen AI 9 365 w/ Radeon 880M
-# CPU Frequency      : 1932.610 MHz
+# CPU Frequency      : 5041.993 MHz
 # CPU Physical cores : 10
 # CPU Logical cores  : 20
 # Host memory        : 32715 MB
 # Swap memory        : 2147 MB
 # Total Virtual      : 34863 MB
-# Available Virtual  : 25969 MB
+# Available Virtual  : 27863 MB
 #-----------------------------------------------------------
 source controller.tcl -notrace
 INFO: [IP_Flow 19-234] Refreshing IP repositories
@@ -37,13 +37,13 @@ INFO: [Designutils 20-5440] No compile time benefit to using incremental synthes
 INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
 INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 7 processes.
 INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
-INFO: [Synth 8-7075] Helper process launched with PID 455818
+INFO: [Synth 8-7075] Helper process launched with PID 880465
 ---------------------------------------------------------------------------------
-Starting RTL Elaboration : Time (s): cpu = 00:00:03 ; elapsed = 00:00:03 . Memory (MB): peak = 2162.020 ; gain = 441.828 ; free physical = 14162 ; free virtual = 23443
+Starting RTL Elaboration : Time (s): cpu = 00:00:03 ; elapsed = 00:00:03 . Memory (MB): peak = 2178.711 ; gain = 441.625 ; free physical = 18433 ; free virtual = 25384
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-6157] synthesizing module 'controller' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/controller.v:4]
-INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-455688-panda/realtime/clk_wiz_0_stub.v:6]
-INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-455688-panda/realtime/clk_wiz_0_stub.v:6]
+INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-880266-panda/realtime/clk_wiz_0_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-880266-panda/realtime/clk_wiz_0_stub.v:6]
 INFO: [Synth 8-6157] synthesizing module 'm_vga_mmio' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:5]
 INFO: [Synth 8-6157] synthesizing module 'vga_system_wrapper' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/hdl/vga_system_wrapper.v:13]
 INFO: [Synth 8-6157] synthesizing module 'vga_system' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:13]
@@ -640,13 +640,20 @@ INFO: [Synth 8-6155] done synthesizing module 'bd_ead3' (0#1) [/home/mariana/Des
 INFO: [Synth 8-6155] done synthesizing module 'vga_system_smartconnect_0_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/synth/vga_system_smartconnect_0_0.v:53]
 INFO: [Synth 8-6155] done synthesizing module 'vga_system' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:13]
 INFO: [Synth 8-6155] done synthesizing module 'vga_system_wrapper' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/hdl/vga_system_wrapper.v:13]
-WARNING: [Synth 8-7071] port 'M_AXIS_MM2S_0_tkeep' of module 'vga_system_wrapper' is unconnected for instance 'u_system' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:101]
-WARNING: [Synth 8-7071] port 'M_AXIS_MM2S_0_tuser' of module 'vga_system_wrapper' is unconnected for instance 'u_system' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:101]
-WARNING: [Synth 8-7023] instance 'u_system' of module 'vga_system_wrapper' has 29 connections declared, but only 27 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:101]
+WARNING: [Synth 8-7071] port 'M_AXIS_MM2S_0_tkeep' of module 'vga_system_wrapper' is unconnected for instance 'u_system' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:102]
+WARNING: [Synth 8-7023] instance 'u_system' of module 'vga_system_wrapper' has 29 connections declared, but only 28 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:102]
 INFO: [Synth 8-6157] synthesizing module 'm_hsync_vga' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/hsync_module.v:5]
 INFO: [Synth 8-6155] done synthesizing module 'm_hsync_vga' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/hsync_module.v:5]
-INFO: [Synth 8-6157] synthesizing module 'm_vsync_vga' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/vsync_module.v:5]
-INFO: [Synth 8-6155] done synthesizing module 'm_vsync_vga' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/vsync_module.v:5]
+INFO: [Synth 8-6157] synthesizing module 'm_vsync_vga' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/vsync_module.v:4]
+INFO: [Synth 8-6155] done synthesizing module 'm_vsync_vga' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/vsync_module.v:4]
+WARNING: [Synth 8-4446] all outputs are unconnected for this instance and logic may be removed [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:161]
+INFO: [Synth 8-6157] synthesizing module 'ila_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-880266-panda/realtime/ila_0_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'ila_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-880266-panda/realtime/ila_0_stub.v:6]
+WARNING: [Synth 8-689] width (1) of port connection 'probe0' does not match port width (16) of module 'ila_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:163]
+WARNING: [Synth 8-689] width (1) of port connection 'probe1' does not match port width (16) of module 'ila_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:164]
+WARNING: [Synth 8-689] width (1) of port connection 'probe2' does not match port width (16) of module 'ila_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:165]
+WARNING: [Synth 8-689] width (1) of port connection 'probe3' does not match port width (16) of module 'ila_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:166]
+WARNING: [Synth 8-689] width (1) of port connection 'probe4' does not match port width (16) of module 'ila_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:167]
 INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_async_rst__parameterized0' [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:1175]
 	Parameter DEST_SYNC_FF bound to: 2 - type: integer 
 	Parameter INIT_SYNC_FF bound to: 1 - type: integer 
@@ -656,9 +663,9 @@ INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_single__parameterized6' [/home
 	Parameter DEST_SYNC_FF bound to: 2 - type: integer 
 	Parameter INIT_SYNC_FF bound to: 1 - type: integer 
 	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
-	Parameter SRC_INPUT_REG bound to: 0 - type: integer 
+	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
 INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_single__parameterized6' (0#1) [/home/mariana/Vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
-INFO: [Synth 8-155] case statement is not full and has no default [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:207]
+INFO: [Synth 8-155] case statement is not full and has no default [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:220]
 INFO: [Synth 8-6155] done synthesizing module 'm_vga_mmio' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:5]
 INFO: [Synth 8-155] case statement is not full and has no default [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/controller.v:141]
 INFO: [Synth 8-6155] done synthesizing module 'controller' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/controller.v:4]
@@ -688,11 +695,16 @@ INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_r
 INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
 INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
 INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
-WARNING: [Synth 8-7129] Port src_clk in module xpm_cdc_single__parameterized6 is either unconnected or has no load
+INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'hsync_module'. This will prevent further optimization [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:134]
+INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'periph_vga'. This will prevent further optimization [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/controller.v:73]
+INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'ila'. This will prevent further optimization [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:161]
+INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'vsync_module'. This will prevent further optimization [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:152]
+INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'u_system'. This will prevent further optimization [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:102]
 WARNING: [Synth 8-7129] Port i_axis_tdata[3] in module m_hsync_vga is either unconnected or has no load
 WARNING: [Synth 8-7129] Port i_axis_tdata[2] in module m_hsync_vga is either unconnected or has no load
 WARNING: [Synth 8-7129] Port i_axis_tdata[1] in module m_hsync_vga is either unconnected or has no load
 WARNING: [Synth 8-7129] Port i_axis_tdata[0] in module m_hsync_vga is either unconnected or has no load
+WARNING: [Synth 8-7129] Port i_axis_tuser in module m_hsync_vga is either unconnected or has no load
 WARNING: [Synth 8-7129] Port din[0] in module sc_util_v1_0_4_onehot_to_binary is either unconnected or has no load
 WARNING: [Synth 8-7129] Port aclk in module sc_util_v1_0_4_pipeline__parameterized0 is either unconnected or has no load
 WARNING: [Synth 8-7129] Port aclken in module sc_util_v1_0_4_pipeline__parameterized0 is either unconnected or has no load
@@ -790,18 +802,18 @@ WARNING: [Synth 8-7129] Port dinb[19] in module xpm_memory_base__parameterized1 
 WARNING: [Synth 8-7129] Port dinb[18] in module xpm_memory_base__parameterized1 is either unconnected or has no load
 INFO: [Common 17-14] Message 'Synth 8-7129' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
 ---------------------------------------------------------------------------------
-Finished RTL Elaboration : Time (s): cpu = 00:00:08 ; elapsed = 00:00:09 . Memory (MB): peak = 2563.496 ; gain = 843.305 ; free physical = 13727 ; free virtual = 23015
+Finished RTL Elaboration : Time (s): cpu = 00:00:08 ; elapsed = 00:00:09 . Memory (MB): peak = 2581.188 ; gain = 844.102 ; free physical = 18031 ; free virtual = 24991
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:08 ; elapsed = 00:00:09 . Memory (MB): peak = 2563.496 ; gain = 843.305 ; free physical = 13736 ; free virtual = 23023
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:09 ; elapsed = 00:00:09 . Memory (MB): peak = 2581.188 ; gain = 844.102 ; free physical = 18031 ; free virtual = 24991
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:08 ; elapsed = 00:00:09 . Memory (MB): peak = 2563.496 ; gain = 843.305 ; free physical = 13736 ; free virtual = 23023
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:09 ; elapsed = 00:00:09 . Memory (MB): peak = 2581.188 ; gain = 844.102 ; free physical = 18031 ; free virtual = 24991
 ---------------------------------------------------------------------------------
-Netlist sorting complete. Time (s): cpu = 00:00:00.67 ; elapsed = 00:00:00.67 . Memory (MB): peak = 2563.496 ; gain = 0.000 ; free physical = 13771 ; free virtual = 23060
+Netlist sorting complete. Time (s): cpu = 00:00:00.72 ; elapsed = 00:00:00.71 . Memory (MB): peak = 2581.188 ; gain = 0.000 ; free physical = 18105 ; free virtual = 25062
 INFO: [Netlist 29-17] Analyzing 5 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
@@ -810,6 +822,8 @@ Processing XDC Constraints
 Initializing timing engine
 Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0/clk_wiz_0_in_context.xdc] for cell 'u_clk_wiz'
 Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0/clk_wiz_0_in_context.xdc] for cell 'u_clk_wiz'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_0/ila_0_in_context.xdc] for cell 'periph_vga/ila'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_0/ila_0_in_context.xdc] for cell 'periph_vga/ila'
 Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/vga_system_processing_system7_0_0.xdc] for cell 'periph_vga/u_system/vga_system_i/processing_system7_0/inst'
 Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/vga_system_processing_system7_0_0.xdc] for cell 'periph_vga/u_system/vga_system_i/processing_system7_0/inst'
 INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_processing_system7_0_0/vga_system_processing_system7_0_0.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
@@ -834,7 +848,7 @@ Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/so
 Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/smartconnect.xdc] for cell 'periph_vga/u_system/vga_system_i/smartconnect_0/inst'
 Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc]
 INFO: [Timing 38-2] Deriving generated clocks [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc:38]
-WARNING: [Vivado_Tcl 4-252] No drc_checks matched for command 'get_drc_checks LUTAR-1' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc:46]
+INFO: [Vivado 12-4777] Setting CLOCK_DEDICATED_ROUTE constraint on the PARENT net instead of the specified net segment (net name: periph_vga/_clk_pixel). Placer only honors CLOCK_DEDICATED_ROUTE when set on the PARENT net, e.g. net segment directly connected to the driver. To eliminate this message, please update your constraint to specify the PARENT net instead. [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc:46]
 Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc]
 INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/constrs_1/new/constraints.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
 Resolution: To avoid this warning, move constraints listed in [.Xil/controller_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
@@ -904,29 +918,29 @@ Resolution: To avoid this warning, move constraints listed in [.Xil/controller_p
 INFO: [Project 1-1714] 56 XPM XDC files have been applied to the design.
 Completed Processing XDC Constraints
 
-Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2829.922 ; gain = 0.000 ; free physical = 13706 ; free virtual = 22999
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2847.309 ; gain = 0.000 ; free physical = 17986 ; free virtual = 24945
 INFO: [Project 1-111] Unisim Transformation Summary:
   A total of 3 instances were transformed.
   SRL16 => SRL16E: 3 instances
 
-Constraint Validation Runtime : Time (s): cpu = 00:00:00.09 ; elapsed = 00:00:00.09 . Memory (MB): peak = 2829.957 ; gain = 0.000 ; free physical = 13701 ; free virtual = 22995
+Constraint Validation Runtime : Time (s): cpu = 00:00:00.09 ; elapsed = 00:00:00.09 . Memory (MB): peak = 2847.344 ; gain = 0.000 ; free physical = 17987 ; free virtual = 24946
 INFO: [Designutils 20-5440] No compile time benefit to using incremental synthesis; A full resynthesis will be run
 INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
 ---------------------------------------------------------------------------------
-Finished Constraint Validation : Time (s): cpu = 00:00:19 ; elapsed = 00:00:19 . Memory (MB): peak = 2829.957 ; gain = 1109.766 ; free physical = 13610 ; free virtual = 22900
+Finished Constraint Validation : Time (s): cpu = 00:00:20 ; elapsed = 00:00:20 . Memory (MB): peak = 2847.344 ; gain = 1110.258 ; free physical = 17935 ; free virtual = 24895
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Loading Part and Timing Information
 ---------------------------------------------------------------------------------
 Loading part: xc7z010clg400-1
 ---------------------------------------------------------------------------------
-Finished Loading Part and Timing Information : Time (s): cpu = 00:00:19 ; elapsed = 00:00:19 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13610 ; free virtual = 22900
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:20 ; elapsed = 00:00:20 . Memory (MB): peak = 2855.312 ; gain = 1118.227 ; free physical = 17935 ; free virtual = 24895
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying 'set_property' XDC Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:19 ; elapsed = 00:00:19 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13610 ; free virtual = 22900
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:20 ; elapsed = 00:00:20 . Memory (MB): peak = 2855.312 ; gain = 1118.227 ; free physical = 17935 ; free virtual = 24895
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-802] inferred FSM for state register 'gen_axi.gen_write.write_cs_reg' in module 'sc_mmu_v1_0_15_decerr_slave'
 INFO: [Synth 8-802] inferred FSM for state register 'gen_endpoint.w_state_reg' in module 'sc_mmu_v1_0_15_top'
@@ -1064,10 +1078,10 @@ INFO: [Synth 8-3354] encoded FSM with state register '_state_reg' using encoding
 ---------------------------------------------------------------------------------------------------
                    State |                     New Encoding |                Previous Encoding 
 ---------------------------------------------------------------------------------------------------
-             FRONT_PORCH |                               00 |                               00
-                    SYNC |                               01 |                               01
-              BACK_PORCH |                               10 |                               10
-                 VISIBLE |                               11 |                               11
+                 VISIBLE |                               00 |                               00
+             FRONT_PORCH |                               01 |                               01
+                    SYNC |                               10 |                               10
+              BACK_PORCH |                               11 |                               11
 ---------------------------------------------------------------------------------------------------
 INFO: [Synth 8-3354] encoded FSM with state register '_state_reg' using encoding 'sequential' in module 'm_vsync_vga'
 ---------------------------------------------------------------------------------------------------
@@ -1082,7 +1096,7 @@ INFO: [Synth 8-3354] encoded FSM with state register '_state_reg' using encoding
 ---------------------------------------------------------------------------------------------------
 INFO: [Synth 8-3354] encoded FSM with state register '_state_reg' using encoding 'sequential' in module 'controller'
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13597 ; free virtual = 22892
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:23 ; elapsed = 00:00:22 . Memory (MB): peak = 2855.312 ; gain = 1118.227 ; free physical = 17893 ; free virtual = 24859
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
 ---------------------------------------------------------------------------------
@@ -1098,8 +1112,8 @@ Detailed RTL Component Info :
 	   2 Input   11 Bit       Adders := 1     
 	   4 Input   11 Bit       Adders := 5     
 	   3 Input   11 Bit       Adders := 1     
-	   2 Input   10 Bit       Adders := 2     
-	   2 Input    9 Bit       Adders := 6     
+	   2 Input   10 Bit       Adders := 3     
+	   2 Input    9 Bit       Adders := 5     
 	   2 Input    8 Bit       Adders := 10    
 	   3 Input    8 Bit       Adders := 2     
 	   2 Input    7 Bit       Adders := 5     
@@ -1135,8 +1149,8 @@ Detailed RTL Component Info :
 	               13 Bit    Registers := 6     
 	               12 Bit    Registers := 11    
 	               11 Bit    Registers := 10    
-	               10 Bit    Registers := 1     
-	                9 Bit    Registers := 8     
+	               10 Bit    Registers := 2     
+	                9 Bit    Registers := 7     
 	                8 Bit    Registers := 21    
 	                7 Bit    Registers := 8     
 	                6 Bit    Registers := 23    
@@ -1164,11 +1178,10 @@ Detailed RTL Component Info :
 	   2 Input   12 Bit        Muxes := 14    
 	   5 Input   12 Bit        Muxes := 1     
 	   2 Input   11 Bit        Muxes := 1     
-	   2 Input   10 Bit        Muxes := 3     
-	   4 Input   10 Bit        Muxes := 1     
+	   2 Input   10 Bit        Muxes := 4     
+	   4 Input   10 Bit        Muxes := 2     
 	   5 Input    9 Bit        Muxes := 1     
-	   2 Input    9 Bit        Muxes := 10    
-	   4 Input    9 Bit        Muxes := 1     
+	   2 Input    9 Bit        Muxes := 6     
 	   2 Input    8 Bit        Muxes := 31    
 	   4 Input    8 Bit        Muxes := 1     
 	   8 Input    8 Bit        Muxes := 5     
@@ -1183,11 +1196,11 @@ Detailed RTL Component Info :
 	   5 Input    3 Bit        Muxes := 1     
 	   4 Input    3 Bit        Muxes := 8     
 	   6 Input    3 Bit        Muxes := 2     
-	   2 Input    2 Bit        Muxes := 75    
+	   2 Input    2 Bit        Muxes := 74    
 	   4 Input    2 Bit        Muxes := 16    
 	   5 Input    2 Bit        Muxes := 2     
 	   3 Input    2 Bit        Muxes := 1     
-	   2 Input    1 Bit        Muxes := 246   
+	   2 Input    1 Bit        Muxes := 245   
 	   3 Input    1 Bit        Muxes := 17    
 	   6 Input    1 Bit        Muxes := 62    
 	   4 Input    1 Bit        Muxes := 42    
@@ -1238,7 +1251,7 @@ WARNING: [Synth 8-3332] Sequential element (BSR_OUT_DFF[0].FDRE_BSR) is unused a
 WARNING: [Synth 8-3332] Sequential element (ACTIVE_LOW_BSR_OUT_DFF[0].FDRE_BSR_N) is unused and will be removed from module proc_sys_reset__parameterized1.
 WARNING: [Synth 8-3332] Sequential element (PR_OUT_DFF[0].FDRE_PER) is unused and will be removed from module proc_sys_reset__parameterized1.
 ---------------------------------------------------------------------------------
-Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:32 ; elapsed = 00:00:32 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13599 ; free virtual = 22940
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:33 ; elapsed = 00:00:33 . Memory (MB): peak = 2855.312 ; gain = 1118.227 ; free physical = 17882 ; free virtual = 24898
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
 INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
@@ -1247,21 +1260,21 @@ Start ROM, RAM, DSP, Shift Register and Retiming Reporting
 ---------------------------------------------------------------------------------
 
 Block RAM: Preliminary Mapping Report (see note below)
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
-|Module Name                                                                                                                                                                                                                         | RTL Object                       | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
-|\periph_vga/u_system/vga_system_i /i_0/axi_vdma_0/U0/\I_PRMRY_DATAMOVER/GEN_MM2S_FULL.I_MM2S_FULL_WRAPPER/GEN_INCLUDE_MM2S_SF.I_RD_SF/I_DATA_FIFO/BLK_MEM.I_SYNC_FIFOGEN_FIFO /xpm_fifo_base_inst/\gen_sdpram.xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | 2 K x 67(NO_CHANGE)    | W |   | 2 K x 67(NO_CHANGE)    |   | R | Port A and B     | 0      | 4      | 
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name                                                                                                                                                                                                                       | RTL Object                       | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|periph_vga/u_system/vga_system_i/i_0/axi_vdma_0/U0/\I_PRMRY_DATAMOVER/GEN_MM2S_FULL.I_MM2S_FULL_WRAPPER/GEN_INCLUDE_MM2S_SF.I_RD_SF/I_DATA_FIFO/BLK_MEM.I_SYNC_FIFOGEN_FIFO /xpm_fifo_base_inst/\gen_sdpram.xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | 2 K x 67(NO_CHANGE)    | W |   | 2 K x 67(NO_CHANGE)    |   | R | Port A and B     | 0      | 4      | 
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
 
 Note: The table above is a preliminary report that shows the Block RAMs at the current stage of the synthesis flow. Some Block RAMs may be reimplemented as non Block RAM primitives later in the synthesis flow. Multiple instantiated Block RAMs are reported only once. 
 
 Distributed RAM: Preliminary Mapping Report (see note below)
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
-|Module Name                                                                                                                                                                                                                      | RTL Object                       | Inference      | Size (Depth x Width) | Primitives   | 
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
-|\periph_vga/u_system/vga_system_i /i_0/smartconnect_0/inst/\s00_nodes/s00_ar_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 156             | RAM32M x 26  | 
-|\periph_vga/u_system/vga_system_i /i_0/smartconnect_0/inst/\s00_nodes/s00_r_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 101             | RAM32M x 17  | 
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
+|Module Name                                                                                                                                                                                                                    | RTL Object                       | Inference      | Size (Depth x Width) | Primitives   | 
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
+|periph_vga/u_system/vga_system_i/i_0/smartconnect_0/inst/\s00_nodes/s00_ar_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 156             | RAM32M x 26  | 
+|periph_vga/u_system/vga_system_i/i_0/smartconnect_0/inst/\s00_nodes/s00_r_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 101             | RAM32M x 17  | 
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
 
 Note: The table above is a preliminary report that shows the Distributed RAMs at the current stage of the synthesis flow. Some Distributed RAMs may be reimplemented as non Distributed RAM primitives later in the synthesis flow. Multiple instantiated RAMs are reported only once.
 ---------------------------------------------------------------------------------
@@ -1271,7 +1284,7 @@ Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
 Start Applying XDC Timing Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:35 ; elapsed = 00:00:35 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13588 ; free virtual = 22929
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:36 ; elapsed = 00:00:36 . Memory (MB): peak = 2855.312 ; gain = 1118.227 ; free physical = 17844 ; free virtual = 24860
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Timing Optimization
@@ -1279,27 +1292,27 @@ Start Timing Optimization
 INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
 INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
 ---------------------------------------------------------------------------------
-Finished Timing Optimization : Time (s): cpu = 00:00:36 ; elapsed = 00:00:36 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13962 ; free virtual = 23267
+Finished Timing Optimization : Time (s): cpu = 00:00:37 ; elapsed = 00:00:37 . Memory (MB): peak = 2855.312 ; gain = 1118.227 ; free physical = 17826 ; free virtual = 24842
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
 ---------------------------------------------------------------------------------
 
 Block RAM: Final Mapping Report
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
-|Module Name                                                                                                                                                                                                                         | RTL Object                       | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
-|\periph_vga/u_system/vga_system_i /i_0/axi_vdma_0/U0/\I_PRMRY_DATAMOVER/GEN_MM2S_FULL.I_MM2S_FULL_WRAPPER/GEN_INCLUDE_MM2S_SF.I_RD_SF/I_DATA_FIFO/BLK_MEM.I_SYNC_FIFOGEN_FIFO /xpm_fifo_base_inst/\gen_sdpram.xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | 2 K x 67(NO_CHANGE)    | W |   | 2 K x 67(NO_CHANGE)    |   | R | Port A and B     | 0      | 4      | 
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name                                                                                                                                                                                                                       | RTL Object                       | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|periph_vga/u_system/vga_system_i/i_0/axi_vdma_0/U0/\I_PRMRY_DATAMOVER/GEN_MM2S_FULL.I_MM2S_FULL_WRAPPER/GEN_INCLUDE_MM2S_SF.I_RD_SF/I_DATA_FIFO/BLK_MEM.I_SYNC_FIFOGEN_FIFO /xpm_fifo_base_inst/\gen_sdpram.xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | 2 K x 67(NO_CHANGE)    | W |   | 2 K x 67(NO_CHANGE)    |   | R | Port A and B     | 0      | 4      | 
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
 
 
 Distributed RAM: Final Mapping Report
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
-|Module Name                                                                                                                                                                                                                      | RTL Object                       | Inference      | Size (Depth x Width) | Primitives   | 
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
-|\periph_vga/u_system/vga_system_i /i_0/smartconnect_0/inst/\s00_nodes/s00_ar_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 156             | RAM32M x 26  | 
-|\periph_vga/u_system/vga_system_i /i_0/smartconnect_0/inst/\s00_nodes/s00_r_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 101             | RAM32M x 17  | 
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
+|Module Name                                                                                                                                                                                                                    | RTL Object                       | Inference      | Size (Depth x Width) | Primitives   | 
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
+|periph_vga/u_system/vga_system_i/i_0/smartconnect_0/inst/\s00_nodes/s00_ar_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 156             | RAM32M x 26  | 
+|periph_vga/u_system/vga_system_i/i_0/smartconnect_0/inst/\s00_nodes/s00_r_node/inst /\inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory /xpm_memory_base_inst  | gen_wr_a.gen_word_narrow.mem_reg | User Attribute | 32 x 101             | RAM32M x 17  | 
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------+----------------+----------------------+--------------+
 
 ---------------------------------------------------------------------------------
 Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -1308,7 +1321,7 @@ Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
 Start Technology Mapping
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Technology Mapping : Time (s): cpu = 00:00:37 ; elapsed = 00:00:37 . Memory (MB): peak = 2837.926 ; gain = 1117.734 ; free physical = 13930 ; free virtual = 23237
+Finished Technology Mapping : Time (s): cpu = 00:00:38 ; elapsed = 00:00:38 . Memory (MB): peak = 2855.312 ; gain = 1118.227 ; free physical = 17825 ; free virtual = 24841
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start IO Insertion
@@ -1326,37 +1339,37 @@ Start Final Netlist Cleanup
 Finished Final Netlist Cleanup
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished IO Insertion : Time (s): cpu = 00:00:39 ; elapsed = 00:00:39 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14130 ; free virtual = 23429
+Finished IO Insertion : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2979.125 ; gain = 1242.039 ; free physical = 17719 ; free virtual = 24734
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Instances
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Instances : Time (s): cpu = 00:00:39 ; elapsed = 00:00:39 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14130 ; free virtual = 23428
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2979.125 ; gain = 1242.039 ; free physical = 17719 ; free virtual = 24734
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Rebuilding User Hierarchy
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14074 ; free virtual = 23374
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:41 ; elapsed = 00:00:41 . Memory (MB): peak = 2979.125 ; gain = 1242.039 ; free physical = 17718 ; free virtual = 24733
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Ports
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Ports : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14074 ; free virtual = 23374
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:41 ; elapsed = 00:00:41 . Memory (MB): peak = 2979.125 ; gain = 1242.039 ; free physical = 17718 ; free virtual = 24733
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14068 ; free virtual = 23366
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:41 ; elapsed = 00:00:41 . Memory (MB): peak = 2979.125 ; gain = 1242.039 ; free physical = 17718 ; free virtual = 24733
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Nets
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Nets : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14065 ; free virtual = 23364
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:41 ; elapsed = 00:00:41 . Memory (MB): peak = 2979.125 ; gain = 1242.039 ; free physical = 17718 ; free virtual = 24733
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -1395,7 +1408,8 @@ Report BlackBoxes:
 +------+--------------+----------+
 |      |BlackBox name |Instances |
 +------+--------------+----------+
-|1     |clk_wiz_0     |         1|
+|1     |ila_0         |         1|
+|2     |clk_wiz_0     |         1|
 +------+--------------+----------+
 
 Report Cell Usage: 
@@ -1403,55 +1417,56 @@ Report Cell Usage:
 |      |Cell       |Count |
 +------+-----------+------+
 |1     |clk_wiz    |     1|
-|2     |BIBUF      |   130|
-|3     |BUFG       |     3|
-|4     |CARRY4     |    79|
-|5     |FIFO36E1   |     1|
-|6     |LUT1       |   312|
-|7     |LUT2       |   303|
-|8     |LUT3       |   392|
-|9     |LUT4       |   338|
-|10    |LUT5       |   305|
-|11    |LUT6       |   560|
-|12    |MMCME2_ADV |     1|
-|13    |PS7        |     1|
-|14    |RAM32M     |    25|
-|15    |RAMB36E1   |     4|
-|16    |SRL16      |     3|
-|17    |SRL16E     |   118|
-|18    |FDCE       |    66|
-|19    |FDPE       |     8|
-|20    |FDRE       |  2240|
-|21    |FDSE       |    80|
-|22    |IBUF       |     2|
-|23    |OBUF       |    14|
+|2     |ila        |     1|
+|3     |BIBUF      |   130|
+|4     |BUFG       |     3|
+|5     |CARRY4     |    79|
+|6     |FIFO36E1   |     1|
+|7     |LUT1       |   312|
+|8     |LUT2       |   303|
+|9     |LUT3       |   395|
+|10    |LUT4       |   330|
+|11    |LUT5       |   309|
+|12    |LUT6       |   574|
+|13    |MMCME2_ADV |     1|
+|14    |PS7        |     1|
+|15    |RAM32M     |    25|
+|16    |RAMB36E1   |     4|
+|17    |SRL16      |     3|
+|18    |SRL16E     |   118|
+|19    |FDCE       |    66|
+|20    |FDPE       |     8|
+|21    |FDRE       |  2241|
+|22    |FDSE       |    80|
+|23    |IBUF       |     2|
+|24    |OBUF       |    14|
 +------+-----------+------+
 ---------------------------------------------------------------------------------
-Finished Writing Synthesis Report : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.738 ; gain = 1240.547 ; free physical = 14067 ; free virtual = 23365
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:41 ; elapsed = 00:00:41 . Memory (MB): peak = 2979.125 ; gain = 1242.039 ; free physical = 17718 ; free virtual = 24733
 ---------------------------------------------------------------------------------
-Synthesis finished with 0 errors, 0 critical warnings and 13 warnings.
-Synthesis Optimization Runtime : Time (s): cpu = 00:00:32 ; elapsed = 00:00:33 . Memory (MB): peak = 2960.738 ; gain = 974.086 ; free physical = 14084 ; free virtual = 23382
-Synthesis Optimization Complete : Time (s): cpu = 00:00:40 ; elapsed = 00:00:40 . Memory (MB): peak = 2960.746 ; gain = 1240.547 ; free physical = 14084 ; free virtual = 23382
+Synthesis finished with 0 errors, 0 critical warnings and 28 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:33 ; elapsed = 00:00:34 . Memory (MB): peak = 2979.125 ; gain = 975.883 ; free physical = 17717 ; free virtual = 24733
+Synthesis Optimization Complete : Time (s): cpu = 00:00:41 ; elapsed = 00:00:41 . Memory (MB): peak = 2979.133 ; gain = 1242.039 ; free physical = 17717 ; free virtual = 24733
 INFO: [Project 1-571] Translating synthesized netlist
-Netlist sorting complete. Time (s): cpu = 00:00:00.12 ; elapsed = 00:00:00.11 . Memory (MB): peak = 2963.707 ; gain = 0.000 ; free physical = 14188 ; free virtual = 23486
+Netlist sorting complete. Time (s): cpu = 00:00:00.13 ; elapsed = 00:00:00.13 . Memory (MB): peak = 2982.094 ; gain = 0.000 ; free physical = 17889 ; free virtual = 24905
 INFO: [Netlist 29-17] Analyzing 113 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 3028.641 ; gain = 0.000 ; free physical = 14190 ; free virtual = 23489
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 3047.027 ; gain = 0.000 ; free physical = 17871 ; free virtual = 24886
 INFO: [Project 1-111] Unisim Transformation Summary:
   A total of 28 instances were transformed.
   RAM32M => RAM32M (RAMD32(x6), RAMS32(x2)): 25 instances
   SRL16 => SRL16E: 3 instances
 
-Synth Design complete | Checksum: 15ce25ec
+Synth Design complete | Checksum: 369dfe75
 INFO: [Common 17-83] Releasing license: Synthesis
-418 Infos, 195 Warnings, 0 Critical Warnings and 0 Errors encountered.
+426 Infos, 199 Warnings, 0 Critical Warnings and 0 Errors encountered.
 synth_design completed successfully
-synth_design: Time (s): cpu = 00:00:45 ; elapsed = 00:00:44 . Memory (MB): peak = 3028.676 ; gain = 1442.117 ; free physical = 14208 ; free virtual = 23499
-INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 2171.859; main = 2149.040; forked = 268.208
-INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3801.484; main = 3028.645; forked = 963.555
-Write ShapeDB Complete: Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00 . Memory (MB): peak = 3052.652 ; gain = 0.000 ; free physical = 14207 ; free virtual = 23499
+synth_design: Time (s): cpu = 00:00:46 ; elapsed = 00:00:45 . Memory (MB): peak = 3047.062 ; gain = 1488.594 ; free physical = 17861 ; free virtual = 24877
+INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 2366.420; main = 2180.175; forked = 274.813
+INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3905.871; main = 3047.031; forked = 963.555
+Write ShapeDB Complete: Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.01 . Memory (MB): peak = 3071.039 ; gain = 0.000 ; free physical = 17859 ; free virtual = 24875
 INFO: [Common 17-1381] The checkpoint '/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1/controller.dcp' has been generated.
 INFO: [Vivado 12-24828] Executing command : report_utilization -file controller_utilization_synth.rpt -pb controller_utilization_synth.pb
-INFO: [Common 17-206] Exiting Vivado at Tue Mar 17 17:18:05 2026...
+INFO: [Common 17-206] Exiting Vivado at Fri Mar 20 11:26:39 2026...

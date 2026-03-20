@@ -57,7 +57,6 @@ if {$::dispatch::connected} {
 
 OPTRACE "synth_1" START { ROLLUP_AUTO }
 set_param general.usePosixSpawnForFork 1
-set_param xicom.use_bs_reader 1
 set_param chipscope.maxJobs 5
 set_msg_config  -id {Synth 37-125}  -string {{WARNING: [Synth 37-125] [ASSIGN-10]Some bits in IO 'i_ctrl' are not read. First unread bit index is 18. 
 RTL Name 'i_ctrl', Hierarchy 'ctrl_dec', File 'ctrl_dec.v', Line 10.}}  -suppress 
@@ -119,6 +118,12 @@ set_property used_in_implementation false [get_files -all /home/mariana/Desktop/
 set_property used_in_implementation false [get_files -all /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0.xdc]
 set_property used_in_implementation false [get_files -all /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_late.xdc]
 set_property used_in_implementation false [get_files -all /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_ooc.xdc]
+
+read_ip -quiet /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/ip/ila_0/ila_0.xci
+set_property used_in_synthesis false [get_files -all /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_v6_2/constraints/ila_impl.xdc]
+set_property used_in_implementation false [get_files -all /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_v6_2/constraints/ila_impl.xdc]
+set_property used_in_implementation false [get_files -all /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_v6_2/constraints/ila.xdc]
+set_property used_in_implementation false [get_files -all /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_0_ooc.xdc]
 
 OPTRACE "Adding files" END { }
 # Mark all dcp files as not used in implementation to prevent them from being

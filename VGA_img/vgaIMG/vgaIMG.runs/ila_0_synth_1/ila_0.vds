@@ -1,0 +1,597 @@
+#-----------------------------------------------------------
+# Vivado v2025.1 (64-bit)
+# SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
+# IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
+# SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
+# Start of session at: Fri Mar 20 10:10:51 2026
+# Process ID         : 497231
+# Current directory  : /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/ila_0_synth_1
+# Command line       : vivado -log ila_0.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source ila_0.tcl
+# Log file           : /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/ila_0_synth_1/ila_0.vds
+# Journal file       : /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/ila_0_synth_1/vivado.jou
+# Running On         : panda
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : AMD Ryzen AI 9 365 w/ Radeon 880M
+# CPU Frequency      : 4292.371 MHz
+# CPU Physical cores : 10
+# CPU Logical cores  : 20
+# Host memory        : 32715 MB
+# Swap memory        : 2147 MB
+# Total Virtual      : 34863 MB
+# Available Virtual  : 27299 MB
+#-----------------------------------------------------------
+source ila_0.tcl -notrace
+Command: synth_design -top ila_0 -part xc7z010clg400-1 -incremental_mode off -mode out_of_context
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7z010'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7z010'
+INFO: [Device 21-403] Loading part xc7z010clg400-1
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 7 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Synth 8-7075] Helper process launched with PID 497413
+---------------------------------------------------------------------------------
+Starting RTL Elaboration : Time (s): cpu = 00:00:04 ; elapsed = 00:00:04 . Memory (MB): peak = 2153.238 ; gain = 437.742 ; free physical = 17969 ; free virtual = 24722
+---------------------------------------------------------------------------------
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:30]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:32]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:69]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:71]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:109]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:111]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:150]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:152]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:192]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:194]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:235]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:237]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:279]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:281]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:324]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:326]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:370]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:372]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:417]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:419]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:465]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:467]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:514]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:516]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:564]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:566]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:615]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_ext.vh:617]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:30]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:32]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:69]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:71]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:109]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:111]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:150]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:152]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:192]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:194]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:235]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:237]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:279]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:281]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:324]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:326]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:370]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:372]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:417]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:419]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:465]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:467]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:514]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:516]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:564]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:566]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:615]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core.vh:617]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:30]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:32]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:65]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:67]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:100]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:102]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:135]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:137]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:170]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:172]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:205]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:207]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:240]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:242]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:275]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:277]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:310]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:312]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:345]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:347]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:380]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:382]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:415]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:417]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:450]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:452]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:485]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:487]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:30]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:32]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:65]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:67]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:100]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:102]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:135]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:137]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:170]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:172]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:205]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:207]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:240]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:242]
+INFO: [Synth 8-11241] undeclared symbol 'tms_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:275]
+INFO: [Synth 8-11241] undeclared symbol 'runtest_int', assumed default net type 'wire' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/hdl/verilog/xsdbm_v3_0_4_bs_core_vec.vh:277]
+INFO: [Common 17-14] Message 'Synth 8-11241' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
+INFO: [Synth 8-6157] synthesizing module 'ila_0' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/synth/ila_0.v:48]
+INFO: [Synth 8-6157] synthesizing module 'CFGLUT5' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:3131]
+INFO: [Synth 8-6155] done synthesizing module 'CFGLUT5' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:3131]
+INFO: [Synth 8-6157] synthesizing module 'CARRY4' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:3094]
+INFO: [Synth 8-6155] done synthesizing module 'CARRY4' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:3094]
+INFO: [Synth 8-6157] synthesizing module 'SRLC32E' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:158762]
+INFO: [Synth 8-6155] done synthesizing module 'SRLC32E' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:158762]
+INFO: [Synth 8-6157] synthesizing module 'SRL16E' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:158612]
+INFO: [Synth 8-6155] done synthesizing module 'SRL16E' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:158612]
+INFO: [Synth 8-6157] synthesizing module 'SRLC16E' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:158701]
+INFO: [Synth 8-6155] done synthesizing module 'SRLC16E' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:158701]
+INFO: [Synth 8-6157] synthesizing module 'FDRE' [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:44231]
+INFO: [Synth 8-6155] done synthesizing module 'FDRE' (0#1) [/home/mariana/Vivado/2025.1/Vivado/scripts/rt/data/unisim_comp.v:44231]
+WARNING: [Synth 8-7071] port 'clk_nobuf' of module 'ila_v6_2_18_ila' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/synth/ila_0.v:3217]
+WARNING: [Synth 8-7071] port 'clkdiv_out' of module 'ila_v6_2_18_ila' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/synth/ila_0.v:3217]
+WARNING: [Synth 8-7071] port 'trig_in' of module 'ila_v6_2_18_ila' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/synth/ila_0.v:3217]
+WARNING: [Synth 8-7071] port 'trig_in_ack' of module 'ila_v6_2_18_ila' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/synth/ila_0.v:3217]
+WARNING: [Synth 8-7071] port 'trig_out' of module 'ila_v6_2_18_ila' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/synth/ila_0.v:3217]
+WARNING: [Synth 8-7071] port 'trig_out_ack' of module 'ila_v6_2_18_ila' is unconnected for instance 'inst' [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/synth/ila_0.v:3217]
+WARNING: [Synth 8-7023] instance 'inst' of module 'ila_v6_2_18_ila' has 1033 connections declared, but only 1027 given [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/synth/ila_0.v:3217]
+INFO: [Synth 8-6155] done synthesizing module 'ila_0' (0#1) [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/synth/ila_0.v:48]
+WARNING: [Synth 8-3848] Net sl_iport0 in module/entity ila_0 does not have driver. [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/synth/ila_0.v:106]
+WARNING: [Synth 8-7129] Port CLKB in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[80] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[79] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[78] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[77] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[76] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[75] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[74] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[73] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[72] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[71] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[70] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[69] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[68] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[67] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[66] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[65] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[64] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[63] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[62] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[61] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[60] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[59] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[58] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[57] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[56] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[55] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[54] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[53] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[52] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[51] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[50] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[49] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[48] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[47] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[46] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[45] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[44] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[43] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[42] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[41] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[40] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[39] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[38] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[37] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[36] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[35] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[34] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[33] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[32] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[31] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[30] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[29] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[28] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[27] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[26] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[25] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[24] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[23] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[22] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[21] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[20] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[19] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[18] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[17] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[16] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[15] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[14] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[13] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[12] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[11] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[10] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[9] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[8] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[7] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[6] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[5] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[4] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[3] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[2] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[1] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA_I[0] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port SBITERR_I in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DBITERR_I in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[13] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[12] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[11] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[10] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[9] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[8] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[7] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[6] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[5] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[4] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[3] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[2] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[1] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port RDADDRECC_I[0] in module blk_mem_gen_v8_4_11_blk_mem_output_block is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA[8] in module blk_mem_gen_v8_4_11_blk_mem_gen_prim_wrapper__parameterized34 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port DOUTA[7] in module blk_mem_gen_v8_4_11_blk_mem_gen_prim_wrapper__parameterized34 is either unconnected or has no load
+INFO: [Common 17-14] Message 'Synth 8-7129' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
+---------------------------------------------------------------------------------
+Finished RTL Elaboration : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2611.684 ; gain = 896.188 ; free physical = 17410 ; free virtual = 24163
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2611.684 ; gain = 896.188 ; free physical = 17410 ; free virtual = 24163
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2611.684 ; gain = 896.188 ; free physical = 17410 ; free virtual = 24163
+---------------------------------------------------------------------------------
+Netlist sorting complete. Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.05 . Memory (MB): peak = 2611.684 ; gain = 0.000 ; free physical = 17405 ; free virtual = 24160
+INFO: [Netlist 29-17] Analyzing 139 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+
+Processing XDC Constraints
+Initializing timing engine
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_0_ooc.xdc] for cell 'inst'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_0_ooc.xdc] for cell 'inst'
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_v6_2/constraints/ila.xdc] for cell 'inst'
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_v6_2/constraints/ila.xdc] for cell 'inst'
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/ila_0/ila_v6_2/constraints/ila.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/ila_0_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/ila_0_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/ila_0_synth_1/dont_touch.xdc]
+Finished Parsing XDC File [/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/ila_0_synth_1/dont_touch.xdc]
+Completed Processing XDC Constraints
+
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2651.703 ; gain = 0.000 ; free physical = 17413 ; free virtual = 24168
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 77 instances were transformed.
+  CFGLUT5 => CFGLUT5 (SRL16E, SRLC32E): 68 instances
+  CFGLUT5 => SRLC32E: 9 instances
+
+Constraint Validation Runtime : Time (s): cpu = 00:00:00.07 ; elapsed = 00:00:00.05 . Memory (MB): peak = 2651.738 ; gain = 0.000 ; free physical = 17412 ; free virtual = 24167
+INFO: [Designutils 20-5008] Incremental synthesis strategy off
+---------------------------------------------------------------------------------
+Finished Constraint Validation : Time (s): cpu = 00:00:18 ; elapsed = 00:00:19 . Memory (MB): peak = 2651.738 ; gain = 936.242 ; free physical = 17439 ; free virtual = 24194
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Loading Part and Timing Information
+---------------------------------------------------------------------------------
+Loading part: xc7z010clg400-1
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:18 ; elapsed = 00:00:19 . Memory (MB): peak = 2659.707 ; gain = 944.211 ; free physical = 17439 ; free virtual = 24194
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying 'set_property' XDC Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:19 ; elapsed = 00:00:19 . Memory (MB): peak = 2659.707 ; gain = 944.211 ; free physical = 17439 ; free virtual = 24194
+---------------------------------------------------------------------------------
+INFO: [Synth 8-802] inferred FSM for state register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s'
+INFO: [Synth 8-802] inferred FSM for state register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized0'
+INFO: [Synth 8-802] inferred FSM for state register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized1'
+INFO: [Synth 8-802] inferred FSM for state register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized2'
+INFO: [Synth 8-802] inferred FSM for state register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized3'
+INFO: [Synth 8-802] inferred FSM for state register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized4'
+INFO: [Synth 8-802] inferred FSM for state register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized5'
+INFO: [Synth 8-802] inferred FSM for state register 'current_state_reg' in module 'ltlib_v1_0_3_generic_memrd'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+*
+                    IDLE |                             0001 |                             0001
+                     REG |                             0010 |                             0010
+                     P2S |                             0100 |                             0100
+                     S2P |                             1000 |                             1000
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3898] No Re-encoding of one hot register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+*
+                    IDLE |                             0001 |                             0001
+                     REG |                             0010 |                             0010
+                     P2S |                             0100 |                             0100
+                     S2P |                             1000 |                             1000
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3898] No Re-encoding of one hot register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized0'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+*
+                    IDLE |                             0001 |                             0001
+                     REG |                             0010 |                             0010
+                     P2S |                             0100 |                             0100
+                     S2P |                             1000 |                             1000
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3898] No Re-encoding of one hot register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized1'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+*
+                    IDLE |                             0001 |                             0001
+                     REG |                             0010 |                             0010
+                     P2S |                             0100 |                             0100
+                     S2P |                             1000 |                             1000
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3898] No Re-encoding of one hot register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized2'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+*
+                    IDLE |                             0001 |                             0001
+                     REG |                             0010 |                             0010
+                     P2S |                             0100 |                             0100
+                     S2P |                             1000 |                             1000
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3898] No Re-encoding of one hot register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized3'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+*
+                    IDLE |                             0001 |                             0001
+                     REG |                             0010 |                             0010
+                     P2S |                             0100 |                             0100
+                     S2P |                             1000 |                             1000
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3898] No Re-encoding of one hot register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized4'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+*
+                    IDLE |                             0001 |                             0001
+                     REG |                             0010 |                             0010
+                     P2S |                             0100 |                             0100
+                     S2P |                             1000 |                             1000
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3898] No Re-encoding of one hot register 'current_state_reg' in module 'xsdbs_v1_0_5_reg_p2s__parameterized5'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+*
+              RESET_ADDR |                          0000001 |                          0000001
+            REQUEST_READ |                          0000010 |                          0000010
+           WAIT_READ_ACK |                          0000100 |                          0000100
+             OUTPUT_DATA |                          0001000 |                          0001000
+                    IDLE |                          0010000 |                          0010000
+         INCREMENT_BLOCK |                          0100000 |                          0100000
+       INCREMENT_ADDRESS |                          1000000 |                          1000000
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3898] No Re-encoding of one hot register 'current_state_reg' in module 'ltlib_v1_0_3_generic_memrd'
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:19 ; elapsed = 00:00:20 . Memory (MB): peak = 2659.707 ; gain = 944.211 ; free physical = 17471 ; free virtual = 24228
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 80 (col length:40)
+BRAMs: 120 (col length: RAMB18 40 RAMB36 20)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+WARNING: [Synth 8-7080] Parallel synthesis criteria is not met
+---------------------------------------------------------------------------------
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:25 ; elapsed = 00:00:26 . Memory (MB): peak = 2659.707 ; gain = 944.211 ; free physical = 17575 ; free virtual = 24332
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying XDC Timing Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:28 ; elapsed = 00:00:29 . Memory (MB): peak = 2659.707 ; gain = 944.211 ; free physical = 17592 ; free virtual = 24349
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Timing Optimization
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Timing Optimization : Time (s): cpu = 00:00:28 ; elapsed = 00:00:29 . Memory (MB): peak = 2659.707 ; gain = 944.211 ; free physical = 17597 ; free virtual = 24354
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Technology Mapping : Time (s): cpu = 00:00:28 ; elapsed = 00:00:30 . Memory (MB): peak = 2659.707 ; gain = 944.211 ; free physical = 17601 ; free virtual = 24358
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Final Netlist Cleanup
+---------------------------------------------------------------------------------
+INFO: [Synth 8-3295] tying undriven pin dummy_inferred:in0 to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[36] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[35] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[34] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[33] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[32] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[31] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[30] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[29] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[28] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[27] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[26] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[25] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[24] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[23] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[22] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[21] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[20] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[19] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[18] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[17] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[16] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[15] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[14] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[13] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[12] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[11] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[10] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[9] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[8] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[7] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[6] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[5] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[4] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[3] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[2] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[1] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:sl_iport0[0] to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:trig_in to constant 0
+INFO: [Synth 8-3295] tying undriven pin inst:trig_out_ack to constant 0
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:00:31 ; elapsed = 00:00:32 . Memory (MB): peak = 2669.613 ; gain = 954.117 ; free physical = 17622 ; free virtual = 24379
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:31 ; elapsed = 00:00:32 . Memory (MB): peak = 2669.613 ; gain = 954.117 ; free physical = 17622 ; free virtual = 24379
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Rebuilding User Hierarchy
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:31 ; elapsed = 00:00:32 . Memory (MB): peak = 2669.613 ; gain = 954.117 ; free physical = 17620 ; free virtual = 24377
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Ports
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:31 ; elapsed = 00:00:32 . Memory (MB): peak = 2669.613 ; gain = 954.117 ; free physical = 17620 ; free virtual = 24377
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:31 ; elapsed = 00:00:32 . Memory (MB): peak = 2669.613 ; gain = 954.117 ; free physical = 17624 ; free virtual = 24381
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Nets
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:31 ; elapsed = 00:00:32 . Memory (MB): peak = 2669.613 ; gain = 954.117 ; free physical = 17622 ; free virtual = 24379
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+Report BlackBoxes: 
++-+--------------+----------+
+| |BlackBox name |Instances |
++-+--------------+----------+
++-+--------------+----------+
+
+Report Cell Usage: 
++------+---------+------+
+|      |Cell     |Count |
++------+---------+------+
+|1     |CARRY4   |    38|
+|2     |CFGLUT5  |    77|
+|3     |LUT1     |    31|
+|4     |LUT2     |   100|
+|5     |LUT3     |   123|
+|6     |LUT4     |   120|
+|7     |LUT5     |    72|
+|8     |LUT6     |   554|
+|9     |MUXF7    |     3|
+|10    |RAMB36E1 |    36|
+|11    |SRL16E   |    84|
+|12    |SRLC16E  |     2|
+|13    |SRLC32E  |    17|
+|14    |FDRE     |  1616|
+|15    |FDSE     |    10|
++------+---------+------+
+---------------------------------------------------------------------------------
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:31 ; elapsed = 00:00:32 . Memory (MB): peak = 2669.613 ; gain = 954.117 ; free physical = 17622 ; free virtual = 24379
+---------------------------------------------------------------------------------
+Synthesis finished with 0 errors, 0 critical warnings and 2812 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:28 ; elapsed = 00:00:30 . Memory (MB): peak = 2669.613 ; gain = 914.062 ; free physical = 17621 ; free virtual = 24379
+Synthesis Optimization Complete : Time (s): cpu = 00:00:31 ; elapsed = 00:00:32 . Memory (MB): peak = 2669.621 ; gain = 954.117 ; free physical = 17621 ; free virtual = 24379
+INFO: [Project 1-571] Translating synthesized netlist
+Netlist sorting complete. Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.02 . Memory (MB): peak = 2669.621 ; gain = 0.000 ; free physical = 17792 ; free virtual = 24549
+INFO: [Netlist 29-17] Analyzing 154 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2728.609 ; gain = 0.000 ; free physical = 17749 ; free virtual = 24506
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 77 instances were transformed.
+  CFGLUT5 => CFGLUT5 (SRL16E, SRLC32E): 68 instances
+  CFGLUT5 => SRLC32E: 9 instances
+
+Synth Design complete | Checksum: 4b0f2bc3
+INFO: [Common 17-83] Releasing license: Synthesis
+190 Infos, 109 Warnings, 0 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:00:35 ; elapsed = 00:00:34 . Memory (MB): peak = 2728.645 ; gain = 1176.594 ; free physical = 17749 ; free virtual = 24506
+INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 2066.025; main = 1852.363; forked = 268.258
+INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3623.262; main = 2728.613; forked = 963.551
+Write ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 2752.621 ; gain = 0.000 ; free physical = 17749 ; free virtual = 24506
+INFO: [Common 17-1381] The checkpoint '/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/ila_0_synth_1/ila_0.dcp' has been generated.
+INFO: [Coretcl 2-1648] Added synthesis output to IP cache for IP ila_0, cache-ID = cf99cc47130613f2
+INFO: [Coretcl 2-1174] Renamed 201 cell refs.
+Write ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 2752.621 ; gain = 0.000 ; free physical = 17718 ; free virtual = 24485
+INFO: [Common 17-1381] The checkpoint '/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/ila_0_synth_1/ila_0.dcp' has been generated.
+INFO: [Vivado 12-24828] Executing command : report_utilization -file ila_0_utilization_synth.rpt -pb ila_0_utilization_synth.pb
+INFO: [Common 17-206] Exiting Vivado at Fri Mar 20 10:11:30 2026...

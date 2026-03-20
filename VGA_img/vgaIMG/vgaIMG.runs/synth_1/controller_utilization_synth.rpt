@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
-| Date         : Tue Mar 17 17:18:05 2026
+| Date         : Fri Mar 20 11:26:39 2026
 | Host         : panda running 64-bit Ubuntu 22.04.5 LTS
 | Command      : report_utilization -file controller_utilization_synth.rpt -pb controller_utilization_synth.pb
 | Design       : controller
@@ -31,13 +31,13 @@ Table of Contents
 +----------------------------+------+-------+------------+-----------+-------+
 |          Site Type         | Used | Fixed | Prohibited | Available | Util% |
 +----------------------------+------+-------+------------+-----------+-------+
-| Slice LUTs*                | 2053 |     0 |          0 |     17600 | 11.66 |
-|   LUT as Logic             | 1832 |     0 |          0 |     17600 | 10.41 |
+| Slice LUTs*                | 2072 |     0 |          0 |     17600 | 11.77 |
+|   LUT as Logic             | 1851 |     0 |          0 |     17600 | 10.52 |
 |   LUT as Memory            |  221 |     0 |          0 |      6000 |  3.68 |
 |     LUT as Distributed RAM |  100 |     0 |            |           |       |
 |     LUT as Shift Register  |  121 |     0 |            |           |       |
-| Slice Registers            | 2394 |     0 |          0 |     35200 |  6.80 |
-|   Register as Flip Flop    | 2394 |     0 |          0 |     35200 |  6.80 |
+| Slice Registers            | 2395 |     0 |          0 |     35200 |  6.80 |
+|   Register as Flip Flop    | 2395 |     0 |          0 |     35200 |  6.80 |
 |   Register as Latch        |    0 |     0 |          0 |     35200 |  0.00 |
 | F7 Muxes                   |    0 |     0 |          0 |      8800 |  0.00 |
 | F8 Muxes                   |    0 |     0 |          0 |      4400 |  0.00 |
@@ -62,7 +62,7 @@ Warning! For any ECO changes, please run place_design if there are unplaced inst
 | 8     |          Yes |           - |          Set |
 | 66    |          Yes |           - |        Reset |
 | 80    |          Yes |         Set |            - |
-| 2240  |          Yes |       Reset |            - |
+| 2241  |          Yes |       Reset |            - |
 +-------+--------------+-------------+--------------+
 
 
@@ -153,12 +153,12 @@ Warning! For any ECO changes, please run place_design if there are unplaced inst
 +------------+------+----------------------+
 |  Ref Name  | Used |  Functional Category |
 +------------+------+----------------------+
-| FDRE       | 2240 |         Flop & Latch |
-| LUT6       |  560 |                  LUT |
-| LUT3       |  392 |                  LUT |
-| LUT4       |  338 |                  LUT |
+| FDRE       | 2241 |         Flop & Latch |
+| LUT6       |  574 |                  LUT |
+| LUT3       |  395 |                  LUT |
+| LUT4       |  330 |                  LUT |
 | LUT1       |  312 |                  LUT |
-| LUT5       |  305 |                  LUT |
+| LUT5       |  309 |                  LUT |
 | LUT2       |  303 |                  LUT |
 | RAMD32     |  150 |   Distributed Memory |
 | BIBUF      |  130 |                   IO |
@@ -184,6 +184,7 @@ Warning! For any ECO changes, please run place_design if there are unplaced inst
 +-----------+------+
 |  Ref Name | Used |
 +-----------+------+
+| ila_0     |    1 |
 | clk_wiz_0 |    1 |
 +-----------+------+
 

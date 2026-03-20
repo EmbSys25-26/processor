@@ -43,4 +43,3 @@ set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 \
 -min 0 -add_delay \
 [get_ports {o_vga_red[*] o_vga_green[*] o_vga_blue[*] o_hsync o_vsync}]
                              
-set_property SEVERITY {Info} [get_drc_checks LUTAR-1]

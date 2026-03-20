@@ -83,7 +83,8 @@ module m_vga_mmio(
     wire [15:0] _axis_tdata;    
     wire        _axis_tvalid;   
     wire        _axis_tready; 
-    wire        _axis_tlast;    
+    wire        _axis_tuser; 
+    wire        _axis_tlast;   
     
     wire _clk_pixel;   // 25 MHz from internal clocking wizard
     wire _rst_n;       // Reset from PS
@@ -124,6 +125,7 @@ module m_vga_mmio(
         .M_AXIS_MM2S_0_tdata  (_axis_tdata),
         .M_AXIS_MM2S_0_tvalid (_axis_tvalid),
         .M_AXIS_MM2S_0_tready (_axis_tready),   // controlled by m_hsync_vga
+        .M_AXIS_MM2S_0_tuser  (_axis_tuser),
         .M_AXIS_MM2S_0_tlast  (_axis_tlast),
         .clk_pixel_0          (_clk_pixel),
         .sys_clock            (i_clk)
@@ -136,6 +138,8 @@ module m_vga_mmio(
         //.i_imgData (_imgData_sync),
         .i_axis_tdata (_axis_tdata),
         .i_axis_tvalid (_axis_tvalid),
+        .i_axis_tuser (_axis_tuser),
+        .i_axis_tlast (_axis_tlast),
         .o_axis_tready (_axis_tready),
         .o_endLine(_endLine),
         .o_vga_red(o_vga_red),
@@ -153,6 +157,15 @@ module m_vga_mmio(
         .o_vsync(o_vsync),
         .o_state_debug(_vsync_state_debug)
      );
+     
+     /*ila_0 ila (
+     .clk(_clk_pixel),
+     .probe0(o_hsync),
+     .probe1(o_vsync),
+     .probe2(_axis_tvalid),
+     .probe3(_endLine),
+     .probe4(_axis_tlast)
+     );*/
      
      
 /*************************************************************************************
@@ -182,7 +195,7 @@ module m_vga_mmio(
         .DEST_SYNC_FF   (2),  // 2 flip-flop synchroniser
         .INIT_SYNC_FF   (1),  // initialise FFs to 0 on reset
         .SIM_ASSERT_CHK (0),  
-        .SRC_INPUT_REG  (0)   
+        .SRC_INPUT_REG  (1)   
     ) u_enVGA_cdc (
         .src_clk  (i_clkSystem),   // source clock domain
         .src_in   (_enVGA),        // signal to cross

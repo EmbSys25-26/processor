@@ -4,7 +4,7 @@ from PIL import Image
 IMG_W = 640
 IMG_H = 480
  
-img = Image.open("gato.png")          # Load any image
+img = Image.open("red.png")          # Load any image
 img = img.resize((IMG_W, IMG_H))          # Resize to 640x480
 img = img.convert("RGB")                  # Ensure RGB mode
  

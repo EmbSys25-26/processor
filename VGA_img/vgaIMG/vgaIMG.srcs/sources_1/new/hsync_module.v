@@ -8,6 +8,8 @@ module m_hsync_vga(
     input wire i_enVGA,
     input wire [15:0] i_axis_tdata,   // Pixel: [15:12]=R [11:8]=G [7:4]=B
     input wire i_axis_tvalid,  // VDMA has pixel ready to send
+    input wire i_axis_tuser,
+    input wire i_axis_tlast,
     output wire o_axis_tready,  // hsync tells VDMA to send pixel
     output wire o_endLine, 
     output wire [`VGA_CHANNEL_SIZE:0] o_vga_red,
@@ -58,6 +60,10 @@ module m_hsync_vga(
 /****************************************************************************
  * 2.1 STATIC ASSIGNMENTS  
  ***************************************************************************/
+    wire _in_visible   = (_state == VISIBLE) && i_enVGA && ~i_rst;
+    wire _pixel_accept = _in_visible && i_axis_tvalid;
+    assign o_axis_tready = _in_visible;
+    
     assign o_endLine = _endLine;
     assign o_hsync   = _hsync;
     assign o_state_debug = _state;
@@ -66,8 +72,7 @@ module m_hsync_vga(
     assign o_vga_green = _vga_green;
     assign o_vga_blue  = _vga_blue;
 
-    assign o_axis_tready = (_state == VISIBLE) && i_enVGA && ~i_rst;
-     
+      
 /****************************************************************************
  * 2.2 FSM   
  ***************************************************************************/
@@ -124,23 +129,37 @@ module m_hsync_vga(
 
             VISIBLE: begin
                 _hsync <= 1'b1;
-            
-                _pixelCounter <= _pixelCounter + 1;
-            
-                if (i_axis_tvalid) begin
+                
+                /*if (i_axis_tvalid && i_axis_tuser && (_pixelCounter != 10'd0)) begin
+                    _pixelCounter <= 10'b0;
+                    _state        <= BACK_PORCH;
+                end*/
+                
+                if (_pixel_accept && i_axis_tlast) begin
+                    _vga_red      <= i_axis_tdata[15:12];
+                    _vga_green    <= i_axis_tdata[11:8];
+                    _vga_blue     <= i_axis_tdata[7:4];
+                    _pixelCounter <= 10'b0;
+                    _state        <= FRONT_PORCH;
+                    _endLine      <= 1'b1;
+                end
+                
+                else if (_pixel_accept) begin
                     _vga_red   <= i_axis_tdata[15:12];
                     _vga_green <= i_axis_tdata[11:8];
                     _vga_blue  <= i_axis_tdata[7:4];
+ 
+                    if (_pixelCounter == THRES_VISIBLE - 1) begin
+                        _pixelCounter <= 10'b0;
+                        _state        <= FRONT_PORCH;
+                        _endLine      <= 1'b1;
+                    end else begin
+                        _pixelCounter <= _pixelCounter + 1;
+                    end
                 end
             
-                if (_pixelCounter == THRES_VISIBLE-1) begin
-                    _pixelCounter <= 0;
-                    _state        <= FRONT_PORCH;
-                    _endLine      <= 1'b1;  // pulse
-                end else begin
-                    _endLine <= 1'b0;
-                end
             end
+            
 
         endcase 
     end    

@@ -321,8 +321,6 @@ set_property src_info {type:XDC file:3 line:31 export:INPUT save:INPUT read:READ
 set_property PACKAGE_PIN W15 [get_ports {o_vga_red[1]}]
 set_property src_info {type:XDC file:3 line:32 export:INPUT save:INPUT read:READ} [current_design]
 set_property PACKAGE_PIN V15 [get_ports {o_vga_red[0]}]
-set_property src_info {type:XDC file:3 line:46 export:INPUT save:INPUT read:READ} [current_design]
-set_property SEVERITY {Info} [get_drc_checks LUTAR-1]
 current_instance {periph_vga/u_system/vga_system_i/smartconnect_0/inst/s00_nodes/s00_ar_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory}
 set_property src_info {type:SCOPED_XDC file:4 line:55 export:INPUT save:NONE read:READ} [current_design]
 set my_var [get_property dram_emb_xdc [get_cells -quiet -hier -filter {PRIMITIVE_SUBGROUP==LUTRAM || PRIMITIVE_SUBGROUP==dram || PRIMITIVE_SUBGROUP==uram || PRIMITIVE_SUBGROUP==BRAM}]]

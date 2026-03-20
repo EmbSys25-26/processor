@@ -11,44 +11,18 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000000000 ms"></ZoomStartTime>
-      <ZoomEndTime time="23.800000001 ms"></ZoomEndTime>
-      <Cursor1Time time="20.041000000 ms"></Cursor1Time>
+      <ZoomStartTime time="2,902.087667 us"></ZoomStartTime>
+      <ZoomEndTime time="3,372.087668 us"></ZoomEndTime>
+      <Cursor1Time time="125.740000 us"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="215"></NameColumnWidth>
-      <ValueColumnWidth column_width="107"></ValueColumnWidth>
+      <ValueColumnWidth column_width="97"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="14" />
-   <wvobject type="logic" fp_name="/tb_vga/clk_pixel">
-      <obj_property name="ElementShortName">clk_pixel</obj_property>
-      <obj_property name="ObjectShortName">clk_pixel</obj_property>
-      <obj_property name="CustomSignalColor">#FFA500</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
    <wvobject type="logic" fp_name="/tb_vga/rst">
       <obj_property name="ElementShortName">rst</obj_property>
       <obj_property name="ObjectShortName">rst</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_vga/axis_tdata">
-      <obj_property name="ElementShortName">axis_tdata[15:0]</obj_property>
-      <obj_property name="ObjectShortName">axis_tdata[15:0]</obj_property>
-      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_vga/axis_tvalid">
-      <obj_property name="ElementShortName">axis_tvalid</obj_property>
-      <obj_property name="ObjectShortName">axis_tvalid</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_vga/axis_tready">
-      <obj_property name="ElementShortName">axis_tready</obj_property>
-      <obj_property name="ObjectShortName">axis_tready</obj_property>
-      <obj_property name="CustomSignalColor">#FFD700</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_vga/axis_tlast">
-      <obj_property name="ElementShortName">axis_tlast</obj_property>
-      <obj_property name="ObjectShortName">axis_tlast</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_vga/vga_red">
       <obj_property name="ElementShortName">vga_red[3:0]</obj_property>
@@ -66,6 +40,22 @@
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga/tvalid">
+      <obj_property name="ElementShortName">tvalid</obj_property>
+      <obj_property name="ObjectShortName">tvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga/tlast">
+      <obj_property name="ElementShortName">tlast</obj_property>
+      <obj_property name="ObjectShortName">tlast</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga/tuser">
+      <obj_property name="ElementShortName">tuser</obj_property>
+      <obj_property name="ObjectShortName">tuser</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_vga/tready">
+      <obj_property name="ElementShortName">tready</obj_property>
+      <obj_property name="ObjectShortName">tready</obj_property>
+   </wvobject>
    <wvobject type="logic" fp_name="/tb_vga/hsync">
       <obj_property name="ElementShortName">hsync</obj_property>
       <obj_property name="ObjectShortName">hsync</obj_property>
@@ -82,12 +72,16 @@
       <obj_property name="CustomSignalColor">#FF00FF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
+   <wvobject type="array" fp_name="/tb_vga/u_vsync/_lineCounter">
+      <obj_property name="ElementShortName">_lineCounter[8:0]</obj_property>
+      <obj_property name="ObjectShortName">_lineCounter[8:0]</obj_property>
+   </wvobject>
    <wvobject type="logic" fp_name="/tb_vga/endLine">
       <obj_property name="ElementShortName">endLine</obj_property>
       <obj_property name="ObjectShortName">endLine</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_vga/pixel_count">
-      <obj_property name="ElementShortName">pixel_count[31:0]</obj_property>
-      <obj_property name="ObjectShortName">pixel_count[31:0]</obj_property>
+   <wvobject type="array" fp_name="/tb_vga/u_hsync/_pixelCounter">
+      <obj_property name="ElementShortName">_pixelCounter[9:0]</obj_property>
+      <obj_property name="ObjectShortName">_pixelCounter[9:0]</obj_property>
    </wvobject>
 </wave_config>
