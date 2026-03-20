@@ -715,17 +715,17 @@ if (op_kind == OP_ASSIGN) {
       /* SEM012: Implicit pointer <-> integer conversion not allowed */
       if ((lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_BUILTIN && is_integral_builtin(rhs_type->as.builtin)) ||
           (lhs_type->kind == TYPE_BUILTIN && is_integral_builtin(lhs_type->as.builtin) && rhs_type->kind == TYPE_POINTER)) {
-        pass2_emit(state, "SEM012", op_node->lineNumber, "Implicit conversion between pointer and integer not allowed");
+        pass2_emit(state, "SEM0012", op_node->lineNumber, "Implicit conversion between pointer and integer not allowed");
       }
       /* SEM013: Assignment between incompatible pointer types */
       else if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER && !type_equal(lhs_type, rhs_type)) {
-        pass2_emit(state, "SEM013", op_node->lineNumber, "Assignment between incompatible pointer types");
+        pass2_emit(state, "SEM0013", op_node->lineNumber, "Assignment between incompatible pointer types");
       }
       /* SEM014: Struct/union assignment requires identical types */
       else if ((lhs_type->kind == TYPE_STRUCT_TAG || lhs_type->kind == TYPE_UNION_TAG) && 
                (rhs_type->kind == TYPE_STRUCT_TAG || rhs_type->kind == TYPE_UNION_TAG) && 
                !type_equal(lhs_type, rhs_type)) {
-        pass2_emit(state, "SEM014", op_node->lineNumber, "Assignment between struct/union requires identical types");
+        pass2_emit(state, "SEM0014", op_node->lineNumber, "Assignment between struct/union requires identical types");
       }
       /* SEM011: Fallback for any other general assignment mismatches */
       else if (!assignment_compatible(lhs_type, rhs_type)) {
@@ -745,7 +745,7 @@ if (op_kind == OP_ASSIGN) {
         }
       }
       if (!is_initialization) {
-        pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
+        pass2_emit(state, "SEM0027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
       }
     }
 
@@ -757,7 +757,7 @@ if (op_kind == OP_ASSIGN) {
       op_kind == OP_MULTIPLY ||
       op_kind == OP_DIVIDE ) {
     if (!type_is_numeric(lhs_type) || !type_is_numeric(rhs_type)) {
-      pass2_emit(state, "SEM020", op_node->lineNumber, "Arithmetic operators require arithmetic operands");
+      pass2_emit(state, "SEM0020", op_node->lineNumber, "Arithmetic operators require arithmetic operands");
       return &g_type_invalid;
     }
     if (lhs_type->kind == TYPE_BUILTIN && rhs_type->kind == TYPE_BUILTIN) {
@@ -778,7 +778,7 @@ if (op_kind == OP_ASSIGN) {
 
     /* SEM021: Module only allows integral types (int, char, etc.) */
     if (!type_is_integral(lhs_type) || !type_is_integral(rhs_type)) {
-      pass2_emit(state, "SEM021", op_node->lineNumber, "Operator '%' only for integral operands");
+      pass2_emit(state, "SEM0021", op_node->lineNumber, "Operator '%' only for integral operands");
       return &g_type_invalid;
     }
     return &g_type_int;
@@ -803,26 +803,19 @@ if (op_kind == OP_ASSIGN) {
   }
 
 
-  if (op_kind == OP_LEFT_SHIFT ||
-      op_kind == OP_RIGHT_SHIFT ||
-      op_kind == OP_BITWISE_AND ||
-      op_kind == OP_BITWISE_OR ||
-      op_kind == OP_BITWISE_XOR) {
-    if (!type_is_integral(lhs_type) || !type_is_integral(rhs_type)) {
-      pass2_emit(state, "SEM023", op_node->lineNumber, "Bitwise operators require integral operands");
+// SEM023: BITWISE OPERATORS (<<, >>, &, |, ^, ~)
+  if (op_kind == OP_LEFT_SHIFT || op_kind == OP_RIGHT_SHIFT ||
+      op_kind == OP_BITWISE_AND || op_kind == OP_BITWISE_OR ||
+      op_kind == OP_BITWISE_XOR || op_kind == OP_BITWISE_NOT) {
+    
+    // Check lhs, and ONLY check rhs if it's a binary operator
+    if (!type_is_integral(lhs_type) || (op_kind != OP_BITWISE_NOT && !type_is_integral(rhs_type))) {
+      pass2_emit(state, "SEM0023", op_node->lineNumber, "Bitwise operators require integral operands");
       return &g_type_invalid;
     }
+    
     return lhs_type;
   }
-
-  if (op_kind == OP_BITWISE_NOT) {
-    if (!type_is_integral(lhs_type)) {
-      pass2_emit(state, "SEM023", op_node->lineNumber, "Bitwise operators require integral operands");
-      return &g_type_invalid;
-    }
-    return lhs_type;
-  }
-
 
   if (op_kind == OP_EQUAL ||
       op_kind == OP_NOT_EQUAL ||
@@ -835,7 +828,7 @@ if (op_kind == OP_ASSIGN) {
     }
 
     if (!is_comparison_compatible(lhs_type, rhs_type)) {
-      pass2_emit(state, "SEM025", op_node->lineNumber, "Incompatible types for comparison operator");
+      pass2_emit(state, "SEM0025", op_node->lineNumber, "Incompatible types for comparison operator");
       return &g_type_invalid;
     }
     return &g_type_int;
@@ -919,13 +912,13 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
           
           /* 2. SEM031: Error if the index is not an integer */
           if (index_type->kind != TYPE_INVALID && !type_is_integral(index_type)) {
-            pass2_emit(state, "SEM031", node->lineNumber, "Array index must be integral");
+            pass2_emit(state, "SEM0031", node->lineNumber, "Array index must be integral");
           }
           }
 
           /* 3. SEM032: Check if the base is actually an array or a pointer */
         if (base->kind != TYPE_INVALID && base->kind != TYPE_ARRAY && base->kind != TYPE_POINTER) {
-          pass2_emit(state, "SEM032", node->lineNumber, "Base of [] access must be an array or pointer");
+          pass2_emit(state, "SEM0032", node->lineNumber, "Base of [] access must be an array or pointer");
         }
 
         /* 4. Return the underlying type if it's valid */
