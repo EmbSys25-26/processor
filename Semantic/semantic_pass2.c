@@ -748,20 +748,20 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
 
   if (op_kind == OP_ASSIGN) {
     if (lhs_type->kind != TYPE_INVALID && rhs_type->kind != TYPE_INVALID) {
-      if (lhs_type->qualifiers & TYPE_QUAL_CONST){
+      if (lhs_type->qualifiers & TYPE_QUAL_CONST){ //Checking if the left operand has const qualification
           pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
       }
       if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER && 
           !(lhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST) && 
-          (rhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST)) {  
+          (rhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST)) {  //Checking if the left operand is a pointer without const qualification and if the right operand has const qualification
           pass2_emit(state, "SEM010", op_node->lineNumber, "Implicit removal of the const qualifier in pointer assignment");
       }
-      else if (!assignment_compatible(lhs_type, rhs_type)) {
+      else if (!assignment_compatible(lhs_type, rhs_type)) { //Checking if the types of the two operands are incompatible
         pass2_emit(state, "SEM011", op_node->lineNumber, "assignment type mismatch");
       }
     }
 
-    
+
     if (lhs_type->kind != TYPE_INVALID && (lhs_type->qualifiers & TYPE_QUAL_CONST)) {
       int is_initialization = 0;
 
@@ -1041,8 +1041,7 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
       if (node->p_firstChild) {
         const type_t *operand_type= infer_expr_type(node->p_firstChild, state);
         if (operand_type->kind != TYPE_INVALID){
-          // Verify if the operand is a modifiable object
-          if (operand_type->qualifiers & TYPE_QUAL_CONST) {
+          if (operand_type->qualifiers & TYPE_QUAL_CONST) { //Verify if the operand is the const qualifier
             pass2_emit(state, "SEM009", node->lineNumber, "Increment/decrement of a const object");
           }else if (!(
               node->p_firstChild->nodeType == NODE_IDENTIFIER ||
@@ -1050,7 +1049,7 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
               node->p_firstChild->nodeType == NODE_POINTER_CONTENT ||
               node->p_firstChild->nodeType == NODE_MEMBER_ACCESS ||
               node->p_firstChild->nodeType == NODE_PTR_MEMBER_ACCESS
-          )) {
+          )) { //Checking if the first operand is a non-modifiable lvalue
             pass2_emit(state, "SEM028", node->lineNumber, "Increment/decrement requires modifiable lvalue");
           }
           return operand_type;

@@ -185,7 +185,6 @@ type_t *semantic_ast_build_type_from_type_node(const TreeNode_t *type_node, unsi
     }
   return type_new_pointer(base, qualifiers);
   }
-
   return semantic_ast_build_scalar_type_from_spec_chain(type_node, qualifiers);
 }
 
