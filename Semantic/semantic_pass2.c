@@ -976,6 +976,17 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
           return &g_type_invalid;
         }
 
+        if (!( node->p_firstChild->nodeType == NODE_IDENTIFIER ||
+              node->p_firstChild->nodeType == NODE_ARRAY_ACCESS ||
+              node->p_firstChild->nodeType == NODE_POINTER_CONTENT ||
+              node->p_firstChild->nodeType == NODE_MEMBER_ACCESS ||
+              node->p_firstChild->nodeType == NODE_PTR_MEMBER_ACCESS )) 
+              {
+            pass2_emit(state, "SEM029", node->lineNumber, "Address-of operator requires lvalue operand"); //Operator '&'
+            return &g_type_invalid;
+          }
+
+
         base_copy = type_clone(base_type);
         if (!base_copy) {
           pass2_emit(state, "SEM900", node->lineNumber, "failed to clone reference operand type");
