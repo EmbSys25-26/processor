@@ -186,6 +186,35 @@ static int type_is_scalar(const type_t *type)
   return type_is_numeric(type) || type->kind == TYPE_POINTER;
 }
 
+
+/** 
+ * @brief Check whether an AST node represents a constant zero expression.
+ * @param node AST node pointer.
+ * @return non-zero if the node is a constant zero expression; zero otherwise.
+*/
+
+ int is_constant_zero(const TreeNode_t *node)
+{
+  if (!node) {
+    return 0;
+  }
+
+  if (node->nodeType == NODE_INTEGER && node->nodeData.dVal == 0) {
+    return 1;
+  }
+
+  if (node->nodeType == NODE_CHAR && node->nodeData.dVal == 0) {
+    return 1;
+  }
+
+  if (node->nodeType == NODE_FLOAT && node->nodeData.fVal == 0.0f) {
+    return 1;
+  }
+
+  return 0;
+
+}
+
 /**
  * @brief Verifies whether two types are compatible for comparison operators.
  * @param lhs left-hand side type.
@@ -708,6 +737,14 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
   if (rhs) {
     rhs_type = infer_expr_type(rhs, state);
   }
+
+  if(op_kind == OP_DIVIDE || op_kind == OP_MODULE || op_kind == OP_DIVIDE_ASSIGN || op_kind == OP_MODULUS_ASSIGN) {
+    if(is_constant_zero(rhs)) {
+      pass2_emit(state, "SEM022", op_node->lineNumber, "Division or module by zero in constant expression");
+      return &g_type_invalid;
+    }
+  }
+
 
   if (op_kind == OP_ASSIGN) {
     if (lhs_type->kind != TYPE_INVALID && rhs_type->kind != TYPE_INVALID) {
