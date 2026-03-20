@@ -178,11 +178,12 @@ type_t *semantic_ast_build_type_from_type_node(const TreeNode_t *type_node, unsi
   }
 
   if (type_node->nodeType == NODE_POINTER) {
-    base = semantic_ast_build_type_from_type_node(type_node->p_firstChild, qualifiers);
+    unsigned child_qualifiers = semantic_ast_collect_qualifiers_from_chain(type_node->p_firstChild);
+    base = semantic_ast_build_type_from_type_node(type_node->p_firstChild, child_qualifiers);
     if (!base) {
       return NULL;
     }
-    return type_new_pointer(base, 0u);
+  return type_new_pointer(base, qualifiers);
   }
 
   return semantic_ast_build_scalar_type_from_spec_chain(type_node, qualifiers);

@@ -710,10 +710,15 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
   }
 
   if (op_kind == OP_ASSIGN) {
-    if (lhs_type->kind != TYPE_INVALID &&
-        rhs_type->kind != TYPE_INVALID &&
-        !assignment_compatible(lhs_type, rhs_type)) {
-      pass2_emit(state, "SEM011", op_node->lineNumber, "assignment type mismatch");
+    if (lhs_type->kind != TYPE_INVALID && rhs_type->kind != TYPE_INVALID) {
+      if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER && 
+          !(lhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST) && 
+          (rhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST)) {  
+          pass2_emit(state, "SEM010", op_node->lineNumber, "Implicit removal of the const qualifier in pointer assignment");
+      }
+      else if (!assignment_compatible(lhs_type, rhs_type)) {
+        pass2_emit(state, "SEM011", op_node->lineNumber, "assignment type mismatch");
+      }
     }
 
 
