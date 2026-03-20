@@ -841,31 +841,21 @@ if (op_kind == OP_ASSIGN) {
     return &g_type_int;
   }
   
-    // SEM024 lOGICAL OPERATORS (&&, ||, !):
-  if (op_kind == OP_LOGICAL_AND || op_kind == OP_LOGICAL_OR) {
-    if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
+// SEM024: LOGICAL OPERATORS (&&, ||, !)
+  if (op_kind == OP_LOGICAL_AND || op_kind == OP_LOGICAL_OR || op_kind == OP_LOGICAL_NOT) {
+    
+    // 1. Abort if any applicable type is already invalid
+    if (lhs_type->kind == TYPE_INVALID || (op_kind != OP_LOGICAL_NOT && rhs_type->kind == TYPE_INVALID)) {
       return &g_type_invalid;
     }
     
-    if (!type_is_scalar(lhs_type) || !type_is_scalar(rhs_type)) {
+    // 2. SEM024: Both sides (if applicable) must be scalar
+    if (!type_is_scalar(lhs_type) || (op_kind != OP_LOGICAL_NOT && !type_is_scalar(rhs_type))) {
       pass2_emit(state, "SEM024", op_node->lineNumber, "Logical operators require scalar operands");
       return &g_type_invalid;
     }
     
     return &g_type_int;
-  }
-  // SEM024: Logical NOT operator (!)
-  if (op_kind == OP_LOGICAL_NOT) {
-    if (lhs_type->kind == TYPE_INVALID) {
-      return &g_type_invalid;
-    }
-    
-    if (!type_is_scalar(lhs_type)) {
-      pass2_emit(state, "SEM024", op_node->lineNumber, "Logical operator requires scalar operand");
-      return &g_type_invalid;
-    }
-    
-    return &g_type_int; 
   }
 
   if (op_kind == OP_UNARY_MINUS) {
