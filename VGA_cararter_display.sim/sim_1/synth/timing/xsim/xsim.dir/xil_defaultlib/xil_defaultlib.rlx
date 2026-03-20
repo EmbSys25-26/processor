@@ -1,7 +1,0 @@
-0.7
-2020.2
-May 21 2025
-22:59:56
-/home/mendes/VGA_cararter_display/VGA_cararter_display.sim/sim_1/synth/timing/xsim/tb_controller_time_synth.v,1773858360,verilog,,/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sim_1/imports/sim/tb_controller.v,,char_buffer_bram;char_buffer_bram_blk_mem_gen_generic_cstr;char_buffer_bram_blk_mem_gen_prim_width;char_buffer_bram_blk_mem_gen_prim_wrapper_init;char_buffer_bram_blk_mem_gen_top;char_buffer_bram_blk_mem_gen_v8_4_11;char_buffer_bram_blk_mem_gen_v8_4_11_synth;clk_wiz_0;clk_wiz_0_clk_wiz;controller;font_rom;font_rom_dist_mem_gen_v8_0_17;font_rom_dist_mem_gen_v8_0_17_synth;font_rom_rom;glbl;m_hsync_vga;m_vga_mmio;m_vsync_vga,,,../../../../../../../../tools/Xilinx/2025.1/data/rsb/busdef;../../../../../VGA_cararter_display.ip_user_files/ipstatic;../../../../../VGA_cararter_display.srcs/sources_1/imports/srcs,,,,,
-/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sim_1/imports/sim/tb_controller.v,1773854436,verilog,,,/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/constants.vh,tb_controller,,,../../../../../../../../tools/Xilinx/2025.1/data/rsb/busdef;../../../../../VGA_cararter_display.ip_user_files/ipstatic;../../../../../VGA_cararter_display.srcs/sources_1/imports/srcs,,,,,
-/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/constants.vh,1773311463,verilog,,,,,,,,,,,,

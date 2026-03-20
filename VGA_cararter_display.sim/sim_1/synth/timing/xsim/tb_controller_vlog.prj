@@ -1,7 +1,0 @@
-# compile verilog/system verilog design source files
-verilog xil_defaultlib  --include "../../../../../../../../tools/Xilinx/2025.1/data/rsb/busdef" --include "../../../../../VGA_cararter_display.ip_user_files/ipstatic" --include "../../../../../VGA_cararter_display.srcs/sources_1/imports/srcs" \
-"tb_controller_time_synth.v" \
-"../../../../../VGA_cararter_display.srcs/sim_1/imports/sim/tb_controller.v" \
-
-# Do not sort compile order
-nosort
