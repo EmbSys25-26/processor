@@ -3,121 +3,29 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="tb_Soc_behav.wdb" id="1">
+      <db_ref path="tb_soc_simple_behav.wdb" id="1">
          <top_modules>
             <top_module name="glbl" />
-            <top_module name="tb_Soc" />
+            <top_module name="tb_soc_simple" />
          </top_modules>
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="1,331.666 ns"></ZoomStartTime>
-      <ZoomEndTime time="1,533.667 ns"></ZoomEndTime>
+      <ZoomStartTime time="1,270.050 ns"></ZoomStartTime>
+      <ZoomEndTime time="1,545.991 ns"></ZoomEndTime>
       <Cursor1Time time="1,500.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="146"></NameColumnWidth>
+      <NameColumnWidth column_width="142"></NameColumnWidth>
       <ValueColumnWidth column_width="66"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="25" />
-   <wvobject type="logic" fp_name="/tb_Soc/_clk">
+   <WVObjectSize size="2" />
+   <wvobject type="logic" fp_name="/tb_soc_simple/_clk">
       <obj_property name="ElementShortName">_clk</obj_property>
       <obj_property name="ObjectShortName">_clk</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/_rst">
+   <wvobject type="logic" fp_name="/tb_soc_simple/_rst">
       <obj_property name="ElementShortName">_rst</obj_property>
       <obj_property name="ObjectShortName">_rst</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_rom/i_addr">
-      <obj_property name="ElementShortName">i_addr[9:1]</obj_property>
-      <obj_property name="ObjectShortName">i_addr[9:1]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_rom/o_dout_h">
-      <obj_property name="ElementShortName">o_dout_h[7:0]</obj_property>
-      <obj_property name="ObjectShortName">o_dout_h[7:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_rom/o_dout_l">
-      <obj_property name="ElementShortName">o_dout_l[7:0]</obj_property>
-      <obj_property name="ObjectShortName">o_dout_l[7:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/i_insn">
-      <obj_property name="ElementShortName">i_insn[15:0]</obj_property>
-      <obj_property name="ObjectShortName">i_insn[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/i_pc">
-      <obj_property name="ElementShortName">i_pc[15:0]</obj_property>
-      <obj_property name="ObjectShortName">i_pc[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/o_insn">
-      <obj_property name="ElementShortName">o_insn[15:0]</obj_property>
-      <obj_property name="ObjectShortName">o_insn[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/o_pc">
-      <obj_property name="ElementShortName">o_pc[15:0]</obj_property>
-      <obj_property name="ObjectShortName">o_pc[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_id_stage/i_insn">
-      <obj_property name="ElementShortName">i_insn[15:0]</obj_property>
-      <obj_property name="ObjectShortName">i_insn[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_id_stage/i_pc">
-      <obj_property name="ElementShortName">i_pc[15:0]</obj_property>
-      <obj_property name="ObjectShortName">i_pc[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/_par_i">
-      <obj_property name="ElementShortName">_par_i[3:0]</obj_property>
-      <obj_property name="ObjectShortName">_par_i[3:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/_par_o">
-      <obj_property name="ElementShortName">_par_o[3:0]</obj_property>
-      <obj_property name="ObjectShortName">_par_o[3:0]</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/_uart_rx">
-      <obj_property name="ElementShortName">_uart_rx</obj_property>
-      <obj_property name="ObjectShortName">_uart_rx</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/_uart_tx">
-      <obj_property name="ElementShortName">_uart_tx</obj_property>
-      <obj_property name="ObjectShortName">_uart_tx</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/_i2c_sda">
-      <obj_property name="ElementShortName">_i2c_sda</obj_property>
-      <obj_property name="ObjectShortName">_i2c_sda</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/_i2c_scl">
-      <obj_property name="ElementShortName">_i2c_scl</obj_property>
-      <obj_property name="ObjectShortName">_i2c_scl</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/_cycles">
-      <obj_property name="ElementShortName">_cycles[31:0]</obj_property>
-      <obj_property name="ObjectShortName">_cycles[31:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/_max_cycles">
-      <obj_property name="ElementShortName">_max_cycles[31:0]</obj_property>
-      <obj_property name="ObjectShortName">_max_cycles[31:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/_b">
-      <obj_property name="ElementShortName">_b[31:0]</obj_property>
-      <obj_property name="ObjectShortName">_b[31:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/_clk_period_ns">
-      <obj_property name="ElementShortName">_clk_period_ns[31:0]</obj_property>
-      <obj_property name="ObjectShortName">_clk_period_ns[31:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/_clk_freq">
-      <obj_property name="ElementShortName">_clk_freq[31:0]</obj_property>
-      <obj_property name="ObjectShortName">_clk_freq[31:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/_baud_rate">
-      <obj_property name="ElementShortName">_baud_rate[31:0]</obj_property>
-      <obj_property name="ObjectShortName">_baud_rate[31:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/_bit_cycles">
-      <obj_property name="ElementShortName">_bit_cycles[31:0]</obj_property>
-      <obj_property name="ObjectShortName">_bit_cycles[31:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/_bit_time_ns">
-      <obj_property name="ElementShortName">_bit_time_ns[31:0]</obj_property>
-      <obj_property name="ObjectShortName">_bit_time_ns[31:0]</obj_property>
    </wvobject>
 </wave_config>

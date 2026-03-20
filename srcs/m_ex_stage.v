@@ -232,7 +232,7 @@ module ex_stage(
     assign o_wb_pre_data = i_is_getcc ? {11'b0, _psw_vector} : _alu_res;
 
     // Data-memory address: ALU sum shifted left by 1 (word index → byte address)
-    assign o_d_ad = (_sum << 1);
+    assign o_d_ad = (_sum );
 
     // Store data is always the Rd register value (the source for SW/SB)
     assign o_store_data = _rd_fwd;
