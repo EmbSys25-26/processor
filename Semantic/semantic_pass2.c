@@ -709,19 +709,34 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     rhs_type = infer_expr_type(rhs, state);
   }
 
-  if (op_kind == OP_ASSIGN) {
-    if (lhs_type->kind != TYPE_INVALID &&
-        rhs_type->kind != TYPE_INVALID &&
-        !assignment_compatible(lhs_type, rhs_type)) {
-      pass2_emit(state, "SEM011", op_node->lineNumber, "assignment type mismatch");
+if (op_kind == OP_ASSIGN) {
+    if (lhs_type->kind != TYPE_INVALID && rhs_type->kind != TYPE_INVALID) {
+      
+      /* SEM012: Implicit pointer <-> integer conversion not allowed */
+      if ((lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_BUILTIN && is_integral_builtin(rhs_type->as.builtin)) ||
+          (lhs_type->kind == TYPE_BUILTIN && is_integral_builtin(lhs_type->as.builtin) && rhs_type->kind == TYPE_POINTER)) {
+        pass2_emit(state, "SEM012", op_node->lineNumber, "Implicit conversion between pointer and integer not allowed");
+      }
+      /* SEM013: Assignment between incompatible pointer types */
+      else if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER && !type_equal(lhs_type, rhs_type)) {
+        pass2_emit(state, "SEM013", op_node->lineNumber, "Assignment between incompatible pointer types");
+      }
+      /* SEM014: Struct/union assignment requires identical types */
+      else if ((lhs_type->kind == TYPE_STRUCT_TAG || lhs_type->kind == TYPE_UNION_TAG) && 
+               (rhs_type->kind == TYPE_STRUCT_TAG || rhs_type->kind == TYPE_UNION_TAG) && 
+               !type_equal(lhs_type, rhs_type)) {
+        pass2_emit(state, "SEM014", op_node->lineNumber, "Assignment between struct/union requires identical types");
+      }
+      /* SEM011: Fallback for any other general assignment mismatches */
+      else if (!assignment_compatible(lhs_type, rhs_type)) {
+        pass2_emit(state, "SEM011", op_node->lineNumber, "Assignment type mismatch");
+      }
     }
-
-
     if (lhs_type->kind != TYPE_INVALID && (lhs_type->qualifiers & TYPE_QUAL_CONST)) {
       int is_initialization = 0;
 
       /* If the LHS is a variable identifier, look it up in the Symbol Table */
-    if (lhs && lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
+      if (lhs && lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
         scope_t *scope = scope_current(&state->ctx->scope_stack);
         symbol_t *sym = symbol_lookup_visible(scope, lhs->nodeData.sVal);
 
@@ -734,8 +749,8 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       }
     }
 
-  return lhs_type;
-  } 
+    return lhs_type;
+  }
 
   if (op_kind == OP_PLUS ||
       op_kind == OP_MINUS ||
@@ -907,15 +922,23 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
       if (node->p_firstChild) {
         const type_t *base = infer_expr_type(node->p_firstChild, state);
         const TreeNode_t *index_expr = node->p_firstChild->p_sibling;
+        
         if (index_expr) {
           /* 1. Save the returned type */
           const type_t *index_type = infer_expr_type((TreeNode_t *)index_expr, state);
           
-          /* 2. SEM031: Throw an error if the index is not an integer */
+          /* 2. SEM031: Error if the index is not an integer */
           if (index_type->kind != TYPE_INVALID && !type_is_integral(index_type)) {
             pass2_emit(state, "SEM031", node->lineNumber, "Array index must be integral");
           }
+          }
+
+          /* 3. SEM032: Check if the base is actually an array or a pointer */
+        if (base->kind != TYPE_INVALID && base->kind != TYPE_ARRAY && base->kind != TYPE_POINTER) {
+          pass2_emit(state, "SEM032", node->lineNumber, "Base of [] access must be an array or pointer");
         }
+
+        /* 4. Return the underlying type if it's valid */
         if (base->kind == TYPE_ARRAY && base->as.array.elem) {
           return base->as.array.elem;
         }
