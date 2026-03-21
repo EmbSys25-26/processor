@@ -1,7 +1,5 @@
 int main() {
-    const int limit = 100;
-
-    limit = 200; 
-    
+    int x = 1;
+    6 = x; 
     return 0;
 }

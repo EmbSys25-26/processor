@@ -749,6 +749,27 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
  if (op_kind == OP_ASSIGN) {
     if (lhs_type->kind != TYPE_INVALID && rhs_type->kind != TYPE_INVALID) {
 
+        if (!(lhs->nodeType == NODE_IDENTIFIER ||
+              lhs->nodeType == NODE_ARRAY_ACCESS ||
+              lhs->nodeType == NODE_POINTER_CONTENT ||
+              lhs->nodeType == NODE_MEMBER_ACCESS ||
+              lhs->nodeType == NODE_PTR_MEMBER_ACCESS)){
+         //Trigger SEM027 (Not a modifiable lvalue)
+          pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
+        }
+        // Check if LHS is qualified as CONST
+        else if (lhs_type->qualifiers & TYPE_QUAL_CONST) {         
+            // Logic for SEM027: Is this an initialization or an illegal reassignment?
+            if (lhs && lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
+                scope_t *scope = scope_current(&state->ctx->scope_stack);
+                symbol_t *sym = symbol_lookup_visible(scope, lhs->nodeData.sVal);
+                if (!(sym && sym->decl_line == op_node->lineNumber)) {
+                  // Trigger SEM008 (Assignment to const) 
+                  pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
+                }
+            }
+        }
+
         /* --- 1. POINTER & TYPE COMPATIBILITY CHECKS --- */
 
         // SEM010: Implicit removal of const in pointer assignment
@@ -780,31 +801,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
         else if (!assignment_compatible(lhs_type, rhs_type)) {
             pass2_emit(state, "SEM011", op_node->lineNumber, "Assignment type mismatch");
         }
-
-        /* --- 2. MODIFIABILITY & CONST CHECKS --- */
-
-        // Check if LHS is qualified as CONST
-        if (lhs_type->qualifiers & TYPE_QUAL_CONST) {
-            
-            // Logic for SEM027: Is this an initialization or an illegal reassignment?
-            int is_initialization = 0;
-            if (lhs && lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
-                scope_t *scope = scope_current(&state->ctx->scope_stack);
-                symbol_t *sym = symbol_lookup_visible(scope, lhs->nodeData.sVal);
-                if (sym && sym->decl_line == op_node->lineNumber) {
-                    is_initialization = 1;
-                }
-            }
-
-            if (!is_initialization) {
-                // Trigger SEM008 (Assignment to const) 
-                pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
-                // Trigger SEM027 (Not a modifiable lvalue)
-                pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
-            }
-        }
     }
-
     return lhs_type;
 }
 
@@ -1058,9 +1055,7 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
       if (node->p_firstChild) {
         const type_t *operand_type= infer_expr_type(node->p_firstChild, state);
         if (operand_type->kind != TYPE_INVALID){
-          if (operand_type->qualifiers & TYPE_QUAL_CONST) { //Verify if the operand is the const qualifier
-            pass2_emit(state, "SEM009", node->lineNumber, "Increment/decrement of a const object");
-          }else if (!(
+          if (!(
               node->p_firstChild->nodeType == NODE_IDENTIFIER ||
               node->p_firstChild->nodeType == NODE_ARRAY_ACCESS ||
               node->p_firstChild->nodeType == NODE_POINTER_CONTENT ||
@@ -1069,6 +1064,9 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
           )) { //Checking if the first operand is a non-modifiable lvalue
             pass2_emit(state, "SEM028", node->lineNumber, "Increment/decrement requires modifiable lvalue");
           }
+          else if (operand_type->qualifiers & TYPE_QUAL_CONST) { //Verify if the operand is the const qualifier
+            pass2_emit(state, "SEM009", node->lineNumber, "Increment/decrement of a const object");
+          }«
           return operand_type;
          }
          return &g_type_invalid;
