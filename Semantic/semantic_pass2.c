@@ -783,24 +783,24 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
 
         /* --- 2. MODIFIABILITY & CONST CHECKS --- */
 
+       if (!(lhs->nodeType == NODE_IDENTIFIER ||
+              lhs->nodeType == NODE_ARRAY_ACCESS ||
+              lhs->nodeType == NODE_POINTER_CONTENT ||
+              lhs->nodeType == NODE_MEMBER_ACCESS ||
+              lhs->nodeType == NODE_PTR_MEMBER_ACCESS)){
+         //Trigger SEM027 (Not a modifiable lvalue)
+          pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
+        }
         // Check if LHS is qualified as CONST
-        if (lhs_type->qualifiers & TYPE_QUAL_CONST) {
-            
+        else if (lhs_type->qualifiers & TYPE_QUAL_CONST) {         
             // Logic for SEM027: Is this an initialization or an illegal reassignment?
-            int is_initialization = 0;
             if (lhs && lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
                 scope_t *scope = scope_current(&state->ctx->scope_stack);
                 symbol_t *sym = symbol_lookup_visible(scope, lhs->nodeData.sVal);
-                if (sym && sym->decl_line == op_node->lineNumber) {
-                    is_initialization = 1;
+                if (!(sym && sym->decl_line == op_node->lineNumber)) {
+                  // Trigger SEM008 (Assignment to const) 
+                  pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
                 }
-            }
-
-            if (!is_initialization) {
-                // Trigger SEM008 (Assignment to const) 
-                pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
-                // Trigger SEM027 (Not a modifiable lvalue)
-                pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
             }
         }
     }
