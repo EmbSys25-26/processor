@@ -738,8 +738,9 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     rhs_type = infer_expr_type(rhs, state);
   }
 
-  if(op_kind == OP_DIVIDE || op_kind == OP_MODULE || op_kind == OP_DIVIDE_ASSIGN || op_kind == OP_MODULUS_ASSIGN) {
-    if(is_constant_zero(rhs)) {
+  /* SEM022: Division or modulus by zero in constant expression */
+  if(op_kind == OP_DIVIDE || op_kind == OP_MODULE || op_kind == OP_DIVIDE_ASSIGN || op_kind == OP_MODULUS_ASSIGN) {   //Check if the operator is division or modulus (including assignment variants)
+    if(is_constant_zero(rhs)) {                                                                                       //Check if the right-hand side is a constant zero expression
       pass2_emit(state, "SEM022", op_node->lineNumber, "Division or module by zero in constant expression");
       return &g_type_invalid;
     }
@@ -870,6 +871,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     return lhs_type;
   }
 
+  /* SEM025: COMPARISON OPERATORS (==, !=, <, >, <=, >=) */
   if (op_kind == OP_EQUAL ||
       op_kind == OP_NOT_EQUAL ||
       op_kind == OP_LESS_THAN ||
@@ -880,7 +882,8 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       return &g_type_invalid;
     }
 
-    if (!is_comparison_compatible(lhs_type, rhs_type)) {
+    //Both sides must be compatible for comparison (numeric types can be compared with each other, pointers can be compared with each other, but no mixing)
+    if (!is_comparison_compatible(lhs_type, rhs_type)) {  
       pass2_emit(state, "SEM025", op_node->lineNumber, "Incompatible types for comparison operator");
       return &g_type_invalid;
     }
@@ -992,12 +995,12 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
         if (base_type->kind == TYPE_INVALID) {
           return &g_type_invalid;
         }
-
+        /* SEM029: The operand of the address-of operator must be a modifiable lvalue (identifier, array access, pointer content, or member access) */
         if (!( node->p_firstChild->nodeType == NODE_IDENTIFIER ||
               node->p_firstChild->nodeType == NODE_ARRAY_ACCESS ||
               node->p_firstChild->nodeType == NODE_POINTER_CONTENT ||
               node->p_firstChild->nodeType == NODE_MEMBER_ACCESS ||
-              node->p_firstChild->nodeType == NODE_PTR_MEMBER_ACCESS )) 
+              node->p_firstChild->nodeType == NODE_PTR_MEMBER_ACCESS ))   //Check if the operand is an identifier, array access, pointer content, or member access
               {
             pass2_emit(state, "SEM029", node->lineNumber, "Address-of operator requires lvalue operand"); //Operator '&'
             return &g_type_invalid;
@@ -1073,6 +1076,7 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
       }
       return &g_type_invalid;
         
+    /*SEM026: TERNARY OPERATOR compatibility check*/
     case NODE_TERNARY:
       if (node->p_firstChild) {
         const type_t *cond_type;
@@ -1085,16 +1089,18 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
                                      node->p_firstChild->p_sibling->p_sibling : NULL,
                                      state);
 
+        // 1. SEM026: If any type is invalid, return invalid without emitting to avoid cascading errors
         if (cond_type->kind == TYPE_INVALID || true_type->kind == TYPE_INVALID || false_type->kind == TYPE_INVALID) {
           return &g_type_invalid;
         }
+        //If the true and false types are compatible, return the more general type (e.g., int for char vs int)
         if (assignment_compatible(true_type, false_type)) {
           return true_type;
         }
         if (assignment_compatible(false_type, true_type)) {
           return false_type;
         }
-        
+        // 2. SEM026: If neither is compatible with the other, emit error and return invalid
         pass2_emit(state, "SEM026", node->lineNumber, "Incompatible types in ternary operator");
       }
       return &g_type_invalid;
