@@ -746,48 +746,74 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
   }
 
 
-  if (op_kind == OP_ASSIGN) {
+ if (op_kind == OP_ASSIGN) {
     if (lhs_type->kind != TYPE_INVALID && rhs_type->kind != TYPE_INVALID) {
-      if (lhs_type->qualifiers & TYPE_QUAL_CONST){ //Checking if the left operand has const qualification
-          pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
-      }
-      if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER && 
-          !(lhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST) && 
-          (rhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST)) {  //Checking if the left operand is a pointer without const qualification and if the right operand has const qualification
-          pass2_emit(state, "SEM010", op_node->lineNumber, "Implicit removal of the const qualifier in pointer assignment");
-      }
-      else if (!assignment_compatible(lhs_type, rhs_type)) { //Checking if the types of the two operands are incompatible
-        pass2_emit(state, "SEM011", op_node->lineNumber, "assignment type mismatch");
-      }
-    }
 
+        /* --- 1. POINTER & TYPE COMPATIBILITY CHECKS --- */
 
-    if (lhs_type->kind != TYPE_INVALID && (lhs_type->qualifiers & TYPE_QUAL_CONST)) {
-      int is_initialization = 0;
-
-      /* If the LHS is a variable identifier, look it up in the Symbol Table */
-    if (lhs && lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
-        scope_t *scope = scope_current(&state->ctx->scope_stack);
-        symbol_t *sym = symbol_lookup_visible(scope, lhs->nodeData.sVal);
-
-        if (sym && sym->decl_line == op_node->lineNumber) {
-          is_initialization = 1;
+        // SEM010: Implicit removal of const in pointer assignment
+        if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER &&
+            !(lhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST) &&
+            (rhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST)) {
+            pass2_emit(state, "SEM010", op_node->lineNumber, "Implicit removal of the const qualifier in pointer assignment");
         }
-      }
-      if (!is_initialization) {
-        pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
-      }
+
+        // SEM012: Pointer <-> Integer conversion
+        else if ((lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_BUILTIN && is_integral_builtin(rhs_type->as.builtin)) ||
+                 (lhs_type->kind == TYPE_BUILTIN && is_integral_builtin(lhs_type->as.builtin) && rhs_type->kind == TYPE_POINTER)) {
+            pass2_emit(state, "SEM012", op_node->lineNumber, "Implicit conversion between pointer and integer not allowed");
+        }
+
+        // SEM013: Incompatible pointer types
+        else if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER && !type_equal(lhs_type, rhs_type)) {
+            pass2_emit(state, "SEM013", op_node->lineNumber, "Assignment between incompatible pointer types");
+        }
+
+        // SEM014: Struct/Union identical type requirement
+        else if ((lhs_type->kind == TYPE_STRUCT_TAG || lhs_type->kind == TYPE_UNION_TAG) &&
+                 (rhs_type->kind == TYPE_STRUCT_TAG || rhs_type->kind == TYPE_UNION_TAG) &&
+                 !type_equal(lhs_type, rhs_type)) {
+            pass2_emit(state, "SEM014", op_node->lineNumber, "Assignment between struct/union requires identical types");
+        }
+
+        // SEM011: General fallback mismatch
+        else if (!assignment_compatible(lhs_type, rhs_type)) {
+            pass2_emit(state, "SEM011", op_node->lineNumber, "Assignment type mismatch");
+        }
+
+        /* --- 2. MODIFIABILITY & CONST CHECKS --- */
+
+        // Check if LHS is qualified as CONST
+        if (lhs_type->qualifiers & TYPE_QUAL_CONST) {
+            
+            // Logic for SEM027: Is this an initialization or an illegal reassignment?
+            int is_initialization = 0;
+            if (lhs && lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
+                scope_t *scope = scope_current(&state->ctx->scope_stack);
+                symbol_t *sym = symbol_lookup_visible(scope, lhs->nodeData.sVal);
+                if (sym && sym->decl_line == op_node->lineNumber) {
+                    is_initialization = 1;
+                }
+            }
+
+            if (!is_initialization) {
+                // Trigger SEM008 (Assignment to const) 
+                pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
+                // Trigger SEM027 (Not a modifiable lvalue)
+                pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
+            }
+        }
     }
 
-  return lhs_type;
-  } 
+    return lhs_type;
+}
 
   if (op_kind == OP_PLUS ||
       op_kind == OP_MINUS ||
       op_kind == OP_MULTIPLY ||
       op_kind == OP_DIVIDE ) {
     if (!type_is_numeric(lhs_type) || !type_is_numeric(rhs_type)) {
-      pass2_emit(state, "SEM020", op_node->lineNumber, "Arithmetic operators require arithmetic operands");
+      pass2_emit(state, "SEM0020", op_node->lineNumber, "Arithmetic operators require arithmetic operands");
       return &g_type_invalid;
     }
     if (lhs_type->kind == TYPE_BUILTIN && rhs_type->kind == TYPE_BUILTIN) {
@@ -808,7 +834,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
 
     /* SEM021: Module only allows integral types (int, char, etc.) */
     if (!type_is_integral(lhs_type) || !type_is_integral(rhs_type)) {
-      pass2_emit(state, "SEM021", op_node->lineNumber, "Operator '%' only for integral operands");
+      pass2_emit(state, "SEM0021", op_node->lineNumber, "Operator '%' only for integral operands");
       return &g_type_invalid;
     }
     return &g_type_int;
@@ -833,26 +859,19 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
   }
 
 
-  if (op_kind == OP_LEFT_SHIFT ||
-      op_kind == OP_RIGHT_SHIFT ||
-      op_kind == OP_BITWISE_AND ||
-      op_kind == OP_BITWISE_OR ||
-      op_kind == OP_BITWISE_XOR) {
-    if (!type_is_integral(lhs_type) || !type_is_integral(rhs_type)) {
-      pass2_emit(state, "SEM023", op_node->lineNumber, "Bitwise operators require integral operands");
+// SEM023: BITWISE OPERATORS (<<, >>, &, |, ^, ~)
+  if (op_kind == OP_LEFT_SHIFT || op_kind == OP_RIGHT_SHIFT ||
+      op_kind == OP_BITWISE_AND || op_kind == OP_BITWISE_OR ||
+      op_kind == OP_BITWISE_XOR || op_kind == OP_BITWISE_NOT) {
+    
+    // Check lhs, and ONLY check rhs if it's a binary operator
+    if (!type_is_integral(lhs_type) || (op_kind != OP_BITWISE_NOT && !type_is_integral(rhs_type))) {
+      pass2_emit(state, "SEM0023", op_node->lineNumber, "Bitwise operators require integral operands");
       return &g_type_invalid;
     }
+    
     return lhs_type;
   }
-
-  if (op_kind == OP_BITWISE_NOT) {
-    if (!type_is_integral(lhs_type)) {
-      pass2_emit(state, "SEM023", op_node->lineNumber, "Bitwise operators require integral operands");
-      return &g_type_invalid;
-    }
-    return lhs_type;
-  }
-
 
   if (op_kind == OP_EQUAL ||
       op_kind == OP_NOT_EQUAL ||
@@ -865,37 +884,27 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     }
 
     if (!is_comparison_compatible(lhs_type, rhs_type)) {
-      pass2_emit(state, "SEM025", op_node->lineNumber, "Incompatible types for comparison operator");
+      pass2_emit(state, "SEM0025", op_node->lineNumber, "Incompatible types for comparison operator");
       return &g_type_invalid;
     }
     return &g_type_int;
   }
   
-    // SEM024 lOGICAL OPERATORS (&&, ||, !):
-  if (op_kind == OP_LOGICAL_AND || op_kind == OP_LOGICAL_OR) {
-    if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
+// SEM024: LOGICAL OPERATORS (&&, ||, !)
+  if (op_kind == OP_LOGICAL_AND || op_kind == OP_LOGICAL_OR || op_kind == OP_LOGICAL_NOT) {
+    
+    // 1. Abort if any applicable type is already invalid
+    if (lhs_type->kind == TYPE_INVALID || (op_kind != OP_LOGICAL_NOT && rhs_type->kind == TYPE_INVALID)) {
       return &g_type_invalid;
     }
     
-    if (!type_is_scalar(lhs_type) || !type_is_scalar(rhs_type)) {
+    // 2. SEM024: Both sides (if applicable) must be scalar
+    if (!type_is_scalar(lhs_type) || (op_kind != OP_LOGICAL_NOT && !type_is_scalar(rhs_type))) {
       pass2_emit(state, "SEM024", op_node->lineNumber, "Logical operators require scalar operands");
       return &g_type_invalid;
     }
     
     return &g_type_int;
-  }
-  // SEM024: Logical NOT operator (!)
-  if (op_kind == OP_LOGICAL_NOT) {
-    if (lhs_type->kind == TYPE_INVALID) {
-      return &g_type_invalid;
-    }
-    
-    if (!type_is_scalar(lhs_type)) {
-      pass2_emit(state, "SEM024", op_node->lineNumber, "Logical operator requires scalar operand");
-      return &g_type_invalid;
-    }
-    
-    return &g_type_int; 
   }
 
   if (op_kind == OP_UNARY_MINUS) {
@@ -952,15 +961,23 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
       if (node->p_firstChild) {
         const type_t *base = infer_expr_type(node->p_firstChild, state);
         const TreeNode_t *index_expr = node->p_firstChild->p_sibling;
+        
         if (index_expr) {
           /* 1. Save the returned type */
           const type_t *index_type = infer_expr_type((TreeNode_t *)index_expr, state);
           
-          /* 2. SEM031: Throw an error if the index is not an integer */
+          /* 2. SEM031: Error if the index is not an integer */
           if (index_type->kind != TYPE_INVALID && !type_is_integral(index_type)) {
-            pass2_emit(state, "SEM031", node->lineNumber, "Array index must be integral");
+            pass2_emit(state, "SEM0031", node->lineNumber, "Array index must be integral");
           }
+          }
+
+          /* 3. SEM032: Check if the base is actually an array or a pointer */
+        if (base->kind != TYPE_INVALID && base->kind != TYPE_ARRAY && base->kind != TYPE_POINTER) {
+          pass2_emit(state, "SEM0032", node->lineNumber, "Base of [] access must be an array or pointer");
         }
+
+        /* 4. Return the underlying type if it's valid */
         if (base->kind == TYPE_ARRAY && base->as.array.elem) {
           return base->as.array.elem;
         }
