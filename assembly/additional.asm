@@ -1,29 +1,3 @@
-.include "../tools/abi.inc"
-
-    ; ============================
-    ; Constants / addresses
-    ; ============================
-    .equ RESET_VEC,  0x0100
-    .equ STACK_TOP,  0x03FF
-
-    ; ============================
-    ; 0x0100 — reset / main
-    ; ============================
-    .org RESET_VEC
-reset:
-    LI   sp, #STACK_TOP
-    
-    J main
-
-loop: 
-	LI r1, 0
-	LI r2, 0
-	LI r3, 0
-	CMP r4, r3
-	BEQ loop
-
-main:
-
     ; Deactivate TimerH int_en -- MMIO write requires input address to be (final_address >>1)
     IMM  #0x081        
     SW   r0, r0, #0    ; MEM[r0 + 0x8100] = r0 = 0
@@ -41,6 +15,3 @@ main:
     ADD r2, r1
     CMP r2, r1
     BEQ loop
-
-main_loop:
-    BR   #-1

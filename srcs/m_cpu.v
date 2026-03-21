@@ -418,7 +418,11 @@
             .i_ccn(_ccn),
             .i_ccc(_ccc),
             .i_ccv(_ccv),
-            .o_valid(_id_valid),
+          /*  .i_ccz(_ex_new_ccz),
+            .i_ccn(_ex_new_ccn),
+            .i_ccc(_ex_new_ccc),
+            .i_ccv(_ex_new_ccv),
+            .o_valid(_id_valid),*/
             .o_exec_valid(_id_exec_valid),
             .o_pc(_id_pc),
             .o_rd(_id_rd),
@@ -943,31 +947,37 @@
                 end
             end
         end
-    
-        // Condition codes and carry committed at WB.
-        // Note: the carry bit (_c) used by ADC/SBC is separate from _ccc (the branch carry flag).
-        // Both are updated here from WB outputs; EX reads the committed values directly.
-        always @(posedge i_clk) begin
-            if (i_rst) begin
-                _c <= 1'b0;
-                _ccz <= 1'b0;
-                _ccn <= 1'b0;
-                _ccc <= 1'b0;
-                _ccv <= 1'b0;
-            end else begin
-                // Update condition codes (Z/N/C/V) when WB has a valid flag write
-                if (_wb_flag_we) begin
-                    _ccz <= _wb_new_ccz;
-                    _ccn <= _wb_new_ccn;
-                    _ccc <= _wb_new_ccc;
-                    _ccv <= _wb_new_ccv;
-                end
-                // Update carry bit independently (used by ADC/SBC)
-                if (_wb_carry_we) begin
-                    _c <= _wb_new_c;
-                end
+        
+        // Udpate condition codes combinationally so that there is no need for CC hazard stall 
+        // Check is performed during EX stage
+        always @(*) begin
+            _c   = 1'b0;
+            _ccz = 1'b0;
+            _ccn = 1'b0;
+            _ccc = 1'b0;
+            _ccv = 1'b0;
+        
+             if (_ex_flag_we) begin
+                _ccz = _ex_new_ccz;
+                _ccn = _ex_new_ccn;
+                _ccc = _ex_new_ccc;
+                _ccv = _ex_new_ccv;
             end
+                
+            if (_ex_carry_we) begin
+                _c = _ex_new_c;
+            end
+            
+            if (i_rst) begin
+                _c   = 1'b0;
+                _ccz = 1'b0;
+                _ccn = 1'b0;
+                _ccc = 1'b0;
+                _ccv = 1'b0;
+            end
+            
         end
+        
     
     /*************************************************************************************
      * 2.9 IRQ Depth Tracking

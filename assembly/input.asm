@@ -1,142 +1,39 @@
-; ============================================================
-; TEST 1 — Apenas hazards (pior CPI)
-;
-; Hazards explorados:
-;   A) load-use (LW→uso imediato)      : 1 stall cada (20 pares)
-;   B) branch taken em loop             : 2 stalls por iteração
-;   C) CC hazard (ADDI→BEQ sem folga)  : stall de CC (10 pares)
-; ============================================================
+.include "../tools/abi.inc"
 
-.include "abi.inc"
+    ; ============================
+    ; Constants / addresses
+    ; ============================
+    .equ RESET_VEC,  0x0100
+    .equ STACK_TOP,  0x03FF
 
-    .equ MEM_BASE, 0x0200
+    ; ============================
+    ; 0x0100 — reset / main
+    ; ============================
+    .org RESET_VEC
+reset:
+    LI   sp, #STACK_TOP         ; => IMM #0x03F    [8|03F] = 0x803F  (prefix: upper 12 bits of STACK_TOP=0x03FF)	| MEM_ADDR = 0x0100
+                                ; => ADDI sp,zero,#0xF  [1|D|0|F] = 0x1D0F  (sp = 0x03FF with prefix)			| MEM_ADDR = 0x0102
 
-    .org 0x0100
+    J main                      ; => IMM #0x010    [8|010] = 0x8010  (prefix: main_byte_addr=0x10E, 0x10E>>4=0x10)	| MEM_ADDR = 0x0104
+                                ; => JAL r0,r0,#0xE [0|0|0|E] = 0x000E  (pc = 0 + 0x10E, lr discarded)			| MEM_ADDR = 0x0106
 
-; ------------------------------------------------------------
-; PARTE A — 20 pares load-use
-; LW seguido imediatamente de instrução que usa o resultado
-; ------------------------------------------------------------
-    LI   t0, #MEM_BASE           ; t0 = base do array
+loop1: 
+    ADDI r1, r0, #1             ; [1|1|0|1] = 0x1101									| MEM_ADDR = 0x0108
+    BEQ loop2                   ; [9|2|00] = 0x9200  (disp=0, loop2 is next word)					| MEM_ADDR = 0x010A
+    
+loop2:
+    ADDI r1, r0, #1             ; [1|1|0|1] = 0x1101									| MEM_ADDR = 0x010C
+    
+main:
 
-    LW   t1, t0, #0
-    ADD  t1, t1
+    ; Deactivate TimerH int_en -- MMIO write requires input address to be (final_address >>1)
+    IMM  #0x408                 ; [8|408] = 0x8408  (prefix: upper 12 bits of MMIO word-address 0x8100)			| MEM_ADDR = 0x010E
+    SW   r0, r0, #0             ; [6|0|0|0] = 0x6000  (MEM[0+0x8100] = r0 = 0, using prefix)				| MEM_ADDR = 0x0110
+    
+    ; do an instruction that updates CC
+    LI r1, 0                    ; => IMM #0x000    [8|000] = 0x8000  (prefix: 0>>4 = 0)					| MEM_ADDR = 0x0112
+                                ; => ADDI r1,zero,#0  [1|1|0|0] = 0x1100  (r1 = 0, sets CC: Z=1)			| MEM_ADDR = 0x0114
+    BEQ loop1                   ; [9|2|F8] = 0x92F8  (disp=-8: loop1_byte=0x108, next_PC=0x118)				| MEM_ADDR = 0x0116
 
-    LW   t2, t0, #1
-    ADD  t2, t2
-
-    LW   t3, t0, #2
-    ADD  t3, t3
-
-    LW   s0, t0, #3
-    ADD  s0, s0
-
-    LW   s1, t0, #4
-    ADD  s1, s1
-
-    LW   t1, t0, #0
-    ADDI t1, t1, #1
-
-    LW   t2, t0, #1
-    ADDI t2, t2, #2
-
-    LW   t3, t0, #2
-    ADDI t3, t3, #3
-
-    LW   t1, t0, #0
-    SW   t1, t0, #5
-
-    LW   t2, t0, #1
-    SW   t2, t0, #6
-
-    LW   s0, t0, #3
-    AND  s0, t1
-
-    LW   s1, t0, #4
-    XOR  s1, t2
-
-    LW   t1, t0, #0
-    SUB  t1, t2
-
-    LW   t2, t0, #1
-    ADD  t1, t2
-
-    LW   t3, t0, #2
-    ADD  t3, t1
-
-    LW   s0, t0, #0
-    ADDI s0, s0, #0xF
-
-    LW   s1, t0, #1
-    ADDI s1, s1, #0xF
-
-    LW   t1, t0, #2
-    CMP  t1, t2
-
-    LW   t2, t0, #3
-    CMP  t2, t3
-
-    LW   t3, t0, #0
-    ADD  t3, s0
-
-; ------------------------------------------------------------
-; PARTE B — loop com branch always-taken
-; 14 iterações × 2 stalls = 28 stalls de branch
-; ------------------------------------------------------------
-    ADDI t0, zero, #0
-
-branch_loop:
-    ADDI t0, t0, #1
-    ADDI t1, zero, #0xE
-    CMP  t0, t1
-    BEQ  branch_done
-    BR   branch_loop
-
-branch_done:
-
-; ------------------------------------------------------------
-; PARTE C — CC hazard: ADDI→BEQ/BLT sem folga (10 pares)
-; ------------------------------------------------------------
-    ADDI t2, zero, #0
-    BEQ  cc2
-    ADDI t2, t2, #1
-cc2:
-    ADDI t2, zero, #1
-    BEQ  cc3
-    ADDI t2, t2, #1
-cc3:
-    ADDI t2, zero, #0
-    BEQ  cc4
-    ADDI t2, t2, #1
-cc4:
-    ADDI t2, zero, #2
-    BLT  cc5
-    ADDI t2, t2, #1
-cc5:
-    ADDI t2, zero, #0
-    BEQ  cc6
-    ADDI t2, t2, #1
-cc6:
-    ADDI t2, zero, #3
-    BLT  cc7
-    ADDI t2, t2, #1
-cc7:
-    ADDI t2, zero, #0
-    BEQ  cc8
-    ADDI t2, t2, #1
-cc8:
-    ADDI t2, zero, #4
-    BLT  cc9
-    ADDI t2, t2, #1
-cc9:
-    ADDI t2, zero, #0
-    BEQ  cc10
-    ADDI t2, t2, #1
-cc10:
-    ADDI t2, zero, #5
-    BLT  cc11
-    ADDI t2, t2, #1
-cc11:
-
-end_loop:
-    BR   end_loop
+main_loop:
+    BR   #-1                    ; [9|0|FF] = 0x90FF  (always branch, disp=-1: infinite loop)				| MEM_ADDR = 0x0118

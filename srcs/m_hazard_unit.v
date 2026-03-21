@@ -144,7 +144,7 @@ module hazard_unit(
                            (i_idex_updates_carry | i_exmem_updates_carry | i_memwb_updates_carry);
 
     // Any hazard that requires inserting a stall/bubble at the decode boundary
-    assign _decode_hazard =  _load_use_hazard | _cc_hazard | _carry_hazard;
+    assign _decode_hazard =  _load_use_hazard; //| _cc_hazard | _carry_hazard;
 
 /*************************************************************************************
  * 2.2 Control Outputs

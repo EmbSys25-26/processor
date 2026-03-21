@@ -232,7 +232,7 @@ module ex_stage(
     assign o_wb_pre_data = i_is_getcc ? {11'b0, _psw_vector} : _alu_res;
 
     // Data-memory address: ALU sum shifted left by 1 (word index → byte address)
-    assign o_d_ad = (_sum );
+    assign o_d_ad = (_sum << 1);
 
     // Store data is always the Rd register value (the source for SW/SB)
     assign o_store_data = _rd_fwd;
@@ -271,7 +271,7 @@ module ex_stage(
     // Hazard hints for the hazard unit downstream tracking:
     //   updates_cc_hz: instruction updates condition codes (broader than _update_cc —
     //   also includes SETCC/restore_cc, since that also modifies the CC state)
-    assign o_updates_cc_hz    = i_valid & ((((i_is_rr | i_is_ri) & (i_is_sum | i_is_cmp)) | i_is_addi | i_restore_cc));
+    assign o_updates_cc_hz  = i_valid & ((((i_is_rr | i_is_ri) & (i_is_sum | i_is_cmp)) | i_is_addi | i_restore_cc));
     // updates_carry_hz: conservative — every valid instruction potentially touches carry
     // (because carry_we is always asserted for valid instructions in this design)
     assign o_updates_carry_hz = i_valid;

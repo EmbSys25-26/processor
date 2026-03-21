@@ -448,7 +448,7 @@ def assemble_line(asm: str, pc_words: int, symbols=None, sym_kind=None) -> int:
                 target_byte = symbols[name]
                 if extra:
                     target_byte += parse_imm(extra)
-                cur_byte = pc_words * 2 + 2
+                cur_byte = pc_words * 2 # + 2 # compute relative to current PC and not relative to next_PC
                 diff = target_byte - cur_byte
                 if diff % 2 != 0:
                     raise ValueError(f"Branch target {target} not word aligned")
