@@ -225,6 +225,7 @@ static int type_is_scalar(const type_t *type)
       return 0;
   }
 }
+
 /**
  * @brief Assignment compatibility predicate used by pass2 checks.
  * @param lhs left-hand side type.
@@ -1101,39 +1102,64 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
       continue;
     } else if (it->nodeType == NODE_FOR) {
       int rc;
+      TreeNode_t *init = NULL;
       TreeNode_t *cond = NULL;
+      TreeNode_t *step = NULL;
+      TreeNode_t *body = NULL;
 
       if (scope_push(&state->ctx->scope_stack) < 0) {
         pass2_emit(state, "SEM900", it->lineNumber, "failed to enter for-loop scope");
         return -EINVAL;
       }
-      
-      cond = it->p_firstChild;
+
+      init = it->p_firstChild;
+      cond = init ? init->p_sibling : NULL;
+      step = cond ? cond->p_sibling : NULL;
+      body = step ? step->p_sibling : NULL;
+
+      /* First process the initializer so declarations such as
+       * 'for (int i = 0; ...)' become visible to the condition/step/body.
+       */
+      if (init) {
+        if (init->nodeType == NODE_VAR_DECLARATION ||
+            init->nodeType == NODE_ARRAY_DECLARATION) {
+          register_local_decl(init, state, SYMBOL_OBJECT);
+        }
+
+        rc = walk_pass2(init, state);
+        if (rc < 0) {
+          (void)scope_pop(&state->ctx->scope_stack);
+          return rc;
+        }
+      }
+
+      /* Now the condition can safely reference variables declared in init. */
       if (cond) {
-        cond = cond->p_sibling;
-        // David 2026-06-01: check condition before for-loop body to avoid cascading errors when condition is invalid
-        const type_t *cond_type;
+        const type_t *cond_type = infer_expr_type(cond, state);
 
-        if (!cond || !state) {
-          return;
-        }
-
-        cond_type = infer_expr_type(cond, state);
-        if (cond_type->kind == TYPE_INVALID) {
-          return;
-        }
-
-        if (!type_is_scalar(cond_type)) {
+        if (cond_type &&
+            cond_type->kind != TYPE_INVALID &&
+            !type_is_scalar(cond_type)) {
           pass2_emit(state, "SEM052", it->lineNumber, "control condition must be scalar");
         }
       }
 
       state->loop_depth++;
 
-      if (it->p_firstChild) {
-        rc = walk_pass2(it->p_firstChild, state);
+      if (body) {
+        rc = walk_pass2(body, state);
         if (rc < 0) {
           state->loop_depth--;
+          (void)scope_pop(&state->ctx->scope_stack);
+          return rc;
+        }
+      }
+
+      if (step) {
+        rc = walk_pass2(step, state);
+        if (rc < 0) {
+          state->loop_depth--;
+          (void)scope_pop(&state->ctx->scope_stack);
           return rc;
         }
       }
@@ -1172,20 +1198,13 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
 
       if (cond) {
         // David 2026-06-01: check condition before while-loop body to avoid cascading errors when condition is invalid
-        const type_t *cond_type;
+        const type_t *cond_type = infer_expr_type(cond, state);
 
-        if (!cond || !state) {
-          return;
-        }
-
-        cond_type = infer_expr_type(cond, state);
-        if (cond_type->kind == TYPE_INVALID) {
-          return;
-        }
-
-        if (!type_is_scalar(cond_type)) {
+        if (cond_type && cond_type->kind != TYPE_INVALID && !type_is_scalar(cond_type) && state) {
           pass2_emit(state, "SEM052", it->lineNumber, "control condition must be scalar");
         }
+        it = it->p_sibling;
+        continue;
       }
 
       state->loop_depth++;
@@ -1222,25 +1241,52 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
       }
       it = it->p_sibling;
       continue;
-    } else if (it->nodeType == NODE_IF) {
+    } else if (it->nodeType == NODE_CASE) {
+      TreeNode_t *case_expr = it->p_firstChild;
+      const type_t *case_type;
+
+      if (!case_expr) {
+        pass2_emit(state, "SEM054", it->lineNumber, "case label must be an integral constant expression");
+        it = it->p_sibling;
+        continue;
+      }
+
+      case_type = infer_expr_type(case_expr, state);
+
+      if (case_type &&
+          case_type->kind != TYPE_INVALID &&
+          !type_is_integral(case_type)) {
+        pass2_emit(state, "SEM054", it->lineNumber, "case label must be an integral constant expression");
+      } else if (case_expr->nodeType != NODE_INTEGER &&
+                 case_expr->nodeType != NODE_CHAR) {
+        pass2_emit(state, "SEM054", it->lineNumber, "case label must be an integral constant expression");
+      }
+
+      if (it->p_firstChild) {
+        int rc = walk_pass2(it->p_firstChild, state);
+        if (rc < 0) {
+          return rc;
+        }
+      }
+
+      it = it->p_sibling;
+      continue;
+    }else if (it->nodeType == NODE_IF) {
         if (it->p_firstChild) {
 
         TreeNode_t *cond = NULL;
         const type_t *cond_type;
-
-        if (!it->p_firstChild || !state) {
-          return;
-        }
-
         cond = it->p_firstChild;
         cond_type = infer_expr_type(cond, state);
-        if (cond_type->kind == TYPE_INVALID) {
-          return;
-        }
 
-        if (!type_is_scalar(cond_type)) {
+        if (cond_type && 
+          cond_type->kind != TYPE_INVALID 
+          && !type_is_scalar(cond_type) 
+          && state) 
+        {
           pass2_emit(state, "SEM052", it->lineNumber, "control condition must be scalar");
         }
+      
         } 
     } else if (it->nodeType == NODE_VAR_DECLARATION || it->nodeType == NODE_ARRAY_DECLARATION) {
       register_local_decl(it, state, SYMBOL_OBJECT);

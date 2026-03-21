@@ -85,8 +85,10 @@ run_case "non_scalar_if_fail.c" 2 "SEM052"
 run_case "non_scalar_while_fail.c" 2 "SEM052"
 run_case "non_scalar_dowhile_fail.c" 2 "SEM052"
 run_case "non_scalar_for_fail.c" 2 "SEM052"
+run_case "non_int_const_fail.c" 2 "SEM054"
 run_case "switch_integral_ok.c" 0 ""
 run_case "switch_non_integral_fail.c" 2 "SEM053"
+
 
 echo "[SUMMARY] semantic_pass_examples total=$total passed=$passed failed=$((total - passed))" | tee -a "$LOG"
 echo "PASS semantic_pass_examples" | tee -a "$LOG"
