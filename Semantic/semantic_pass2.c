@@ -528,6 +528,7 @@ static const type_t *resolve_member_decl_type(const TreeNode_t *aggregate_decl,
  * @param via_pointer non-zero for '->', zero for '.'.
  * @return inferred member type or invalid singleton on failure.
  */
+//Extract base expression and the member name being accessed
 static const type_t *infer_member_access_type(TreeNode_t *node,
                                               pass2_state_t *state,
                                               int via_pointer)
@@ -546,7 +547,6 @@ static const type_t *infer_member_access_type(TreeNode_t *node,
   if (!node || !state) {
     return &g_type_invalid;
   }
-
   base_expr = node->p_firstChild;
   field_ident = base_expr ? base_expr->p_sibling : NULL;
   member_name = (field_ident && field_ident->nodeType == NODE_IDENTIFIER) ? field_ident->nodeData.sVal : NULL;
@@ -555,12 +555,14 @@ static const type_t *infer_member_access_type(TreeNode_t *node,
     return &g_type_invalid;
   }
 
+  //Infer the type of the base expression
   base_type = infer_expr_type(base_expr, state);
   aggregate_type = base_type;
   semantic_code = via_pointer ? "SEM062" : "SEM061";
   semantic_message = via_pointer ? "operator '->' requires pointer to struct/union"
                                  : "operator '.' requires struct/union object";
 
+  //If '->' is used, ensure LHS is a valid pointer and extract its base type
   if (via_pointer) {
     if (!base_type || base_type->kind != TYPE_POINTER || !base_type->as.pointer.base) {
       pass2_emit(state, semantic_code, node->lineNumber, semantic_message);
@@ -569,12 +571,14 @@ static const type_t *infer_member_access_type(TreeNode_t *node,
     aggregate_type = base_type->as.pointer.base;
   }
 
+  //Ensure the target is actually a struct or a union
   if (!aggregate_type ||
       (aggregate_type->kind != TYPE_STRUCT_TAG && aggregate_type->kind != TYPE_UNION_TAG)) {
     pass2_emit(state, semantic_code, node->lineNumber, semantic_message);
     return &g_type_invalid;
   }
 
+  //Locate the struct/union definition (from type, symbol table, or AST)
   aggregate_decl = (const TreeNode_t *)aggregate_type->as.aggregate.decl_node;
   if (!aggregate_decl && aggregate_type->as.aggregate.tag) {
     tag_symbol = lookup_visible_tag_symbol(state,
@@ -589,11 +593,14 @@ static const type_t *infer_member_access_type(TreeNode_t *node,
                                           aggregate_type->kind,
                                           aggregate_type->as.aggregate.tag);
   }
+
+  //SEM060: Fail if the struct is incomplete (declared but missing its body)
   if (!aggregate_decl) {
     pass2_emit(state, "SEM060", node->lineNumber, "aggregate member not found");
     return &g_type_invalid;
   }
 
+  //SEM060: Fail if the requested member doesn't exist inside the struct
   member_type = resolve_member_decl_type(aggregate_decl, member_name, state);
   if (!member_type) {
     pass2_emit(state, "SEM060", node->lineNumber, "aggregate member not found");
@@ -602,7 +609,6 @@ static const type_t *infer_member_access_type(TreeNode_t *node,
 
   return member_type;
 }
-
 /**
  * @brief lookup identifier type through the currently visible scope chain.
  * @param name identifier name.
@@ -1069,7 +1075,7 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
           }
           else if (operand_type->qualifiers & TYPE_QUAL_CONST) { //Verify if the operand is the const qualifier
             pass2_emit(state, "SEM009", node->lineNumber, "Increment/decrement of a const object");
-          }«
+          }
           return operand_type;
          }
          return &g_type_invalid;
