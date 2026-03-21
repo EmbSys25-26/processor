@@ -18,6 +18,7 @@ run_case() {
   local expected_rc="$2"
   local expected_code="$3"
   local expected_location="${4:-}"
+  local expected_summary="${5:-}"
   local stdout_file="$OUT_DIR/${file%.c}.stdout"
   local stderr_file="$OUT_DIR/${file%.c}.stderr"
   local program_path="$PROGRAM_DIR/$file"
@@ -63,19 +64,38 @@ run_case() {
     fi
   fi
 
+  if [[ -n "$expected_summary" ]]; then
+    if ! grep -Eq "$expected_summary" "$stdout_file" "$stderr_file"; then
+      echo "[FAIL] $file missing expected summary pattern $expected_summary" | tee -a "$LOG"
+      return 1
+    fi
+  fi
+
   passed=$((passed + 1))
   echo "[PASS] $file" | tee -a "$LOG"
 }
 
 run_case "pass1_shadow_ok.c" 0 ""
+run_case "pass1_tag_namespace_ok.c" 0 ""
 run_case "pass2_ok_minimal.c" 0 ""
 run_case "pass2_member_access_ok.c" 0 ""
 run_case "pass2_void_param_ok.c" 0 ""
 run_case "pass2_tag_shadow_ok.c" 0 ""
 run_case "pass1_redecl_fail.c" 2 "SEM002"
+run_case "pass1_enum_member_redecl_fail.c" 2 "SEM063" "pass1_enum_member_redecl_fail\\.c:3:0"
+run_case "pass1_struct_tag_redef_fail.c" 2 "SEM064" "pass1_struct_tag_redef_fail\\.c:4:0"
+run_case "pass1_union_tag_redef_fail.c" 2 "SEM064" "pass1_union_tag_redef_fail\\.c:4:0"
 run_case "pass2_assign_type_fail.c" 2 "SEM011"
 run_case "pass2_call_arity_fail.c" 2 "SEM041"
 run_case "pass2_return_type_fail.c" 2 "SEM043"
+run_case "pass2_sem009_const_inc_fail.c" 2 "SEM009" "pass2_sem009_const_inc_fail\\.c:4:0"
+run_case "pass2_sem020_arith_operands_fail.c" 2 "SEM020" "pass2_sem020_arith_operands_fail\\.c:4:0"
+run_case "pass2_sem021_mod_integral_fail.c" 2 "SEM021" "pass2_sem021_mod_integral_fail\\.c:4:0"
+run_case "pass2_sem023_bitwise_integral_fail.c" 2 "SEM023" "pass2_sem023_bitwise_integral_fail\\.c:4:0"
+run_case "pass2_sem024_logical_scalar_fail.c" 2 "SEM024" "pass2_sem024_logical_scalar_fail\\.c:4:0"
+run_case "pass2_sem027_assign_modifiable_lvalue_fail.c" 2 "SEM027" "pass2_sem027_assign_modifiable_lvalue_fail\\.c:4:0"
+run_case "pass2_sem028_inc_modifiable_lvalue_fail.c" 2 "SEM028" "pass2_sem028_inc_modifiable_lvalue_fail\\.c:3:0"
+run_case "pass2_sem031_array_index_integral_fail.c" 2 "SEM031" "pass2_sem031_array_index_integral_fail\\.c:5:0"
 run_case "pass2_break_outside_fail.c" 2 "SEM050"
 run_case "pass2_continue_outside_fail.c" 2 "SEM051"
 run_case "pass2_unknown_identifier_line_fail.c" 2 "SEM001" "pass2_unknown_identifier_line_fail\\.c:4:0"
@@ -90,6 +110,9 @@ run_case "int_const_case_fail.c" 1 "" # "SEM054" is never emitted because valid 
 run_case "switch_integral_ok.c" 0 ""
 run_case "switch_non_integral_fail.c" 2 "SEM053"
 
+run_case "semw_001_check.c" 0 "SEMW001" "semw_001_check\\.c:11:0" "warnings=3"
+run_case "semw_002_check.c" 0 "SEMW002" "semw_002_check\\.c:9:0" "warnings=3"
+run_case "semw_003_check.c" 0 "SEMW003" "semw_003_check\\.c:6:0" "warnings=1"
 
 echo "[SUMMARY] semantic_pass_examples total=$total passed=$passed failed=$((total - passed))" | tee -a "$LOG"
 echo "PASS semantic_pass_examples" | tee -a "$LOG"

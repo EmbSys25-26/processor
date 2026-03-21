@@ -135,6 +135,25 @@ static void pass2_emit(pass2_state_t *state,
 }
 
 /**
+ * @brief Emit one pass2 diagnostic warning into the shared diagnostics list.
+ * @param state pass2 execution state.
+ * @param code semantic code (SEM###).
+ * @param line source line associated with the diagnostic.
+ * @param message readable error message.
+ */
+static void pass2_warning(pass2_state_t *state,
+                       const char *code,
+                       size_t line,
+                       const char *message)
+{
+  if (!state || !state->ctx) {
+    return;
+  }
+
+  (void)diag_emit(&state->ctx->diagnostics, code, DIAG_WARNING, line, 0u, "%s", message);
+}
+
+/**
  * @brief Check whether a builtin type is integral.
  * @param builtin builtin type enum.
  * @return non-zero if integral.
@@ -148,6 +167,18 @@ static int is_integral_builtin(builtin_type_t builtin)
 }
 
 /**
+ * @brief Check whether a builtin type is floating.
+ * @param builtin builtin type enum.
+ * @return non-zero if floating.
+ */
+static int is_floating_builtin(builtin_type_t builtin)
+{
+  return builtin == BUILTIN_FLOAT ||
+         builtin == BUILTIN_DOUBLE ||
+         builtin == BUILTIN_LONG_DOUBLE;
+}
+
+/**
  * @brief Check whether a builtin type belongs to numeric family.
  * @param builtin builtin type enum.
  * @return non-zero if numeric.
@@ -155,9 +186,34 @@ static int is_integral_builtin(builtin_type_t builtin)
 static int is_numeric_builtin(builtin_type_t builtin)
 {
   return is_integral_builtin(builtin) ||
-         builtin == BUILTIN_FLOAT ||
-         builtin == BUILTIN_DOUBLE ||
-         builtin == BUILTIN_LONG_DOUBLE;
+         is_floating_builtin(builtin); 
+}
+
+/**
+ * @brief Return a widening rank for builtin numeric types.
+ * @param builtin builtin type enum.
+ * @return monotonically increasing rank, or zero when non-numeric.
+ */
+static int builtin_rank(builtin_type_t builtin)
+{
+  switch (builtin) {
+    case BUILTIN_CHAR:
+      return 1;
+    case BUILTIN_SHORT:
+      return 2;
+    case BUILTIN_INT:
+      return 3;
+    case BUILTIN_LONG:
+      return 4;
+    case BUILTIN_FLOAT:
+      return 5;
+    case BUILTIN_DOUBLE:
+      return 6;
+    case BUILTIN_LONG_DOUBLE:
+      return 7;
+    default:
+      return 0;
+  }
 }
 
 /**
@@ -171,6 +227,63 @@ static int type_is_numeric(const type_t *type)
     return 0;
   }
   return is_numeric_builtin(type->as.builtin);
+}
+/**
+ * @brief Check whether a semantic type is scalar.
+ * @param type semantic type pointer.
+ * @return non-zero if scalar.
+ */
+static int type_is_scalar(const type_t *type)
+{
+  if (!type) {
+    return 0;
+  }
+  //Is scalar if it's numeric or pointer
+  return type_is_numeric(type) || type->kind == TYPE_POINTER;
+}
+
+/**
+ * @brief Check whether one semantic type is a builtin integral type.
+ * @param type semantic type pointer.
+ * @return non-zero if builtin integral.
+ */
+static int type_is_builtin_integral(const type_t *type)
+{
+  return type &&
+         type->kind == TYPE_BUILTIN &&
+         is_integral_builtin(type->as.builtin);
+}
+
+/**
+ * @brief Check whether one semantic type is an unsigned builtin integral type.
+ * @param type semantic type pointer.
+ * @return non-zero if unsigned integral.
+ */
+static int type_is_unsigned_integral(const type_t *type)
+{
+  return type_is_builtin_integral(type) &&
+         (type->qualifiers & TYPE_QUAL_UNSIGNED) != 0u;
+}
+
+/**
+ * @brief Check whether one semantic type behaves as a signed builtin integral type.
+ * @param type semantic type pointer.
+ * @return non-zero if integral and not explicitly unsigned.
+ */
+static int type_is_signed_integral(const type_t *type)
+{
+  return type_is_builtin_integral(type) &&
+         (type->qualifiers & TYPE_QUAL_UNSIGNED) == 0u;
+}
+
+/**
+ * @brief Check whether one expression root is an explicit cast.
+ * @param expr expression node.
+ * @return non-zero if expression is an explicit cast root.
+ */
+static int expr_is_explicit_cast(const TreeNode_t *expr)
+{
+  return expr && expr->nodeType == NODE_TYPE_CAST;
 }
 
 /**
@@ -203,28 +316,6 @@ static int is_expression_node_type(NodeType_t node_type)
       return 0;
   }
 }
-/**
- * David 2026-06-01
- * @brief Check whether a semantic type is scalar (arithmetic or pointer).
- * @param lhs left-hand side type.
- * @param rhs right-hand side type.
- * @return non-zero if the type is scalar.
- */
-static int type_is_scalar(const type_t *type)
-{
-  if (!type) {
-    return 0;
-  }
-
-  switch (type->kind) {
-    case TYPE_BUILTIN:
-    case TYPE_POINTER:
-    case TYPE_ENUM_TAG:
-      return 1;
-    default:
-      return 0;
-  }
-}
 
 /**
  * @brief Assignment compatibility predicate used by pass2 checks.
@@ -237,19 +328,144 @@ static int assignment_compatible(const type_t *lhs, const type_t *rhs)
   if (!lhs || !rhs) {
     return 0;
   }
-
+  
   if (type_equal(lhs, rhs)) {
     return 1;
   }
 
   if (lhs->kind == TYPE_BUILTIN && rhs->kind == TYPE_BUILTIN) {
-    if (is_integral_builtin(lhs->as.builtin) && is_integral_builtin(rhs->as.builtin)) {
+    if (is_numeric_builtin(lhs->as.builtin) && is_numeric_builtin(rhs->as.builtin)) {
       return 1;
     }
     return 0;
   }
 
   return 0;
+}
+
+/**
+ * @brief Check whether one implicit assignment narrows the numeric value family.
+ * @param lhs left-hand side type.
+ * @param rhs right-hand side type.
+ * @param rhs_expr right-hand side AST node.
+ * @return non-zero if the assignment should emit SEMW001.
+ */
+static int warns_on_narrowing_assignment(const type_t *lhs,
+                                         const type_t *rhs,
+                                         const TreeNode_t *rhs_expr)
+{
+  if (!lhs || !rhs || !rhs_expr || expr_is_explicit_cast(rhs_expr)) {
+    return 0;
+  }
+
+  if (lhs->kind != TYPE_BUILTIN || rhs->kind != TYPE_BUILTIN) {
+    return 0;
+  }
+
+  if (is_integral_builtin(lhs->as.builtin) && is_floating_builtin(rhs->as.builtin)) {
+    return 1;
+  }
+
+  if (is_floating_builtin(lhs->as.builtin) &&
+      is_floating_builtin(rhs->as.builtin) &&
+      builtin_rank(lhs->as.builtin) < builtin_rank(rhs->as.builtin)) {
+    return 1;
+  }
+
+  if (is_integral_builtin(lhs->as.builtin) &&
+      is_integral_builtin(rhs->as.builtin) &&
+      builtin_rank(lhs->as.builtin) < builtin_rank(rhs->as.builtin)) {
+    return 1;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Check whether one implicit assignment converts signed integral data to unsigned.
+ * @param lhs left-hand side type.
+ * @param rhs right-hand side type.
+ * @param rhs_expr right-hand side AST node.
+ * @return non-zero if the assignment should emit SEMW002.
+ */
+static int warns_on_signed_to_unsigned_assignment(const type_t *lhs,
+                                                  const type_t *rhs,
+                                                  const TreeNode_t *rhs_expr)
+{
+  if (!lhs || !rhs || !rhs_expr || expr_is_explicit_cast(rhs_expr)) {
+    return 0;
+  }
+
+  if (!type_is_unsigned_integral(lhs) || !type_is_signed_integral(rhs)) {
+    return 0;
+  }
+
+  if (rhs_expr->nodeType == NODE_OPERATOR && rhs_expr->nodeData.dVal != OP_UNARY_MINUS) {
+    return 0;
+  }
+
+  return 1;
+}
+
+/**
+ * @brief Check whether a binary operator mixes signed and unsigned integral operands.
+ * @param lhs left operand type.
+ * @param rhs right operand type.
+ * @return non-zero if the operand pair should emit SEMW002.
+ */
+static int warns_on_mixed_signed_unsigned_operands(const type_t *lhs, const type_t *rhs)
+{
+  if (!type_is_builtin_integral(lhs) || !type_is_builtin_integral(rhs)) {
+    return 0;
+  }
+
+  return type_is_unsigned_integral(lhs) != type_is_unsigned_integral(rhs);
+}
+
+/**
+ * @brief Check whether a cast target removes const qualifiers anywhere in the pointee chain.
+ * @param target cast target type.
+ * @param source source expression type.
+ * @return non-zero if const is dropped.
+ */
+static int cast_drops_const(const type_t *target, const type_t *source)
+{
+  if (!target || !source) {
+    return 0;
+  }
+
+  if ((source->qualifiers & TYPE_QUAL_CONST) != 0u &&
+      (target->qualifiers & TYPE_QUAL_CONST) == 0u) {
+    return 1;
+  }
+
+  if (target->kind == TYPE_POINTER &&
+      source->kind == TYPE_POINTER &&
+      target->as.pointer.base &&
+      source->as.pointer.base) {
+    return cast_drops_const(target->as.pointer.base, source->as.pointer.base);
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Check whether one explicit pointer cast removes const from the pointee chain.
+ * @param target cast target type.
+ * @param source source expression type.
+ * @return non-zero if SEMW003 should be emitted.
+ */
+static int warns_on_const_dropping_cast(const type_t *target, const type_t *source)
+{
+  if (!target || !source) {
+    return 0;
+  }
+
+  if (target->kind != TYPE_POINTER || source->kind != TYPE_POINTER) {
+    return 0;
+  }
+
+  return cast_drops_const(target->as.pointer.base, source->as.pointer.base);
 }
 
 static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state);
@@ -694,13 +910,35 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
         rhs_type->kind != TYPE_INVALID &&
         !assignment_compatible(lhs_type, rhs_type)) {
       pass2_emit(state, "SEM011", op_node->lineNumber, "assignment type mismatch");
+    } else if (lhs_type->kind != TYPE_INVALID &&
+               rhs_type->kind != TYPE_INVALID) {
+      if (warns_on_narrowing_assignment(lhs_type, rhs_type, rhs)) {
+        pass2_warning(state, "SEMW001", op_node->lineNumber, "implicit narrowing conversion");
+      }
+      if (warns_on_signed_to_unsigned_assignment(lhs_type, rhs_type, rhs)) {
+        pass2_warning(state, "SEMW002", op_node->lineNumber, "implicit signed to unsigned conversion");
+      }
     }
- 
-  if (lhs_type->kind != TYPE_INVALID && (lhs_type->qualifiers & TYPE_QUAL_CONST)) {
-    pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
+
+    if (lhs_type->kind != TYPE_INVALID && (lhs_type->qualifiers & TYPE_QUAL_CONST)) {
+      int is_initialization = 0;
+
+      /* If the LHS is a variable identifier, look it up in the Symbol Table */
+    if (lhs && lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
+        scope_t *scope = scope_current(&state->ctx->scope_stack);
+        symbol_t *sym = symbol_lookup_visible(scope, lhs->nodeData.sVal);
+
+        if (sym && sym->decl_line == op_node->lineNumber) {
+          is_initialization = 1;
+        }
+      }
+      if (!is_initialization) {
+        pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
+      }
     }
-    return lhs_type;
-  }
+
+  return lhs_type;
+  } 
 
   if (op_kind == OP_PLUS ||
       op_kind == OP_MINUS ||
@@ -711,6 +949,9 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       return &g_type_invalid;
     }
     if (lhs_type->kind == TYPE_BUILTIN && rhs_type->kind == TYPE_BUILTIN) {
+      if (warns_on_mixed_signed_unsigned_operands(lhs_type, rhs_type)) {
+        pass2_warning(state, "SEMW002", op_node->lineNumber, "mixed signed and unsigned arithmetic");
+      }
       if (lhs_type->as.builtin == BUILTIN_DOUBLE || rhs_type->as.builtin == BUILTIN_DOUBLE) {
         return &g_type_double;
       }
@@ -721,7 +962,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     return &g_type_int;
   }
 
-  else if (op_kind == OP_MODULE) {
+   else if (op_kind == OP_MODULE) {
     if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
       return &g_type_invalid;
     }
@@ -747,10 +988,11 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     if (lhs_type->kind != TYPE_INVALID &&
         rhs_type->kind != TYPE_INVALID &&
         !assignment_compatible(lhs_type, rhs_type)) {
-      pass2_emit(state, "SEM011", op_node->lineNumber, "assignment type mismatch");
+      pass2_emit(state, "SEM011", op_node->lineNumber, "assignment type mismatch"); // perhaps add a warning/error for float to integer implicit conversion? 
     }
     return lhs_type;
   }
+
 
   if (op_kind == OP_LEFT_SHIFT ||
       op_kind == OP_RIGHT_SHIFT ||
@@ -764,33 +1006,62 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     return lhs_type;
   }
 
-  if (op_kind == OP_EQUAL ||
-      op_kind == OP_NOT_EQUAL ||
-      op_kind == OP_LESS_THAN ||
-      op_kind == OP_GREATER_THAN ||
-      op_kind == OP_LESS_THAN_OR_EQUAL ||
-      op_kind == OP_GREATER_THAN_OR_EQUAL ||
-      op_kind == OP_LOGICAL_AND ||
-      op_kind == OP_LOGICAL_OR) {
-    if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
-      return &g_type_invalid;
-    }
-    return &g_type_int;
-  }
-
-  if (op_kind == OP_LOGICAL_NOT) {
-    if (lhs_type->kind == TYPE_INVALID) {
-      return &g_type_invalid;
-    }
-    return &g_type_int;
-  }
-
   if (op_kind == OP_BITWISE_NOT) {
     if (!type_is_integral(lhs_type)) {
       pass2_emit(state, "SEM023", op_node->lineNumber, "Bitwise operators require integral operands");
       return &g_type_invalid;
     }
+    if ((op_kind == OP_BITWISE_AND ||
+         op_kind == OP_BITWISE_OR ||
+         op_kind == OP_BITWISE_XOR) &&
+        warns_on_mixed_signed_unsigned_operands(lhs_type, rhs_type)) {
+      pass2_warning(state, "SEMW002", op_node->lineNumber, "mixed signed and unsigned integral operation");
+    }
     return lhs_type;
+  }
+
+
+  if (op_kind == OP_EQUAL ||
+      op_kind == OP_NOT_EQUAL ||
+      op_kind == OP_LESS_THAN ||
+      op_kind == OP_GREATER_THAN ||
+      op_kind == OP_LESS_THAN_OR_EQUAL ||
+      op_kind == OP_GREATER_THAN_OR_EQUAL ) {
+    if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
+      return &g_type_invalid;
+    }
+    if (op_kind != OP_LOGICAL_AND &&
+        op_kind != OP_LOGICAL_OR &&
+        warns_on_mixed_signed_unsigned_operands(lhs_type, rhs_type)) {
+      pass2_warning(state, "SEMW002", op_node->lineNumber, "mixed signed and unsigned comparison");
+    }
+    return &g_type_int;
+  }
+    // SEM024 lOGICAL OPERATORS (&&, ||, !):
+  if (op_kind == OP_LOGICAL_AND || op_kind == OP_LOGICAL_OR) {
+    if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
+      return &g_type_invalid;
+    }
+    
+    if (!type_is_scalar(lhs_type) || !type_is_scalar(rhs_type)) {
+      pass2_emit(state, "SEM024", op_node->lineNumber, "Logical operators require scalar operands");
+      return &g_type_invalid;
+    }
+    
+    return &g_type_int;
+  }
+  // SEM024: Logical NOT operator (!)
+  if (op_kind == OP_LOGICAL_NOT) {
+    if (lhs_type->kind == TYPE_INVALID) {
+      return &g_type_invalid;
+    }
+    
+    if (!type_is_scalar(lhs_type)) {
+      pass2_emit(state, "SEM024", op_node->lineNumber, "Logical operator requires scalar operand");
+      return &g_type_invalid;
+    }
+    
+    return &g_type_int; 
   }
 
   if (op_kind == OP_UNARY_MINUS) {
@@ -824,10 +1095,11 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
   }
 
   switch (node->nodeType) {
-    case NODE_INTEGER:
-      return &g_type_int;
+    
     case NODE_CHAR:
       return &g_type_char;
+    case NODE_INTEGER:
+      return &g_type_int;
     case NODE_FLOAT:
       return &g_type_double;
     case NODE_STRING:
@@ -848,7 +1120,13 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
         const type_t *base = infer_expr_type(node->p_firstChild, state);
         const TreeNode_t *index_expr = node->p_firstChild->p_sibling;
         if (index_expr) {
-          (void)infer_expr_type((TreeNode_t *)index_expr, state);
+          /* 1. Save the returned type */
+          const type_t *index_type = infer_expr_type((TreeNode_t *)index_expr, state);
+          
+          /* 2. SEM031: Throw an error if the index is not an integer */
+          if (index_type->kind != TYPE_INVALID && !type_is_integral(index_type)) {
+            pass2_emit(state, "SEM031", node->lineNumber, "Array index must be integral");
+          }
         }
         if (base->kind == TYPE_ARRAY && base->as.array.elem) {
           return base->as.array.elem;
@@ -896,12 +1174,17 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
       if (node->p_firstChild) {
         unsigned qualifiers = semantic_ast_collect_qualifiers_from_chain(node->p_firstChild);
         type_t *cast_type = semantic_ast_build_type_from_type_node(node->p_firstChild, qualifiers);
+        const type_t *source_type = &g_type_invalid;
         if (node->p_firstChild->p_sibling) {
-          (void)infer_expr_type(node->p_firstChild->p_sibling, state);
+          source_type = infer_expr_type(node->p_firstChild->p_sibling, state);
         }
         if (!cast_type) {
           pass2_emit(state, "SEM900", node->lineNumber, "failed to build cast target type");
           return &g_type_invalid;
+        }
+        if (source_type->kind != TYPE_INVALID &&
+            warns_on_const_dropping_cast(cast_type, source_type)) {
+          pass2_warning(state, "SEMW003", node->lineNumber, "explicit cast removes const qualifier");
         }
         return remember_temporary_type(state, cast_type);
       }
@@ -911,7 +1194,23 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
     case NODE_POST_DEC:
     case NODE_PRE_DEC:
       if (node->p_firstChild) {
-        return infer_expr_type(node->p_firstChild, state);
+        const type_t *operand_type = infer_expr_type(node->p_firstChild, state);
+        if (operand_type->kind != TYPE_INVALID) {
+          /* Verify that the operand is a modifiable object. */
+          if (operand_type->qualifiers & TYPE_QUAL_CONST) {
+            pass2_emit(state, "SEM009", node->lineNumber, "Increment/decrement of a const object");
+          } else if (!(
+              node->p_firstChild->nodeType == NODE_IDENTIFIER ||
+              node->p_firstChild->nodeType == NODE_ARRAY_ACCESS ||
+              node->p_firstChild->nodeType == NODE_POINTER_CONTENT ||
+              node->p_firstChild->nodeType == NODE_MEMBER_ACCESS ||
+              node->p_firstChild->nodeType == NODE_PTR_MEMBER_ACCESS
+          )) {
+            pass2_emit(state, "SEM028", node->lineNumber, "Increment/decrement requires modifiable lvalue");
+          }
+          return operand_type;
+        }
+        return &g_type_invalid;
       }
       return &g_type_invalid;
     case NODE_TERNARY:
@@ -1373,7 +1672,7 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
  * PASSE 2 - Tipos, expressoes, chamadas e controlo de fluxo
  * [x] SEM001 Identificador desconhecido deve resolver para simbolo visivel (implementado no fluxo de lookup do pass2)
  * [ ] SEM008 Atribuicao a objeto qualificado como const
- * [ ] SEM009 inc/dec em objeto qualificado como const
+ * [x] SEM009 inc/dec em objeto qualificado como const
  * [ ] SEM010 Remocao implicita de qualificador const em atribuicao de ponteiros
  * [x] SEM011 Compatibilidade de tipos em atribuicoes
  * [ ] SEM012 Conversao implicita ponteiro <-> inteiro nao permitida
@@ -1381,18 +1680,18 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
  * [ ] SEM014 Atribuicao entre struct/union exige tipos identicos
  * [ ] SEM015 Cast envolvendo struct/union incompleta
  * [ ] SEM016 Cast ponteiro <-> float proibido (modo estrito)
- * [ ] SEM020 Operadores aritmeticos requerem operandos aritmeticos
- * [ ] SEM021 '%' apenas para operandos integrais
+ * [x] SEM020 Operadores aritmeticos requerem operandos aritmeticos
+ * [x] SEM021 '%' apenas para operandos integrais
  * [ ] SEM022 Divisao/modulo por zero constante
- * [ ] SEM023 Operadores bitwise requerem operandos integrais
- * [ ] SEM024 Operadores logicos requerem operandos escalares
+ * [x] SEM023 Operadores bitwise requerem operandos integrais
+ * [x] SEM024 Operadores logicos requerem operandos escalares
  * [ ] SEM025 Compatibilidade de operandos em comparacoes
  * [ ] SEM026 Compatibilidade dos ramos do operador ternario
- * [ ] SEM027 LHS da atribuicao deve ser lvalue modificavel
- * [ ] SEM028 inc/dec requer lvalue modificavel
+ * [x] SEM027 LHS da atribuicao deve ser lvalue modificavel
+ * [x] SEM028 inc/dec requer lvalue modificavel
  * [ ] SEM029 '&' requer operando lvalue
  * [ ] SEM030 '*' requer operando do tipo ponteiro
- * [ ] SEM031 Indice de array deve ser integral
+ * [x] SEM031 Indice de array deve ser integral
  * [ ] SEM032 Base de [] deve ser array ou ponteiro
  * [x] SEM040 Alvo de chamada deve ser uma funcao
  * [x] SEM041 Numero de argumentos deve coincidir com a assinatura
@@ -1414,9 +1713,9 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
  * [ ] SEM070 Limitacao backend: aritmetica com float nao suportada
  * [ ] SEM071 Limitacao backend: retorno de struct nao suportado
  * [ ] SEM072 Limitacao backend: chamadas variadicas nao suportadas
- * [ ] SEMW001 Aviso: cast truncado (ex.: float -> int)
- * [ ] SEMW002 Aviso: conversao suspeita signed/unsigned
- * [ ] SEMW003 Aviso: cast explicito que remove const
+ * [x] SEMW001 Aviso: cast truncado / narrowing implícito
+ * [x] SEMW002 Aviso: conversao suspeita signed/unsigned
+ * [x] SEMW003 Aviso: cast explicito que remove const
  *
  * Checks prioritarios ainda em falta:
  * atualizar aqui dps com os checks 
