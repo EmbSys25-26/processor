@@ -33,7 +33,7 @@ main:
     ; do an instruction that updates CC
     LI r1, 0                    ; => IMM #0x000    [8|000] = 0x8000  (prefix: 0>>4 = 0)					| MEM_ADDR = 0x0112
                                 ; => ADDI r1,zero,#0  [1|1|0|0] = 0x1100  (r1 = 0, sets CC: Z=1)			| MEM_ADDR = 0x0114
-    BEQ loop1                   ; [9|2|F9] = 0x92F9  (disp=-7: loop1_byte=0x108)					| MEM_ADDR = 0x0116
+    BEQ loop1                   ; [9|2|F8] = 0x92F8  (disp=-8: loop1_byte=0x108, next_PC=0x118)				| MEM_ADDR = 0x0116
 
 main_loop:
     BR   #-1                    ; [9|0|FF] = 0x90FF  (always branch, disp=-1: infinite loop)				| MEM_ADDR = 0x0118

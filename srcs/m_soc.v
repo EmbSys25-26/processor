@@ -96,9 +96,6 @@ module soc(
             _insn_q <= _default_nop;
         end else if (_insn_ce) begin
             _insn_q <= _imem_dout;
-            if (_br_taken) begin
-                _insn_q <= _default_nop;
-            end
         end
     end
 

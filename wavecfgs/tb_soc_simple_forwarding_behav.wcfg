@@ -11,15 +11,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="175.470 ns"></ZoomStartTime>
-      <ZoomEndTime time="363.271 ns"></ZoomEndTime>
-      <Cursor1Time time="145.000 ns"></Cursor1Time>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="128.001 ns"></ZoomEndTime>
+      <Cursor1Time time="60.400 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="190"></NameColumnWidth>
+      <NameColumnWidth column_width="186"></NameColumnWidth>
       <ValueColumnWidth column_width="66"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="52" />
+   <WVObjectSize size="56" />
    <wvobject type="logic" fp_name="/tb_soc_simple/_clk">
       <obj_property name="ElementShortName">_clk</obj_property>
       <obj_property name="ObjectShortName">_clk</obj_property>
@@ -43,6 +43,26 @@
    <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_if_stage/_pc_d1">
       <obj_property name="ElementShortName">_pc_d1[15:0]</obj_property>
       <obj_property name="ObjectShortName">_pc_d1[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/_imem_invalid">
+      <obj_property name="ElementShortName">_imem_invalid</obj_property>
+      <obj_property name="ObjectShortName">_imem_invalid</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/_insn_q">
+      <obj_property name="ElementShortName">_insn_q[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_insn_q[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/_imem_dout">
+      <obj_property name="ElementShortName">_imem_dout[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_imem_dout[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/_imem_dout_h">
+      <obj_property name="ElementShortName">_imem_dout_h[7:0]</obj_property>
+      <obj_property name="ObjectShortName">_imem_dout_h[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/_imem_dout_l">
+      <obj_property name="ElementShortName">_imem_dout_l[7:0]</obj_property>
+      <obj_property name="ObjectShortName">_imem_dout_l[7:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_if_stage/o_pc">
       <obj_property name="ElementShortName">o_pc[15:0]</obj_property>
@@ -123,10 +143,6 @@
    <wvobject type="array" fp_name="/tb_soc_simple/dut/u_rom/_dout_l">
       <obj_property name="ElementShortName">_dout_l[7:0]</obj_property>
       <obj_property name="ObjectShortName">_dout_l[7:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_soc_simple/dut/_imem_dout">
-      <obj_property name="ElementShortName">_imem_dout[15:0]</obj_property>
-      <obj_property name="ObjectShortName">_imem_dout[15:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_id_stage/_imm16">
       <obj_property name="ElementShortName">_imm16[15:0]</obj_property>
