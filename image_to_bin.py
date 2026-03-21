@@ -4,13 +4,13 @@ from PIL import Image
 IMG_W = 640
 IMG_H = 480
  
-img = Image.open("red.png")          # Load any image
+img = Image.open("gato.png")          # Load any image
 img = img.resize((IMG_W, IMG_H))          # Resize to 640x480
 img = img.convert("RGB")                  # Ensure RGB mode
  
 pixels = list(img.getdata())              # Flat list of (R, G, B) tuples
 
-with open("image.bin", "wb") as f:
+with open("gato.bin", "wb") as f:
     for r, g, b in pixels:
         r4 = (r >> 4) & 0xF
         g4 = (g >> 4) & 0xF

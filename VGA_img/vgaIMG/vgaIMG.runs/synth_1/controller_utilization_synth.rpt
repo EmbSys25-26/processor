@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
-| Date         : Fri Mar 20 11:26:39 2026
+| Date         : Sat Mar 21 18:10:48 2026
 | Host         : panda running 64-bit Ubuntu 22.04.5 LTS
 | Command      : report_utilization -file controller_utilization_synth.rpt -pb controller_utilization_synth.pb
 | Design       : controller
@@ -31,8 +31,8 @@ Table of Contents
 +----------------------------+------+-------+------------+-----------+-------+
 |          Site Type         | Used | Fixed | Prohibited | Available | Util% |
 +----------------------------+------+-------+------------+-----------+-------+
-| Slice LUTs*                | 2072 |     0 |          0 |     17600 | 11.77 |
-|   LUT as Logic             | 1851 |     0 |          0 |     17600 | 10.52 |
+| Slice LUTs*                | 2065 |     0 |          0 |     17600 | 11.73 |
+|   LUT as Logic             | 1844 |     0 |          0 |     17600 | 10.48 |
 |   LUT as Memory            |  221 |     0 |          0 |      6000 |  3.68 |
 |     LUT as Distributed RAM |  100 |     0 |            |           |       |
 |     LUT as Shift Register  |  121 |     0 |            |           |       |
@@ -154,12 +154,12 @@ Warning! For any ECO changes, please run place_design if there are unplaced inst
 |  Ref Name  | Used |  Functional Category |
 +------------+------+----------------------+
 | FDRE       | 2241 |         Flop & Latch |
-| LUT6       |  574 |                  LUT |
-| LUT3       |  395 |                  LUT |
+| LUT6       |  569 |                  LUT |
+| LUT3       |  393 |                  LUT |
 | LUT4       |  330 |                  LUT |
 | LUT1       |  312 |                  LUT |
-| LUT5       |  309 |                  LUT |
-| LUT2       |  303 |                  LUT |
+| LUT5       |  311 |                  LUT |
+| LUT2       |  302 |                  LUT |
 | RAMD32     |  150 |   Distributed Memory |
 | BIBUF      |  130 |                   IO |
 | SRL16E     |  121 |   Distributed Memory |
@@ -184,7 +184,6 @@ Warning! For any ECO changes, please run place_design if there are unplaced inst
 +-----------+------+
 |  Ref Name | Used |
 +-----------+------+
-| ila_0     |    1 |
 | clk_wiz_0 |    1 |
 +-----------+------+
 
