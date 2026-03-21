@@ -1,6 +1,6 @@
-#line 1 "Lexer/lex.yy.c"
+#line 2 "Lexer/lex.yy.c"
 
-#line 3 "Lexer/lex.yy.c"
+#line 4 "Lexer/lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -612,8 +612,8 @@ char pp_value[512];
 static void read_pp_define(void);
 static void read_pp_undef(void);
 
-#line 615 "Lexer/lex.yy.c"
 #line 616 "Lexer/lex.yy.c"
+#line 617 "Lexer/lex.yy.c"
 
 #define INITIAL 0
 #define INCOMMENT 1
@@ -832,7 +832,7 @@ YY_DECL
 #line 30 "Lexer/lexer.l"
 
 
-#line 835 "Lexer/lex.yy.c"
+#line 836 "Lexer/lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1388,7 +1388,7 @@ YY_RULE_SETUP
 #line 172 "Lexer/lexer.l"
 ECHO;
 	YY_BREAK
-#line 1391 "Lexer/lex.yy.c"
+#line 1392 "Lexer/lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{

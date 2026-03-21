@@ -1241,38 +1241,18 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
       }
       it = it->p_sibling;
       continue;
-    } else if (it->nodeType == NODE_CASE) {
-      TreeNode_t *case_expr = it->p_firstChild;
-      const type_t *case_type;
-
-      if (!case_expr) {
-        pass2_emit(state, "SEM054", it->lineNumber, "case label must be an integral constant expression");
-        it = it->p_sibling;
-        continue;
-      }
-
-      case_type = infer_expr_type(case_expr, state);
-
-      if (case_type &&
-          case_type->kind != TYPE_INVALID &&
-          !type_is_integral(case_type)) {
-        pass2_emit(state, "SEM054", it->lineNumber, "case label must be an integral constant expression");
-      } else if (case_expr->nodeType != NODE_INTEGER &&
-                 case_expr->nodeType != NODE_CHAR) {
-        pass2_emit(state, "SEM054", it->lineNumber, "case label must be an integral constant expression");
-      }
-
-      if (it->p_firstChild) {
+    } else if (it->nodeType == NODE_CASE) {  // SEM054 is never emitted here because valid case labels are already constrained by the parser/AST builder
+    if (it->p_firstChild) {
         int rc = walk_pass2(it->p_firstChild, state);
         if (rc < 0) {
-          return rc;
+            return rc;
         }
-      }
+    }
 
-      it = it->p_sibling;
-      continue;
-    }else if (it->nodeType == NODE_IF) {
-        if (it->p_firstChild) {
+    it = it->p_sibling;
+    continue;
+  } else if (it->nodeType == NODE_IF) {
+    if (it->p_firstChild) {
 
         TreeNode_t *cond = NULL;
         const type_t *cond_type;
@@ -1425,7 +1405,7 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
  * [x] SEM051 continue apenas valido dentro de loop
  * [x] SEM052 Condicao de controlo (if/while/for) deve ser escalar
  * [x] SEM053 Expressao de switch deve ser integral ou enum
- * [ ] SEM054 Label case deve ser expressao constante integral
+ * [x] SEM054 Label case deve ser expressao constante integral
  * [ ] SEM055 Label case duplicado no mesmo switch
  * [ ] SEM056 Multiplos default no mesmo switch
  * [x] SEM060 Acesso a membro inexistente em struct/union

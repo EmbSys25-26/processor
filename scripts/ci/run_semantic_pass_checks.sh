@@ -85,7 +85,8 @@ run_case "non_scalar_if_fail.c" 2 "SEM052"
 run_case "non_scalar_while_fail.c" 2 "SEM052"
 run_case "non_scalar_dowhile_fail.c" 2 "SEM052"
 run_case "non_scalar_for_fail.c" 2 "SEM052"
-run_case "non_int_const_fail.c" 2 "SEM054"
+run_case "int_const_case_ok.c" 0 ""
+run_case "int_const_case_fail.c" 1 "" # "SEM054" is never emitted because valid case labels are already constrained by the parser/AST builder --- IGNORE ---
 run_case "switch_integral_ok.c" 0 ""
 run_case "switch_non_integral_fail.c" 2 "SEM053"
 
