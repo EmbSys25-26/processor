@@ -813,7 +813,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       op_kind == OP_MULTIPLY ||
       op_kind == OP_DIVIDE ) {
     if (!type_is_numeric(lhs_type) || !type_is_numeric(rhs_type)) {
-      pass2_emit(state, "SEM0020", op_node->lineNumber, "Arithmetic operators require arithmetic operands");
+      pass2_emit(state, "SEM020", op_node->lineNumber, "Arithmetic operators require arithmetic operands");
       return &g_type_invalid;
     }
     if (lhs_type->kind == TYPE_BUILTIN && rhs_type->kind == TYPE_BUILTIN) {
@@ -834,7 +834,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
 
     /* SEM021: Module only allows integral types (int, char, etc.) */
     if (!type_is_integral(lhs_type) || !type_is_integral(rhs_type)) {
-      pass2_emit(state, "SEM0021", op_node->lineNumber, "Operator '%' only for integral operands");
+      pass2_emit(state, "SEM021", op_node->lineNumber, "Operator '%' only for integral operands");
       return &g_type_invalid;
     }
     return &g_type_int;
@@ -866,7 +866,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     
     // Check lhs, and ONLY check rhs if it's a binary operator
     if (!type_is_integral(lhs_type) || (op_kind != OP_BITWISE_NOT && !type_is_integral(rhs_type))) {
-      pass2_emit(state, "SEM0023", op_node->lineNumber, "Bitwise operators require integral operands");
+      pass2_emit(state, "SEM023", op_node->lineNumber, "Bitwise operators require integral operands");
       return &g_type_invalid;
     }
     
@@ -884,7 +884,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
     }
 
     if (!is_comparison_compatible(lhs_type, rhs_type)) {
-      pass2_emit(state, "SEM0025", op_node->lineNumber, "Incompatible types for comparison operator");
+      pass2_emit(state, "SEM025", op_node->lineNumber, "Incompatible types for comparison operator");
       return &g_type_invalid;
     }
     return &g_type_int;
@@ -968,13 +968,13 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
           
           /* 2. SEM031: Error if the index is not an integer */
           if (index_type->kind != TYPE_INVALID && !type_is_integral(index_type)) {
-            pass2_emit(state, "SEM0031", node->lineNumber, "Array index must be integral");
+            pass2_emit(state, "SEM031", node->lineNumber, "Array index must be integral");
           }
           }
 
           /* 3. SEM032: Check if the base is actually an array or a pointer */
         if (base->kind != TYPE_INVALID && base->kind != TYPE_ARRAY && base->kind != TYPE_POINTER) {
-          pass2_emit(state, "SEM0032", node->lineNumber, "Base of [] access must be an array or pointer");
+          pass2_emit(state, "SEM032", node->lineNumber, "Base of [] access must be an array or pointer");
         }
 
         /* 4. Return the underlying type if it's valid */
