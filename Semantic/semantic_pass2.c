@@ -793,8 +793,14 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
         }
 
         // SEM013: Incompatible pointer types
-        else if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER && !type_equal(lhs_type, rhs_type)) {
+        else if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER) {
+          const type_t *l_base = lhs_type->as.pointer.base;
+          const type_t *r_base = rhs_type->as.pointer.base;
+
+          if (l_base->kind != r_base->kind || 
+            (l_base->kind == TYPE_BUILTIN && l_base->as.builtin != r_base->as.builtin)) {
             pass2_emit(state, "SEM013", op_node->lineNumber, "Assignment between incompatible pointer types");
+          }
         }
 
         // SEM014: Struct/Union identical type requirement
@@ -810,7 +816,7 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
         }
     }
     return lhs_type;
-}
+  }
 
   if (op_kind == OP_PLUS ||
       op_kind == OP_MINUS ||
