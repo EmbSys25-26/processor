@@ -1,11 +1,3 @@
-/* ============================================================
- *  test_parser.c  —  One example of each supported feature
- * ============================================================ */
-
-/* ---------- Pre-processor ---------- */
-#define MAX 10
-#undef MAX
-#define MAX 15
 
 /* ---------- Enum ---------- */
 enum Cor { VERMELHO, VERDE = 5, AZUL };

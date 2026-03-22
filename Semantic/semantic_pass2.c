@@ -396,8 +396,11 @@ static int assignment_compatible(const type_t *lhs, const type_t *rhs)
         return 1;
     }
     return 0;
-}
+  }
 
+  if (lhs->kind == TYPE_ENUM_TAG && (rhs->kind == TYPE_BUILTIN) && is_integral_builtin(rhs->as.builtin)){
+    return 1; 
+  }
   return 0;
 }
 
