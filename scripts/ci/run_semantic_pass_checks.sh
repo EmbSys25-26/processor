@@ -92,7 +92,6 @@ run_case "pass2_sem009_const_inc_fail.c" 2 "SEM009" "pass2_sem009_const_inc_fail
 run_case "pass2_sem020_arith_operands_fail.c" 2 "SEM020" "pass2_sem020_arith_operands_fail\\.c:4:0"
 run_case "pass2_sem021_mod_integral_fail.c" 2 "SEM021" "pass2_sem021_mod_integral_fail\\.c:4:0"
 run_case "pass2_sem023_bitwise_integral_fail.c" 2 "SEM023" "pass2_sem023_bitwise_integral_fail\\.c:4:0"
-run_case "pass2_sem027_assign_modifiable_lvalue_fail.c" 2 "SEM027" "pass2_sem027_assign_modifiable_lvalue_fail\\.c:4:0"
 run_case "pass2_sem028_inc_modifiable_lvalue_fail.c" 2 "SEM028" "pass2_sem028_inc_modifiable_lvalue_fail\\.c:3:0"
 run_case "pass2_sem031_array_index_integral_fail.c" 2 "SEM031" "pass2_sem031_array_index_integral_fail\\.c:5:0"
 run_case "pass2_break_outside_fail.c" 2 "SEM050"

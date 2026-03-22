@@ -976,40 +976,44 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
       return &g_type_invalid;
     }
   }
-
-
- if (op_kind == OP_ASSIGN) {
+if (op_kind == OP_ASSIGN) {
     if (lhs_type->kind != TYPE_INVALID && rhs_type->kind != TYPE_INVALID) {
-
+        
+        //LVALUE CHECK (Is the LHS assignable?)
         if (!(lhs->nodeType == NODE_IDENTIFIER ||
-              lhs->nodeType == NODE_ARRAY_ACCESS ||
-              lhs->nodeType == NODE_POINTER_CONTENT ||
-              lhs->nodeType == NODE_MEMBER_ACCESS ||
-              lhs->nodeType == NODE_PTR_MEMBER_ACCESS)){
-         //Trigger SEM027 (Not a modifiable lvalue)
-          pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
-        } else if (lhs_type->kind != TYPE_INVALID &&
-               rhs_type->kind != TYPE_INVALID) {
-      if (warns_on_narrowing_assignment(lhs_type, rhs_type, rhs)) {
-        pass2_warning(state, "SEMW001", op_node->lineNumber, "implicit narrowing conversion");
-      }
-      if (warns_on_signed_to_unsigned_assignment(lhs_type, rhs_type, rhs)) {
-        pass2_warning(state, "SEMW002", op_node->lineNumber, "implicit signed to unsigned conversion");
-      }
-    }        // Check if LHS is qualified as CONST
-        else if (lhs_type->qualifiers & TYPE_QUAL_CONST) {         
-            // Logic for SEM027: Is this an initialization or an illegal reassignment?
-            if (lhs && lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
+                          lhs->nodeType == NODE_ARRAY_ACCESS ||
+                          lhs->nodeType == NODE_POINTER_CONTENT ||
+                          lhs->nodeType == NODE_MEMBER_ACCESS ||
+                          lhs->nodeType == NODE_PTR_MEMBER_ACCESS)) {
+            //Trigger SEM027: Not a modifiable lvalue
+            pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
+        } 
+        //CONST CHECK (Is the lvalue read-only?)
+        else if (lhs_type->qualifiers & TYPE_QUAL_CONST) {
+            if (lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
                 scope_t *scope = scope_current(&state->ctx->scope_stack);
                 symbol_t *sym = symbol_lookup_visible(scope, lhs->nodeData.sVal);
-                if (!(sym && sym->decl_line == op_node->lineNumber)) {
-                  // Trigger SEM008 (Assignment to const) 
-                  pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
+                
+                // If the symbol exists and the assignment is not on the declaration line, it's an error
+                if (sym && sym->decl_line != op_node->lineNumber) {
+                    // Trigger SEM008: Assignment to a constant object
+                    pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
                 }
+            } else {
+                // For other lvalue types (like pointer dereferences) that are const
+                pass2_emit(state, "SEM008", op_node->lineNumber, "Assignment to an object qualified as const");
             }
         }
 
-        /* --- 1. POINTER & TYPE COMPATIBILITY CHECKS --- */
+        // These are checked independently of the errors above
+        if (warns_on_narrowing_assignment(lhs_type, rhs_type, rhs)) {
+            pass2_warning(state, "SEMW001", op_node->lineNumber, "implicit narrowing conversion");
+        }
+        if (warns_on_signed_to_unsigned_assignment(lhs_type, rhs_type, rhs)) {
+            pass2_warning(state, "SEMW002", op_node->lineNumber, "implicit signed to unsigned conversion");
+        }
+
+        //TYPE COMPATIBILITY CHECKS
 
         // SEM010: Implicit removal of const in pointer assignment
         if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER &&
@@ -1017,32 +1021,26 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
             (rhs_type->as.pointer.base->qualifiers & TYPE_QUAL_CONST)) {
             pass2_emit(state, "SEM010", op_node->lineNumber, "Implicit removal of the const qualifier in pointer assignment");
         }
-
         // SEM012: Pointer <-> Integer conversion
         else if ((lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_BUILTIN && is_integral_builtin(rhs_type->as.builtin)) ||
                  (lhs_type->kind == TYPE_BUILTIN && is_integral_builtin(lhs_type->as.builtin) && rhs_type->kind == TYPE_POINTER)) {
             pass2_emit(state, "SEM012", op_node->lineNumber, "Implicit conversion between pointer and integer not allowed");
         }
-
         // SEM013: Incompatible pointer types
         else if (lhs_type->kind == TYPE_POINTER && rhs_type->kind == TYPE_POINTER) {
-          const type_t *l_base = lhs_type->as.pointer.base;
-          const type_t *r_base = rhs_type->as.pointer.base;
-
-          if (l_base->kind != r_base->kind || 
-            (l_base->kind == TYPE_BUILTIN && l_base->as.builtin != r_base->as.builtin)) {
-            pass2_emit(state, "SEM013", op_node->lineNumber, "Assignment between incompatible pointer types");
-          }
+            const type_t *l_base = lhs_type->as.pointer.base;
+            const type_t *r_base = rhs_type->as.pointer.base;
+            if (l_base->kind != r_base->kind || 
+               (l_base->kind == TYPE_BUILTIN && l_base->as.builtin != r_base->as.builtin)) {
+                pass2_emit(state, "SEM013", op_node->lineNumber, "Assignment between incompatible pointer types");
+            }
         }
-
         // SEM014: Struct/Union identical type requirement
         else if ((lhs_type->kind == TYPE_STRUCT_TAG || lhs_type->kind == TYPE_UNION_TAG) &&
-                 (rhs_type->kind == TYPE_STRUCT_TAG || rhs_type->kind == TYPE_UNION_TAG) &&
                  !type_equal(lhs_type, rhs_type)) {
             pass2_emit(state, "SEM014", op_node->lineNumber, "Assignment between struct/union requires identical types");
         }
-
-        // SEM011: General fallback mismatch
+        // SEM011: General type mismatch fallback
         else if (!assignment_compatible(lhs_type, rhs_type)) {
             pass2_emit(state, "SEM011", op_node->lineNumber, "Assignment type mismatch");
         }
@@ -1128,38 +1126,29 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
   }
 
   /* SEM025: COMPARISON OPERATORS (==, !=, <, >, <=, >=) */
-  if (op_kind == OP_EQUAL ||
-      op_kind == OP_NOT_EQUAL ||
-      op_kind == OP_LESS_THAN ||
-      op_kind == OP_GREATER_THAN ||
-      op_kind == OP_LESS_THAN_OR_EQUAL ||
-      op_kind == OP_GREATER_THAN_OR_EQUAL) {
-      op_kind == OP_GREATER_THAN_OR_EQUAL ) {
+  if (op_kind == OP_EQUAL || op_kind == OP_NOT_EQUAL || 
+    op_kind == OP_LESS_THAN || op_kind == OP_GREATER_THAN || 
+    op_kind == OP_LESS_THAN_OR_EQUAL || op_kind == OP_GREATER_THAN_OR_EQUAL) {
+
+    // Abort if types are already invalid
     if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
-      return &g_type_invalid;
-    }
-    if (op_kind != OP_LOGICAL_AND &&
-        op_kind != OP_LOGICAL_OR &&
-        warns_on_mixed_signed_unsigned_operands(lhs_type, rhs_type)) {
-      pass2_warning(state, "SEMW002", op_node->lineNumber, "mixed signed and unsigned comparison");
-    }
-    return &g_type_int;
-  }
-    // SEM024 lOGICAL OPERATORS (&&, ||, !):
-  if (op_kind == OP_LOGICAL_AND || op_kind == OP_LOGICAL_OR) {
-    if (lhs_type->kind == TYPE_INVALID || rhs_type->kind == TYPE_INVALID) {
-      return &g_type_invalid;
+        return &g_type_invalid;
     }
 
-    //Both sides must be compatible for comparison (numeric types can be compared with each other, pointers can be compared with each other, but no mixing)
+    // SEM025: Check if types are compatible for comparison (e.g., int vs int, ptr vs ptr)
     if (!is_comparison_compatible(lhs_type, rhs_type)) {  
-      pass2_emit(state, "SEM025", op_node->lineNumber, "Incompatible types for comparison operator");
-      return &g_type_invalid;
+        pass2_emit(state, "SEM025", op_node->lineNumber, "Incompatible types for comparison operator");
+        return &g_type_invalid;
     }
+
+    // SEMW002: Warning for mixed signed/unsigned comparison
+    if (warns_on_mixed_signed_unsigned_operands(lhs_type, rhs_type)) {
+        pass2_warning(state, "SEMW002", op_node->lineNumber, "mixed signed and unsigned comparison");
+    }
+
     return &g_type_int;
   }
-  
-// SEM024: LOGICAL OPERATORS (&&, ||, !)
+  // SEM024: LOGICAL OPERATORS (&&, ||, !)
   if (op_kind == OP_LOGICAL_AND || op_kind == OP_LOGICAL_OR || op_kind == OP_LOGICAL_NOT) {
     
     // 1. Abort if any applicable type is already invalid
