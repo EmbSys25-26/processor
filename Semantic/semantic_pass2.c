@@ -816,20 +816,24 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
         }
     }
     return lhs_type;
-  }
-
+}
+/*SEM020: ARITHMETIC OPERATORS*/
   if (op_kind == OP_PLUS ||
       op_kind == OP_MINUS ||
       op_kind == OP_MULTIPLY ||
       op_kind == OP_DIVIDE ) {
+
+    //1. Abort if any applicable type is already invalid
     if (!type_is_numeric(lhs_type) || !type_is_numeric(rhs_type)) {
       pass2_emit(state, "SEM020", op_node->lineNumber, "Arithmetic operators require arithmetic operands");
       return &g_type_invalid;
     }
+    //2. If both sides are numeric, apply usual arithmetic conversions to determine the resulting type
     if (lhs_type->kind == TYPE_BUILTIN && rhs_type->kind == TYPE_BUILTIN) {
       if (lhs_type->as.builtin == BUILTIN_DOUBLE || rhs_type->as.builtin == BUILTIN_DOUBLE) {
         return &g_type_double;
       }
+      // If either side is float (but not double), the result is float
       if (lhs_type->as.builtin == BUILTIN_FLOAT || rhs_type->as.builtin == BUILTIN_FLOAT) {
         return &g_type_float;
       }
