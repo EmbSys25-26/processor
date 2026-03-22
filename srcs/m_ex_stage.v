@@ -158,9 +158,6 @@ module ex_stage(
     assign _rs_fwd = (i_forward_b == 2'b10) ? i_exmem_wb_data :
                      (i_forward_b == 2'b01) ? i_memwb_wb_data :
                      i_rs_data;
- 
- 
- 
 
     // Operand mux for RI vs RR:
     //   RI: Rd is the destination AND the left source; Rs is unused.

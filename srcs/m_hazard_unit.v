@@ -126,7 +126,6 @@ module hazard_unit(
     // is about to write. Used exclusively for load-use hazard detection.
     assign _match_idex  = (i_id_reads_rd & (i_id_rd == i_idex_rd))  | (i_id_reads_rs & (i_id_rs == i_idex_rd));
 
-
     // Load-use hazard: the instruction immediately following a load reads the loaded
     // register.  The load result is only available after MEM, so an extra stall is
     // needed.  R0 destination excluded — writes to R0 are discarded.
@@ -166,8 +165,8 @@ module hazard_unit(
     // EX stalls only during a MEM wait (the pipeline above MEM freezes).
     assign o_stall_ex  = i_mem_wait;
 
-    // During a MEM wait, EX/MEM is frozen and ID/EX must be preserved.
-    // Inject bubbles only for pure decode hazards when MEM is not stalling.
+    // During a MEM wait (load-use), EX/MEM is frozen and ID/EX must be preserved.
+    // The goal is not to lose the values on the ID/EX register
     assign o_bubble_ex = _decode_hazard & ~i_mem_wait;
 
     // Flush IF/ID on branch commit or IRQ accept (both redirect the PC).

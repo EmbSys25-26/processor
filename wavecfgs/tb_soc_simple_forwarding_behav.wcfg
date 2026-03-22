@@ -12,14 +12,14 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="128.001 ns"></ZoomEndTime>
-      <Cursor1Time time="60.400 ns"></Cursor1Time>
+      <ZoomEndTime time="284.476 ns"></ZoomEndTime>
+      <Cursor1Time time="62.694 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="186"></NameColumnWidth>
+      <NameColumnWidth column_width="182"></NameColumnWidth>
       <ValueColumnWidth column_width="66"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="56" />
+   <WVObjectSize size="58" />
    <wvobject type="logic" fp_name="/tb_soc_simple/_clk">
       <obj_property name="ElementShortName">_clk</obj_property>
       <obj_property name="ObjectShortName">_clk</obj_property>
@@ -32,6 +32,10 @@
       <obj_property name="ElementShortName">_cycles[31:0]</obj_property>
       <obj_property name="ObjectShortName">_cycles[31:0]</obj_property>
    </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_pc_next/o_pc_next">
+      <obj_property name="ElementShortName">o_pc_next[15:0]</obj_property>
+      <obj_property name="ObjectShortName">o_pc_next[15:0]</obj_property>
+   </wvobject>
    <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/_pc">
       <obj_property name="ElementShortName">_pc[15:0]</obj_property>
       <obj_property name="ObjectShortName">_pc[15:0]</obj_property>
@@ -43,26 +47,6 @@
    <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_if_stage/_pc_d1">
       <obj_property name="ElementShortName">_pc_d1[15:0]</obj_property>
       <obj_property name="ObjectShortName">_pc_d1[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_soc_simple/dut/_imem_invalid">
-      <obj_property name="ElementShortName">_imem_invalid</obj_property>
-      <obj_property name="ObjectShortName">_imem_invalid</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_soc_simple/dut/_insn_q">
-      <obj_property name="ElementShortName">_insn_q[15:0]</obj_property>
-      <obj_property name="ObjectShortName">_insn_q[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_soc_simple/dut/_imem_dout">
-      <obj_property name="ElementShortName">_imem_dout[15:0]</obj_property>
-      <obj_property name="ObjectShortName">_imem_dout[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_soc_simple/dut/_imem_dout_h">
-      <obj_property name="ElementShortName">_imem_dout_h[7:0]</obj_property>
-      <obj_property name="ObjectShortName">_imem_dout_h[7:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_soc_simple/dut/_imem_dout_l">
-      <obj_property name="ElementShortName">_imem_dout_l[7:0]</obj_property>
-      <obj_property name="ObjectShortName">_imem_dout_l[7:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_if_stage/o_pc">
       <obj_property name="ElementShortName">o_pc[15:0]</obj_property>
@@ -128,10 +112,6 @@
       <obj_property name="ElementShortName">i_rs_data[15:0]</obj_property>
       <obj_property name="ObjectShortName">i_rs_data[15:0]</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_pc_next/o_pc_next">
-      <obj_property name="ElementShortName">o_pc_next[15:0]</obj_property>
-      <obj_property name="ObjectShortName">o_pc_next[15:0]</obj_property>
-   </wvobject>
    <wvobject type="array" fp_name="/tb_soc_simple/dut/u_rom/i_addr">
       <obj_property name="ElementShortName">i_addr[9:1]</obj_property>
       <obj_property name="ObjectShortName">i_addr[9:1]</obj_property>
@@ -192,6 +172,22 @@
       <obj_property name="ElementShortName">o_valid</obj_property>
       <obj_property name="ObjectShortName">o_valid</obj_property>
    </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/u_pipe_if_id/o_valid">
+      <obj_property name="ElementShortName">o_valid</obj_property>
+      <obj_property name="ObjectShortName">o_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/u_id_stage/i_valid">
+      <obj_property name="ElementShortName">i_valid</obj_property>
+      <obj_property name="ObjectShortName">i_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/u_pipe_id_ex/i_valid">
+      <obj_property name="ElementShortName">i_valid</obj_property>
+      <obj_property name="ObjectShortName">i_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/u_ex_stage/i_valid">
+      <obj_property name="ElementShortName">i_valid</obj_property>
+      <obj_property name="ObjectShortName">i_valid</obj_property>
+   </wvobject>
    <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_ifid_valid">
       <obj_property name="ElementShortName">_ifid_valid</obj_property>
       <obj_property name="ObjectShortName">_ifid_valid</obj_property>
@@ -199,6 +195,18 @@
    <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_idex_valid">
       <obj_property name="ElementShortName">_idex_valid</obj_property>
       <obj_property name="ObjectShortName">_idex_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_id_fire">
+      <obj_property name="ElementShortName">_id_fire</obj_property>
+      <obj_property name="ObjectShortName">_id_fire</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_id_exec_valid">
+      <obj_property name="ElementShortName">_id_exec_valid</obj_property>
+      <obj_property name="ObjectShortName">_id_exec_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/u_pipe_if_id/i_flush">
+      <obj_property name="ElementShortName">i_flush</obj_property>
+      <obj_property name="ObjectShortName">i_flush</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_exmem_valid">
       <obj_property name="ElementShortName">_exmem_valid</obj_property>

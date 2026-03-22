@@ -418,11 +418,7 @@
             .i_ccn(_ccn),
             .i_ccc(_ccc),
             .i_ccv(_ccv),
-          /*  .i_ccz(_ex_new_ccz),
-            .i_ccn(_ex_new_ccn),
-            .i_ccc(_ex_new_ccc),
-            .i_ccv(_ex_new_ccv),
-            .o_valid(_id_valid),*/
+            .o_valid(_id_valid),
             .o_exec_valid(_id_exec_valid),
             .o_pc(_id_pc),
             .o_rd(_id_rd),
