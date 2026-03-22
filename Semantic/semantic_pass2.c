@@ -292,11 +292,11 @@ static int assignment_compatible(const type_t *lhs, const type_t *rhs)
   }
 
   if (lhs->kind == TYPE_BUILTIN && rhs->kind == TYPE_BUILTIN) {
-    if (lhs->as.builtin != BUILTIN_VOID && rhs->as.builtin != BUILTIN_VOID) {
-      return 1;
+    if (is_numeric_builtin(lhs->as.builtin) && is_numeric_builtin(rhs->as.builtin)) {
+        return 1;
     }
     return 0;
-  }
+}
 
   return 0;
 }
