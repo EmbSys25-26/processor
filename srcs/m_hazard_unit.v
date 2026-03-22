@@ -165,8 +165,8 @@ module hazard_unit(
     // EX stalls only during a MEM wait (the pipeline above MEM freezes).
     assign o_stall_ex  = i_mem_wait;
 
-    // During a MEM wait (load-use), EX/MEM is frozen and ID/EX must be preserved.
-    // The goal is not to lose the values on the ID/EX register
+    // Upon Load-use hazard detection => Load insn is in EX and previous insn in ID
+    // The goal is not to insert a bubble on the ID/EX register that propagates along the pipeline.
     assign o_bubble_ex = _decode_hazard & ~i_mem_wait;
 
     // Flush IF/ID on branch commit or IRQ accept (both redirect the PC).
