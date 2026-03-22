@@ -58,7 +58,7 @@ module if_stage(
     // Counter for post-flush bubble cycles (flush bad inflight instructions)
     // After a flush, 1 bubble slot must be injected to drain the pipeline
     // before a valid instruction from the new PC can appear.
-    reg _flush_bubble;    // Counts down from 1 to 0 after a flush
+    reg [1:0]_flush_bubble;    // Counts down from 1 to 0 after a flush
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
@@ -69,10 +69,11 @@ module if_stage(
 
     // Output is valid only when: instruction memory has a hit AND there are
     // no outstanding flush bubbles still being drained.
-    assign o_valid = i_hit & (_flush_bubble == 1'd0);
+    assign o_valid = i_hit & (_flush_bubble == 2'd0);
 
-    // Pass the instruction word directly — no registered stage here.
-    assign o_insn = i_insn;
+    // Pass the instruction word with validation
+    // If insn is not valid, a bubble (NOP) is inserted
+    assign o_insn = (_flush_bubble == 2'd0) ? i_insn : `CPU_NOP_INSN;
 
     always @(posedge i_clk) begin
         if (i_rst) begin
@@ -86,7 +87,7 @@ module if_stage(
             // and arm the 1-cycle bubble counter.
             _pc_d1 <= i_flush_pc;
             o_pc   <= i_flush_pc;
-            _flush_bubble <= 1'd1;
+            _flush_bubble <= 2'd2;
         end else begin
             if (i_hit & ~i_stall) begin
                 // Normal advance: shift the PC pipeline forward and

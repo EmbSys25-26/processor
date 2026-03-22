@@ -45,7 +45,7 @@
 // ============================================================
 module ex_stage(
     input wire i_valid,
-    input wire [15:0] i_pc,
+    input wire [15:0] i_pc_dbg,
     input wire [3:0] i_rd,
     input wire [15:0] i_rd_data,    // Register-file value of Rd
     input wire [15:0] i_rs_data,    // Register-file value of Rs
@@ -73,10 +73,9 @@ module ex_stage(
     input wire i_restore_cc,        // SETCC: restore PSW from Rs
     input wire i_is_iret,
     
-    input wire [1:0] i_forward_a,
-    input wire [1:0] i_forward_b,
+    input wire i_forward_a,
+    input wire i_forward_b,
     input wire [15:0] i_exmem_wb_data,
-    input wire [15:0] i_memwb_wb_data,
     
     // Current committed condition-code state (read directly from top-level regs)
     input wire i_c,     // Carry bit (for ADC/SBC)
@@ -151,16 +150,9 @@ module ex_stage(
  
     // muxes for the forwarding
     
-    assign _rd_fwd = (i_forward_a == 2'b10) ? i_exmem_wb_data :
-                     (i_forward_a == 2'b01) ? i_memwb_wb_data :
-                     i_rd_data;
+    assign _rd_fwd = (i_forward_a == 1'b1) ? i_exmem_wb_data: i_rd_data;
 
-    assign _rs_fwd = (i_forward_b == 2'b10) ? i_exmem_wb_data :
-                     (i_forward_b == 2'b01) ? i_memwb_wb_data :
-                     i_rs_data;
- 
- 
- 
+    assign _rs_fwd = (i_forward_b == 1'b1) ? i_exmem_wb_data : i_rs_data;
 
     // Operand mux for RI vs RR:
     //   RI: Rd is the destination AND the left source; Rs is unused.
@@ -214,7 +206,7 @@ module ex_stage(
         ((i_is_alu & i_is_sum) | i_is_addi) ? _sum :    // Arithmetic → sum
         ((i_is_alu & i_is_log)              ? _log :    // Logical    → log
         ((i_is_alu & i_is_sr)               ? _sr  :    // Shift      → sr
-        (i_is_jal ? (i_pc + 16'h0004)       : 16'h0000))); // JAL → return addr (PC+4)
+        (i_is_jal ? (i_pc_dbg + 16'h0004)       : 16'h0000))); // JAL → return addr (PC+4)
 
 /*************************************************************************************
  * 2.2 Flag and Writeback Candidates
@@ -260,7 +252,7 @@ module ex_stage(
 
     // Most control signals pass through with valid-gating to suppress bubbles
     assign o_valid   = i_valid;
-    assign o_pc      = i_pc;
+    assign o_pc      = i_pc_dbg;
     assign o_rd      = i_rd;
     assign o_rf_we   = i_valid & i_rf_we;
     assign o_lw      = i_valid & i_lw;
@@ -271,7 +263,7 @@ module ex_stage(
     // Hazard hints for the hazard unit downstream tracking:
     //   updates_cc_hz: instruction updates condition codes (broader than _update_cc —
     //   also includes SETCC/restore_cc, since that also modifies the CC state)
-    assign o_updates_cc_hz    = i_valid & ((((i_is_rr | i_is_ri) & (i_is_sum | i_is_cmp)) | i_is_addi | i_restore_cc));
+    assign o_updates_cc_hz  = i_valid & ((((i_is_rr | i_is_ri) & (i_is_sum | i_is_cmp)) | i_is_addi | i_restore_cc));
     // updates_carry_hz: conservative — every valid instruction potentially touches carry
     // (because carry_we is always asserted for valid instructions in this design)
     assign o_updates_carry_hz = i_valid;

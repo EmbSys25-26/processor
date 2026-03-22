@@ -49,6 +49,7 @@ module mem_stage(
     input wire i_is_iret,
     input wire [15:0] i_data_in,        // Load data returned by data memory
     input wire i_rdy,                   // Data memory ready (load/store complete)
+    input wire [15:0] i_pc_dbg,
 
     output wire o_mem_wait,             // 1 = pipeline stall: waiting for memory
     output wire o_mem_complete,         // 1 = memory operation done (or no mem op)

@@ -80,13 +80,6 @@ module hazard_unit(
     input wire i_exmem_updates_cc,
     input wire i_exmem_updates_carry,
 
-    // ---- MEM/WB stage state (instruction in WB) ----
-    input wire i_memwb_valid,
-    input wire i_memwb_rf_we,
-    input wire [3:0] i_memwb_rd,
-    input wire i_memwb_updates_cc,
-    input wire i_memwb_updates_carry,
-
     // ---- Control outputs ----
     output wire o_stall_if,
     output wire o_stall_id,
@@ -107,8 +100,7 @@ module hazard_unit(
 
     // Hazard type flags
     wire _load_use_hazard;  // Load-use subset of RAW (extra stall cycle needed)
-    wire _cc_hazard;        // Condition-code read-after-write
-    wire _carry_hazard;     // Carry-bit read-after-write
+
     wire _decode_hazard;    // Any hazard that requires stalling the decode stage
 
     wire _accept_irq;       // Internal IRQ accept signal
@@ -126,7 +118,6 @@ module hazard_unit(
     // is about to write. Used exclusively for load-use hazard detection.
     assign _match_idex  = (i_id_reads_rd & (i_id_rd == i_idex_rd))  | (i_id_reads_rs & (i_id_rs == i_idex_rd));
 
-
     // Load-use hazard: the instruction immediately following a load reads the loaded
     // register.  The load result is only available after MEM, so an extra stall is
     // needed.  R0 destination excluded — writes to R0 are discarded.
@@ -134,17 +125,8 @@ module hazard_unit(
     assign _load_use_hazard = i_id_valid & i_idex_valid & i_idex_is_load &
                               (i_idex_rd != 4'h0) & _match_idex;
 
-    // CC hazard: ID instruction consumes condition codes but a downstream instruction
-    // will update them.  Must stall until the update is committed.
-    assign _cc_hazard = i_id_valid & i_id_uses_cc &
-                        (i_idex_updates_cc | i_exmem_updates_cc | i_memwb_updates_cc);
-
-    // Carry hazard: same concept for the carry bit used by ADC/SBC.
-    assign _carry_hazard = i_id_valid & i_id_uses_carry &
-                           (i_idex_updates_carry | i_exmem_updates_carry | i_memwb_updates_carry);
-
     // Any hazard that requires inserting a stall/bubble at the decode boundary
-    assign _decode_hazard =  _load_use_hazard | _cc_hazard | _carry_hazard;
+    assign _decode_hazard =  _load_use_hazard;
 
 /*************************************************************************************
  * 2.2 Control Outputs
@@ -166,8 +148,8 @@ module hazard_unit(
     // EX stalls only during a MEM wait (the pipeline above MEM freezes).
     assign o_stall_ex  = i_mem_wait;
 
-    // During a MEM wait, EX/MEM is frozen and ID/EX must be preserved.
-    // Inject bubbles only for pure decode hazards when MEM is not stalling.
+    // Upon Load-use hazard detection => Load insn is in EX and previous insn in ID
+    // The goal is not to insert a bubble on the ID/EX register that propagates along the pipeline.
     assign o_bubble_ex = _decode_hazard & ~i_mem_wait;
 
     // Flush IF/ID on branch commit or IRQ accept (both redirect the PC).

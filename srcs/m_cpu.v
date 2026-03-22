@@ -153,8 +153,8 @@
         
         // Data Forwarding Outputs
         
-        wire [1:0] _forward_a;
-        wire [1:0] _forward_b;
+        wire _forward_a;
+        wire _forward_b;
                
        
     
@@ -276,22 +276,6 @@
         wire _mem_updates_cc_hz;
         wire _mem_updates_carry_hz;
         wire _mem_is_iret;
-    
-        // ---- MEM/WB pipeline register outputs ----
-        wire _memwb_valid;
-        wire [3:0] _memwb_rd;
-        wire _memwb_rf_we;
-        wire [15:0] _memwb_wb_data;
-        wire _memwb_flag_we;
-        wire _memwb_new_ccz;
-        wire _memwb_new_ccn;
-        wire _memwb_new_ccc;
-        wire _memwb_new_ccv;
-        wire _memwb_carry_we;
-        wire _memwb_new_c;
-        wire _memwb_updates_cc_hz;
-        wire _memwb_updates_carry_hz;
-        wire _memwb_is_iret;
     
         // ---- WB stage outputs ----
         wire _wb_rf_we;
@@ -500,12 +484,6 @@
             .i_exmem_rd(_exmem_rd),
             .i_exmem_updates_cc(_exmem_updates_cc_hz),
             .i_exmem_updates_carry(_exmem_updates_carry_hz),
-            // MEM/WB stage — what's pending in WB
-            .i_memwb_valid(_memwb_valid),
-            .i_memwb_rf_we(_memwb_rf_we),
-            .i_memwb_rd(_memwb_rd),
-            .i_memwb_updates_cc(_memwb_updates_cc_hz),
-            .i_memwb_updates_carry(_memwb_updates_carry_hz),
             // Control outputs
             .o_stall_if(_stall_if),
             .o_stall_id(_stall_id),
@@ -525,9 +503,6 @@
         .i_WriteRegM(_exmem_rd),
         .i_RegWriteM(_exmem_rf_we),
         .i_validM(_exmem_valid),
-        .i_WriteRegWB(_memwb_rd),
-        .i_RegWriteWB(_memwb_rf_we),
-        .i_validWB(_memwb_valid),
         .o_ForwardAE(_forward_a),
         .o_ForwardBE(_forward_b)
     );
@@ -635,7 +610,7 @@
     
         ex_stage u_ex_stage (
             .i_valid(_idex_valid),
-            .i_pc(_idex_pc),
+            .i_pc_dbg(_idex_pc),
             .i_rd(_idex_rd),
             .i_rd_data(_idex_rd_data),
             .i_rs_data(_idex_rs_data),
@@ -666,7 +641,6 @@
             .i_forward_a(_forward_a),
             .i_forward_b(_forward_b),
             .i_exmem_wb_data(_exmem_wb_pre_data),
-            .i_memwb_wb_data(_memwb_wb_data),
             // Current committed condition-code and carry state (read directly from registers)
             .i_c(_c),
             .i_ccz(_ccz),
@@ -775,6 +749,7 @@
             .i_is_iret(_exmem_is_iret),
             .i_data_in(i_data_in),    // Load result from data memory
             .i_rdy(i_rdy),            // Data memory ready
+            .i_pc_dbg(_exmem_pc),
             .o_mem_wait(_mem_wait),
             .o_mem_complete(_mem_complete),
             .o_sw(_mem_sw),
@@ -798,77 +773,20 @@
             .o_updates_carry_hz(_mem_updates_carry_hz),
             .o_is_iret(_mem_is_iret)
         );
+        
+    // Register file writeback - driven directly from MEM stage
+    assign _wb_rf_we   = _mem_valid & _mem_rf_we;
+    assign _wb_wa      = _mem_rd;
+    assign _wb_wd      = _mem_wb_data;
     
-    /*************************************************************************************
-     * 2.7 MEM/WB Register + WB Stage
-     ************************************************************************************/
-    
-        // MEM/WB never stalls or flushes in the current implementation —
-        // once MEM completes (i_rdy asserted), the instruction always retires.
-        pipe_mem_wb u_pipe_mem_wb (
-            .i_clk(i_clk),
-            .i_rst(i_rst),
-            .i_stall(1'b0),     // MEM/WB is never stalled
-            .i_flush(1'b0),     // MEM/WB is never flushed
-            .i_valid(_mem_valid),
-            .i_rd(_mem_rd),
-            .i_rf_we(_mem_rf_we),
-            .i_wb_data(_mem_wb_data),
-            .i_flag_we(_mem_flag_we),
-            .i_new_ccz(_mem_new_ccz),
-            .i_new_ccn(_mem_new_ccn),
-            .i_new_ccc(_mem_new_ccc),
-            .i_new_ccv(_mem_new_ccv),
-            .i_carry_we(_mem_carry_we),
-            .i_new_c(_mem_new_c),
-            .i_updates_cc_hz(_mem_updates_cc_hz),
-            .i_updates_carry_hz(_mem_updates_carry_hz),
-            .i_is_iret(_mem_is_iret),
-            .o_valid(_memwb_valid),
-            .o_rd(_memwb_rd),
-            .o_rf_we(_memwb_rf_we),
-            .o_wb_data(_memwb_wb_data),
-            .o_flag_we(_memwb_flag_we),
-            .o_new_ccz(_memwb_new_ccz),
-            .o_new_ccn(_memwb_new_ccn),
-            .o_new_ccc(_memwb_new_ccc),
-            .o_new_ccv(_memwb_new_ccv),
-            .o_carry_we(_memwb_carry_we),
-            .o_new_c(_memwb_new_c),
-            .o_updates_cc_hz(_memwb_updates_cc_hz),
-            .o_updates_carry_hz(_memwb_updates_carry_hz),
-            .o_is_iret(_memwb_is_iret)
-        );
-    
-        wb_stage u_wb_stage (
-            .i_valid(_memwb_valid),
-            .i_rd(_memwb_rd),
-            .i_rf_we(_memwb_rf_we),
-            .i_wb_data(_memwb_wb_data),
-            .i_flag_we(_memwb_flag_we),
-            .i_new_ccz(_memwb_new_ccz),
-            .i_new_ccn(_memwb_new_ccn),
-            .i_new_ccc(_memwb_new_ccc),
-            .i_new_ccv(_memwb_new_ccv),
-            .i_carry_we(_memwb_carry_we),
-            .i_new_c(_memwb_new_c),
-            .i_updates_cc_hz(_memwb_updates_cc_hz),
-            .i_updates_carry_hz(_memwb_updates_carry_hz),
-            .i_is_iret(_memwb_is_iret),
-            .o_rf_we(_wb_rf_we),
-            .o_wa(_wb_wa),
-            .o_wd(_wb_wd),
-            .o_flag_we(_wb_flag_we),
-            .o_new_ccz(_wb_new_ccz),
-            .o_new_ccn(_wb_new_ccn),
-            .o_new_ccc(_wb_new_ccc),
-            .o_new_ccv(_wb_new_ccv),
-            .o_carry_we(_wb_carry_we),
-            .o_new_c(_wb_new_c),
-            .o_updates_cc_hz(_wb_updates_cc_hz),
-            .o_updates_carry_hz(_wb_updates_carry_hz),
-            .o_iret_event(_wb_iret_event)
-        );
+    // Flag and carry updates
+    assign _wb_flag_we = _mem_valid & _mem_flag_we;
+    assign _wb_new_ccz = _mem_new_ccz;
+    assign _wb_new_ccn = _mem_new_ccn;
+    assign _wb_new_ccc = _mem_new_ccc;
+    assign _wb_new_ccv = _mem_new_ccv;
+    assign _wb_carry_we = _mem_valid & _mem_carry_we;
+    assign _wb_new_c    = _mem_new_c;
     
     /*************************************************************************************
      * 2.8 PC and Global State Updates
@@ -943,31 +861,37 @@
                 end
             end
         end
-    
-        // Condition codes and carry committed at WB.
-        // Note: the carry bit (_c) used by ADC/SBC is separate from _ccc (the branch carry flag).
-        // Both are updated here from WB outputs; EX reads the committed values directly.
-        always @(posedge i_clk) begin
-            if (i_rst) begin
-                _c <= 1'b0;
-                _ccz <= 1'b0;
-                _ccn <= 1'b0;
-                _ccc <= 1'b0;
-                _ccv <= 1'b0;
-            end else begin
-                // Update condition codes (Z/N/C/V) when WB has a valid flag write
-                if (_wb_flag_we) begin
-                    _ccz <= _wb_new_ccz;
-                    _ccn <= _wb_new_ccn;
-                    _ccc <= _wb_new_ccc;
-                    _ccv <= _wb_new_ccv;
-                end
-                // Update carry bit independently (used by ADC/SBC)
-                if (_wb_carry_we) begin
-                    _c <= _wb_new_c;
-                end
+        
+        // Udpate condition codes combinationally so that there is no need for CC hazard stall 
+        // Check is performed during EX stage
+        always @(*) begin
+            _c   = 1'b0;
+            _ccz = 1'b0;
+            _ccn = 1'b0;
+            _ccc = 1'b0;
+            _ccv = 1'b0;
+        
+             if (_ex_flag_we) begin
+                _ccz = _ex_new_ccz;
+                _ccn = _ex_new_ccn;
+                _ccc = _ex_new_ccc;
+                _ccv = _ex_new_ccv;
             end
+                
+            if (_ex_carry_we) begin
+                _c = _ex_new_c;
+            end
+            
+            if (i_rst) begin
+                _c   = 1'b0;
+                _ccz = 1'b0;
+                _ccn = 1'b0;
+                _ccc = 1'b0;
+                _ccv = 1'b0;
+            end
+            
         end
+        
     
     /*************************************************************************************
      * 2.9 IRQ Depth Tracking
