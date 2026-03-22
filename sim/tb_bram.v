@@ -1,105 +1,64 @@
 `timescale 1ns / 1ps
 
-module tb_bram_latency;
+module tb_bram_latency();
 
-    reg         clk;
-    reg         rst;
-    reg         en;
-    reg         we_h;
-    reg         we_l;
-    reg  [9:1]  addr;
-    reg  [7:0]  din_h;
-    reg  [7:0]  din_l;
-    wire [7:0]  dout_h;
-    wire [7:0]  dout_l;
+    // Standard BRAM signals
+    reg i_clk, i_rst, i_en;
+    reg i_we_h, i_we_l;
+    reg [9:1] i_addr;
+    reg [7:0] i_din_h, i_din_l;
+    wire [7:0] o_dout_h, o_dout_l;
 
-    integer cycle_count;
-    integer start_cycle;
-
-    reg load_req;
-    reg load_req_d;
+    // --- NEW DEBUG VARIABLE ---
+    // This exists only in the testbench to mark the "Request Phase"
+    reg read_requested; 
 
     bram_1kb_be uut (
-        .i_clk(clk),
-        .i_rst(rst),
-        .i_en(en),
-        .i_we_h(we_h),
-        .i_we_l(we_l),
-        .i_addr(addr),
-        .i_din_h(din_h),
-        .i_din_l(din_l),
-        .o_dout_h(dout_h),
-        .o_dout_l(dout_l)
+        .i_clk(i_clk), .i_rst(i_rst), .i_en(i_en),
+        .i_we_h(i_we_h), .i_we_l(i_we_l), .i_addr(i_addr),
+        .i_din_h(i_din_h), .i_din_l(i_din_l),
+        .o_dout_h(o_dout_h), .o_dout_l(o_dout_l)
     );
 
-    /******** CLOCK ********/
-    always #5 clk = ~clk;
+    always #5 i_clk = ~i_clk; // 100MHz clock
 
-    /******** CYCLE COUNTER ********/
-    always @(posedge clk) begin
-        cycle_count <= cycle_count + 1;
-    end
-
-    /******** LOAD TRACKING ********/
-    always @(posedge clk) begin
-        load_req_d <= load_req;
-
-        // mark when request is issued
-        if (load_req) begin
-            start_cycle <= cycle_count;
-        end
-
-        // detect when data returns (1 cycle later)
-        if (load_req_d) begin
-            $display("LOAD complete @ cycle %0d | latency = %0d | data = %h%h",
-                     cycle_count,
-                     cycle_count - start_cycle,
-                     dout_h, dout_l);
-        end
-    end
-
-    /******** TEST ********/
     initial begin
-        clk = 0;
-        rst = 1;
-        en  = 0;
-        we_h = 0;
-        we_l = 0;
-        addr = 0;
-        din_h = 0;
-        din_l = 0;
-        cycle_count = 0;
-        load_req = 0;
-        load_req_d = 0;
+        // 1. Setup
+        i_clk = 0; i_rst = 1; i_en = 0; 
+        i_we_h = 0; i_we_l = 0; i_addr = 0;
+        read_requested = 0;
+        #20 i_rst = 0;
+        
+        // 2. Pre-fill memory with 0xDEAD at address 0x050
+        @(posedge i_clk);
+        #1; // Wait slightly after edge
+        i_en = 1; i_we_h = 1; i_we_l = 1; i_addr = 9'h050;
+        i_din_h = 8'hDE; i_din_l = 8'hAD;
+        @(posedge i_clk);
+        #1;
+        i_we_h = 0; i_we_l = 0; i_en = 0;
 
         #20;
-        rst = 0;
 
-        /******** WRITE KNOWN VALUE ********/
-        @(posedge clk);
-        en   = 1;
-        we_h = 1;
-        we_l = 1;
-        addr = 9'd5;
-        din_h = 8'hAA;
-        din_l = 8'h55;
+        // 3. THE READ TEST
+        @(posedge i_clk);
+        #1; 
+        read_requested = 1; // Mark the START of the request
+        i_en = 1;
+        i_addr = 9'h050;    // CPU puts address on the bus
+        
+        @(posedge i_clk); 
+        // Edge 1: BRAM captures the address internally. 
+        // o_dout is still 0000 here because the register hasn't updated yet.
+        #1;
+        read_requested = 0; // Request phase over
+        $display("[%0t] Edge 1 (Capture): Address sampled. Data is NOT ready yet.", $time);
 
-        @(posedge clk);
-        we_h = 0;
-        we_l = 0;
+        @(posedge i_clk);
+        // Edge 2: The BRAM output register finally shows the data.
+        #1;
+        $display("[%0t] Edge 2 (Valid): Data is now %h%h", $time, o_dout_h, o_dout_l);
 
-        /******** ISSUE SINGLE-CYCLE LOAD ********/
-        @(posedge clk);
-        addr = 9'd5;
-        load_req = 1;
-
-        @(posedge clk);
-        load_req = 0;
-
-        /******** WAIT ********/
-        repeat (5) @(posedge clk);
-
-        $finish;
+        #50 $finish;
     end
-
 endmodule
