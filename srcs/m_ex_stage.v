@@ -45,7 +45,7 @@
 // ============================================================
 module ex_stage(
     input wire i_valid,
-    input wire [15:0] i_pc,
+    input wire [15:0] i_pc_dbg,
     input wire [3:0] i_rd,
     input wire [15:0] i_rd_data,    // Register-file value of Rd
     input wire [15:0] i_rs_data,    // Register-file value of Rs
@@ -211,7 +211,7 @@ module ex_stage(
         ((i_is_alu & i_is_sum) | i_is_addi) ? _sum :    // Arithmetic → sum
         ((i_is_alu & i_is_log)              ? _log :    // Logical    → log
         ((i_is_alu & i_is_sr)               ? _sr  :    // Shift      → sr
-        (i_is_jal ? (i_pc + 16'h0004)       : 16'h0000))); // JAL → return addr (PC+4)
+        (i_is_jal ? (i_pc_dbg + 16'h0004)       : 16'h0000))); // JAL → return addr (PC+4)
 
 /*************************************************************************************
  * 2.2 Flag and Writeback Candidates
@@ -257,7 +257,7 @@ module ex_stage(
 
     // Most control signals pass through with valid-gating to suppress bubbles
     assign o_valid   = i_valid;
-    assign o_pc      = i_pc;
+    assign o_pc      = i_pc_dbg;
     assign o_rd      = i_rd;
     assign o_rf_we   = i_valid & i_rf_we;
     assign o_lw      = i_valid & i_lw;

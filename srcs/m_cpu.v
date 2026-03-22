@@ -635,7 +635,7 @@
     
         ex_stage u_ex_stage (
             .i_valid(_idex_valid),
-            .i_pc(_idex_pc),
+            .i_pc_dbg(_idex_pc),
             .i_rd(_idex_rd),
             .i_rd_data(_idex_rd_data),
             .i_rs_data(_idex_rs_data),
@@ -775,6 +775,7 @@
             .i_is_iret(_exmem_is_iret),
             .i_data_in(i_data_in),    // Load result from data memory
             .i_rdy(i_rdy),            // Data memory ready
+            .i_pc_dbg(_exmem_pc),
             .o_mem_wait(_mem_wait),
             .o_mem_complete(_mem_complete),
             .o_sw(_mem_sw),
