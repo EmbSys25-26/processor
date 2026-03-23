@@ -3,27 +3,27 @@
 # SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
 # IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
 # SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
-# Start of session at: Wed Mar 18 18:25:00 2026
-# Process ID         : 28723
-# Current directory  : /home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1
+# Start of session at: Mon Mar 23 08:37:15 2026
+# Process ID         : 52791
+# Current directory  : /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1
 # Command line       : vivado -log controller.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source controller.tcl
-# Log file           : /home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/controller.vds
-# Journal file       : /home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/vivado.jou
-# Running On         : mendes-Katana-GF66-12UGS
+# Log file           : /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1/controller.vds
+# Journal file       : /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1/vivado.jou
+# Running On         : panda
 # Platform           : Ubuntu
 # Operating System   : Ubuntu 22.04.5 LTS
-# Processor Detail   : 12th Gen Intel(R) Core(TM) i7-12700H
-# CPU Frequency      : 1341.507 MHz
-# CPU Physical cores : 14
+# Processor Detail   : AMD Ryzen AI 9 365 w/ Radeon 880M
+# CPU Frequency      : 4276.005 MHz
+# CPU Physical cores : 10
 # CPU Logical cores  : 20
-# Host memory        : 16455 MB
+# Host memory        : 32715 MB
 # Swap memory        : 2147 MB
-# Total Virtual      : 18603 MB
-# Available Virtual  : 11812 MB
+# Total Virtual      : 34863 MB
+# Available Virtual  : 29398 MB
 #-----------------------------------------------------------
 source controller.tcl -notrace
-Command: read_checkpoint -auto_incremental -incremental /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/utils_1/imports/synth_1/controller.dcp
-INFO: [Vivado 12-5825] Read reference checkpoint from /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/utils_1/imports/synth_1/controller.dcp for incremental synthesis
+Command: read_checkpoint -auto_incremental -incremental /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/utils_1/imports/synth_1/controller.dcp
+INFO: [Vivado 12-5825] Read reference checkpoint from /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/utils_1/imports/synth_1/controller.dcp for incremental synthesis
 INFO: [Vivado 12-7989] Please ensure there are no constraint changes
 Command: synth_design -top controller -part xc7z010clg400-1
 Starting synth_design
@@ -34,26 +34,28 @@ INFO: [Designutils 20-5440] No compile time benefit to using incremental synthes
 INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
 INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 7 processes.
 INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
-INFO: [Synth 8-7075] Helper process launched with PID 28768
+INFO: [Synth 8-7075] Helper process launched with PID 52920
 ---------------------------------------------------------------------------------
-Starting RTL Elaboration : Time (s): cpu = 00:00:02 ; elapsed = 00:00:02 . Memory (MB): peak = 2230.477 ; gain = 441.797 ; free physical = 750 ; free virtual = 10022
+Starting RTL Elaboration : Time (s): cpu = 00:00:02 ; elapsed = 00:00:02 . Memory (MB): peak = 2137.113 ; gain = 440.711 ; free physical = 18989 ; free virtual = 26677
 ---------------------------------------------------------------------------------
-INFO: [Synth 8-6157] synthesizing module 'controller' [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/controller.v:26]
-INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [/home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/.Xil/Vivado-28723-mendes-Katana-GF66-12UGS/realtime/clk_wiz_0_stub.v:6]
-INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (0#1) [/home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/.Xil/Vivado-28723-mendes-Katana-GF66-12UGS/realtime/clk_wiz_0_stub.v:6]
-INFO: [Synth 8-6157] synthesizing module 'm_vga_mmio' [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vga_mmio.v:29]
-INFO: [Synth 8-6157] synthesizing module 'char_buffer_bram' [/home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/.Xil/Vivado-28723-mendes-Katana-GF66-12UGS/realtime/char_buffer_bram_stub.v:6]
-INFO: [Synth 8-6155] done synthesizing module 'char_buffer_bram' (0#1) [/home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/.Xil/Vivado-28723-mendes-Katana-GF66-12UGS/realtime/char_buffer_bram_stub.v:6]
-INFO: [Synth 8-6157] synthesizing module 'font_rom' [/home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/.Xil/Vivado-28723-mendes-Katana-GF66-12UGS/realtime/font_rom_stub.v:6]
-INFO: [Synth 8-6155] done synthesizing module 'font_rom' (0#1) [/home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/.Xil/Vivado-28723-mendes-Katana-GF66-12UGS/realtime/font_rom_stub.v:6]
-INFO: [Synth 8-6157] synthesizing module 'm_hsync_vga' [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/m_hsync_vga.v:5]
-INFO: [Synth 8-6155] done synthesizing module 'm_hsync_vga' (0#1) [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/m_hsync_vga.v:5]
-INFO: [Synth 8-6157] synthesizing module 'm_vsync_vga' [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vsync_vga.v:5]
-INFO: [Synth 8-6155] done synthesizing module 'm_vsync_vga' (0#1) [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vsync_vga.v:5]
-INFO: [Synth 8-155] case statement is not full and has no default [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vga_mmio.v:251]
-INFO: [Synth 8-6155] done synthesizing module 'm_vga_mmio' (0#1) [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vga_mmio.v:29]
-INFO: [Synth 8-155] case statement is not full and has no default [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/controller.v:125]
-INFO: [Synth 8-6155] done synthesizing module 'controller' (0#1) [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/controller.v:26]
+INFO: [Synth 8-6157] synthesizing module 'controller' [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/controller.v:26]
+INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1/.Xil/Vivado-52791-panda/realtime/clk_wiz_0_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (0#1) [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1/.Xil/Vivado-52791-panda/realtime/clk_wiz_0_stub.v:6]
+INFO: [Synth 8-6157] synthesizing module 'm_vga_mmio' [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vga_mmio.v:29]
+INFO: [Synth 8-6157] synthesizing module 'char_buffer_bram' [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1/.Xil/Vivado-52791-panda/realtime/char_buffer_bram_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'char_buffer_bram' (0#1) [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1/.Xil/Vivado-52791-panda/realtime/char_buffer_bram_stub.v:6]
+INFO: [Synth 8-6157] synthesizing module 'font_rom' [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1/.Xil/Vivado-52791-panda/realtime/font_rom_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'font_rom' (0#1) [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1/.Xil/Vivado-52791-panda/realtime/font_rom_stub.v:6]
+INFO: [Synth 8-6157] synthesizing module 'm_hsync_vga' [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_hsync_vga.v:5]
+INFO: [Synth 8-6155] done synthesizing module 'm_hsync_vga' (0#1) [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_hsync_vga.v:5]
+INFO: [Synth 8-6157] synthesizing module 'm_vsync_vga' [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vsync_vga.v:5]
+INFO: [Synth 8-6155] done synthesizing module 'm_vsync_vga' (0#1) [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vsync_vga.v:5]
+INFO: [Synth 8-155] case statement is not full and has no default [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vga_mmio.v:267]
+INFO: [Synth 8-6155] done synthesizing module 'm_vga_mmio' (0#1) [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vga_mmio.v:29]
+INFO: [Synth 8-155] case statement is not full and has no default [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/controller.v:125]
+INFO: [Synth 8-6155] done synthesizing module 'controller' (0#1) [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/controller.v:26]
+WARNING: [Synth 8-6014] Unused sequential element _char_addr_reg was removed.  [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vga_mmio.v:242]
+WARNING: [Synth 8-6014] Unused sequential element _imgSel_prev_reg was removed.  [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/controller.v:122]
 WARNING: [Synth 8-7129] Port i_wdata[15] in module m_vga_mmio is either unconnected or has no load
 WARNING: [Synth 8-7129] Port i_wdata[14] in module m_vga_mmio is either unconnected or has no load
 WARNING: [Synth 8-7129] Port i_wdata[13] in module m_vga_mmio is either unconnected or has no load
@@ -66,63 +68,62 @@ WARNING: [Synth 8-7129] Port i_wdata[7] in module m_vga_mmio is either unconnect
 WARNING: [Synth 8-7129] Port i_wdata[6] in module m_vga_mmio is either unconnected or has no load
 WARNING: [Synth 8-7129] Port i_wdata[5] in module m_vga_mmio is either unconnected or has no load
 ---------------------------------------------------------------------------------
-Finished RTL Elaboration : Time (s): cpu = 00:00:03 ; elapsed = 00:00:03 . Memory (MB): peak = 2310.414 ; gain = 521.734 ; free physical = 647 ; free virtual = 9921
+Finished RTL Elaboration : Time (s): cpu = 00:00:03 ; elapsed = 00:00:03 . Memory (MB): peak = 2217.051 ; gain = 520.648 ; free physical = 18934 ; free virtual = 26624
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:03 ; elapsed = 00:00:03 . Memory (MB): peak = 2328.227 ; gain = 539.547 ; free physical = 647 ; free virtual = 9921
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:03 ; elapsed = 00:00:03 . Memory (MB): peak = 2231.895 ; gain = 535.492 ; free physical = 18933 ; free virtual = 26624
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:03 ; elapsed = 00:00:03 . Memory (MB): peak = 2328.227 ; gain = 539.547 ; free physical = 647 ; free virtual = 9921
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:03 ; elapsed = 00:00:03 . Memory (MB): peak = 2231.895 ; gain = 535.492 ; free physical = 18933 ; free virtual = 26624
 ---------------------------------------------------------------------------------
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2328.227 ; gain = 0.000 ; free physical = 647 ; free virtual = 9921
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2231.895 ; gain = 0.000 ; free physical = 18933 ; free virtual = 26624
 INFO: [Project 1-570] Preparing netlist for logic optimization
 
 Processing XDC Constraints
 Initializing timing engine
-Parsing XDC File [/home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/font_rom/font_rom/font_rom_in_context.xdc] for cell 'periph_vga/font_lut'
-Finished Parsing XDC File [/home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/font_rom/font_rom/font_rom_in_context.xdc] for cell 'periph_vga/font_lut'
-Parsing XDC File [/home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/char_buffer_bram/char_buffer_bram/char_buffer_bram_in_context.xdc] for cell 'periph_vga/u_char_buf'
-Finished Parsing XDC File [/home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/char_buffer_bram/char_buffer_bram/char_buffer_bram_in_context.xdc] for cell 'periph_vga/u_char_buf'
-Parsing XDC File [/home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/clk_wiz_0/clk_wiz_0/clk_wiz_0_in_context.xdc] for cell 'u_clk_wiz'
-Finished Parsing XDC File [/home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/clk_wiz_0/clk_wiz_0/clk_wiz_0_in_context.xdc] for cell 'u_clk_wiz'
-Parsing XDC File [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc]
-WARNING: [Vivado 12-627] No clocks matched 'clk_out2_clk_wiz_0'. [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc:60]
-INFO: [Vivado 12-626] No clocks found. Please use 'create_clock' or 'create_generated_clock' command to create clocks. [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc:60]
-WARNING: [Vivado 12-627] No clocks matched 'clk_out2_clk_wiz_0'. [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc:63]
-INFO: [Vivado 12-626] No clocks found. Please use 'create_clock' or 'create_generated_clock' command to create clocks. [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc:63]
-Finished Parsing XDC File [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc]
-WARNING: [Project 1-498] One or more constraints failed evaluation while reading constraint file [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc] and the design contains unresolved black boxes. These constraints will be read post-synthesis (as long as their source constraint file is marked as used_in_implementation) and should be applied correctly then. You should review the constraints listed in the file [.Xil/controller_propImpl.xdc] and check the run log file to verify that these constraints were correctly applied.
-INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
+Parsing XDC File [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/font_rom/font_rom/font_rom_in_context.xdc] for cell 'periph_vga/font_lut'
+Finished Parsing XDC File [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/font_rom/font_rom/font_rom_in_context.xdc] for cell 'periph_vga/font_lut'
+Parsing XDC File [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/char_buffer_bram/char_buffer_bram/char_buffer_bram_in_context.xdc] for cell 'periph_vga/u_char_buf'
+Finished Parsing XDC File [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/char_buffer_bram/char_buffer_bram/char_buffer_bram_in_context.xdc] for cell 'periph_vga/u_char_buf'
+Parsing XDC File [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/clk_wiz_0/clk_wiz_0/clk_wiz_0_in_context.xdc] for cell 'u_clk_wiz'
+Finished Parsing XDC File [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/clk_wiz_0/clk_wiz_0/clk_wiz_0_in_context.xdc] for cell 'u_clk_wiz'
+Parsing XDC File [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc]
+WARNING: [Vivado 12-584] No ports matched 'i_imgSel[*]'. [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc:51]
+WARNING: [Vivado 12-627] No clocks matched 'clk_out2_clk_wiz_0'. [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc:54]
+INFO: [Vivado 12-626] No clocks found. Please use 'create_clock' or 'create_generated_clock' command to create clocks. [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc:54]
+WARNING: [Vivado 12-627] No clocks matched 'clk_out2_clk_wiz_0'. [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc:57]
+INFO: [Vivado 12-626] No clocks found. Please use 'create_clock' or 'create_generated_clock' command to create clocks. [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc:57]
+Finished Parsing XDC File [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc]
+WARNING: [Project 1-498] One or more constraints failed evaluation while reading constraint file [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc] and the design contains unresolved black boxes. These constraints will be read post-synthesis (as long as their source constraint file is marked as used_in_implementation) and should be applied correctly then. You should review the constraints listed in the file [.Xil/controller_propImpl.xdc] and check the run log file to verify that these constraints were correctly applied.
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/controller_propImpl.xdc].
 Resolution: To avoid this warning, move constraints listed in [.Xil/controller_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
-Parsing XDC File [/home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/dont_touch.xdc]
-Finished Parsing XDC File [/home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/dont_touch.xdc]
 Completed Processing XDC Constraints
 
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2450.965 ; gain = 0.000 ; free physical = 636 ; free virtual = 9909
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2360.633 ; gain = 0.000 ; free physical = 18933 ; free virtual = 26622
 INFO: [Project 1-111] Unisim Transformation Summary:
 No Unisim elements were transformed.
 
-Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2451.000 ; gain = 0.000 ; free physical = 636 ; free virtual = 9909
+Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2360.668 ; gain = 0.000 ; free physical = 18933 ; free virtual = 26622
 INFO: [Designutils 20-5440] No compile time benefit to using incremental synthesis; A full resynthesis will be run
 INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
 ---------------------------------------------------------------------------------
-Finished Constraint Validation : Time (s): cpu = 00:00:06 ; elapsed = 00:00:07 . Memory (MB): peak = 2451.000 ; gain = 662.320 ; free physical = 633 ; free virtual = 9907
+Finished Constraint Validation : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 2360.668 ; gain = 664.266 ; free physical = 18952 ; free virtual = 26642
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Loading Part and Timing Information
 ---------------------------------------------------------------------------------
 Loading part: xc7z010clg400-1
 ---------------------------------------------------------------------------------
-Finished Loading Part and Timing Information : Time (s): cpu = 00:00:06 ; elapsed = 00:00:07 . Memory (MB): peak = 2458.969 ; gain = 670.289 ; free physical = 633 ; free virtual = 9907
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 2368.637 ; gain = 672.234 ; free physical = 18952 ; free virtual = 26642
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying 'set_property' XDC Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:06 ; elapsed = 00:00:07 . Memory (MB): peak = 2458.969 ; gain = 670.289 ; free physical = 633 ; free virtual = 9907
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 2368.637 ; gain = 672.234 ; free physical = 18952 ; free virtual = 26642
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-802] inferred FSM for state register '_state_reg' in module 'm_hsync_vga'
 INFO: [Synth 8-802] inferred FSM for state register '_state_reg' in module 'm_vsync_vga'
@@ -157,7 +158,7 @@ INFO: [Synth 8-3354] encoded FSM with state register '_state_reg' using encoding
 ---------------------------------------------------------------------------------------------------
 INFO: [Synth 8-3354] encoded FSM with state register '_state_reg' using encoding 'sequential' in module 'controller'
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 2458.969 ; gain = 670.289 ; free physical = 633 ; free virtual = 9907
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 2368.637 ; gain = 672.234 ; free physical = 18962 ; free virtual = 26652
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start RTL Component Statistics 
@@ -174,17 +175,22 @@ Detailed RTL Component Info :
 	               10 Bit    Registers := 1     
 	                9 Bit    Registers := 1     
 	                8 Bit    Registers := 1     
-	                5 Bit    Registers := 3     
-	                4 Bit    Registers := 3     
+	                5 Bit    Registers := 2     
+	                4 Bit    Registers := 4     
+	                3 Bit    Registers := 1     
 	                2 Bit    Registers := 1     
-	                1 Bit    Registers := 19    
+	                1 Bit    Registers := 21    
 +---Muxes : 
 	   2 Input   16 Bit        Muxes := 3     
 	   6 Input   16 Bit        Muxes := 1     
+	   4 Input   12 Bit        Muxes := 1     
+	   3 Input   11 Bit        Muxes := 1     
 	   2 Input   10 Bit        Muxes := 4     
 	   4 Input   10 Bit        Muxes := 1     
 	   2 Input    9 Bit        Muxes := 4     
 	   4 Input    9 Bit        Muxes := 1     
+	   4 Input    8 Bit        Muxes := 1     
+	   3 Input    7 Bit        Muxes := 1     
 	   2 Input    7 Bit        Muxes := 1     
 	   2 Input    4 Bit        Muxes := 3     
 	   5 Input    4 Bit        Muxes := 3     
@@ -194,7 +200,7 @@ Detailed RTL Component Info :
 	   6 Input    2 Bit        Muxes := 1     
 	   4 Input    1 Bit        Muxes := 7     
 	   2 Input    1 Bit        Muxes := 9     
-	   6 Input    1 Bit        Muxes := 6     
+	   6 Input    1 Bit        Muxes := 4     
 ---------------------------------------------------------------------------------
 Finished RTL Component Statistics 
 ---------------------------------------------------------------------------------
@@ -212,25 +218,25 @@ Start Cross Boundary and Area Optimization
 ---------------------------------------------------------------------------------
 WARNING: [Synth 8-7080] Parallel synthesis criteria is not met
 ---------------------------------------------------------------------------------
-Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 2458.969 ; gain = 670.289 ; free physical = 610 ; free virtual = 9890
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:08 ; elapsed = 00:00:09 . Memory (MB): peak = 2368.637 ; gain = 672.234 ; free physical = 18974 ; free virtual = 26671
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying XDC Timing Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:11 ; elapsed = 00:00:11 . Memory (MB): peak = 2495.969 ; gain = 707.289 ; free physical = 510 ; free virtual = 9790
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:11 ; elapsed = 00:00:11 . Memory (MB): peak = 2401.637 ; gain = 705.234 ; free physical = 18890 ; free virtual = 26591
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Timing Optimization
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Timing Optimization : Time (s): cpu = 00:00:11 ; elapsed = 00:00:11 . Memory (MB): peak = 2525.016 ; gain = 736.336 ; free physical = 478 ; free virtual = 9759
+Finished Timing Optimization : Time (s): cpu = 00:00:11 ; elapsed = 00:00:11 . Memory (MB): peak = 2411.652 ; gain = 715.250 ; free physical = 18882 ; free virtual = 26584
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Technology Mapping
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Technology Mapping : Time (s): cpu = 00:00:11 ; elapsed = 00:00:11 . Memory (MB): peak = 2525.016 ; gain = 736.336 ; free physical = 478 ; free virtual = 9759
+Finished Technology Mapping : Time (s): cpu = 00:00:11 ; elapsed = 00:00:11 . Memory (MB): peak = 2421.668 ; gain = 725.266 ; free physical = 18874 ; free virtual = 26575
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start IO Insertion
@@ -248,37 +254,37 @@ Start Final Netlist Cleanup
 Finished Final Netlist Cleanup
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished IO Insertion : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2681.828 ; gain = 893.148 ; free physical = 348 ; free virtual = 9627
+Finished IO Insertion : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2587.480 ; gain = 891.078 ; free physical = 18725 ; free virtual = 26426
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Instances
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Instances : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2681.828 ; gain = 893.148 ; free physical = 348 ; free virtual = 9627
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2587.480 ; gain = 891.078 ; free physical = 18725 ; free virtual = 26426
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Rebuilding User Hierarchy
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2681.828 ; gain = 893.148 ; free physical = 348 ; free virtual = 9627
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2587.480 ; gain = 891.078 ; free physical = 18725 ; free virtual = 26426
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Ports
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Ports : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2681.828 ; gain = 893.148 ; free physical = 348 ; free virtual = 9627
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2587.480 ; gain = 891.078 ; free physical = 18725 ; free virtual = 26426
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2681.828 ; gain = 893.148 ; free physical = 348 ; free virtual = 9627
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2587.480 ; gain = 891.078 ; free physical = 18725 ; free virtual = 26426
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Nets
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Nets : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2681.828 ; gain = 893.148 ; free physical = 348 ; free virtual = 9627
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2587.480 ; gain = 891.078 ; free physical = 18725 ; free virtual = 26426
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Writing Synthesis Report
@@ -300,43 +306,43 @@ Report Cell Usage:
 |1     |char_buffer_bram |     1|
 |2     |clk_wiz          |     1|
 |3     |font_rom         |     1|
-|4     |CARRY4           |     6|
-|5     |LUT1             |     3|
-|6     |LUT2             |    13|
-|7     |LUT3             |    12|
-|8     |LUT4             |    22|
-|9     |LUT5             |    22|
-|10    |LUT6             |    39|
+|4     |CARRY4           |     3|
+|5     |LUT1             |     1|
+|6     |LUT2             |     9|
+|7     |LUT3             |    15|
+|8     |LUT4             |    24|
+|9     |LUT5             |    18|
+|10    |LUT6             |    32|
 |11    |FDPE             |     1|
-|12    |FDRE             |    93|
-|13    |FDSE             |     2|
-|14    |IBUF             |    15|
+|12    |FDRE             |    55|
+|13    |FDSE             |     3|
+|14    |IBUF             |     1|
 |15    |OBUF             |    14|
 +------+-----------------+------+
 ---------------------------------------------------------------------------------
-Finished Writing Synthesis Report : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2681.828 ; gain = 893.148 ; free physical = 348 ; free virtual = 9627
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2587.480 ; gain = 891.078 ; free physical = 18725 ; free virtual = 26426
 ---------------------------------------------------------------------------------
 Synthesis finished with 0 errors, 0 critical warnings and 1 warnings.
-Synthesis Optimization Runtime : Time (s): cpu = 00:00:12 ; elapsed = 00:00:12 . Memory (MB): peak = 2681.828 ; gain = 770.375 ; free physical = 348 ; free virtual = 9627
-Synthesis Optimization Complete : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2681.836 ; gain = 893.148 ; free physical = 348 ; free virtual = 9627
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2587.480 ; gain = 762.305 ; free physical = 18724 ; free virtual = 26425
+Synthesis Optimization Complete : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2587.488 ; gain = 891.078 ; free physical = 18724 ; free virtual = 26425
 INFO: [Project 1-571] Translating synthesized netlist
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2681.836 ; gain = 0.000 ; free physical = 348 ; free virtual = 9627
-INFO: [Netlist 29-17] Analyzing 6 Unisim elements for replacement
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2587.488 ; gain = 0.000 ; free physical = 18724 ; free virtual = 26425
+INFO: [Netlist 29-17] Analyzing 3 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2737.855 ; gain = 0.000 ; free physical = 504 ; free virtual = 9783
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2643.508 ; gain = 0.000 ; free physical = 18846 ; free virtual = 26556
 INFO: [Project 1-111] Unisim Transformation Summary:
 No Unisim elements were transformed.
 
-Synth Design complete | Checksum: 2007febf
+Synth Design complete | Checksum: 102c6e49
 INFO: [Common 17-83] Releasing license: Synthesis
-45 Infos, 15 Warnings, 0 Critical Warnings and 0 Errors encountered.
+45 Infos, 18 Warnings, 0 Critical Warnings and 0 Errors encountered.
 synth_design completed successfully
-synth_design: Time (s): cpu = 00:00:17 ; elapsed = 00:00:16 . Memory (MB): peak = 2737.891 ; gain = 1109.656 ; free physical = 504 ; free virtual = 9783
-INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 1856.857; main = 1856.857; forked = 274.322
-INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3429.664; main = 2737.859; forked = 962.691
-Write ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2761.867 ; gain = 0.000 ; free physical = 504 ; free virtual = 9783
-INFO: [Common 17-1381] The checkpoint '/home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/controller.dcp' has been generated.
+synth_design: Time (s): cpu = 00:00:18 ; elapsed = 00:00:17 . Memory (MB): peak = 2643.543 ; gain = 1088.805 ; free physical = 18843 ; free virtual = 26552
+INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 1755.568; main = 1755.568; forked = 266.731
+INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3332.195; main = 2643.512; forked = 963.555
+Write ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2667.520 ; gain = 0.000 ; free physical = 18842 ; free virtual = 26551
+INFO: [Common 17-1381] The checkpoint '/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1/controller.dcp' has been generated.
 INFO: [Vivado 12-24828] Executing command : report_utilization -file controller_utilization_synth.rpt -pb controller_utilization_synth.pb
-INFO: [Common 17-206] Exiting Vivado at Wed Mar 18 18:25:19 2026...
+INFO: [Common 17-206] Exiting Vivado at Mon Mar 23 08:37:35 2026...

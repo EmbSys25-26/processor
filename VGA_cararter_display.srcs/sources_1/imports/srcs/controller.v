@@ -26,9 +26,9 @@
 module controller(
     input        i_clk,
     input        i_rst,
-    input  [4:0] i_imgSel,
-    input  wire [7:0] i_ascii_code,
-    input  wire       i_ascii_valid,   // pulso 1 ciclo por carácter (PS/2 ou TB)
+    //input  [4:0] i_imgSel,
+    //input  wire [7:0] i_ascii_code,
+    //input  wire       i_ascii_valid,   // pulso 1 ciclo por carácter (PS/2 ou TB)
     output wire [`VGA_CHANNEL_SIZE:0] o_vga_red,
     output wire [`VGA_CHANNEL_SIZE:0] o_vga_green,
     output wire [`VGA_CHANNEL_SIZE:0] o_vga_blue,
@@ -86,8 +86,8 @@ module controller(
         .i_re         (_re),
         .i_addr       (_addr),          
         .i_wdata      (_wdata),
-        .i_ascii_code (i_ascii_code),
-        .i_ascii_valid(i_ascii_valid),  
+        //.i_ascii_code (i_ascii_code),
+        //.i_ascii_valid(i_ascii_valid),  
         .o_rdata      (_rdata),
         .o_rdy        (_rdy),
         .o_vga_red    (o_vga_red),
@@ -127,7 +127,7 @@ module controller(
                 S_IDLE: begin
                     _sel         <= 1'b0;
                     _we          <= 1'b0;
-                    _imgSel_prev <= i_imgSel;
+                    //_imgSel_prev <= i_imgSel;
                     _state       <= S_WRITE_VGASEL;
                 end
 
@@ -137,7 +137,7 @@ module controller(
                     _we    <= 1'b1;
                     _re    <= 1'b0;
                     _addr  <= 2'b01;                    // FIXED: era 1'b1
-                    _wdata <= {11'b0, i_imgSel};
+                    _wdata <= 16'h0010;
                     _state <= S_WAIT_VGASEL;
                 end
 
@@ -165,14 +165,14 @@ module controller(
                     if (_rdy) begin
                         _sel         <= 1'b0;
                         _we          <= 1'b0;
-                        _imgSel_prev <= i_imgSel;
+                        //_imgSel_prev <= i_imgSel;
                         _state       <= S_DONE;
                     end
                 end
 
                 // Passo 3: monitoriza mudanças em i_imgSel, re-escreve se necessário
                 S_DONE: begin
-                    if (i_imgSel != _imgSel_prev) begin
+                    /*if (i_imgSel != _imgSel_prev) begin
                         _imgSel_prev <= i_imgSel;
                         _sel         <= 1'b1;
                         _we          <= 1'b1;
@@ -180,10 +180,10 @@ module controller(
                         _addr        <= 2'b01;          // VGASEL
                         _wdata       <= {11'b0, i_imgSel};
                     end
-                    else begin
+                    else begin*/
                         _sel <= 1'b0;
                         _we  <= 1'b0;
-                    end
+                    //end
                 end
 
             endcase

@@ -1,0 +1,2 @@
+font_rom.v,verilog,xil_defaultlib,../../../../VGA_cararter_display.gen/sources_1/ip/font_rom/sim/font_rom.v,incdir="../../../../../../../Vivado/2025.1/data/rsb/busdef"
+glbl.v,Verilog,xil_defaultlib,glbl.v

@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# Vivado v2025.1 (64-bit)
+# SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
+# IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
+# SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
+# Start of session at: Mon Mar 23 08:41:45 2026
+# Process ID         : 94501
+# Current directory  : /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/impl_1
+# Command line       : vivado -log controller.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source controller.tcl -notrace
+# Log file           : /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/impl_1/controller.vdi
+# Journal file       : /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/impl_1/vivado.jou
+# Running On         : panda
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : AMD Ryzen AI 9 365 w/ Radeon 880M
+# CPU Frequency      : 4282.231 MHz
+# CPU Physical cores : 10
+# CPU Logical cores  : 20
+# Host memory        : 32715 MB
+# Swap memory        : 2147 MB
+# Total Virtual      : 34863 MB
+# Available Virtual  : 29383 MB
+#-----------------------------------------------------------
+source controller.tcl -notrace

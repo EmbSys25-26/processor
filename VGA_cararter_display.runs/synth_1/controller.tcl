@@ -4,7 +4,7 @@
 
 set TIME_start [clock seconds] 
 namespace eval ::optrace {
-  variable script "/home/mendes/VGA_cararter_display/VGA_cararter_display.runs/synth_1/controller.tcl"
+  variable script "/home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.runs/synth_1/controller.tcl"
   variable category "vivado_synth"
 }
 
@@ -56,10 +56,11 @@ if {$::dispatch::connected} {
 }
 
 OPTRACE "synth_1" START { ROLLUP_AUTO }
-set_param checkpoint.writeSynthRtdsInDcp 1
 set_param general.usePosixSpawnForFork 1
-set_msg_config -id {Synth 8-256} -limit 10000
-set_msg_config -id {Synth 8-638} -limit 10000
+set_param xicom.use_bs_reader 1
+set_param chipscope.maxJobs 5
+set_msg_config  -id {Synth 37-125}  -string {{WARNING: [Synth 37-125] [ASSIGN-10]Some bits in IO 'i_ctrl' are not read. First unread bit index is 18. 
+RTL Name 'i_ctrl', Hierarchy 'ctrl_dec', File 'ctrl_dec.v', Line 10.}}  -suppress 
 OPTRACE "Creating in-memory project" START { }
 create_project -in_memory -part xc7z010clg400-1
 
@@ -67,34 +68,34 @@ set_param project.singleFileAddWarning.threshold 0
 set_param project.compositeFile.enableAutoGeneration 0
 set_param synth.vivado.isSynthRun true
 set_msg_config -source 4 -id {IP_Flow 19-2162} -severity warning -new_severity info
-set_property webtalk.parent_dir /home/mendes/VGA_cararter_display/VGA_cararter_display.cache/wt [current_project]
-set_property parent.project_path /home/mendes/VGA_cararter_display/VGA_cararter_display.xpr [current_project]
+set_property webtalk.parent_dir /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.cache/wt [current_project]
+set_property parent.project_path /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.xpr [current_project]
 set_property XPM_LIBRARIES {XPM_CDC XPM_MEMORY} [current_project]
 set_property default_lib xil_defaultlib [current_project]
 set_property target_language Verilog [current_project]
 set_property board_part digilentinc.com:zybo-z7-10:part0:1.2 [current_project]
-set_property ip_output_repo /home/mendes/VGA_cararter_display/VGA_cararter_display.cache/ip [current_project]
+set_property ip_output_repo /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.cache/ip [current_project]
 set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
-add_files /home/mendes/Documentos/processor/vga_font.coe
-read_verilog /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/constants.vh
+add_files /home/mariana/Desktop/project_2nd_Semester/processor/vga_font.coe
+read_verilog /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/constants.vh
 read_verilog -library xil_defaultlib {
-  /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/m_hsync_vga.v
-  /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vga_mmio.v
-  /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vsync_vga.v
-  /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/imports/srcs/controller.v
+  /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_hsync_vga.v
+  /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vga_mmio.v
+  /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/m_vsync_vga.v
+  /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/imports/srcs/controller.v
 }
-read_ip -quiet /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/ip/font_rom/font_rom.xci
-set_property used_in_implementation false [get_files -all /home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/font_rom/font_rom_ooc.xdc]
+read_ip -quiet /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/ip/font_rom/font_rom.xci
+set_property used_in_implementation false [get_files -all /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/font_rom/font_rom_ooc.xdc]
 
-read_ip -quiet /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/ip/char_buffer_bram/char_buffer_bram.xci
-set_property used_in_implementation false [get_files -all /home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/char_buffer_bram/char_buffer_bram_ooc.xdc]
+read_ip -quiet /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/ip/char_buffer_bram/char_buffer_bram.xci
+set_property used_in_implementation false [get_files -all /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/char_buffer_bram/char_buffer_bram_ooc.xdc]
 
-read_ip -quiet /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0.xci
-set_property used_in_implementation false [get_files -all /home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_board.xdc]
-set_property used_in_implementation false [get_files -all /home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.xdc]
-set_property used_in_implementation false [get_files -all /home/mendes/VGA_cararter_display/VGA_cararter_display.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_ooc.xdc]
+read_ip -quiet /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0.xci
+set_property used_in_implementation false [get_files -all /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_board.xdc]
+set_property used_in_implementation false [get_files -all /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.xdc]
+set_property used_in_implementation false [get_files -all /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_ooc.xdc]
 
 OPTRACE "Adding files" END { }
 # Mark all dcp files as not used in implementation to prevent them from being
@@ -105,14 +106,12 @@ OPTRACE "Adding files" END { }
 foreach dcp [get_files -quiet -all -filter file_type=="Design\ Checkpoint"] {
   set_property used_in_implementation false $dcp
 }
-read_xdc /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc
-set_property used_in_implementation false [get_files /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc]
+read_xdc /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc
+set_property used_in_implementation false [get_files /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/constrs_1/imports/constraints/constraintsPins.xdc]
 
-read_xdc dont_touch.xdc
-set_property used_in_implementation false [get_files dont_touch.xdc]
 set_param ips.enableIPCacheLiteLoad 1
 
-read_checkpoint -auto_incremental -incremental /home/mendes/VGA_cararter_display/VGA_cararter_display.srcs/utils_1/imports/synth_1/controller.dcp
+read_checkpoint -auto_incremental -incremental /home/mariana/Desktop/project_2nd_Semester/processor/VGA_cararter_display.srcs/utils_1/imports/synth_1/controller.dcp
 close [open __synthesis_is_running__ w]
 
 OPTRACE "synth_design" START { }

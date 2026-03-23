@@ -35,8 +35,8 @@ module m_vga_mmio(
     input wire        i_re,
     input wire [1:0]  i_addr,          // 2 bits: 4 registos MMIO
     input wire [15:0] i_wdata,
-    input wire [7:0]  i_ascii_code,    // ASCII do PS/2 ou TB
-    input wire        i_ascii_valid,   // pulso 1 ciclo por carácter
+    //input wire [7:0]  i_ascii_code,    // ASCII do PS/2 ou TB
+    //input wire        i_ascii_valid,   // pulso 1 ciclo por carácter
     output wire [15:0] o_rdata,
     output wire        o_rdy,
     output wire [`VGA_CHANNEL_SIZE:0] o_vga_red,
@@ -95,9 +95,16 @@ module m_vga_mmio(
     wire [7:0] _char_ascii;              // saída da BRAM Porta B (1 ciclo latência)
     wire [3:0] _char_row = _lineCounter[3:0];   // linha dentro do char (0-15)
     wire [2:0] _char_col = _pixelCounter[2:0];  // coluna dentro do char (0-7)
+    // Versões registadas para alinhar com a latência de 1 ciclo da BRAM
+    reg [3:0] _char_row_r;
+    always @(posedge i_clkVGA) _char_row_r <= _char_row;
     wire [7:0] _font_data;
-    // ~_char_col inverte: char_col=0 → bit7 (pixel mais à esquerda do char)
-    wire       _pixel_activo = _font_data[~_char_col]; 
+    // O lookahead pede o char do pixel P+1, então _font_data no ciclo P+1 é correcto.
+    // Mas _char_col = _pixelCounter[2:0] também avança no ciclo P+1.
+    // Registamos _char_col 1 ciclo para alinhar com a saída da BRAM.
+    reg [2:0] _char_col_r;
+    always @(posedge i_clkVGA) _char_col_r <= _char_col;
+    wire _pixel_activo = _font_data[~_char_col_r];
     
     // para nao ter delay de pixeis faz se um lookahead ( tambem ia ser so 1 pixel)
 
@@ -143,7 +150,7 @@ module m_vga_mmio(
     // Font ROM - Distributed Memory (assíncrona, .spo = 0 ciclos latência)
     // Endereço: {ascii[7:0], row[3:0]} = 12 bits → 4096 posições × 8 bits
     font_rom font_lut (
-        .a   ({_char_ascii, _char_row}),
+        .a   ({_char_ascii, _char_row_r}),
         .spo (_font_data)
     );
 
@@ -207,7 +214,10 @@ module m_vga_mmio(
             _enVGA_sync <= _enVGA_meta;
         end
     end
-
+    
+    reg _m_written;
+    reg _m_write_pending;  
+    
 /*************************************************************************************
  * SECÇÃO 5 - ESCRITA NOS REGISTOS (domínio clkSystem)
  *
@@ -222,28 +232,34 @@ module m_vga_mmio(
 
     always @(posedge i_clkSystem) begin
         if (i_rst) begin
-            _enVGA      <= 1'b0;
-            _auto_inc   <= 1'b0;
-            _SrcImg0    <= 1'b0;
-            _SrcImg1    <= 1'b0;
-            _SrcImg2    <= 1'b0;
-            _SrcImg3    <= 1'b0;
-            _SrcChar    <= 1'b0;
-            _char_addr  <= 12'd0;
-            _char_waddr <= 12'd0;
-            _char_we    <= 1'b0;
-            _char_wdata <= 8'd0;
+            _enVGA          <= 1'b0;
+            _auto_inc       <= 1'b0;
+            _SrcImg0        <= 1'b0;
+            _SrcImg1        <= 1'b0;
+            _SrcImg2        <= 1'b0;
+            _SrcImg3        <= 1'b0;
+            _SrcChar        <= 1'b0;
+            _char_addr      <= 12'd0;
+            _char_waddr     <= 12'd0;
+            _char_we        <= 1'b0;
+            _char_wdata     <= 8'd0;
+            _m_written      <= 1'b0;
+            _m_write_pending <= 1'b1;  
         end
         else begin
-            _char_we <= 1'b0;   // default: sem escrita (overridden abaixo se necessário)
+            _char_we <= 1'b0;   // default: sem escrita
 
-            // --- Fonte 1: PS/2 / TB (prioridade máxima) ---
-            if (i_ascii_valid) begin
-                _char_wdata <= i_ascii_code;
-                _char_waddr <= _char_addr;  // captura ANTES do auto-inc
+            // --- Escrita hardwired do 'm': espera 1 ciclo após reset ---
+            if (_m_write_pending) begin
+                _m_write_pending <= 1'b0;  // limpa o pending
+                // ainda não escreve, só prepara
+            end
+            else if (!_m_written) begin
+                _char_wdata <= 8'd109;   // 'm' ASCII
+                _char_waddr <= 12'd1159;
                 _char_we    <= 1'b1;
-                if (_auto_inc)
-                    _char_addr <= (_char_addr < 12'd2399) ? _char_addr + 1 : 12'd0;
+                _char_addr  <= 12'd1;
+                _m_written  <= 1'b1;
             end
 
             // --- Fonte 2: CPU via MMIO
