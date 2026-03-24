@@ -28,17 +28,9 @@ module pipe_id_ex(
     input wire [15:0] i_pc,
     input wire [3:0] i_rd,
     input wire [3:0] i_rs,
-    input wire [3:0] i_imm,
-    input wire [11:0] i_i12,
     input wire [15:0] i_rd_data,
     input wire [15:0] i_rs_data,
     input wire [15:0] i_imm16,
-    input wire i_is_imm,
-    input wire i_is_bx,
-    input wire i_is_cli,
-    input wire i_is_sti,
-    input wire i_is_iret,
-    input wire i_irq_interlock,
     input wire i_rf_we,
     input wire i_lw,
     input wire i_lb,
@@ -60,29 +52,14 @@ module pipe_id_ex(
     input wire i_is_sr,
     input wire i_is_getcc,
     input wire i_restore_cc,
-    input wire i_reads_rd,
-    input wire i_reads_rs,
-    input wire i_writes_rd,
     input wire i_is_load,
-    input wire i_is_store,
-    input wire i_uses_cc,
-    input wire i_uses_carry,
-    input wire i_updates_cc,
     output reg o_valid,
     output reg [15:0] o_pc,
     output reg [3:0] o_rd,
     output reg [3:0] o_rs,
-    output reg [3:0] o_imm,
-    output reg [11:0] o_i12,
     output reg [15:0] o_rd_data,
     output reg [15:0] o_rs_data,
     output reg [15:0] o_imm16,
-    output reg o_is_imm,
-    output reg o_is_bx,
-    output reg o_is_cli,
-    output reg o_is_sti,
-    output reg o_is_iret,
-    output reg o_irq_interlock,
     output reg o_rf_we,
     output reg o_lw,
     output reg o_lb,
@@ -104,14 +81,7 @@ module pipe_id_ex(
     output reg o_is_sr,
     output reg o_is_getcc,
     output reg o_restore_cc,
-    output reg o_reads_rd,
-    output reg o_reads_rs,
-    output reg o_writes_rd,
-    output reg o_is_load,
-    output reg o_is_store,
-    output reg o_uses_cc,
-    output reg o_uses_carry,
-    output reg o_updates_cc
+    output reg o_is_load
 );
 
 /*************************************************************************************
@@ -132,17 +102,9 @@ module pipe_id_ex(
             o_pc           <= 16'h0000;
             o_rd           <= 4'h0;
             o_rs           <= 4'h0;
-            o_imm          <= 4'h0;
-            o_i12          <= 12'h000;
             o_rd_data      <= 16'h0000;
             o_rs_data      <= 16'h0000;
             o_imm16        <= 16'h0000;
-            o_is_imm       <= 1'b0;
-            o_is_bx        <= 1'b0;
-            o_is_cli       <= 1'b0;
-            o_is_sti       <= 1'b0;
-            o_is_iret      <= 1'b0;
-            o_irq_interlock <= 1'b0;
             o_rf_we        <= 1'b0;
             o_lw           <= 1'b0;
             o_lb           <= 1'b0;
@@ -164,31 +126,16 @@ module pipe_id_ex(
             o_is_sr        <= 1'b0;
             o_is_getcc     <= 1'b0;
             o_restore_cc   <= 1'b0;
-            o_reads_rd     <= 1'b0;
-            o_reads_rs     <= 1'b0;
-            o_writes_rd    <= 1'b0;
             o_is_load      <= 1'b0;
-            o_is_store     <= 1'b0;
-            o_uses_cc      <= 1'b0;
-            o_uses_carry   <= 1'b0;
-            o_updates_cc   <= 1'b0;
         end else if (!i_stall) begin
             // Normal advance: capture the full decode bundle
             o_valid        <= i_valid;
             o_pc           <= i_pc;
             o_rd           <= i_rd;
             o_rs           <= i_rs;
-            o_imm          <= i_imm;
-            o_i12          <= i_i12;
             o_rd_data      <= i_rd_data;
             o_rs_data      <= i_rs_data;
             o_imm16        <= i_imm16;
-            o_is_imm       <= i_is_imm;
-            o_is_bx        <= i_is_bx;
-            o_is_cli       <= i_is_cli;
-            o_is_sti       <= i_is_sti;
-            o_is_iret      <= i_is_iret;
-            o_irq_interlock <= i_irq_interlock;
             o_rf_we        <= i_rf_we;
             o_lw           <= i_lw;
             o_lb           <= i_lb;
@@ -210,14 +157,7 @@ module pipe_id_ex(
             o_is_sr        <= i_is_sr;
             o_is_getcc     <= i_is_getcc;
             o_restore_cc   <= i_restore_cc;
-            o_reads_rd     <= i_reads_rd;
-            o_reads_rs     <= i_reads_rs;
-            o_writes_rd    <= i_writes_rd;
             o_is_load      <= i_is_load;
-            o_is_store     <= i_is_store;
-            o_uses_cc      <= i_uses_cc;
-            o_uses_carry   <= i_uses_carry;
-            o_updates_cc   <= i_updates_cc;
         end
         // If stalled: all outputs hold (implicit register freeze)
     end

@@ -93,12 +93,10 @@ module id_stage(
 
     output wire o_reads_rd,
     output wire o_reads_rs,
-    output wire o_writes_rd,
     output wire o_is_load,
-    output wire o_is_store,
     output wire o_uses_cc,
-    output wire o_uses_carry,
-    output wire o_updates_cc
+    output wire o_uses_carry
+    
 );
 
 /*************************************************************************************
@@ -217,11 +215,11 @@ module id_stage(
         .o_reads_rd(_reads_rd),
         .o_reads_rs(_reads_rs),
         .o_writes_rd(_writes_rd),
-        .o_is_load(_is_load),
         .o_is_store(_is_store),
+        .o_updates_cc(_updates_cc),
+        .o_is_load(_is_load),
         .o_uses_cc(_uses_cc),
         .o_uses_carry(_uses_carry),
-        .o_updates_cc(_updates_cc),
         .o_irq_interlock(_irq_interlock)
     );
 
@@ -327,11 +325,8 @@ module id_stage(
 
     assign o_reads_rd   = _reads_rd;
     assign o_reads_rs   = _reads_rs;
-    assign o_writes_rd  = _writes_rd;
     assign o_is_load    = _is_load;
-    assign o_is_store   = _is_store;
     assign o_uses_cc    = _uses_cc;
     assign o_uses_carry = _uses_carry;
-    assign o_updates_cc = _updates_cc;
 
 endmodule

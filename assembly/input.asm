@@ -12,81 +12,95 @@
     .org RESET_VEC
 
 reset:
-    LI   sp, #STACK_TOP         ; => IMM #0x03F        [8|03F] = 0x803F  (prefix: upper 12 bits of STACK_TOP=0x03FF)  | MEM_ADDR = 0x0100
-                                ; => ADDI sp,zero,#0xF  [1|D|0|F] = 0x1D0F  (sp = 0x03FF with prefix)                | MEM_ADDR = 0x0102
+    LI   sp, #STACK_TOP         ; => IMM #0x03F        [8|03F] = 0x803F  (prefix: upper 12 bits of STACK_TOP=0x03FF)  		| MEM_ADDR = 0x0100
+                                ; => ADDI sp,zero,#0xF  [1|D|0|F] = 0x1D0F  (sp = 0x03FF with prefix)                		| MEM_ADDR = 0x0102
 main:
     ; Deactivate TimerH int_en
-    IMM  #0x408                 ; [8|408] = 0x8408  (prefix: upper 12 bits of MMIO word-address 0x8100)               | MEM_ADDR = 0x0104
-    SW   r0, r0, #0             ; [6|0|0|0] = 0x6000  (MEM[0+0x8100] = r0 = 0, using prefix)                         | MEM_ADDR = 0x0106
-
-    ; Setup: store known values into memory for later loads
-    ; MEM[sp+0] = 7,  MEM[sp+1] = 3
-    LI   t0, #7                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 7>>4 = 0)                           | MEM_ADDR = 0x0108
-                                ; => ADDI t0,zero,#0x7  [1|4|0|7] = 0x1407  (t0 = 7)                                 | MEM_ADDR = 0x010A
-    SW   t0, sp, #0             ; [6|4|D|0] = 0x64D0  (MEM[sp+0] = 7)                                                | MEM_ADDR = 0x010C
-
-    LI   t0, #3                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 3>>4 = 0)                           | MEM_ADDR = 0x010E
-                                ; => ADDI t0,zero,#0x3  [1|4|0|3] = 0x1403  (t0 = 3)                                 | MEM_ADDR = 0x0110
-    SW   t0, sp, #1             ; [6|4|D|1] = 0x64D1  (MEM[sp+1] = 3)                                                | MEM_ADDR = 0x0112
-
-    ; t1 = 0xFF (mask — AND with any value ≤ 0xFF gives that value directly)
-    LI   t1, #0xFF              ; => IMM #0x00F        [8|00F] = 0x800F  (prefix: 0xFF>>4 = 0xF)                      | MEM_ADDR = 0x0114
-                                ; => ADDI t1,zero,#0xF  [1|5|0|F] = 0x150F  (t1 = 0x00FF)                            | MEM_ADDR = 0x0116
+    IMM  #0x408                 ; [8|408] = 0x8408  (prefix: upper 12 bits of MMIO word-address 0x8100)               		| MEM_ADDR = 0x0104
+    SW   r0, r0, #0             ; [6|0|0|0] = 0x6000  (MEM[0+0x8100] = r0 = 0, using prefix)                         		| MEM_ADDR = 0x0106
 
     ; ============================
-    ; TEST 1: load-use with 0 gap — 2 stalls expected
-    ; AND enters ID while LW is still in MEM (mem_wait cycle 1)
-    ; pipeline stalls AND twice before t0 is available via WB→EX forward
-    ; expected: t1 = 0xFF & 7 = 7
+    ; TEST 1: MEM→EX forwarding (distance 1)
+    ; t0 produced in EX, consumed next cycle when t0 is in MEM
+    ; without forwarding: t0 still in EX → regfile read returns stale value
+    ; expected: t1=2, t2=3, t3=4
     ; ============================
-    LW   t0, sp, #0             ; [4|4|D|0] = 0x44D0  (t0 = MEM[sp+0] = 7)                                           | MEM_ADDR = 0x0118
-    AND  t1, t0                 ; [2|5|4|2] = 0x2542  (t1 = 0xFF & 7 = 7 — load-use: 0 gap → 2 stalls)               | MEM_ADDR = 0x011A
+    LI   t0, #1                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 1>>4 = 0)                           		| MEM_ADDR = 0x0108
+                                ; => ADDI t0,zero,#0x1  [1|4|0|1] = 0x1401  (t0 = 1)                                 		| MEM_ADDR = 0x010A
+
+    ADDI t1, t0, #1             ; [1|5|4|1] = 0x1541  (t1 = t0+1 = 2  — t0 forwarded MEM→EX)                        		| MEM_ADDR = 0x010C
+    ADDI t2, t1, #1             ; [1|6|5|1] = 0x1651  (t2 = t1+1 = 3  — t1 forwarded MEM→EX)                        		| MEM_ADDR = 0x010E
+    ADDI t3, t2, #1             ; [1|7|6|1] = 0x1761  (t3 = t2+1 = 4  — t2 forwarded MEM→EX)                        		| MEM_ADDR = 0x0110
 
     ; ============================
-    ; TEST 2: load-use with 1 gap — 1 stall expected
-    ; 1 independent instruction absorbs 1 stall cycle, 1 stall still needed
-    ; expected: t1 = 7 & 7 = 7
+    ; TEST 2: WB→EX forwarding (distance 2)
+    ; t0 produced in EX, 1 instruction gap, consumed when t0 is in WB
+    ; without forwarding: t0 not yet committed to regfile → stale read
+    ; expected: t1=11
     ; ============================
-    LI   t1, #0xFF              ; => IMM #0x00F        [8|00F] = 0x800F  (prefix: 0xFF>>4 = 0xF)                      | MEM_ADDR = 0x011C
-                                ; => ADDI t1,zero,#0xF  [1|5|0|F] = 0x150F  (t1 = 0x00FF)                            | MEM_ADDR = 0x011E
-    LW   t0, sp, #0             ; [4|4|D|0] = 0x44D0  (t0 = MEM[sp+0] = 7)                                           | MEM_ADDR = 0x0120
-    ADDI s0, s0, #0             ; [1|8|8|0] = 0x1880  (gap: independent, absorbs 1 stall cycle)                       | MEM_ADDR = 0x0122
-    AND  t1, t0                  ; [2|5|4|2] = 0x2542  (t1 = 0xFF & 7 = 7 — load-use: 1 gap → 1 stall)                | MEM_ADDR = 0x0124
+    LI   t0, #10                ; => IMM #0x000        [8|000] = 0x8000  (prefix: 10>>4 = 0)                          		| MEM_ADDR = 0x0112
+                                ; => ADDI t0,zero,#0xA  [1|4|0|A] = 0x140A  (t0 = 10)                                		| MEM_ADDR = 0x0114
+
+    ADDI s0, s0, #0             ; [1|8|8|0] = 0x1880  (gap instruction, does not use t0)                             		| MEM_ADDR = 0x0116
+    ADDI t1, t0, #1             ; [1|5|4|1] = 0x1541  (t1 = t0+1 = 11 — t0 forwarded WB→EX)                         		| MEM_ADDR = 0x0118
 
     ; ============================
-    ; TEST 3: load-use with 2 gaps — 1 stall expected
-    ; 2 independent instructions fully hide the 2-cycle memory latency
-    ; expected: t1 = 0xFF & 7 = 7
+    ; TEST 3: back-to-back MEM→EX dependency chain on both rd and rs
+    ; ADD t0,t0 reads t0 as both operands — both need forwarding simultaneously
+    ; expected: t0 = 1→2→4→8→16
     ; ============================
-    LI   t1, #0xFF              ; => IMM #0x00F        [8|00F] = 0x800F  (prefix: 0xFF>>4 = 0xF)                      | MEM_ADDR = 0x0126
-                                ; => ADDI t1,zero,#0xF  [1|5|0|F] = 0x150F  (t1 = 0x00FF)                            | MEM_ADDR = 0x0128
-    LW   t0, sp, #0             ; [4|4|D|0] = 0x44D0  (t0 = MEM[sp+0] = 7)                                           | MEM_ADDR = 0x012A
-    ADDI s0, s0, #0             ; [1|8|8|0] = 0x1880  (gap 1: independent, absorbs stall cycle 1)                     | MEM_ADDR = 0x012C
-    ADDI s1, s1, #0             ; [1|9|9|0] = 0x1990  (gap 2: independent, absorbs stall cycle 2)                     | MEM_ADDR = 0x012E
-    AND  t1, t0                 ; [2|5|4|2] = 0x2542  (t1 = 0xFF & 7 = 7 — no stall, latency fully hidden)            | MEM_ADDR = 0x0130
+    LI   t0, #1                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 1>>4 = 0)                           		| MEM_ADDR = 0x011A
+                                ; => ADDI t0,zero,#0x1  [1|4|0|1] = 0x1401  (t0 = 1)                                 		| MEM_ADDR = 0x011C
+
+    ADD  t0, t0                 ; [2|4|4|0] = 0x2440  (t0 = t0+t0 = 2  — t0 forwarded MEM→EX for both rd and rs)     		| MEM_ADDR = 0x011E
+    ADD  t0, t0                 ; [2|4|4|0] = 0x2440  (t0 = t0+t0 = 4  — t0 forwarded MEM→EX for both rd and rs)     		| MEM_ADDR = 0x0120
+    ADD  t0, t0                 ; [2|4|4|0] = 0x2440  (t0 = t0+t0 = 8  — t0 forwarded MEM→EX for both rd and rs)     		| MEM_ADDR = 0x0122
+    ADD  t0, t0                 ; [2|4|4|0] = 0x2440  (t0 = t0+t0 = 16 — t0 forwarded MEM→EX for both rd and rs)     		| MEM_ADDR = 0x0124
 
     ; ============================
-    ; TEST 4: back-to-back loads both used immediately
-    ; each LW→use pair causes 2 stalls independently
-    ; expected: t2 = 7 + 3 = 10
+    ; TEST 4: two independent forwards into the same instruction
+    ; t2 and t3 explicitly zeroed to avoid residue from previous tests
+    ; ADD t2,t0: t2=0+3=3 (t0 WB→EX); ADD t3,t1: t3=0+5=5 (t1 MEM→EX)
+    ; ADD t2,t3: t2=3+5=8 (t2 MEM→EX, t3 WB→EX)
+    ; expected: t2=8, t3=5
     ; ============================
-    LI   t2, #0                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 0>>4 = 0)                           | MEM_ADDR = 0x0132
-                                ; => ADDI t2,zero,#0x0  [1|6|0|0] = 0x1600  (t2 = 0, cleared)                        | MEM_ADDR = 0x0134
-    LW   t0, sp, #0             ; [4|4|D|0] = 0x44D0  (t0 = MEM[sp+0] = 7)                                           | MEM_ADDR = 0x0136
-    ADD  t2, t0                 ; [2|6|4|0] = 0x2640  (t2 = 0+7 = 7 — load-use: 0 gap → 2 stalls)                    | MEM_ADDR = 0x0138
-    LW   t1, sp, #1             ; [4|5|D|1] = 0x45D1  (t1 = MEM[sp+1] = 3)                                           | MEM_ADDR = 0x013A
-    ADD  t2, t1                 ; [2|6|5|0] = 0x2650  (t2 = 7+3 = 10 — load-use: 0 gap → 2 stalls)                   | MEM_ADDR = 0x013C
+    LI   t0, #3                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 3>>4 = 0)                           		| MEM_ADDR = 0x0126
+                                ; => ADDI t0,zero,#0x3  [1|4|0|3] = 0x1403  (t0 = 3)                                 		| MEM_ADDR = 0x0128
+
+    LI   t1, #5                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 5>>4 = 0)                          		| MEM_ADDR = 0x012A
+                                ; => ADDI t1,zero,#0x5  [1|5|0|5] = 0x1505  (t1 = 5)                                 		| MEM_ADDR = 0x012C
+
+    LI   t2, #0                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 0>>4 = 0)                           		| MEM_ADDR = 0x012E
+                                ; => ADDI t2,zero,#0x0  [1|6|0|0] = 0x1600  (t2 = 0, cleared)                        		| MEM_ADDR = 0x0130
+
+    LI   t3, #0                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 0>>4 = 0)                           		| MEM_ADDR = 0x0132
+                                ; => ADDI t3,zero,#0x0  [1|7|0|0] = 0x1700  (t3 = 0, cleared)                        		| MEM_ADDR = 0x0134
+
+    ADD  t2, t0                 ; [2|6|4|0] = 0x2640  (t2 = t2+t0 = 0+3 = 3 — t0 forwarded WB→EX, t2 forwarded WB→EX)  	| MEM_ADDR = 0x0136
+    ADD  t3, t1                 ; [2|7|5|0] = 0x2750  (t3 = t3+t1 = 0+5 = 5 — t1 forwarded MEM→EX, t3 forwarded MEM→EX) 	| MEM_ADDR = 0x0138
+    ADD  t2, t3                 ; [2|6|7|0] = 0x2670  (t2 = t2+t3 = 3+5 = 8 — t2 forwarded MEM→EX, t3 forwarded WB→EX)  	| MEM_ADDR = 0x013A
 
     ; ============================
-    ; TEST 5: load-use on store data operand (0 gap)
-    ; SW uses t0 as the data to write — hazard unit must also stall for this case
-    ; expected: MEM[sp+2] = 7
+    ; TEST 5: forwarding with SUB and CMP
+    ; t2=8 explicitly loaded to isolate this test from TEST 4 residue
+    ; SUB t2,t0: t2 = t2-t0 = 8-3 = 5 (t0 forwarded WB→EX)
+    ; CMP t2,t1: CMP(5, 5) → Z=1 (t2 forwarded MEM→EX, t1 forwarded WB→EX)
+    ; expected: Z=1 N=0
     ; ============================
-    LW   t0, sp, #0             ; [4|4|D|0] = 0x44D0  (t0 = MEM[sp+0] = 7)                                           | MEM_ADDR = 0x013E
-    SW   t0, sp, #2             ; [6|4|D|2] = 0x64D2  (MEM[sp+2] = t0 = 7 — load-use: 0 gap → 2 stalls)              | MEM_ADDR = 0x0140
+    LI   t0, #3                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 3>>4 = 0)                           		| MEM_ADDR = 0x013C
+                                ; => ADDI t0,zero,#0x3  [1|4|0|3] = 0x1403  (t0 = 3)                                 		| MEM_ADDR = 0x013E
+
+    LI   t1, #5                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 5>>4 = 0)                           		| MEM_ADDR = 0x0140
+                                ; => ADDI t1,zero,#0x5  [1|5|0|5] = 0x1505  (t1 = 5)                                 		| MEM_ADDR = 0x0142
+
+    LI   t2, #8                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 8>>4 = 0)                           		| MEM_ADDR = 0x0144
+                                ; => ADDI t2,zero,#0x8  [1|6|0|8] = 0x1608  (t2 = 8)                                 		| MEM_ADDR = 0x0146
+
+    SUB  t2, t0                 ; [2|6|4|1] = 0x2641  (t2 = t2-t0 = 8-3 = 5 — t0 forwarded WB→EX, t2 forwarded WB→EX) 	| MEM_ADDR = 0x0148
+    CMP  t2, t1                 ; [2|6|5|6] = 0x2656  (CMP(5,5) → Z=1 — t2 forwarded MEM→EX, t1 forwarded WB→EX)    		| MEM_ADDR = 0x014A
 
     ; ============================
-    ; 0x0142 — halt
+    ; 0x014C — halt
     ; ============================
 halt:
-    BR   halt                   ; [9|0|00] = 0x9000  (disp=0: infinite self-loop)                                     | MEM_ADDR = 0x0142
+    BR   halt                   ; [9|0|00] = 0x9000  (disp=0: infinite self-loop)                                     		| MEM_ADDR = 0x014C

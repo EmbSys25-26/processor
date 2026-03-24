@@ -22,8 +22,7 @@
 // Writeback data selection:
 //   Loads: o_wb_data = i_data_in (data received from memory)
 //   Others: o_wb_data = i_wb_pre_data (ALU result from EX stage)
-//
-// All flag/carry/CC metadata is forwarded unchanged to the MEM/WB register.
+
 // ============================================================
 module mem_stage(
     input wire i_valid,
@@ -36,23 +35,12 @@ module mem_stage(
     input wire [15:0] i_d_ad,           // Data-memory byte address from EX
     input wire [15:0] i_store_data,     // Data to write to memory (for stores)
     input wire [15:0] i_wb_pre_data,    // ALU result for writeback (for non-loads)
-    input wire i_flag_we,
-    input wire i_new_ccz,
-    input wire i_new_ccn,
-    input wire i_new_ccc,
-    input wire i_new_ccv,
-    input wire i_carry_we,
-    input wire i_new_c,
-    input wire i_updates_cc_hz,
-    input wire i_updates_carry_hz,
     input wire i_is_load,
-    input wire i_is_iret,
     input wire [15:0] i_data_in,        // Load data returned by data memory
     input wire i_rdy,                   // Data memory ready (load/store complete)
     input wire [15:0] i_pc_dbg,
 
     output wire o_mem_wait,             // 1 = pipeline stall: waiting for memory
-    output wire o_mem_complete,         // 1 = memory operation done (or no mem op)
     output wire o_sw,
     output wire o_sb,
     output wire o_lw,
@@ -62,17 +50,7 @@ module mem_stage(
     output wire o_valid,                // Instruction has retired from MEM
     output wire [3:0] o_rd,
     output wire o_rf_we,
-    output wire [15:0] o_wb_data,       // Final writeback value (load result or ALU result)
-    output wire o_flag_we,
-    output wire o_new_ccz,
-    output wire o_new_ccn,
-    output wire o_new_ccc,
-    output wire o_new_ccv,
-    output wire o_carry_we,
-    output wire o_new_c,
-    output wire o_updates_cc_hz,
-    output wire o_updates_carry_hz,
-    output wire o_is_iret
+    output wire [15:0] o_wb_data       // Final writeback value (load result or ALU result)
 );
 
 /*************************************************************************************
@@ -95,8 +73,6 @@ module mem_stage(
     // Pipeline stall: instruction is valid, it's a memory op, and memory isn't ready yet
     assign o_mem_wait     = i_valid & _is_mem_op & ~i_rdy;
 
-    // Memory complete: either there's no memory op, or the memory op has finished
-    assign o_mem_complete = i_valid & (~_is_mem_op | i_rdy);
 
 /*************************************************************************************
  * 2.2 External Bus
@@ -121,16 +97,5 @@ module mem_stage(
     // Select final writeback data: load instructions get memory data, others get ALU result
     assign o_wb_data = i_is_load ? i_data_in : i_wb_pre_data;
 
-    // Pass flag/carry metadata unchanged to the WB stage
-    assign o_flag_we          = i_flag_we;
-    assign o_new_ccz          = i_new_ccz;
-    assign o_new_ccn          = i_new_ccn;
-    assign o_new_ccc          = i_new_ccc;
-    assign o_new_ccv          = i_new_ccv;
-    assign o_carry_we         = i_carry_we;
-    assign o_new_c            = i_new_c;
-    assign o_updates_cc_hz    = i_updates_cc_hz;
-    assign o_updates_carry_hz = i_updates_carry_hz;
-    assign o_is_iret          = i_is_iret;
 
 endmodule

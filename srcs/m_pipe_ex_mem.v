@@ -31,17 +31,7 @@ module pipe_ex_mem(
     input wire [15:0] i_d_ad,       // Data-memory address from EX
     input wire [15:0] i_store_data, // Store data from EX
     input wire [15:0] i_wb_pre_data,// Pre-writeback ALU result from EX
-    input wire i_flag_we,
-    input wire i_new_ccz,
-    input wire i_new_ccn,
-    input wire i_new_ccc,
-    input wire i_new_ccv,
-    input wire i_carry_we,
-    input wire i_new_c,
-    input wire i_updates_cc_hz,
-    input wire i_updates_carry_hz,
     input wire i_is_load,
-    input wire i_is_iret,
     output reg o_valid,
     output reg [15:0] o_pc,
     output reg [3:0] o_rd,
@@ -53,17 +43,7 @@ module pipe_ex_mem(
     output reg [15:0] o_d_ad,
     output reg [15:0] o_store_data,
     output reg [15:0] o_wb_pre_data,
-    output reg o_flag_we,
-    output reg o_new_ccz,
-    output reg o_new_ccn,
-    output reg o_new_ccc,
-    output reg o_new_ccv,
-    output reg o_carry_we,
-    output reg o_new_c,
-    output reg o_updates_cc_hz,
-    output reg o_updates_carry_hz,
-    output reg o_is_load,
-    output reg o_is_iret
+    output reg o_is_load
 );
 
 /*************************************************************************************
@@ -91,17 +71,7 @@ module pipe_ex_mem(
             o_d_ad             <= 16'h0000;
             o_store_data       <= 16'h0000;
             o_wb_pre_data      <= 16'h0000;
-            o_flag_we          <= 1'b0;
-            o_new_ccz          <= 1'b0;
-            o_new_ccn          <= 1'b0;
-            o_new_ccc          <= 1'b0;
-            o_new_ccv          <= 1'b0;
-            o_carry_we         <= 1'b0;
-            o_new_c            <= 1'b0;
-            o_updates_cc_hz    <= 1'b0;
-            o_updates_carry_hz <= 1'b0;
             o_is_load          <= 1'b0;
-            o_is_iret          <= 1'b0;
         end else if (!i_stall) begin
             // Normal advance: capture all EX outputs
             o_valid            <= i_valid;
@@ -115,17 +85,7 @@ module pipe_ex_mem(
             o_d_ad             <= i_d_ad;
             o_store_data       <= i_store_data;
             o_wb_pre_data      <= i_wb_pre_data;
-            o_flag_we          <= i_flag_we;
-            o_new_ccz          <= i_new_ccz;
-            o_new_ccn          <= i_new_ccn;
-            o_new_ccc          <= i_new_ccc;
-            o_new_ccv          <= i_new_ccv;
-            o_carry_we         <= i_carry_we;
-            o_new_c            <= i_new_c;
-            o_updates_cc_hz    <= i_updates_cc_hz;
-            o_updates_carry_hz <= i_updates_carry_hz;
             o_is_load          <= i_is_load;
-            o_is_iret          <= i_is_iret;
         end
         // If stalled: hold all outputs frozen
     end

@@ -58,12 +58,12 @@ module brom_1kb_be(
         // Vivado behavioral sim launch directory depth.
      //   _mem_hex_lo = "../../../../srcs/mem/mem_lo.hex";
      //   _mem_hex_hi = "../../../../srcs/mem/mem_hi.hex";
-          _mem_hex_lo = "/home/andre/Desktop/pipeline_group/processor/srcs/mem/mem_lo.hex";
-        _mem_hex_hi = "/home/andre/Desktop/pipeline_group/processor/srcs/mem/mem_hi.hex";
+          _mem_hex_lo = "/home/simba/Documents/Embedded_Systems/2nd_semester/pipeline_no_wb/processor/srcs/mem/mem_lo.hex";
+        _mem_hex_hi = "/home/simba/Documents/Embedded_Systems/2nd_semester/pipeline_no_wb/processor/srcs/mem/mem_hi.hex";
 `else
         // Board-flow default absolute paths (override via BROM_MEM_*_PATH if needed).
-        _mem_hex_lo = "/home/andre/Desktop/pipeline_group/processor/srcs/mem/mem_lo.hex";
-        _mem_hex_hi = "/home/andre/Desktop/pipeline_group/processor/srcs/mem/mem_hi.hex";
+        _mem_hex_lo = "/home/simba/Documents/Embedded_Systems/2nd_semester/pipeline_no_wb/processor/srcs/mem/mem_lo.hex";
+        _mem_hex_hi = "/home/simba/Documents/Embedded_Systems/2nd_semester/pipeline_no_wb/processor/srcs/mem/mem_hi.hex";
 `endif
         $readmemh(_mem_hex_lo, _mem_l);
         $readmemh(_mem_hex_hi, _mem_h);

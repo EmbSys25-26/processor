@@ -71,7 +71,7 @@ module ex_stage(
     input wire i_is_sr,
     input wire i_is_getcc,
     input wire i_restore_cc,        // SETCC: restore PSW from Rs
-    input wire i_is_iret,
+
     
     input wire i_forward_a,
     input wire i_forward_b,
@@ -102,10 +102,7 @@ module ex_stage(
     output wire o_new_ccv,
     output wire o_carry_we,             // Carry bit should be updated
     output wire o_new_c,
-    output wire o_updates_cc_hz,        // Hazard hint: this instruction updates CCs
-    output wire o_updates_carry_hz,     // Hazard hint: this instruction updates carry
-    output wire o_is_load,
-    output wire o_is_iret
+    output wire o_is_load
 );
 
 /*************************************************************************************
@@ -260,15 +257,8 @@ module ex_stage(
     assign o_sw      = i_valid & i_sw;
     assign o_sb      = i_valid & i_sb;
 
-    // Hazard hints for the hazard unit downstream tracking:
-    //   updates_cc_hz: instruction updates condition codes (broader than _update_cc —
-    //   also includes SETCC/restore_cc, since that also modifies the CC state)
-    assign o_updates_cc_hz  = i_valid & ((((i_is_rr | i_is_ri) & (i_is_sum | i_is_cmp)) | i_is_addi | i_restore_cc));
-    // updates_carry_hz: conservative — every valid instruction potentially touches carry
-    // (because carry_we is always asserted for valid instructions in this design)
-    assign o_updates_carry_hz = i_valid;
+  
 
     assign o_is_load  = i_valid & (i_lw | i_lb);
-    assign o_is_iret  = i_valid & i_is_iret;
 
 endmodule

@@ -3,9 +3,9 @@
     `include "constants.vh"
     
     // ============================================================
-    // Top-level CPU module — 5-stage pipelined processor
+    // Top-level CPU module — 4-stage pipelined processor
     //
-    // Pipeline stages: IF → ID → EX → MEM → WB
+    // Pipeline stages: IF → ID → EX → MEM
     //
     // External interfaces:
     //   - Instruction memory: provides i_insn when i_hit is asserted;
@@ -121,12 +121,7 @@
         wire _id_restore_cc;        // SETCC system instruction (restores PSW from register)
         wire _id_reads_rd;          // Instruction reads Rd as source (for hazard detection)
         wire _id_reads_rs;          // Instruction reads Rs as source
-        wire _id_writes_rd;         // Instruction writes Rd (for hazard detection)
         wire _id_is_load;
-        wire _id_is_store;
-        wire _id_uses_cc;           // Instruction uses condition codes (e.g. BX)
-        wire _id_uses_carry;        // Instruction uses carry bit (ADC/SBC)
-        wire _id_updates_cc;        // Instruction will update condition codes
     
         // ---- Register file wires ----
         wire _rf_we;                // Register-file write-enable (from WB or IRQ accept)
@@ -164,17 +159,9 @@
         wire [15:0] _idex_pc;
         wire [3:0] _idex_rd;
         wire [3:0] _idex_rs;
-        wire [3:0] _idex_imm;
-        wire [11:0] _idex_i12;
         wire [15:0] _idex_rd_data;
         wire [15:0] _idex_rs_data;
         wire [15:0] _idex_imm16;
-        wire _idex_is_imm;
-        wire _idex_is_bx;
-        wire _idex_is_cli;
-        wire _idex_is_sti;
-        wire _idex_is_iret;
-        wire _idex_irq_interlock;
         wire _idex_rf_we;
         wire _idex_lw;
         wire _idex_lb;
@@ -196,14 +183,7 @@
         wire _idex_is_sr;
         wire _idex_is_getcc;
         wire _idex_restore_cc;
-        wire _idex_reads_rd;
-        wire _idex_reads_rs;
-        wire _idex_writes_rd;
         wire _idex_is_load;
-        wire _idex_is_store;
-        wire _idex_uses_cc;
-        wire _idex_uses_carry;
-        wire _idex_updates_cc;
     
         // ---- EX stage outputs ----
         wire _ex_valid;
@@ -224,10 +204,7 @@
         wire _ex_new_ccv;
         wire _ex_carry_we;             // EX wants to update carry bit
         wire _ex_new_c;
-        wire _ex_updates_cc_hz;        // Hazard metadata: this instruction updates CCs
-        wire _ex_updates_carry_hz;     // Hazard metadata: this instruction updates carry
         wire _ex_is_load;
-        wire _ex_is_iret;
     
         // ---- EX/MEM pipeline register outputs ----
         wire _exmem_valid;
@@ -241,21 +218,10 @@
         wire [15:0] _exmem_d_ad;
         wire [15:0] _exmem_store_data;
         wire [15:0] _exmem_wb_pre_data;
-        wire _exmem_flag_we;
-        wire _exmem_new_ccz;
-        wire _exmem_new_ccn;
-        wire _exmem_new_ccc;
-        wire _exmem_new_ccv;
-        wire _exmem_carry_we;
-        wire _exmem_new_c;
-        wire _exmem_updates_cc_hz;
-        wire _exmem_updates_carry_hz;
         wire _exmem_is_load;
-        wire _exmem_is_iret;
     
         // ---- MEM stage outputs ----
         wire _mem_wait;             // MEM is waiting on data memory (stalls pipeline)
-        wire _mem_complete;         // MEM operation has completed (or no memory op)
         wire _mem_sw;
         wire _mem_sb;
         wire _mem_lw;
@@ -266,31 +232,12 @@
         wire [3:0] _mem_rd;
         wire _mem_rf_we;
         wire [15:0] _mem_wb_data;   // Final writeback value (load result or ALU result)
-        wire _mem_flag_we;
-        wire _mem_new_ccz;
-        wire _mem_new_ccn;
-        wire _mem_new_ccc;
-        wire _mem_new_ccv;
-        wire _mem_carry_we;
-        wire _mem_new_c;
-        wire _mem_updates_cc_hz;
-        wire _mem_updates_carry_hz;
-        wire _mem_is_iret;
+
     
         // ---- WB stage outputs ----
         wire _wb_rf_we;
         wire [3:0] _wb_wa;
         wire [15:0] _wb_wd;
-        wire _wb_flag_we;
-        wire _wb_new_ccz;
-        wire _wb_new_ccn;
-        wire _wb_new_ccc;
-        wire _wb_new_ccv;
-        wire _wb_carry_we;
-        wire _wb_new_c;
-        wire _wb_updates_cc_hz;
-        wire _wb_updates_carry_hz;
-        wire _wb_iret_event;
     
     /*************************************************************************************
      * SECTION 2. IMPLEMENTATION
@@ -443,12 +390,7 @@
             .o_restore_cc(_id_restore_cc),
             .o_reads_rd(_id_reads_rd),
             .o_reads_rs(_id_reads_rs),
-            .o_writes_rd(_id_writes_rd),
-            .o_is_load(_id_is_load),
-            .o_is_store(_id_is_store),
-            .o_uses_cc(_id_uses_cc),
-            .o_uses_carry(_id_uses_carry),
-            .o_updates_cc(_id_updates_cc)
+            .o_is_load(_id_is_load)
         );
     
         // Register-file read addresses come from the decoded Rd/Rs fields in ID
@@ -465,8 +407,6 @@
             .i_id_rs(_id_rs),
             .i_id_reads_rd(_id_reads_rd),
             .i_id_reads_rs(_id_reads_rs),
-            .i_id_uses_cc(_id_uses_cc),
-            .i_id_uses_carry(_id_uses_carry),
             // External events
             .i_branch_take(_branch_take_commit),
             .i_mem_wait(_mem_wait),
@@ -476,14 +416,10 @@
             .i_idex_rf_we(_idex_rf_we),
             .i_idex_rd(_idex_rd),
             .i_idex_is_load(_idex_is_load),
-            .i_idex_updates_cc(_idex_updates_cc),
-            .i_idex_updates_carry(_idex_valid),     // Note: intentionally uses _idex_valid as carry proxy
             // EX/MEM stage — what's pending in MEM
             .i_exmem_valid(_exmem_valid),
             .i_exmem_rf_we(_exmem_rf_we),
             .i_exmem_rd(_exmem_rd),
-            .i_exmem_updates_cc(_exmem_updates_cc_hz),
-            .i_exmem_updates_carry(_exmem_updates_carry_hz),
             // Control outputs
             .o_stall_if(_stall_if),
             .o_stall_id(_stall_id),
@@ -522,17 +458,9 @@
             .i_pc(_id_pc),
             .i_rd(_id_rd),
             .i_rs(_id_rs),
-            .i_imm(_id_imm),
-            .i_i12(_id_i12),
             .i_rd_data(_id_rd_data),
             .i_rs_data(_id_rs_data),
             .i_imm16(_id_imm16),
-            .i_is_imm(_id_is_imm),
-            .i_is_bx(_id_is_bx),
-            .i_is_cli(_id_is_cli),
-            .i_is_sti(_id_is_sti),
-            .i_is_iret(_id_is_iret),
-            .i_irq_interlock(_id_irq_interlock),
             .i_rf_we(_id_rf_we),
             .i_lw(_id_lw),
             .i_lb(_id_lb),
@@ -554,29 +482,14 @@
             .i_is_sr(_id_is_sr),
             .i_is_getcc(_id_is_getcc),
             .i_restore_cc(_id_restore_cc),
-            .i_reads_rd(_id_reads_rd),
-            .i_reads_rs(_id_reads_rs),
-            .i_writes_rd(_id_writes_rd),
             .i_is_load(_id_is_load),
-            .i_is_store(_id_is_store),
-            .i_uses_cc(_id_uses_cc),
-            .i_uses_carry(_id_uses_carry),
-            .i_updates_cc(_id_updates_cc),
             .o_valid(_idex_valid),
             .o_pc(_idex_pc),
             .o_rd(_idex_rd),
             .o_rs(_idex_rs),
-            .o_imm(_idex_imm),
-            .o_i12(_idex_i12),
             .o_rd_data(_idex_rd_data),
             .o_rs_data(_idex_rs_data),
             .o_imm16(_idex_imm16),
-            .o_is_imm(_idex_is_imm),
-            .o_is_bx(_idex_is_bx),
-            .o_is_cli(_idex_is_cli),
-            .o_is_sti(_idex_is_sti),
-            .o_is_iret(_idex_is_iret),
-            .o_irq_interlock(_idex_irq_interlock),
             .o_rf_we(_idex_rf_we),
             .o_lw(_idex_lw),
             .o_lb(_idex_lb),
@@ -598,14 +511,7 @@
             .o_is_sr(_idex_is_sr),
             .o_is_getcc(_idex_is_getcc),
             .o_restore_cc(_idex_restore_cc),
-            .o_reads_rd(_idex_reads_rd),
-            .o_reads_rs(_idex_reads_rs),
-            .o_writes_rd(_idex_writes_rd),
-            .o_is_load(_idex_is_load),
-            .o_is_store(_idex_is_store),
-            .o_uses_cc(_idex_uses_cc),
-            .o_uses_carry(_idex_uses_carry),
-            .o_updates_cc(_idex_updates_cc)
+            .o_is_load(_idex_is_load)
         );
     
         ex_stage u_ex_stage (
@@ -636,7 +542,6 @@
             .i_is_sr(_idex_is_sr),
             .i_is_getcc(_idex_is_getcc),
             .i_restore_cc(_idex_restore_cc),
-            .i_is_iret(_idex_is_iret),
              // for the forwarding
             .i_forward_a(_forward_a),
             .i_forward_b(_forward_b),
@@ -665,10 +570,7 @@
             .o_new_ccv(_ex_new_ccv),
             .o_carry_we(_ex_carry_we),
             .o_new_c(_ex_new_c),
-            .o_updates_cc_hz(_ex_updates_cc_hz),
-            .o_updates_carry_hz(_ex_updates_carry_hz),
-            .o_is_load(_ex_is_load),
-            .o_is_iret(_ex_is_iret)
+            .o_is_load(_ex_is_load)
         );
     
     /*************************************************************************************
@@ -690,17 +592,7 @@
             .i_d_ad(_ex_d_ad),
             .i_store_data(_ex_store_data),
             .i_wb_pre_data(_ex_wb_pre_data),
-            .i_flag_we(_ex_flag_we),
-            .i_new_ccz(_ex_new_ccz),
-            .i_new_ccn(_ex_new_ccn),
-            .i_new_ccc(_ex_new_ccc),
-            .i_new_ccv(_ex_new_ccv),
-            .i_carry_we(_ex_carry_we),
-            .i_new_c(_ex_new_c),
-            .i_updates_cc_hz(_ex_updates_cc_hz),
-            .i_updates_carry_hz(_ex_updates_carry_hz),
             .i_is_load(_ex_is_load),
-            .i_is_iret(_ex_is_iret),
             .o_valid(_exmem_valid),
             .o_pc(_exmem_pc),
             .o_rd(_exmem_rd),
@@ -712,17 +604,7 @@
             .o_d_ad(_exmem_d_ad),
             .o_store_data(_exmem_store_data),
             .o_wb_pre_data(_exmem_wb_pre_data),
-            .o_flag_we(_exmem_flag_we),
-            .o_new_ccz(_exmem_new_ccz),
-            .o_new_ccn(_exmem_new_ccn),
-            .o_new_ccc(_exmem_new_ccc),
-            .o_new_ccv(_exmem_new_ccv),
-            .o_carry_we(_exmem_carry_we),
-            .o_new_c(_exmem_new_c),
-            .o_updates_cc_hz(_exmem_updates_cc_hz),
-            .o_updates_carry_hz(_exmem_updates_carry_hz),
-            .o_is_load(_exmem_is_load),
-            .o_is_iret(_exmem_is_iret)
+            .o_is_load(_exmem_is_load)
         );
     
         mem_stage u_mem_stage (
@@ -736,22 +618,11 @@
             .i_d_ad(_exmem_d_ad),
             .i_store_data(_exmem_store_data),
             .i_wb_pre_data(_exmem_wb_pre_data),
-            .i_flag_we(_exmem_flag_we),
-            .i_new_ccz(_exmem_new_ccz),
-            .i_new_ccn(_exmem_new_ccn),
-            .i_new_ccc(_exmem_new_ccc),
-            .i_new_ccv(_exmem_new_ccv),
-            .i_carry_we(_exmem_carry_we),
-            .i_new_c(_exmem_new_c),
-            .i_updates_cc_hz(_exmem_updates_cc_hz),
-            .i_updates_carry_hz(_exmem_updates_carry_hz),
             .i_is_load(_exmem_is_load),
-            .i_is_iret(_exmem_is_iret),
             .i_data_in(i_data_in),    // Load result from data memory
             .i_rdy(i_rdy),            // Data memory ready
             .i_pc_dbg(_exmem_pc),
             .o_mem_wait(_mem_wait),
-            .o_mem_complete(_mem_complete),
             .o_sw(_mem_sw),
             .o_sb(_mem_sb),
             .o_lw(_mem_lw),
@@ -761,17 +632,7 @@
             .o_valid(_mem_valid),
             .o_rd(_mem_rd),
             .o_rf_we(_mem_rf_we),
-            .o_wb_data(_mem_wb_data),
-            .o_flag_we(_mem_flag_we),
-            .o_new_ccz(_mem_new_ccz),
-            .o_new_ccn(_mem_new_ccn),
-            .o_new_ccc(_mem_new_ccc),
-            .o_new_ccv(_mem_new_ccv),
-            .o_carry_we(_mem_carry_we),
-            .o_new_c(_mem_new_c),
-            .o_updates_cc_hz(_mem_updates_cc_hz),
-            .o_updates_carry_hz(_mem_updates_carry_hz),
-            .o_is_iret(_mem_is_iret)
+            .o_wb_data(_mem_wb_data)
         );
         
     // Register file writeback - driven directly from MEM stage
@@ -779,14 +640,6 @@
     assign _wb_wa      = _mem_rd;
     assign _wb_wd      = _mem_wb_data;
     
-    // Flag and carry updates
-    assign _wb_flag_we = _mem_valid & _mem_flag_we;
-    assign _wb_new_ccz = _mem_new_ccz;
-    assign _wb_new_ccn = _mem_new_ccn;
-    assign _wb_new_ccc = _mem_new_ccc;
-    assign _wb_new_ccv = _mem_new_ccv;
-    assign _wb_carry_we = _mem_valid & _mem_carry_we;
-    assign _wb_new_c    = _mem_new_c;
     
     /*************************************************************************************
      * 2.8 PC and Global State Updates

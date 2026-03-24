@@ -24,15 +24,6 @@
 //      Detection: ID/EX is a load AND its destination matches
 //      what the current ID instruction reads.
 //
-//   3. CC (Condition Code) hazard:
-//      An instruction in ID reads the condition codes (e.g. BX),
-//      but an in-flight instruction in EX, MEM, or WB will update
-//      them. ID must stall until the update is committed.
-//
-//   4. Carry hazard:
-//      Similar to CC hazard but for the carry bit, which is used
-//      by ADC/SBC. Stall if any in-flight instruction updates carry.
-//
 // Control outputs:
 //
 //   o_stall_if   — Stall the IF stage (freeze PC register)
@@ -57,8 +48,6 @@ module hazard_unit(
     input wire [3:0] i_id_rs,          // Rs field
     input wire i_id_reads_rd,          // Instruction reads Rd as a source
     input wire i_id_reads_rs,          // Instruction reads Rs as a source
-    input wire i_id_uses_cc,           // Instruction reads condition codes
-    input wire i_id_uses_carry,        // Instruction reads carry bit
 
     // ---- External control events ----
     input wire i_branch_take,          // A branch/jump was committed in ID this cycle
@@ -67,18 +56,8 @@ module hazard_unit(
 
     // ---- ID/EX stage state (instruction in EX) ----
     input wire i_idex_valid,
-    input wire i_idex_rf_we,           // EX instruction writes a register
     input wire [3:0] i_idex_rd,        // Destination register of EX instruction
     input wire i_idex_is_load,         // EX instruction is a load (extra latency)
-    input wire i_idex_updates_cc,      // EX instruction updates condition codes
-    input wire i_idex_updates_carry,   // EX instruction updates carry
-
-    // ---- EX/MEM stage state (instruction in MEM) ----
-    input wire i_exmem_valid,
-    input wire i_exmem_rf_we,
-    input wire [3:0] i_exmem_rd,
-    input wire i_exmem_updates_cc,
-    input wire i_exmem_updates_carry,
 
     // ---- Control outputs ----
     output wire o_stall_if,
