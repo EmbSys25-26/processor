@@ -52,10 +52,11 @@ module i2s_clk_gen (
     end
 
     // LRCLK: toggle every 128 MCLK cycles => period = 256 MCLK cycles = 48 kHz
+    // Initialize to 1 so the first falling edge (1→0) aligns with left-channel start.
     always @(posedge i_mclk) begin
         if (i_rst) begin
             _lrclk_cnt <= 8'd0;
-            o_lrclk    <= 1'b0;
+            o_lrclk    <= 1'b1;
         end else begin
             if (_lrclk_cnt == 8'd127) begin
                 _lrclk_cnt <= 8'd0;

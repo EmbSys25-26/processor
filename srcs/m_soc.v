@@ -165,7 +165,7 @@ module soc(
     assign _io_re    = _is_io & (_lw | _lb);
     assign _io_wdata = _cpu_do;
 
-    assign _cpu_di   = _is_io ? _io_rdata    : _mem_load_data;
+    assign _cpu_di = _is_io ? _io_rdata : _mem_load_data;
     assign _rdy      = _is_io ? _io_rdy      : _mem_rdy;
 
 /*************************************************************************************
@@ -217,6 +217,9 @@ module soc(
         .o_dout_l(_dmem_dout_l)
     );
 
+// Atribuição direta do clock vindo do Wizard para o pino de saída
+    assign o_i2s_mclk = _i2s_mclk;
+
     periph_bus u_periph (
         .i_clk       (i_clk),
         .i_rst       (i_rst),
@@ -235,7 +238,7 @@ module soc(
         .io_i2c_scl  (io_i2c_scl),
         // ── NEW: I2S connections ──────────────────────────────────────────
         .i_i2s_mclk  (_i2s_mclk),
-        .o_i2s_mclk  (o_i2s_mclk),
+        .o_i2s_mclk  (),
         .o_i2s_bclk  (o_i2s_bclk),
         .o_i2s_lrclk (o_i2s_lrclk),
         .o_i2s_pbdat (o_i2s_pbdat),

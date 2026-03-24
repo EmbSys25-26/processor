@@ -2,131 +2,129 @@
 
 /*************************************************************************************
  * I2S TX MODULE (Playback)
- *  Serializes 16-bit PCM stereo samples to the SSM2603 codec via PBDAT.
+ * Serializes stereo PCM words from the asynchronous FIFO to the codec (PBDAT).
  *
- *  Protocol:
- *    - Each I2S frame = 32 bits per channel (16-bit data + 16-bit zero padding)
- *    - Left  channel: LRCLK = 0
- *    - Right channel: LRCLK = 1
- *    - LRCLK transitions on the falling edge of BCLK BEFORE the MSB is sent
- *    - Data is placed on PBDAT on the falling edge of BCLK
- *    - The codec samples PBDAT on the rising edge of BCLK
- *    - Data order: MSB first, followed by zero padding to complete 32-bit frame
- *
- *  FSM States:
- *    IDLE    -> waits for i_enable
- *    LOAD_L  -> loads left sample into shift register, asserts LRCLK=0 (1 BCLK cycle)
- *    SHIFT_L -> serializes 32 bits of left channel (bit_cnt 0..31)
- *    LOAD_R  -> loads right sample into shift register, asserts LRCLK=1 (1 BCLK cycle)
- *    SHIFT_R -> serializes 32 bits of right channel. At bit_cnt=31: asserts sample_req
- *    DONE    -> pulses sample_req for 1 cycle, loops back to LOAD_L
+ * Core Features:
+ * - 5-State FSM to strictly comply with the Philips I2S Standard.
+ * - Generates the LRCLK internally to prevent clock domain race conditions.
+ * - Enforces exactly 1 BCLK cycle delay between LRCLK toggle and the MSB transmission.
  ************************************************************************************/
-
 module i2s_tx (
-    input  wire        i_bclk,        // 3.072 MHz bit clock
-    input  wire        i_rst,
-    input  wire        i_enable,      // Enable TX (from CTRL register)
-    input  wire [15:0] i_left,        // Left  channel PCM sample
-    input  wire [15:0] i_right,       // Right channel PCM sample
-    output reg         o_pbdat,       // Playback data to SSM2603
-    output reg         o_lrclk,       // Left/Right clock to SSM2603
-    output reg         o_sample_req   // Pulses HIGH for 1 BCLK cycle when next sample needed
+    input  wire        i_bclk,          // 3.072 MHz bit clock (Serial Clock)
+    input  wire        i_rst,           // Active-high reset
+    input  wire        i_enable,        // TX enable signal from MMIO (100MHz domain)
+    input  wire [31:0] i_fifo_rdata,    // Data from FIFO: {left[15:0], right[15:0]}
+    input  wire        i_fifo_empty,    // FIFO empty flag (BCLK domain)
+    output reg         o_fifo_rd_en,    // 1-cycle pulse to pop data from FIFO
+    output reg         o_underrun,      // 1-cycle pulse if FIFO is empty when needed
+    output reg         o_pbdat,         // Serial audio data output to Codec
+    output reg         o_lrclk          // Left/Right Channel Clock (FSM is the master)
 );
 
-/*************************************************************************************
- * SECTION 1. DECLARE/DEFINE VARIABLES
- ************************************************************************************/
-
-/****************************************************************************
- * 1.1 FSM STATES
- ***************************************************************************/
+    // FSM State Definitions
     localparam [2:0] IDLE    = 3'd0;
     localparam [2:0] LOAD_L  = 3'd1;
     localparam [2:0] SHIFT_L = 3'd2;
     localparam [2:0] LOAD_R  = 3'd3;
     localparam [2:0] SHIFT_R = 3'd4;
-    localparam [2:0] DONE    = 3'd5;
 
-/****************************************************************************
- * 1.2 REGISTERS
- ***************************************************************************/
-    reg [2:0]  _state;
-    reg [31:0] _shift_reg;  // 32-bit shift register (16-bit sample + 16-bit padding)
-    reg [4:0]  _bit_cnt;    // Bit counter: 0..31
+    reg [2:0]  _state;                  // Current FSM state
+    reg [31:0] _shift_reg;              // Shift register for serialization
+    reg [31:0] _stereo_word;            // Holds the full 32-bit fetched from FIFO
+    reg [4:0]  _bit_cnt;                // Counts the 31 bits being shifted
+    
+    // CDC (Clock Domain Crossing) registers for the enable signal
+    reg _enable_s1, _enable_s2;
 
-/*************************************************************************************
- * SECTION 2. IMPLEMENTATION
- *  Triggered on negedge BCLK: data placed on PBDAT is sampled by codec on posedge.
- ************************************************************************************/
     always @(negedge i_bclk) begin
         if (i_rst) begin
-            _state      <= IDLE;
-            _shift_reg  <= 32'd0;
-            _bit_cnt    <= 5'd0;
-            o_pbdat     <= 1'b0;
-            o_lrclk     <= 1'b0;
-            o_sample_req <= 1'b0;
+            _state       <= IDLE;
+            _shift_reg   <= 32'd0;
+            _stereo_word <= 32'd0;
+            _bit_cnt     <= 5'd0;
+            _enable_s1   <= 1'b0;
+            _enable_s2   <= 1'b0;
+            o_pbdat      <= 1'b0;
+            o_lrclk      <= 1'b0;
+            o_fifo_rd_en <= 1'b0;
+            o_underrun   <= 1'b0;
         end else begin
-            o_sample_req <= 1'b0; // Default: deassert
+            // 2-Flop Synchronizer: Safely brings 'i_enable' into the 3MHz BCLK domain
+            _enable_s1 <= i_enable;
+            _enable_s2 <= _enable_s1;
+            
+            // Default pulse values (active for 1 cycle only)
+            o_fifo_rd_en <= 1'b0;
+            o_underrun   <= 1'b0;
 
             case (_state)
-
                 IDLE: begin
-                    o_pbdat  <= 1'b0;
-                    if (i_enable) begin
+                    o_pbdat <= 1'b0;
+                    if (_enable_s2) begin
+                        // If enabled, check if we have audio samples available
+                        if (!i_fifo_empty) begin
+                            _stereo_word <= i_fifo_rdata;
+                            o_fifo_rd_en <= 1'b1; // Pop the sample from FIFO
+                        end else begin
+                            _stereo_word <= 32'd0; // Play silence if no data
+                            o_underrun   <= 1'b1;  // Flag an underrun error
+                        end
                         _state <= LOAD_L;
                     end
                 end
 
-                // Load left sample. LRCLK transitions to 0 here, BEFORE MSB is sent.
-                // This state lasts exactly 1 BCLK cycle (per I2S spec timing).
+                // LOAD_L: Prepares Left Channel.
+                // Philips I2S Rule: Must delay 1 clock cycle before sending the first bit.
                 LOAD_L: begin
-                    _shift_reg <= {i_left, 16'h0000}; // 16-bit data + 16-bit zero padding
-                    o_lrclk    <= 1'b0;
+                    _shift_reg <= {_stereo_word[31:16], 16'h0000}; // Load left 16 bits
+                    o_lrclk    <= 1'b0;                            // Set Left Channel
                     _bit_cnt   <= 5'd0;
-                    _state     <= SHIFT_L;
+                    _state     <= SHIFT_L;                         // Delay accomplished
                 end
 
-                // Serialize 32 bits of left channel, MSB first
+                // SHIFT_L: Serializes Left Channel data
                 SHIFT_L: begin
-                    o_pbdat    <= _shift_reg[31];
-                    _shift_reg <= {_shift_reg[30:0], 1'b0};
+                    o_pbdat    <= _shift_reg[31];                  // Output MSB
+                    _shift_reg <= {_shift_reg[30:0], 1'b0};        // Shift left
                     _bit_cnt   <= _bit_cnt + 5'd1;
-                    if (_bit_cnt == 5'd31) begin
-                        _state <= LOAD_R;
+                    if (_bit_cnt == 5'd30) begin
+                        _state <= LOAD_R;                          // Move to Right Channel
                     end
                 end
 
-                // Load right sample. LRCLK transitions to 1 here, BEFORE MSB is sent.
-                // This state lasts exactly 1 BCLK cycle (per I2S spec timing).
+                // LOAD_R: Prepares Right Channel.
+                // Philips I2S Rule: Must delay 1 clock cycle before sending the first bit.
                 LOAD_R: begin
-                    _shift_reg <= {i_right, 16'h0000};
-                    o_lrclk    <= 1'b1;
+                    _shift_reg <= {_stereo_word[15:0], 16'h0000};  // Load right 16 bits
+                    o_lrclk    <= 1'b1;                            // Set Right Channel
                     _bit_cnt   <= 5'd0;
-                    _state     <= SHIFT_R;
+                    _state     <= SHIFT_R;                         // Delay accomplished
                 end
 
-                // Serialize 32 bits of right channel, MSB first
+                // SHIFT_R: Serializes Right Channel data
                 SHIFT_R: begin
-                    o_pbdat    <= _shift_reg[31];
-                    _shift_reg <= {_shift_reg[30:0], 1'b0};
+                    o_pbdat    <= _shift_reg[31];                  // Output MSB
+                    _shift_reg <= {_shift_reg[30:0], 1'b0};        // Shift left
                     _bit_cnt   <= _bit_cnt + 5'd1;
-                    if (_bit_cnt == 5'd31) begin
-                        o_sample_req <= 1'b1; // Request next sample from MMIO
-                        _state       <= DONE;
+                    if (_bit_cnt == 5'd30) begin
+                        if (_enable_s2) begin
+                            // Continuous streaming: Fetch next sample seamlessly
+                            if (!i_fifo_empty) begin
+                                _stereo_word <= i_fifo_rdata;
+                                o_fifo_rd_en <= 1'b1; // Pop next sample
+                            end else begin
+                                _stereo_word <= 32'd0; // Underflow: insert silence
+                                o_underrun   <= 1'b1;
+                            end
+                            _state <= LOAD_L;
+                        end else begin
+                            _state <= IDLE;           // Stop if disabled
+                        end
                     end
-                end
-
-                // Signal that next sample pair is needed. Loop back immediately.
-                DONE: begin
-                    o_sample_req <= 1'b0;
-                    _state       <= LOAD_L;
                 end
 
                 default: _state <= IDLE;
-
             endcase
         end
     end
-
 endmodule

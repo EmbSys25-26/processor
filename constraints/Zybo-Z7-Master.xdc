@@ -26,3 +26,16 @@ set_property -dict { PACKAGE_PIN L14 IOSTANDARD LVCMOS33 } [get_ports { i_uart_r
 ## NOTE: external pull-ups are still recommended for robust I2C signaling.
 set_property -dict { PACKAGE_PIN K16 IOSTANDARD LVCMOS33 PULLUP true } [get_ports { io_i2c_sda }];
 set_property -dict { PACKAGE_PIN K14 IOSTANDARD LVCMOS33 PULLUP true } [get_ports { io_i2c_scl }];
+
+# ----------------------------------------------------------------------------
+# Audio Codec (SSM2603) - Zybo Z7-10
+# ----------------------------------------------------------------------------
+set_property -dict { PACKAGE_PIN R19   IOSTANDARD LVCMOS33 } [get_ports { o_i2s_bclk }];
+set_property -dict { PACKAGE_PIN R17   IOSTANDARD LVCMOS33 } [get_ports { o_i2s_mclk }];
+set_property -dict { PACKAGE_PIN P18   IOSTANDARD LVCMOS33 } [get_ports { o_i2s_mute }];
+set_property -dict { PACKAGE_PIN R18   IOSTANDARD LVCMOS33 } [get_ports { o_i2s_pbdat }];
+set_property -dict { PACKAGE_PIN T19   IOSTANDARD LVCMOS33 } [get_ports { o_i2s_lrclk }];
+
+# I2C Configuration Bus for the Codec
+set_property -dict { PACKAGE_PIN N18   IOSTANDARD LVCMOS33 } [get_ports { io_i2s_scl }];
+set_property -dict { PACKAGE_PIN N17   IOSTANDARD LVCMOS33 } [get_ports { io_i2s_sda }];

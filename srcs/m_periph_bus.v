@@ -31,7 +31,7 @@ module periph_bus(
     inout wire io_i2c_sda,
     inout wire io_i2c_scl,
     // ── NEW: I2S ports ──────────────────────────────────────────────────────
-    input  wire i_i2s_mclk,        // 12.288 MHz from top-level MMCM
+    input  wire i_i2s_mclk,        // 12.288 MHz audio MCLK from soc-level Clock Wizard
     output wire o_i2s_mclk,        // -> SSM2603 MCLK pin
     output wire o_i2s_bclk,        // -> SSM2603 BCLK pin
     output wire o_i2s_lrclk,       // -> SSM2603 PBLRC pin
@@ -157,7 +157,6 @@ module periph_bus(
         .o_irq_take(o_irq_take), .o_irq_vector(o_irq_vector)
     );
 
-    // ── NEW: I2S instance ────────────────────────────────────────────────────────
     i2s_mmio u_i2s (
         .i_clk       (i_clk),
         .i_rst       (i_rst),
