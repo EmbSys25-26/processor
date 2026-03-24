@@ -413,13 +413,8 @@
             .i_irq_take(_irq_take_oneshot),
             // ID/EX stage — what's pending in EX
             .i_idex_valid(_idex_valid),
-            .i_idex_rf_we(_idex_rf_we),
             .i_idex_rd(_idex_rd),
             .i_idex_is_load(_idex_is_load),
-            // EX/MEM stage — what's pending in MEM
-            .i_exmem_valid(_exmem_valid),
-            .i_exmem_rf_we(_exmem_rf_we),
-            .i_exmem_rd(_exmem_rd),
             // Control outputs
             .o_stall_if(_stall_if),
             .o_stall_id(_stall_id),
