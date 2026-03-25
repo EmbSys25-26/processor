@@ -63,7 +63,6 @@ module hazard_unit(
     output wire o_stall_if,
     output wire o_stall_id,
     output wire o_stall_ex,
-    output wire o_bubble_ex,
     output wire o_flush_ifid,
     output wire o_flush_idex,
     output wire o_accept_irq
@@ -127,17 +126,15 @@ module hazard_unit(
     // EX stalls only during a MEM wait (the pipeline above MEM freezes).
     assign o_stall_ex  = i_mem_wait;
 
-    // Upon Load-use hazard detection => Load insn is in EX and previous insn in ID
-    // The goal is not to insert a bubble on the ID/EX register that propagates along the pipeline.
-    assign o_bubble_ex = _decode_hazard & ~i_mem_wait;
-
     // Flush IF/ID on branch commit or IRQ accept (both redirect the PC).
     assign o_flush_ifid = i_branch_take | _accept_irq;
 
     // Flush ID/EX on IRQ accept to squash the instruction that was about to enter EX.
     // (A branch commit does NOT need to flush ID/EX because the instruction in ID
     //  is the branch itself — it has already been handled.)
-    assign o_flush_idex = _accept_irq;
+    // Upon Load-use hazard detection => Load insn is in EX and previous insn in ID
+    // The goal is not to insert a bubble on the ID/EX register that propagates along the pipeline.
+    assign o_flush_idex = _accept_irq || (_decode_hazard & ~i_mem_wait);
 
     assign o_accept_irq = _accept_irq;
 

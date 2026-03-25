@@ -136,7 +136,6 @@
         wire _stall_if;             // Stall the IF stage (freeze PC)
         wire _stall_id;             // Stall the ID stage (freeze IF/ID register)
         wire _stall_ex;             // Stall the EX stage (freeze ID/EX and EX/MEM registers)
-        wire _bubble_ex;            // Inject a NOP bubble into ID/EX (decode hazard without MEM wait)
         wire _flush_ifid;           // Flush IF/ID register (on branch taken or IRQ accept)
         wire _flush_idex;           // Flush ID/EX register (on IRQ accept)
         wire _accept_irq;           // Handshake: CPU accepts the pending interrupt this cycle
@@ -419,7 +418,6 @@
             .o_stall_if(_stall_if),
             .o_stall_id(_stall_id),
             .o_stall_ex(_stall_ex),
-            .o_bubble_ex(_bubble_ex),
             .o_flush_ifid(_flush_ifid),
             .o_flush_idex(_flush_idex),
             .o_accept_irq(_accept_irq)
@@ -446,8 +444,8 @@
             .i_clk(i_clk),
             .i_rst(i_rst),
             .i_stall(_stall_ex),
-            .i_bubble(_bubble_ex),   // Decode hazard: insert bubble without disturbing MEM
-            .i_flush(_flush_idex),   // IRQ accept: squash instruction about to enter EX
+            // IRQ accept: squash instruction about to enter EX or Decode hazard: insert bubble without disturbing MEM
+            .i_flush(_flush_idex),   
             // Only latch instruction if it is exec-valid AND the ID stage fires
             .i_valid(_id_exec_valid & _id_fire),
             .i_pc(_id_pc),

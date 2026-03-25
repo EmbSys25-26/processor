@@ -21,8 +21,7 @@
 module pipe_id_ex(
     input wire i_clk,
     input wire i_rst,
-    input wire i_stall,         // Freeze: hold register contents (MEM wait)
-    input wire i_bubble,        // Inject NOP: decode hazard without MEM wait
+    input wire i_stall,         // Freeze: hold register contents (MEM wait) or Inject NOP: decode hazard without MEM wait
     input wire i_flush,         // Squash: IRQ accept (clear to NOP)
     input wire i_valid,
     input wire [15:0] i_pc,
@@ -96,7 +95,7 @@ module pipe_id_ex(
  * 2.1 ID/EX Register
  ************************************************************************************/
     always @(posedge i_clk) begin
-        if (i_rst || i_flush || i_bubble) begin
+        if (i_rst || i_flush) begin
             // Clear to NOP: zero all control signals so EX sees a harmless bubble
             o_valid        <= 1'b0;
             o_pc           <= 16'h0000;
