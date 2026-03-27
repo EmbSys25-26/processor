@@ -362,6 +362,42 @@ static int build_function_call_node(TreeNode_t **out_node,
     return 0;
 }
 
+static int build_case_node(TreeNode_t **out_node,
+                           TreeNode_t *label_expr,
+                           TreeNode_t *body_stmt)
+{
+    int rc;
+    TreeNode_t *case_node = NULL;
+
+    if (!out_node || !label_expr) {
+        return -EINVAL;
+    }
+
+    *out_node = NULL;
+
+    rc = NodeCreate(&case_node, NODE_CASE);
+    if (rc < 0) {
+        return rc;
+    }
+
+    rc = NodeAddChild(case_node, label_expr);
+    if (rc < 0) {
+        NodeFree(case_node);
+        return rc;
+    }
+
+    if (body_stmt) {
+        rc = NodeAddChild(case_node, body_stmt);
+        if (rc < 0) {
+            NodeFree(case_node);
+            return rc;
+        }
+    }
+
+    *out_node = case_node;
+    return 0;
+}
+
 static int build_operator_node(TreeNode_t **out_node,
                                long op_kind,
                                TreeNode_t *lhs,
@@ -400,7 +436,7 @@ static int build_operator_node(TreeNode_t **out_node,
     return 0;
 }
 
-#line 404 "Parser/parser.tab.c"
+#line 440 "Parser/parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -983,26 +1019,26 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   437,   437,   443,   457,   458,   462,   463,   477,   478,
-     479,   480,   481,   482,   486,   490,   500,   501,   504,   505,
-     506,   509,   510,   511,   514,   524,   525,   531,   535,   540,
-     549,   562,   563,   572,   587,   593,   602,   610,   616,   620,
-     626,   630,   638,   645,   651,   659,   670,   674,   678,   682,
-     693,   702,   710,   746,   747,   760,   765,   766,   769,   770,
-     777,   789,   791,   800,   806,   810,   816,   835,   841,   849,
-     850,   853,   858,   865,   873,   883,   891,   901,   909,   920,
-     925,   930,   935,   940,   944,   949,   954,   958,   962,   968,
-     973,   980,   987,   992,   999,  1004,  1016,  1020,  1024,  1028,
-    1032,  1038,  1042,  1057,  1061,  1068,  1094,  1098,  1104,  1108,
-    1116,  1120,  1137,  1143,  1147,  1160,  1165,  1171,  1181,  1183,
-    1185,  1199,  1203,  1209,  1213,  1222,  1226,  1235,  1239,  1245,
-    1249,  1255,  1259,  1265,  1269,  1275,  1279,  1285,  1289,  1293,
-    1299,  1303,  1307,  1311,  1315,  1321,  1325,  1329,  1335,  1339,
-    1343,  1350,  1354,  1358,  1362,  1368,  1372,  1379,  1383,  1388,
-    1393,  1398,  1403,  1407,  1411,  1415,  1419,  1423,  1429,  1433,
-    1437,  1441,  1445,  1449,  1454,  1461,  1466,  1471,  1476,  1481,
-    1486,  1493,  1497,  1504,  1508,  1516,  1521,  1526,  1531,  1536,
-    1541,  1546,  1551,  1556,  1561,  1566
+       0,   473,   473,   479,   493,   494,   498,   499,   513,   514,
+     515,   516,   517,   518,   522,   526,   536,   537,   540,   541,
+     542,   545,   546,   547,   550,   560,   561,   567,   571,   576,
+     585,   598,   599,   608,   623,   629,   638,   646,   652,   656,
+     662,   666,   674,   681,   688,   697,   708,   712,   716,   720,
+     731,   740,   748,   784,   785,   798,   803,   804,   807,   808,
+     815,   827,   829,   838,   844,   848,   854,   873,   879,   887,
+     888,   891,   896,   903,   911,   921,   929,   939,   947,   958,
+     963,   968,   973,   978,   982,   987,   992,   996,  1000,  1006,
+    1011,  1018,  1025,  1030,  1037,  1042,  1054,  1058,  1062,  1066,
+    1070,  1076,  1080,  1095,  1099,  1106,  1132,  1136,  1142,  1146,
+    1154,  1158,  1175,  1181,  1185,  1198,  1203,  1209,  1219,  1221,
+    1223,  1237,  1241,  1247,  1251,  1260,  1264,  1273,  1277,  1283,
+    1287,  1293,  1297,  1303,  1307,  1313,  1317,  1323,  1327,  1331,
+    1337,  1341,  1345,  1349,  1353,  1359,  1363,  1367,  1373,  1377,
+    1381,  1388,  1392,  1396,  1400,  1406,  1410,  1417,  1421,  1426,
+    1431,  1436,  1441,  1445,  1449,  1453,  1457,  1461,  1467,  1471,
+    1475,  1479,  1483,  1487,  1492,  1499,  1504,  1509,  1514,  1519,
+    1524,  1531,  1535,  1542,  1546,  1554,  1559,  1564,  1569,  1574,
+    1579,  1584,  1589,  1594,  1599,  1604
 };
 #endif
 
@@ -1889,17 +1925,17 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* translation_unit: external_declaration  */
-#line 438 "Parser/parser.y"
+#line 474 "Parser/parser.y"
                     {
                         NodeCreate(&yyval.treeNode, NODE_TRANSLATION_UNIT);
                         NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                         p_treeRoot = yyval.treeNode;
                     }
-#line 1899 "Parser/parser.tab.c"
+#line 1935 "Parser/parser.tab.c"
     break;
 
   case 3: /* translation_unit: translation_unit external_declaration  */
-#line 444 "Parser/parser.y"
+#line 480 "Parser/parser.y"
                     {
                         TreeNode_t* pRoot = yyvsp[-1].treeNode;
                         TreeNode_t* pHead = pRoot->p_firstChild;
@@ -1909,29 +1945,29 @@ yyreduce:
                         yyval.treeNode = pRoot;
                         p_treeRoot = yyval.treeNode;
                     }
-#line 1913 "Parser/parser.tab.c"
+#line 1949 "Parser/parser.tab.c"
     break;
 
   case 4: /* external_declaration: function_definition  */
-#line 457 "Parser/parser.y"
+#line 493 "Parser/parser.y"
                                         { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1919 "Parser/parser.tab.c"
+#line 1955 "Parser/parser.tab.c"
     break;
 
   case 5: /* external_declaration: declaration  */
-#line 458 "Parser/parser.y"
+#line 494 "Parser/parser.y"
                                 { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1925 "Parser/parser.tab.c"
+#line 1961 "Parser/parser.tab.c"
     break;
 
   case 6: /* statement_sequence: %empty  */
-#line 462 "Parser/parser.y"
+#line 498 "Parser/parser.y"
                                      { yyval.treeNode = NULL; }
-#line 1931 "Parser/parser.tab.c"
+#line 1967 "Parser/parser.tab.c"
     break;
 
   case 7: /* statement_sequence: statement_sequence statement  */
-#line 464 "Parser/parser.y"
+#line 500 "Parser/parser.y"
                        {
                            TreeNode_t* pHead = yyvsp[-1].treeNode;
                            if (yyvsp[0].treeNode != NULL) {
@@ -1943,153 +1979,153 @@ yyreduce:
                            }
                            yyval.treeNode = pHead;
                        }
-#line 1947 "Parser/parser.tab.c"
-    break;
-
-  case 8: /* statement: selection_statement  */
-#line 477 "Parser/parser.y"
-                                      { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1953 "Parser/parser.tab.c"
-    break;
-
-  case 9: /* statement: iteration_statement  */
-#line 478 "Parser/parser.y"
-                                            { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1959 "Parser/parser.tab.c"
-    break;
-
-  case 10: /* statement: jump_statement  */
-#line 479 "Parser/parser.y"
-                                       { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1965 "Parser/parser.tab.c"
-    break;
-
-  case 11: /* statement: compound_statement  */
-#line 480 "Parser/parser.y"
-                                           { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1971 "Parser/parser.tab.c"
-    break;
-
-  case 12: /* statement: declaration  */
-#line 481 "Parser/parser.y"
-                                    { yyval.treeNode = yyvsp[0].treeNode; }
-#line 1977 "Parser/parser.tab.c"
-    break;
-
-  case 13: /* statement: expression_statement  */
-#line 482 "Parser/parser.y"
-                                             { yyval.treeNode = yyvsp[0].treeNode; }
 #line 1983 "Parser/parser.tab.c"
     break;
 
+  case 8: /* statement: selection_statement  */
+#line 513 "Parser/parser.y"
+                                      { yyval.treeNode = yyvsp[0].treeNode; }
+#line 1989 "Parser/parser.tab.c"
+    break;
+
+  case 9: /* statement: iteration_statement  */
+#line 514 "Parser/parser.y"
+                                            { yyval.treeNode = yyvsp[0].treeNode; }
+#line 1995 "Parser/parser.tab.c"
+    break;
+
+  case 10: /* statement: jump_statement  */
+#line 515 "Parser/parser.y"
+                                       { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2001 "Parser/parser.tab.c"
+    break;
+
+  case 11: /* statement: compound_statement  */
+#line 516 "Parser/parser.y"
+                                           { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2007 "Parser/parser.tab.c"
+    break;
+
+  case 12: /* statement: declaration  */
+#line 517 "Parser/parser.y"
+                                    { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2013 "Parser/parser.tab.c"
+    break;
+
+  case 13: /* statement: expression_statement  */
+#line 518 "Parser/parser.y"
+                                             { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2019 "Parser/parser.tab.c"
+    break;
+
   case 14: /* expression_statement: TOKEN_SEMI  */
-#line 487 "Parser/parser.y"
+#line 523 "Parser/parser.y"
                     {
                         yyval.treeNode = NULL;
                     }
-#line 1991 "Parser/parser.tab.c"
+#line 2027 "Parser/parser.tab.c"
     break;
 
   case 15: /* expression_statement: expression TOKEN_SEMI  */
-#line 491 "Parser/parser.y"
+#line 527 "Parser/parser.y"
                     {
                         yyval.treeNode = yyvsp[-1].treeNode;
                     }
-#line 1999 "Parser/parser.tab.c"
-    break;
-
-  case 16: /* selection_statement: if_statement  */
-#line 500 "Parser/parser.y"
-                                   { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2005 "Parser/parser.tab.c"
-    break;
-
-  case 17: /* selection_statement: switch_statement  */
-#line 501 "Parser/parser.y"
-                                       { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2011 "Parser/parser.tab.c"
-    break;
-
-  case 18: /* jump_statement: break_statement  */
-#line 504 "Parser/parser.y"
-                                      { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2017 "Parser/parser.tab.c"
-    break;
-
-  case 19: /* jump_statement: return_statement  */
-#line 505 "Parser/parser.y"
-                                       { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2023 "Parser/parser.tab.c"
-    break;
-
-  case 20: /* jump_statement: continue_statement  */
-#line 506 "Parser/parser.y"
-                                         { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2029 "Parser/parser.tab.c"
-    break;
-
-  case 21: /* iteration_statement: do_while_loop  */
-#line 509 "Parser/parser.y"
-                                      { yyval.treeNode = yyvsp[0].treeNode; }
 #line 2035 "Parser/parser.tab.c"
     break;
 
-  case 22: /* iteration_statement: while_loop  */
-#line 510 "Parser/parser.y"
+  case 16: /* selection_statement: if_statement  */
+#line 536 "Parser/parser.y"
                                    { yyval.treeNode = yyvsp[0].treeNode; }
 #line 2041 "Parser/parser.tab.c"
     break;
 
-  case 23: /* iteration_statement: for_loop  */
-#line 511 "Parser/parser.y"
-                                 { yyval.treeNode = yyvsp[0].treeNode; }
+  case 17: /* selection_statement: switch_statement  */
+#line 537 "Parser/parser.y"
+                                       { yyval.treeNode = yyvsp[0].treeNode; }
 #line 2047 "Parser/parser.tab.c"
     break;
 
+  case 18: /* jump_statement: break_statement  */
+#line 540 "Parser/parser.y"
+                                      { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2053 "Parser/parser.tab.c"
+    break;
+
+  case 19: /* jump_statement: return_statement  */
+#line 541 "Parser/parser.y"
+                                       { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2059 "Parser/parser.tab.c"
+    break;
+
+  case 20: /* jump_statement: continue_statement  */
+#line 542 "Parser/parser.y"
+                                         { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2065 "Parser/parser.tab.c"
+    break;
+
+  case 21: /* iteration_statement: do_while_loop  */
+#line 545 "Parser/parser.y"
+                                      { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2071 "Parser/parser.tab.c"
+    break;
+
+  case 22: /* iteration_statement: while_loop  */
+#line 546 "Parser/parser.y"
+                                   { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2077 "Parser/parser.tab.c"
+    break;
+
+  case 23: /* iteration_statement: for_loop  */
+#line 547 "Parser/parser.y"
+                                 { yyval.treeNode = yyvsp[0].treeNode; }
+#line 2083 "Parser/parser.tab.c"
+    break;
+
   case 24: /* compound_statement: TOKEN_LEFT_BRACE statement_sequence TOKEN_RIGHT_BRACE  */
-#line 515 "Parser/parser.y"
+#line 551 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_BLOCK);
                             if (yyvsp[-1].treeNode != NULL) {
                                 NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                             }
                         }
-#line 2058 "Parser/parser.tab.c"
+#line 2094 "Parser/parser.tab.c"
     break;
 
   case 25: /* enum_member_list: enum_member  */
-#line 524 "Parser/parser.y"
+#line 560 "Parser/parser.y"
                                     { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2064 "Parser/parser.tab.c"
+#line 2100 "Parser/parser.tab.c"
     break;
 
   case 26: /* enum_member_list: enum_member_list TOKEN_COMMA enum_member  */
-#line 526 "Parser/parser.y"
+#line 562 "Parser/parser.y"
                         {
                             TreeNode_t* pHead = yyvsp[-2].treeNode;
                             if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
                             yyval.treeNode = pHead;
                         }
-#line 2074 "Parser/parser.tab.c"
+#line 2110 "Parser/parser.tab.c"
     break;
 
   case 27: /* enum_member_list: enum_member_list TOKEN_COMMA  */
-#line 532 "Parser/parser.y"
+#line 568 "Parser/parser.y"
                         { yyval.treeNode = yyvsp[-1].treeNode; }
-#line 2080 "Parser/parser.tab.c"
+#line 2116 "Parser/parser.tab.c"
     break;
 
   case 28: /* enum_member: TOKEN_ID  */
-#line 536 "Parser/parser.y"
+#line 572 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_ENUM_MEMBER);
                             yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
                         }
-#line 2089 "Parser/parser.tab.c"
+#line 2125 "Parser/parser.tab.c"
     break;
 
   case 29: /* enum_member: TOKEN_ID TOKEN_ASSIGN TOKEN_NUM  */
-#line 541 "Parser/parser.y"
+#line 577 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_ENUM_MEMBER);
                             yyval.treeNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;
@@ -2098,11 +2134,11 @@ yyreduce:
                             pVal->nodeData.dVal = yyvsp[0].nodeData.dVal;  // guarda o valor!
                             NodeAddChild(yyval.treeNode, pVal);
                         }
-#line 2102 "Parser/parser.tab.c"
+#line 2138 "Parser/parser.tab.c"
     break;
 
   case 30: /* enum_member: TOKEN_ID TOKEN_ASSIGN TOKEN_MINUS TOKEN_NUM  */
-#line 550 "Parser/parser.y"
+#line 586 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_ENUM_MEMBER);
                             yyval.treeNode->nodeData.sVal = yyvsp[-3].nodeData.sVal;
@@ -2111,27 +2147,27 @@ yyreduce:
                             pVal->nodeData.dVal = -yyvsp[0].nodeData.dVal;
                             NodeAddChild(yyval.treeNode, pVal);
                         }
-#line 2115 "Parser/parser.tab.c"
+#line 2151 "Parser/parser.tab.c"
     break;
 
   case 31: /* struct_union_member_list: struct_member  */
-#line 562 "Parser/parser.y"
+#line 598 "Parser/parser.y"
                                              { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2121 "Parser/parser.tab.c"
+#line 2157 "Parser/parser.tab.c"
     break;
 
   case 32: /* struct_union_member_list: struct_union_member_list struct_member  */
-#line 564 "Parser/parser.y"
+#line 600 "Parser/parser.y"
                               {
                                   TreeNode_t* pHead = yyvsp[-1].treeNode;
                                   if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
                                   yyval.treeNode = pHead;
                               }
-#line 2131 "Parser/parser.tab.c"
+#line 2167 "Parser/parser.tab.c"
     break;
 
   case 33: /* struct_member: declaration_specifiers declarator TOKEN_SEMI  */
-#line 573 "Parser/parser.y"
+#line 609 "Parser/parser.y"
                         {
                             if (NodeAttachDeclSpecifiers(yyvsp[-1].treeNode, yyvsp[-2].treeNode)) { YYERROR; }
                             if (yyvsp[-1].treeNode->nodeType == NODE_VAR_DECLARATION) {
@@ -2140,175 +2176,177 @@ yyreduce:
                             NodeFree(yyvsp[-2].treeNode);
                             yyval.treeNode = yyvsp[-1].treeNode;
                         }
-#line 2144 "Parser/parser.tab.c"
+#line 2180 "Parser/parser.tab.c"
     break;
 
   case 34: /* if_statement: TOKEN_IF TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES statement  */
-#line 588 "Parser/parser.y"
+#line 624 "Parser/parser.y"
                     {
                         NodeCreate(&(yyval.treeNode), NODE_IF);
                         NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);    //condition
                         NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);    //if true
                     }
-#line 2154 "Parser/parser.tab.c"
+#line 2190 "Parser/parser.tab.c"
     break;
 
   case 35: /* if_statement: TOKEN_IF TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES statement TOKEN_ELSE statement  */
-#line 594 "Parser/parser.y"
+#line 630 "Parser/parser.y"
                     {
                         NodeCreate(&(yyval.treeNode), NODE_IF);
                         NodeAddChild(yyval.treeNode, yyvsp[-4].treeNode);   //condition
                         NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);   //if true
                         NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);   //else
                     }
-#line 2165 "Parser/parser.tab.c"
+#line 2201 "Parser/parser.tab.c"
     break;
 
   case 36: /* switch_statement: TOKEN_SWITCH TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES TOKEN_LEFT_BRACE switch_body TOKEN_RIGHT_BRACE  */
-#line 603 "Parser/parser.y"
+#line 639 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_SWITCH);
                             NodeAddChild(yyval.treeNode, yyvsp[-4].treeNode);
                             NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                         }
-#line 2175 "Parser/parser.tab.c"
+#line 2211 "Parser/parser.tab.c"
     break;
 
   case 37: /* switch_body: case_list default_clause  */
-#line 611 "Parser/parser.y"
+#line 647 "Parser/parser.y"
                     {
                         TreeNode_t* pHead = yyvsp[-1].treeNode;
                         if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
                         yyval.treeNode = pHead;
                     }
-#line 2185 "Parser/parser.tab.c"
+#line 2221 "Parser/parser.tab.c"
     break;
 
   case 38: /* switch_body: case_list  */
-#line 617 "Parser/parser.y"
+#line 653 "Parser/parser.y"
                     {
                         yyval.treeNode = yyvsp[0].treeNode;
                     }
-#line 2193 "Parser/parser.tab.c"
+#line 2229 "Parser/parser.tab.c"
     break;
 
   case 39: /* switch_body: default_clause  */
-#line 621 "Parser/parser.y"
+#line 657 "Parser/parser.y"
                     {
                         yyval.treeNode = yyvsp[0].treeNode;
                     }
-#line 2201 "Parser/parser.tab.c"
+#line 2237 "Parser/parser.tab.c"
     break;
 
   case 40: /* case_list: case_clause  */
-#line 627 "Parser/parser.y"
+#line 663 "Parser/parser.y"
                     {
                         yyval.treeNode = yyvsp[0].treeNode;
                     }
-#line 2209 "Parser/parser.tab.c"
+#line 2245 "Parser/parser.tab.c"
     break;
 
   case 41: /* case_list: case_list case_clause  */
-#line 631 "Parser/parser.y"
+#line 667 "Parser/parser.y"
                     {
                         TreeNode_t* pHead = yyvsp[-1].treeNode;
                         if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
                         yyval.treeNode = pHead;
                     }
-#line 2219 "Parser/parser.tab.c"
+#line 2255 "Parser/parser.tab.c"
     break;
 
   case 42: /* case_clause: TOKEN_CASE TOKEN_NUM TOKEN_COLON statement_sequence  */
-#line 639 "Parser/parser.y"
+#line 675 "Parser/parser.y"
                     {
-                          NodeCreate(&(yyval.treeNode), NODE_CASE);
-                          yyval.treeNode->nodeData.sVal = NULL;
-                          yyval.treeNode->nodeData.dVal = yyvsp[-2].nodeData.dVal;
-                          NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                          TreeNode_t *pLabel = NULL;
+                          if (NodeCreate(&pLabel, NODE_INTEGER)) { YYERROR; }
+                          pLabel->nodeData.dVal = yyvsp[-2].nodeData.dVal;
+                          if (build_case_node(&yyval.treeNode, pLabel, yyvsp[0].treeNode) < 0) { YYERROR; }
                     }
-#line 2230 "Parser/parser.tab.c"
+#line 2266 "Parser/parser.tab.c"
     break;
 
   case 43: /* case_clause: TOKEN_CASE TOKEN_CNUM TOKEN_COLON statement_sequence  */
-#line 646 "Parser/parser.y"
+#line 682 "Parser/parser.y"
                     {
-                          NodeCreate(&(yyval.treeNode), NODE_CASE);
-                          yyval.treeNode->nodeData.dVal = yyvsp[-2].nodeData.dVal;
-                          NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                          TreeNode_t *pLabel = NULL;
+                          if (NodeCreate(&pLabel, NODE_CHAR)) { YYERROR; }
+                          pLabel->nodeData.dVal = yyvsp[-2].nodeData.dVal;
+                          if (build_case_node(&yyval.treeNode, pLabel, yyvsp[0].treeNode) < 0) { YYERROR; }
                     }
-#line 2240 "Parser/parser.tab.c"
+#line 2277 "Parser/parser.tab.c"
     break;
 
   case 44: /* case_clause: TOKEN_CASE TOKEN_ID TOKEN_COLON statement_sequence  */
-#line 652 "Parser/parser.y"
+#line 689 "Parser/parser.y"
                     {
-                          NodeCreate(&(yyval.treeNode), NODE_CASE);
-                          yyval.treeNode->nodeData.sVal = yyvsp[-2].nodeData.sVal;  /* guarda o nome */
-                          NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                          TreeNode_t *pLabel = NULL;
+                          if (NodeCreate(&pLabel, NODE_IDENTIFIER)) { YYERROR; }
+                          pLabel->nodeData.sVal = yyvsp[-2].nodeData.sVal;
+                          if (build_case_node(&yyval.treeNode, pLabel, yyvsp[0].treeNode) < 0) { YYERROR; }
                     }
-#line 2250 "Parser/parser.tab.c"
+#line 2288 "Parser/parser.tab.c"
     break;
 
   case 45: /* default_clause: TOKEN_DEFAULT TOKEN_COLON statement_sequence  */
-#line 660 "Parser/parser.y"
+#line 698 "Parser/parser.y"
                     {
                         NodeCreate(&(yyval.treeNode), NODE_DEFAULT);
                         NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                     }
-#line 2259 "Parser/parser.tab.c"
+#line 2297 "Parser/parser.tab.c"
     break;
 
   case 46: /* continue_statement: TOKEN_CONTINUE TOKEN_SEMI  */
-#line 671 "Parser/parser.y"
+#line 709 "Parser/parser.y"
                         { NodeCreate(&(yyval.treeNode), NODE_CONTINUE); }
-#line 2265 "Parser/parser.tab.c"
+#line 2303 "Parser/parser.tab.c"
     break;
 
   case 47: /* break_statement: TOKEN_BREAK TOKEN_SEMI  */
-#line 675 "Parser/parser.y"
+#line 713 "Parser/parser.y"
                         { NodeCreate(&(yyval.treeNode), NODE_BREAK); }
-#line 2271 "Parser/parser.tab.c"
+#line 2309 "Parser/parser.tab.c"
     break;
 
   case 48: /* return_statement: TOKEN_RETURN TOKEN_SEMI  */
-#line 679 "Parser/parser.y"
+#line 717 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_RETURN);
                         }
-#line 2279 "Parser/parser.tab.c"
+#line 2317 "Parser/parser.tab.c"
     break;
 
   case 49: /* return_statement: TOKEN_RETURN expression TOKEN_SEMI  */
-#line 683 "Parser/parser.y"
+#line 721 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_RETURN);
                             NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                         }
-#line 2288 "Parser/parser.tab.c"
+#line 2326 "Parser/parser.tab.c"
     break;
 
   case 50: /* while_loop: TOKEN_WHILE TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES statement  */
-#line 694 "Parser/parser.y"
+#line 732 "Parser/parser.y"
                     {
                         NodeCreate(&(yyval.treeNode), NODE_WHILE);
                         NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);    // Condition
                         NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);    // if true
                     }
-#line 2298 "Parser/parser.tab.c"
+#line 2336 "Parser/parser.tab.c"
     break;
 
   case 51: /* do_while_loop: TOKEN_DO statement TOKEN_WHILE TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES TOKEN_SEMI  */
-#line 703 "Parser/parser.y"
+#line 741 "Parser/parser.y"
                     {
                         NodeCreate(&(yyval.treeNode), NODE_DO_WHILE);
                         NodeAddChild(yyval.treeNode, yyvsp[-5].treeNode);
                         NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
                     }
-#line 2308 "Parser/parser.tab.c"
+#line 2346 "Parser/parser.tab.c"
     break;
 
   case 52: /* for_loop: TOKEN_FOR TOKEN_LEFT_PARENTHESES for_init_field TOKEN_SEMI for_condition TOKEN_SEMI for_assignment_field TOKEN_RIGHT_PARENTHESES statement  */
-#line 711 "Parser/parser.y"
+#line 749 "Parser/parser.y"
                     {
                         TreeNode_t* pNull;
 
@@ -2342,17 +2380,17 @@ yyreduce:
                             NodeAddChild(yyval.treeNode, pNull);
                         }
                     }
-#line 2346 "Parser/parser.tab.c"
+#line 2384 "Parser/parser.tab.c"
     break;
 
   case 53: /* for_init_field: %empty  */
-#line 746 "Parser/parser.y"
+#line 784 "Parser/parser.y"
                            { yyval.treeNode = NULL; }
-#line 2352 "Parser/parser.tab.c"
+#line 2390 "Parser/parser.tab.c"
     break;
 
   case 54: /* for_init_field: declaration_specifiers init_declarator_list  */
-#line 748 "Parser/parser.y"
+#line 786 "Parser/parser.y"
                     {
                         TreeNode_t *pNode = yyvsp[0].treeNode;
                         do {
@@ -2365,43 +2403,43 @@ yyreduce:
                         NodeFree(yyvsp[-1].treeNode);
                         yyval.treeNode = yyvsp[0].treeNode;
                     }
-#line 2369 "Parser/parser.tab.c"
+#line 2407 "Parser/parser.tab.c"
     break;
 
   case 55: /* for_init_field: expression  */
-#line 761 "Parser/parser.y"
+#line 799 "Parser/parser.y"
                     {
                         yyval.treeNode = yyvsp[0].treeNode;
                     }
-#line 2377 "Parser/parser.tab.c"
+#line 2415 "Parser/parser.tab.c"
     break;
 
   case 56: /* for_condition: %empty  */
-#line 765 "Parser/parser.y"
+#line 803 "Parser/parser.y"
                              { yyval.treeNode = NULL; }
-#line 2383 "Parser/parser.tab.c"
+#line 2421 "Parser/parser.tab.c"
     break;
 
   case 57: /* for_condition: expression  */
-#line 766 "Parser/parser.y"
+#line 804 "Parser/parser.y"
                                  { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2389 "Parser/parser.tab.c"
+#line 2427 "Parser/parser.tab.c"
     break;
 
   case 58: /* for_assignment_field: %empty  */
-#line 769 "Parser/parser.y"
+#line 807 "Parser/parser.y"
                                    { yyval.treeNode = NULL; }
-#line 2395 "Parser/parser.tab.c"
+#line 2433 "Parser/parser.tab.c"
     break;
 
   case 59: /* for_assignment_field: expression  */
-#line 770 "Parser/parser.y"
+#line 808 "Parser/parser.y"
                                        { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2401 "Parser/parser.tab.c"
+#line 2439 "Parser/parser.tab.c"
     break;
 
   case 60: /* function_definition: declaration_specifiers declarator compound_statement  */
-#line 778 "Parser/parser.y"
+#line 816 "Parser/parser.y"
                         {
                             if (yyvsp[-1].treeNode->nodeType != NODE_FUNCTION) { YYERROR; }
                             if (NodeAttachDeclSpecifiers(yyvsp[-1].treeNode, yyvsp[-2].treeNode)) { YYERROR; }
@@ -2409,17 +2447,17 @@ yyreduce:
                             yyval.treeNode = yyvsp[-1].treeNode;
                             NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                         }
-#line 2413 "Parser/parser.tab.c"
+#line 2451 "Parser/parser.tab.c"
     break;
 
   case 61: /* parameter_list_opt: %empty  */
-#line 789 "Parser/parser.y"
+#line 827 "Parser/parser.y"
                             { yyval.treeNode = NULL; }
-#line 2419 "Parser/parser.tab.c"
+#line 2457 "Parser/parser.tab.c"
     break;
 
   case 62: /* parameter_list_opt: parameter_list_opt TOKEN_COMMA TOKEN_ELLIPSIS  */
-#line 792 "Parser/parser.y"
+#line 830 "Parser/parser.y"
                     {
                         TreeNode_t* pNode;
                         TreeNode_t* p_Head = yyvsp[-2].treeNode;
@@ -2428,37 +2466,37 @@ yyreduce:
                         if (NodeAppendSibling(&p_Head, pNode)) { YYERROR; }
                         yyval.treeNode = p_Head;
                     }
-#line 2432 "Parser/parser.tab.c"
+#line 2470 "Parser/parser.tab.c"
     break;
 
   case 63: /* parameter_list_opt: parameter_list_opt TOKEN_COMMA param_declaration  */
-#line 801 "Parser/parser.y"
+#line 839 "Parser/parser.y"
                     {
                         TreeNode_t* p_Head = yyvsp[-2].treeNode;
                         if (NodeAppendSibling(&p_Head, yyvsp[0].treeNode)) { YYERROR; }
                         yyval.treeNode = p_Head;
                     }
-#line 2442 "Parser/parser.tab.c"
+#line 2480 "Parser/parser.tab.c"
     break;
 
   case 64: /* parameter_list_opt: param_declaration  */
-#line 806 "Parser/parser.y"
+#line 844 "Parser/parser.y"
                                        { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2448 "Parser/parser.tab.c"
+#line 2486 "Parser/parser.tab.c"
     break;
 
   case 65: /* param_declaration: declaration_specifiers declarator  */
-#line 811 "Parser/parser.y"
+#line 849 "Parser/parser.y"
                         {
                             if (NodeAttachDeclSpecifiers(yyvsp[0].treeNode, yyvsp[-1].treeNode)) { YYERROR; }
                             NodeFree(yyvsp[-1].treeNode);
                             yyval.treeNode = yyvsp[0].treeNode;
                         }
-#line 2458 "Parser/parser.tab.c"
+#line 2496 "Parser/parser.tab.c"
     break;
 
   case 66: /* param_declaration: declaration_specifiers  */
-#line 817 "Parser/parser.y"
+#line 855 "Parser/parser.y"
                         {
                             if (is_void_parameter_specifier(yyvsp[0].treeNode)) {
                                 yyval.treeNode = NULL;
@@ -2468,58 +2506,58 @@ yyreduce:
                             }
                             NodeFree(yyvsp[0].treeNode);
                         }
-#line 2472 "Parser/parser.tab.c"
+#line 2510 "Parser/parser.tab.c"
     break;
 
   case 67: /* type_name: all_type_specifiers  */
-#line 836 "Parser/parser.y"
+#line 874 "Parser/parser.y"
                         {
                             yyval.treeNode = yyvsp[0].treeNode;
                         }
-#line 2480 "Parser/parser.tab.c"
+#line 2518 "Parser/parser.tab.c"
     break;
 
   case 68: /* type_cast_specifier: TOKEN_LEFT_PARENTHESES type_name TOKEN_RIGHT_PARENTHESES  */
-#line 842 "Parser/parser.y"
+#line 880 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE_CAST);
                             NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                         }
-#line 2489 "Parser/parser.tab.c"
+#line 2527 "Parser/parser.tab.c"
     break;
 
   case 69: /* all_type_specifiers: type_specifier  */
-#line 849 "Parser/parser.y"
+#line 887 "Parser/parser.y"
                                         { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2495 "Parser/parser.tab.c"
+#line 2533 "Parser/parser.tab.c"
     break;
 
   case 70: /* all_type_specifiers: type_pointer  */
-#line 850 "Parser/parser.y"
+#line 888 "Parser/parser.y"
                                       { yyval.treeNode = yyvsp[0].treeNode; }
-#line 2501 "Parser/parser.tab.c"
+#line 2539 "Parser/parser.tab.c"
     break;
 
   case 71: /* type_pointer: type_specifier TOKEN_ASTERISK  */
-#line 854 "Parser/parser.y"
+#line 892 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_POINTER);
                             NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                         }
-#line 2510 "Parser/parser.tab.c"
+#line 2548 "Parser/parser.tab.c"
     break;
 
   case 72: /* type_pointer: type_pointer TOKEN_ASTERISK  */
-#line 859 "Parser/parser.y"
+#line 897 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_POINTER);
                             NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                         }
-#line 2519 "Parser/parser.tab.c"
+#line 2557 "Parser/parser.tab.c"
     break;
 
   case 73: /* enum_specifier: TOKEN_ENUM TOKEN_ID  */
-#line 866 "Parser/parser.y"
+#line 904 "Parser/parser.y"
                     {
                         if (build_tag_type_node(&yyval.treeNode,
                                                 TYPE_ENUM,
@@ -2527,11 +2565,11 @@ yyreduce:
                                                 yyvsp[0].nodeData.sVal,
                                                 NULL) < 0) { YYERROR; }
                     }
-#line 2531 "Parser/parser.tab.c"
+#line 2569 "Parser/parser.tab.c"
     break;
 
   case 74: /* enum_specifier: TOKEN_ENUM TOKEN_ID TOKEN_LEFT_BRACE enum_member_list TOKEN_RIGHT_BRACE  */
-#line 874 "Parser/parser.y"
+#line 912 "Parser/parser.y"
                     {
                         if (build_tag_type_node(&yyval.treeNode,
                                                 TYPE_ENUM,
@@ -2539,11 +2577,11 @@ yyreduce:
                                                 yyvsp[-3].nodeData.sVal,
                                                 yyvsp[-1].treeNode) < 0) { YYERROR; }
                     }
-#line 2543 "Parser/parser.tab.c"
+#line 2581 "Parser/parser.tab.c"
     break;
 
   case 75: /* struct_specifier: TOKEN_STRUCT TOKEN_ID  */
-#line 884 "Parser/parser.y"
+#line 922 "Parser/parser.y"
                     {
                         if (build_tag_type_node(&yyval.treeNode,
                                                 TYPE_STRUCT,
@@ -2551,11 +2589,11 @@ yyreduce:
                                                 yyvsp[0].nodeData.sVal,
                                                 NULL) < 0) { YYERROR; }
                     }
-#line 2555 "Parser/parser.tab.c"
+#line 2593 "Parser/parser.tab.c"
     break;
 
   case 76: /* struct_specifier: TOKEN_STRUCT TOKEN_ID TOKEN_LEFT_BRACE struct_union_member_list TOKEN_RIGHT_BRACE  */
-#line 892 "Parser/parser.y"
+#line 930 "Parser/parser.y"
                     {
                         if (build_tag_type_node(&yyval.treeNode,
                                                 TYPE_STRUCT,
@@ -2563,11 +2601,11 @@ yyreduce:
                                                 yyvsp[-3].nodeData.sVal,
                                                 yyvsp[-1].treeNode) < 0) { YYERROR; }
                     }
-#line 2567 "Parser/parser.tab.c"
+#line 2605 "Parser/parser.tab.c"
     break;
 
   case 77: /* union_specifier: TOKEN_UNION TOKEN_ID  */
-#line 902 "Parser/parser.y"
+#line 940 "Parser/parser.y"
                     {
                         if (build_tag_type_node(&yyval.treeNode,
                                                 TYPE_UNION,
@@ -2575,11 +2613,11 @@ yyreduce:
                                                 yyvsp[0].nodeData.sVal,
                                                 NULL) < 0) { YYERROR; }
                     }
-#line 2579 "Parser/parser.tab.c"
+#line 2617 "Parser/parser.tab.c"
     break;
 
   case 78: /* union_specifier: TOKEN_UNION TOKEN_ID TOKEN_LEFT_BRACE struct_union_member_list TOKEN_RIGHT_BRACE  */
-#line 910 "Parser/parser.y"
+#line 948 "Parser/parser.y"
                     {
                         if (build_tag_type_node(&yyval.treeNode,
                                                 TYPE_UNION,
@@ -2587,208 +2625,208 @@ yyreduce:
                                                 yyvsp[-3].nodeData.sVal,
                                                 yyvsp[-1].treeNode) < 0) { YYERROR; }
                     }
-#line 2591 "Parser/parser.tab.c"
+#line 2629 "Parser/parser.tab.c"
     break;
 
   case 79: /* type_specifier: TOKEN_CHAR  */
-#line 921 "Parser/parser.y"
+#line 959 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_CHAR;
                         }
-#line 2600 "Parser/parser.tab.c"
+#line 2638 "Parser/parser.tab.c"
     break;
 
   case 80: /* type_specifier: TOKEN_SHORT  */
-#line 926 "Parser/parser.y"
+#line 964 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_SHORT;
                         }
-#line 2609 "Parser/parser.tab.c"
+#line 2647 "Parser/parser.tab.c"
     break;
 
   case 81: /* type_specifier: TOKEN_INT  */
-#line 931 "Parser/parser.y"
+#line 969 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_INT;
                         }
-#line 2618 "Parser/parser.tab.c"
+#line 2656 "Parser/parser.tab.c"
     break;
 
   case 82: /* type_specifier: TOKEN_LONG  */
-#line 936 "Parser/parser.y"
+#line 974 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_LONG;
                         }
-#line 2627 "Parser/parser.tab.c"
+#line 2665 "Parser/parser.tab.c"
     break;
 
   case 83: /* type_specifier: TOKEN_FLOAT  */
-#line 941 "Parser/parser.y"
+#line 979 "Parser/parser.y"
                             { NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_FLOAT;
                         }
-#line 2635 "Parser/parser.tab.c"
+#line 2673 "Parser/parser.tab.c"
     break;
 
   case 84: /* type_specifier: TOKEN_DOUBLE  */
-#line 945 "Parser/parser.y"
+#line 983 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_DOUBLE;
                         }
-#line 2644 "Parser/parser.tab.c"
+#line 2682 "Parser/parser.tab.c"
     break;
 
   case 85: /* type_specifier: TOKEN_VOID  */
-#line 950 "Parser/parser.y"
+#line 988 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_TYPE);
                             yyval.treeNode->nodeData.dVal = TYPE_VOID;
                         }
-#line 2653 "Parser/parser.tab.c"
+#line 2691 "Parser/parser.tab.c"
     break;
 
   case 86: /* type_specifier: struct_specifier  */
-#line 955 "Parser/parser.y"
+#line 993 "Parser/parser.y"
                         {
                             yyval.treeNode = yyvsp[0].treeNode;
                         }
-#line 2661 "Parser/parser.tab.c"
+#line 2699 "Parser/parser.tab.c"
     break;
 
   case 87: /* type_specifier: union_specifier  */
-#line 959 "Parser/parser.y"
+#line 997 "Parser/parser.y"
                         {
                             yyval.treeNode = yyvsp[0].treeNode;
                         }
-#line 2669 "Parser/parser.tab.c"
+#line 2707 "Parser/parser.tab.c"
     break;
 
   case 88: /* type_specifier: enum_specifier  */
-#line 963 "Parser/parser.y"
+#line 1001 "Parser/parser.y"
                         {
                             yyval.treeNode = yyvsp[0].treeNode;
                         }
-#line 2677 "Parser/parser.tab.c"
+#line 2715 "Parser/parser.tab.c"
     break;
 
   case 89: /* storage_class_specifier: TOKEN_STATIC  */
-#line 969 "Parser/parser.y"
+#line 1007 "Parser/parser.y"
                              {
                                  NodeCreate(&(yyval.treeNode), NODE_VISIBILITY);
                                  yyval.treeNode->nodeData.dVal = VIS_STATIC;
                              }
-#line 2686 "Parser/parser.tab.c"
+#line 2724 "Parser/parser.tab.c"
     break;
 
   case 90: /* storage_class_specifier: TOKEN_EXTERN  */
-#line 974 "Parser/parser.y"
+#line 1012 "Parser/parser.y"
                              {
                                  NodeCreate(&(yyval.treeNode), NODE_VISIBILITY);
                                  yyval.treeNode->nodeData.dVal = VIS_EXTERN;
                              }
-#line 2695 "Parser/parser.tab.c"
+#line 2733 "Parser/parser.tab.c"
     break;
 
   case 91: /* function_specifier: TOKEN_INLINE  */
-#line 981 "Parser/parser.y"
+#line 1019 "Parser/parser.y"
                              {
                                  NodeCreate(&(yyval.treeNode), NODE_VISIBILITY);
                                  yyval.treeNode->nodeData.dVal = VIS_INLINE;
                              }
-#line 2704 "Parser/parser.tab.c"
+#line 2742 "Parser/parser.tab.c"
     break;
 
   case 92: /* type_qualifier: TOKEN_CONST  */
-#line 988 "Parser/parser.y"
+#line 1026 "Parser/parser.y"
                         {
                         NodeCreate(&(yyval.treeNode), NODE_MODIFIER);
                         yyval.treeNode->nodeData.dVal = (long int) MOD_CONST;
                         }
-#line 2713 "Parser/parser.tab.c"
+#line 2751 "Parser/parser.tab.c"
     break;
 
   case 93: /* type_qualifier: TOKEN_VOLATILE  */
-#line 993 "Parser/parser.y"
+#line 1031 "Parser/parser.y"
                         {
                         NodeCreate(&(yyval.treeNode), NODE_MODIFIER);
                         yyval.treeNode->nodeData.dVal = (long int) MOD_VOLATILE;
                         }
-#line 2722 "Parser/parser.tab.c"
+#line 2760 "Parser/parser.tab.c"
     break;
 
   case 94: /* sign_specifier: TOKEN_SIGNED  */
-#line 1000 "Parser/parser.y"
+#line 1038 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_SIGN);
                             yyval.treeNode->nodeData.dVal = (long int) SIGN_SIGNED;
                         }
-#line 2731 "Parser/parser.tab.c"
+#line 2769 "Parser/parser.tab.c"
     break;
 
   case 95: /* sign_specifier: TOKEN_UNSIGNED  */
-#line 1005 "Parser/parser.y"
+#line 1043 "Parser/parser.y"
                         {
                             NodeCreate(&(yyval.treeNode), NODE_SIGN);
                             yyval.treeNode->nodeData.dVal = (long int) SIGN_UNSIGNED;
                         }
-#line 2740 "Parser/parser.tab.c"
+#line 2778 "Parser/parser.tab.c"
     break;
 
   case 96: /* declaration_specifier: storage_class_specifier  */
-#line 1017 "Parser/parser.y"
+#line 1055 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2748 "Parser/parser.tab.c"
+#line 2786 "Parser/parser.tab.c"
     break;
 
   case 97: /* declaration_specifier: type_specifier  */
-#line 1021 "Parser/parser.y"
+#line 1059 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2756 "Parser/parser.tab.c"
+#line 2794 "Parser/parser.tab.c"
     break;
 
   case 98: /* declaration_specifier: type_qualifier  */
-#line 1025 "Parser/parser.y"
+#line 1063 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2764 "Parser/parser.tab.c"
+#line 2802 "Parser/parser.tab.c"
     break;
 
   case 99: /* declaration_specifier: function_specifier  */
-#line 1029 "Parser/parser.y"
+#line 1067 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2772 "Parser/parser.tab.c"
+#line 2810 "Parser/parser.tab.c"
     break;
 
   case 100: /* declaration_specifier: sign_specifier  */
-#line 1033 "Parser/parser.y"
+#line 1071 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2780 "Parser/parser.tab.c"
+#line 2818 "Parser/parser.tab.c"
     break;
 
   case 101: /* declaration_specifiers: declaration_specifier  */
-#line 1039 "Parser/parser.y"
+#line 1077 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2788 "Parser/parser.tab.c"
+#line 2826 "Parser/parser.tab.c"
     break;
 
   case 102: /* declaration_specifiers: declaration_specifiers declaration_specifier  */
-#line 1043 "Parser/parser.y"
+#line 1081 "Parser/parser.y"
                             {
                                 TreeNode_t *pHead = yyvsp[-1].treeNode;
 
@@ -2801,28 +2839,28 @@ yyreduce:
 
                                 yyval.treeNode = pHead;
                             }
-#line 2805 "Parser/parser.tab.c"
+#line 2843 "Parser/parser.tab.c"
     break;
 
   case 103: /* pointer_prefix: TOKEN_ASTERISK  */
-#line 1058 "Parser/parser.y"
+#line 1096 "Parser/parser.y"
                     {
                         NodeCreate(&yyval.treeNode, NODE_POINTER);
                     }
-#line 2813 "Parser/parser.tab.c"
+#line 2851 "Parser/parser.tab.c"
     break;
 
   case 104: /* pointer_prefix: TOKEN_ASTERISK pointer_prefix  */
-#line 1062 "Parser/parser.y"
+#line 1100 "Parser/parser.y"
                     {
                         NodeCreate(&yyval.treeNode, NODE_POINTER);
                         NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                     }
-#line 2822 "Parser/parser.tab.c"
+#line 2860 "Parser/parser.tab.c"
     break;
 
   case 105: /* declaration: declaration_specifiers init_declarator_list_opt TOKEN_SEMI  */
-#line 1069 "Parser/parser.y"
+#line 1107 "Parser/parser.y"
                     {
                         TreeNode_t *result = NULL;
 
@@ -2845,53 +2883,53 @@ yyreduce:
                         NodeFree(yyvsp[-2].treeNode);
                         yyval.treeNode = result;
                     }
-#line 2849 "Parser/parser.tab.c"
+#line 2887 "Parser/parser.tab.c"
     break;
 
   case 106: /* init_declarator_list_opt: %empty  */
-#line 1095 "Parser/parser.y"
+#line 1133 "Parser/parser.y"
                             {
                                 yyval.treeNode = NULL;
                             }
-#line 2857 "Parser/parser.tab.c"
+#line 2895 "Parser/parser.tab.c"
     break;
 
   case 107: /* init_declarator_list_opt: init_declarator_list  */
-#line 1099 "Parser/parser.y"
+#line 1137 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2865 "Parser/parser.tab.c"
+#line 2903 "Parser/parser.tab.c"
     break;
 
   case 108: /* init_declarator_list: init_declarator  */
-#line 1105 "Parser/parser.y"
+#line 1143 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2873 "Parser/parser.tab.c"
+#line 2911 "Parser/parser.tab.c"
     break;
 
   case 109: /* init_declarator_list: init_declarator_list TOKEN_COMMA init_declarator  */
-#line 1109 "Parser/parser.y"
+#line 1147 "Parser/parser.y"
                             {
                                 TreeNode_t *pHead = yyvsp[-2].treeNode;
                                 if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
                                 yyval.treeNode = pHead;
                             }
-#line 2883 "Parser/parser.tab.c"
+#line 2921 "Parser/parser.tab.c"
     break;
 
   case 110: /* init_declarator: declarator  */
-#line 1117 "Parser/parser.y"
+#line 1155 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2891 "Parser/parser.tab.c"
+#line 2929 "Parser/parser.tab.c"
     break;
 
   case 111: /* init_declarator: declarator TOKEN_ASSIGN initializer  */
-#line 1121 "Parser/parser.y"
+#line 1159 "Parser/parser.y"
                             {
                                 TreeNode_t *pAssign;
                                 TreeNode_t *pId;
@@ -2906,27 +2944,27 @@ yyreduce:
                                 if (NodeAppendSibling(&pHead, pAssign)) { YYERROR; }
                                 yyval.treeNode = pHead;
                             }
-#line 2910 "Parser/parser.tab.c"
+#line 2948 "Parser/parser.tab.c"
     break;
 
   case 112: /* initializer: assignment_expression  */
-#line 1138 "Parser/parser.y"
+#line 1176 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2918 "Parser/parser.tab.c"
+#line 2956 "Parser/parser.tab.c"
     break;
 
   case 113: /* declarator: direct_declarator  */
-#line 1144 "Parser/parser.y"
+#line 1182 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2926 "Parser/parser.tab.c"
+#line 2964 "Parser/parser.tab.c"
     break;
 
   case 114: /* declarator: pointer_prefix direct_declarator  */
-#line 1148 "Parser/parser.y"
+#line 1186 "Parser/parser.y"
                             {
                                 if (yyvsp[0].treeNode->nodeType == NODE_FUNCTION) {
                                     yyvsp[-1].treeNode->p_sibling = yyvsp[0].treeNode->p_firstChild;
@@ -2937,30 +2975,30 @@ yyreduce:
                                 }
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 2941 "Parser/parser.tab.c"
+#line 2979 "Parser/parser.tab.c"
     break;
 
   case 115: /* direct_declarator: TOKEN_ID  */
-#line 1161 "Parser/parser.y"
+#line 1199 "Parser/parser.y"
                             {
                                 NodeCreate(&yyval.treeNode, NODE_VAR_DECLARATION);
                                 yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
                             }
-#line 2950 "Parser/parser.tab.c"
+#line 2988 "Parser/parser.tab.c"
     break;
 
   case 116: /* direct_declarator: TOKEN_ID arr_size  */
-#line 1166 "Parser/parser.y"
+#line 1204 "Parser/parser.y"
                             {
                                 NodeCreate(&yyval.treeNode, NODE_ARRAY_DECLARATION);
                                 yyval.treeNode->nodeData.sVal = yyvsp[-1].nodeData.sVal;
                                 NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                             }
-#line 2960 "Parser/parser.tab.c"
+#line 2998 "Parser/parser.tab.c"
     break;
 
   case 117: /* direct_declarator: TOKEN_ID TOKEN_LEFT_PARENTHESES parameter_list_opt TOKEN_RIGHT_PARENTHESES  */
-#line 1172 "Parser/parser.y"
+#line 1210 "Parser/parser.y"
                             {
                                 NodeCreate(&yyval.treeNode, NODE_FUNCTION);
                                 yyval.treeNode->nodeData.sVal = yyvsp[-3].nodeData.sVal;
@@ -2968,664 +3006,664 @@ yyreduce:
                                     NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                                 }
                             }
-#line 2972 "Parser/parser.tab.c"
+#line 3010 "Parser/parser.tab.c"
     break;
 
   case 118: /* arr_size: TOKEN_LEFT_BRACKET expression TOKEN_RIGHT_BRACKET  */
-#line 1182 "Parser/parser.y"
+#line 1220 "Parser/parser.y"
                 { yyval.treeNode = yyvsp[-1].treeNode; }
-#line 2978 "Parser/parser.tab.c"
+#line 3016 "Parser/parser.tab.c"
     break;
 
   case 119: /* arr_size: TOKEN_LEFT_BRACKET TOKEN_RIGHT_BRACKET  */
-#line 1184 "Parser/parser.y"
+#line 1222 "Parser/parser.y"
                 { NodeCreate(&(yyval.treeNode), NODE_NULL); }
-#line 2984 "Parser/parser.tab.c"
+#line 3022 "Parser/parser.tab.c"
     break;
 
   case 120: /* arr_size: arr_size TOKEN_LEFT_BRACKET expression TOKEN_RIGHT_BRACKET  */
-#line 1186 "Parser/parser.y"
+#line 1224 "Parser/parser.y"
                 {
                     TreeNode_t* pHead = yyvsp[-3].treeNode;
                     if (NodeAppendSibling(&pHead, yyvsp[-1].treeNode)) { YYERROR; }
                     yyval.treeNode = pHead;
                 }
-#line 2994 "Parser/parser.tab.c"
+#line 3032 "Parser/parser.tab.c"
     break;
 
   case 121: /* expression: assignment_expression  */
-#line 1200 "Parser/parser.y"
+#line 1238 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3002 "Parser/parser.tab.c"
+#line 3040 "Parser/parser.tab.c"
     break;
 
   case 122: /* expression: expression TOKEN_COMMA assignment_expression  */
-#line 1204 "Parser/parser.y"
+#line 1242 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_COMMA, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
-                            }
-#line 3010 "Parser/parser.tab.c"
-    break;
-
-  case 123: /* assignment_expression: conditional_expression  */
-#line 1210 "Parser/parser.y"
-                            {
-                                yyval.treeNode = yyvsp[0].treeNode;
-                            }
-#line 3018 "Parser/parser.tab.c"
-    break;
-
-  case 124: /* assignment_expression: unary_expression assignment_operator assignment_expression  */
-#line 1214 "Parser/parser.y"
-                            {
-                                if (yyvsp[-1].treeNode->nodeType != NODE_OPERATOR) { YYERROR; }
-                                if (NodeAddChild(yyvsp[-1].treeNode, yyvsp[-2].treeNode) < 0) { YYERROR; }
-                                if (NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
-                                yyval.treeNode = yyvsp[-1].treeNode;
-                            }
-#line 3029 "Parser/parser.tab.c"
-    break;
-
-  case 125: /* conditional_expression: logical_or_expression  */
-#line 1223 "Parser/parser.y"
-                            {
-                                yyval.treeNode = yyvsp[0].treeNode;
-                            }
-#line 3037 "Parser/parser.tab.c"
-    break;
-
-  case 126: /* conditional_expression: logical_or_expression TOKEN_TERNARY expression TOKEN_COLON conditional_expression  */
-#line 1227 "Parser/parser.y"
-                            {
-                                NodeCreate(&(yyval.treeNode), NODE_TERNARY);
-                                NodeAddChild(yyval.treeNode, yyvsp[-4].treeNode);
-                                NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
-                                NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                             }
 #line 3048 "Parser/parser.tab.c"
     break;
 
-  case 127: /* logical_or_expression: logical_and_expression  */
-#line 1236 "Parser/parser.y"
+  case 123: /* assignment_expression: conditional_expression  */
+#line 1248 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
 #line 3056 "Parser/parser.tab.c"
     break;
 
+  case 124: /* assignment_expression: unary_expression assignment_operator assignment_expression  */
+#line 1252 "Parser/parser.y"
+                            {
+                                if (yyvsp[-1].treeNode->nodeType != NODE_OPERATOR) { YYERROR; }
+                                if (NodeAddChild(yyvsp[-1].treeNode, yyvsp[-2].treeNode) < 0) { YYERROR; }
+                                if (NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
+                                yyval.treeNode = yyvsp[-1].treeNode;
+                            }
+#line 3067 "Parser/parser.tab.c"
+    break;
+
+  case 125: /* conditional_expression: logical_or_expression  */
+#line 1261 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3075 "Parser/parser.tab.c"
+    break;
+
+  case 126: /* conditional_expression: logical_or_expression TOKEN_TERNARY expression TOKEN_COLON conditional_expression  */
+#line 1265 "Parser/parser.y"
+                            {
+                                NodeCreate(&(yyval.treeNode), NODE_TERNARY);
+                                NodeAddChild(yyval.treeNode, yyvsp[-4].treeNode);
+                                NodeAddChild(yyval.treeNode, yyvsp[-2].treeNode);
+                                NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
+                            }
+#line 3086 "Parser/parser.tab.c"
+    break;
+
+  case 127: /* logical_or_expression: logical_and_expression  */
+#line 1274 "Parser/parser.y"
+                            {
+                                yyval.treeNode = yyvsp[0].treeNode;
+                            }
+#line 3094 "Parser/parser.tab.c"
+    break;
+
   case 128: /* logical_or_expression: logical_or_expression TOKEN_LOGICAL_OR logical_and_expression  */
-#line 1240 "Parser/parser.y"
+#line 1278 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_LOGICAL_OR, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3064 "Parser/parser.tab.c"
+#line 3102 "Parser/parser.tab.c"
     break;
 
   case 129: /* logical_and_expression: inclusive_or_expression  */
-#line 1246 "Parser/parser.y"
+#line 1284 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3072 "Parser/parser.tab.c"
+#line 3110 "Parser/parser.tab.c"
     break;
 
   case 130: /* logical_and_expression: logical_and_expression TOKEN_LOGICAL_AND inclusive_or_expression  */
-#line 1250 "Parser/parser.y"
+#line 1288 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_LOGICAL_AND, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3080 "Parser/parser.tab.c"
+#line 3118 "Parser/parser.tab.c"
     break;
 
   case 131: /* inclusive_or_expression: exclusive_or_expression  */
-#line 1256 "Parser/parser.y"
+#line 1294 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3088 "Parser/parser.tab.c"
+#line 3126 "Parser/parser.tab.c"
     break;
 
   case 132: /* inclusive_or_expression: inclusive_or_expression TOKEN_BITWISE_OR exclusive_or_expression  */
-#line 1260 "Parser/parser.y"
+#line 1298 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_BITWISE_OR, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3096 "Parser/parser.tab.c"
+#line 3134 "Parser/parser.tab.c"
     break;
 
   case 133: /* exclusive_or_expression: and_expression  */
-#line 1266 "Parser/parser.y"
+#line 1304 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3104 "Parser/parser.tab.c"
+#line 3142 "Parser/parser.tab.c"
     break;
 
   case 134: /* exclusive_or_expression: exclusive_or_expression TOKEN_BITWISE_XOR and_expression  */
-#line 1270 "Parser/parser.y"
+#line 1308 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_BITWISE_XOR, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3112 "Parser/parser.tab.c"
+#line 3150 "Parser/parser.tab.c"
     break;
 
   case 135: /* and_expression: equality_expression  */
-#line 1276 "Parser/parser.y"
+#line 1314 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3120 "Parser/parser.tab.c"
+#line 3158 "Parser/parser.tab.c"
     break;
 
   case 136: /* and_expression: and_expression TOKEN_BITWISE_AND equality_expression  */
-#line 1280 "Parser/parser.y"
+#line 1318 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_BITWISE_AND, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3128 "Parser/parser.tab.c"
+#line 3166 "Parser/parser.tab.c"
     break;
 
   case 137: /* equality_expression: relational_expression  */
-#line 1286 "Parser/parser.y"
+#line 1324 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3136 "Parser/parser.tab.c"
+#line 3174 "Parser/parser.tab.c"
     break;
 
   case 138: /* equality_expression: equality_expression TOKEN_EQUAL relational_expression  */
-#line 1290 "Parser/parser.y"
+#line 1328 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_EQUAL, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3144 "Parser/parser.tab.c"
+#line 3182 "Parser/parser.tab.c"
     break;
 
   case 139: /* equality_expression: equality_expression TOKEN_NOT_EQUAL relational_expression  */
-#line 1294 "Parser/parser.y"
+#line 1332 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_NOT_EQUAL, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3152 "Parser/parser.tab.c"
+#line 3190 "Parser/parser.tab.c"
     break;
 
   case 140: /* relational_expression: shift_expression  */
-#line 1300 "Parser/parser.y"
+#line 1338 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3160 "Parser/parser.tab.c"
+#line 3198 "Parser/parser.tab.c"
     break;
 
   case 141: /* relational_expression: relational_expression TOKEN_LESS_THAN shift_expression  */
-#line 1304 "Parser/parser.y"
+#line 1342 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_LESS_THAN, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3168 "Parser/parser.tab.c"
+#line 3206 "Parser/parser.tab.c"
     break;
 
   case 142: /* relational_expression: relational_expression TOKEN_GREATER_THAN shift_expression  */
-#line 1308 "Parser/parser.y"
+#line 1346 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_GREATER_THAN, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3176 "Parser/parser.tab.c"
+#line 3214 "Parser/parser.tab.c"
     break;
 
   case 143: /* relational_expression: relational_expression TOKEN_LESS_THAN_OR_EQUAL shift_expression  */
-#line 1312 "Parser/parser.y"
+#line 1350 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_LESS_THAN_OR_EQUAL, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3184 "Parser/parser.tab.c"
+#line 3222 "Parser/parser.tab.c"
     break;
 
   case 144: /* relational_expression: relational_expression TOKEN_GREATER_THAN_OR_EQUAL shift_expression  */
-#line 1316 "Parser/parser.y"
+#line 1354 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_GREATER_THAN_OR_EQUAL, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3192 "Parser/parser.tab.c"
+#line 3230 "Parser/parser.tab.c"
     break;
 
   case 145: /* shift_expression: additive_expression  */
-#line 1322 "Parser/parser.y"
+#line 1360 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3200 "Parser/parser.tab.c"
+#line 3238 "Parser/parser.tab.c"
     break;
 
   case 146: /* shift_expression: shift_expression TOKEN_LEFT_SHIFT additive_expression  */
-#line 1326 "Parser/parser.y"
+#line 1364 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_LEFT_SHIFT, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3208 "Parser/parser.tab.c"
+#line 3246 "Parser/parser.tab.c"
     break;
 
   case 147: /* shift_expression: shift_expression TOKEN_RIGHT_SHIFT additive_expression  */
-#line 1330 "Parser/parser.y"
+#line 1368 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_RIGHT_SHIFT, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3216 "Parser/parser.tab.c"
+#line 3254 "Parser/parser.tab.c"
     break;
 
   case 148: /* additive_expression: multiplicative_expression  */
-#line 1336 "Parser/parser.y"
+#line 1374 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3224 "Parser/parser.tab.c"
+#line 3262 "Parser/parser.tab.c"
     break;
 
   case 149: /* additive_expression: additive_expression TOKEN_PLUS multiplicative_expression  */
-#line 1340 "Parser/parser.y"
+#line 1378 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_PLUS, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3232 "Parser/parser.tab.c"
+#line 3270 "Parser/parser.tab.c"
     break;
 
   case 150: /* additive_expression: additive_expression TOKEN_MINUS multiplicative_expression  */
-#line 1344 "Parser/parser.y"
+#line 1382 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_MINUS, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3240 "Parser/parser.tab.c"
+#line 3278 "Parser/parser.tab.c"
     break;
 
   case 151: /* multiplicative_expression: cast_expression  */
-#line 1351 "Parser/parser.y"
+#line 1389 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3248 "Parser/parser.tab.c"
+#line 3286 "Parser/parser.tab.c"
     break;
 
   case 152: /* multiplicative_expression: multiplicative_expression TOKEN_ASTERISK cast_expression  */
-#line 1355 "Parser/parser.y"
+#line 1393 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_MULTIPLY, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3256 "Parser/parser.tab.c"
+#line 3294 "Parser/parser.tab.c"
     break;
 
   case 153: /* multiplicative_expression: multiplicative_expression TOKEN_DIVIDE cast_expression  */
-#line 1359 "Parser/parser.y"
+#line 1397 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_DIVIDE, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3264 "Parser/parser.tab.c"
+#line 3302 "Parser/parser.tab.c"
     break;
 
   case 154: /* multiplicative_expression: multiplicative_expression TOKEN_MOD cast_expression  */
-#line 1363 "Parser/parser.y"
+#line 1401 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_MODULE, yyvsp[-2].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                             }
-#line 3272 "Parser/parser.tab.c"
+#line 3310 "Parser/parser.tab.c"
     break;
 
   case 155: /* cast_expression: unary_expression  */
-#line 1369 "Parser/parser.y"
+#line 1407 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3280 "Parser/parser.tab.c"
+#line 3318 "Parser/parser.tab.c"
     break;
 
   case 156: /* cast_expression: type_cast_specifier cast_expression  */
-#line 1373 "Parser/parser.y"
+#line 1411 "Parser/parser.y"
                             {
                                 if (NodeAddChild(yyvsp[-1].treeNode, yyvsp[0].treeNode) < 0) { YYERROR; }
                                 yyval.treeNode = yyvsp[-1].treeNode;
                             }
-#line 3289 "Parser/parser.tab.c"
+#line 3327 "Parser/parser.tab.c"
     break;
 
   case 157: /* unary_expression: postfix_expression  */
-#line 1380 "Parser/parser.y"
+#line 1418 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3297 "Parser/parser.tab.c"
+#line 3335 "Parser/parser.tab.c"
     break;
 
   case 158: /* unary_expression: TOKEN_INCREMENT unary_expression  */
-#line 1384 "Parser/parser.y"
+#line 1422 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_PRE_INC);
                                 NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                             }
-#line 3306 "Parser/parser.tab.c"
+#line 3344 "Parser/parser.tab.c"
     break;
 
   case 159: /* unary_expression: TOKEN_DECREMENT unary_expression  */
-#line 1389 "Parser/parser.y"
+#line 1427 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_PRE_DEC);
                                 NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                             }
-#line 3315 "Parser/parser.tab.c"
+#line 3353 "Parser/parser.tab.c"
     break;
 
   case 160: /* unary_expression: TOKEN_BITWISE_AND cast_expression  */
-#line 1394 "Parser/parser.y"
+#line 1432 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_REFERENCE);
                                 NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                             }
-#line 3324 "Parser/parser.tab.c"
+#line 3362 "Parser/parser.tab.c"
     break;
 
   case 161: /* unary_expression: TOKEN_ASTERISK cast_expression  */
-#line 1399 "Parser/parser.y"
+#line 1437 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_POINTER_CONTENT);
                                 NodeAddChild(yyval.treeNode, yyvsp[0].treeNode);
                             }
-#line 3333 "Parser/parser.tab.c"
+#line 3371 "Parser/parser.tab.c"
     break;
 
   case 162: /* unary_expression: TOKEN_PLUS cast_expression  */
-#line 1404 "Parser/parser.y"
+#line 1442 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3341 "Parser/parser.tab.c"
+#line 3379 "Parser/parser.tab.c"
     break;
 
   case 163: /* unary_expression: TOKEN_MINUS cast_expression  */
-#line 1408 "Parser/parser.y"
+#line 1446 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_UNARY_MINUS, yyvsp[0].treeNode, NULL) < 0) { YYERROR; }
                             }
-#line 3349 "Parser/parser.tab.c"
+#line 3387 "Parser/parser.tab.c"
     break;
 
   case 164: /* unary_expression: TOKEN_LOGICAL_NOT cast_expression  */
-#line 1412 "Parser/parser.y"
+#line 1450 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_LOGICAL_NOT, yyvsp[0].treeNode, NULL) < 0) { YYERROR; }
                             }
-#line 3357 "Parser/parser.tab.c"
+#line 3395 "Parser/parser.tab.c"
     break;
 
   case 165: /* unary_expression: TOKEN_BITWISE_NOT cast_expression  */
-#line 1416 "Parser/parser.y"
+#line 1454 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_BITWISE_NOT, yyvsp[0].treeNode, NULL) < 0) { YYERROR; }
                             }
-#line 3365 "Parser/parser.tab.c"
+#line 3403 "Parser/parser.tab.c"
     break;
 
   case 166: /* unary_expression: TOKEN_SIZEOF unary_expression  */
-#line 1420 "Parser/parser.y"
+#line 1458 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_SIZEOF, yyvsp[0].treeNode, NULL) < 0) { YYERROR; }
                             }
-#line 3373 "Parser/parser.tab.c"
+#line 3411 "Parser/parser.tab.c"
     break;
 
   case 167: /* unary_expression: TOKEN_SIZEOF TOKEN_LEFT_PARENTHESES type_name TOKEN_RIGHT_PARENTHESES  */
-#line 1424 "Parser/parser.y"
+#line 1462 "Parser/parser.y"
                             {
                                 if (build_operator_node(&yyval.treeNode, OP_SIZEOF, yyvsp[-1].treeNode, NULL) < 0) { YYERROR; }
                             }
-#line 3381 "Parser/parser.tab.c"
+#line 3419 "Parser/parser.tab.c"
     break;
 
   case 168: /* postfix_expression: primary_expression  */
-#line 1430 "Parser/parser.y"
+#line 1468 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3389 "Parser/parser.tab.c"
+#line 3427 "Parser/parser.tab.c"
     break;
 
   case 169: /* postfix_expression: postfix_expression TOKEN_LEFT_BRACKET expression TOKEN_RIGHT_BRACKET  */
-#line 1434 "Parser/parser.y"
+#line 1472 "Parser/parser.y"
                             {
                                 if (build_array_access_node(&yyval.treeNode, yyvsp[-3].treeNode, yyvsp[-1].treeNode) < 0) { YYERROR; }
                             }
-#line 3397 "Parser/parser.tab.c"
+#line 3435 "Parser/parser.tab.c"
     break;
 
   case 170: /* postfix_expression: postfix_expression TOKEN_LEFT_PARENTHESES argument_expression_list_opt TOKEN_RIGHT_PARENTHESES  */
-#line 1438 "Parser/parser.y"
+#line 1476 "Parser/parser.y"
                             {
                                 if (build_function_call_node(&yyval.treeNode, yyvsp[-3].treeNode, yyvsp[-1].treeNode) < 0) { YYERROR; }
                             }
-#line 3405 "Parser/parser.tab.c"
+#line 3443 "Parser/parser.tab.c"
     break;
 
   case 171: /* postfix_expression: postfix_expression TOKEN_DOT TOKEN_ID  */
-#line 1442 "Parser/parser.y"
+#line 1480 "Parser/parser.y"
                             {
                                 if (build_member_access_node(&yyval.treeNode, NODE_MEMBER_ACCESS, yyvsp[-2].treeNode, yyvsp[0].nodeData.sVal) < 0) { YYERROR; }
                             }
-#line 3413 "Parser/parser.tab.c"
+#line 3451 "Parser/parser.tab.c"
     break;
 
   case 172: /* postfix_expression: postfix_expression TOKEN_ARROW TOKEN_ID  */
-#line 1446 "Parser/parser.y"
+#line 1484 "Parser/parser.y"
                             {
                                 if (build_member_access_node(&yyval.treeNode, NODE_PTR_MEMBER_ACCESS, yyvsp[-2].treeNode, yyvsp[0].nodeData.sVal) < 0) { YYERROR; }
                             }
-#line 3421 "Parser/parser.tab.c"
+#line 3459 "Parser/parser.tab.c"
     break;
 
   case 173: /* postfix_expression: postfix_expression TOKEN_INCREMENT  */
-#line 1450 "Parser/parser.y"
+#line 1488 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_POST_INC);
                                 NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                             }
-#line 3430 "Parser/parser.tab.c"
+#line 3468 "Parser/parser.tab.c"
     break;
 
   case 174: /* postfix_expression: postfix_expression TOKEN_DECREMENT  */
-#line 1455 "Parser/parser.y"
+#line 1493 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_POST_DEC);
                                 NodeAddChild(yyval.treeNode, yyvsp[-1].treeNode);
                             }
-#line 3439 "Parser/parser.tab.c"
+#line 3477 "Parser/parser.tab.c"
     break;
 
   case 175: /* primary_expression: TOKEN_ID  */
-#line 1462 "Parser/parser.y"
+#line 1500 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_IDENTIFIER);
                                 yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
                             }
-#line 3448 "Parser/parser.tab.c"
+#line 3486 "Parser/parser.tab.c"
     break;
 
   case 176: /* primary_expression: TOKEN_NUM  */
-#line 1467 "Parser/parser.y"
+#line 1505 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_INTEGER);
                                 yyval.treeNode->nodeData.dVal = yyvsp[0].nodeData.dVal;
                             }
-#line 3457 "Parser/parser.tab.c"
+#line 3495 "Parser/parser.tab.c"
     break;
 
   case 177: /* primary_expression: TOKEN_FNUM  */
-#line 1472 "Parser/parser.y"
+#line 1510 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_FLOAT);
                                 yyval.treeNode->nodeData.fVal = yyvsp[0].nodeData.fVal;
                             }
-#line 3466 "Parser/parser.tab.c"
+#line 3504 "Parser/parser.tab.c"
     break;
 
   case 178: /* primary_expression: TOKEN_CNUM  */
-#line 1477 "Parser/parser.y"
+#line 1515 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_CHAR);
                                 yyval.treeNode->nodeData.dVal = yyvsp[0].nodeData.dVal;
                             }
-#line 3475 "Parser/parser.tab.c"
+#line 3513 "Parser/parser.tab.c"
     break;
 
   case 179: /* primary_expression: TOKEN_STR  */
-#line 1482 "Parser/parser.y"
+#line 1520 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_STRING);
                                 yyval.treeNode->nodeData.sVal = yyvsp[0].nodeData.sVal;
                             }
-#line 3484 "Parser/parser.tab.c"
+#line 3522 "Parser/parser.tab.c"
     break;
 
   case 180: /* primary_expression: TOKEN_LEFT_PARENTHESES expression TOKEN_RIGHT_PARENTHESES  */
-#line 1487 "Parser/parser.y"
+#line 1525 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[-1].treeNode;
                             }
-#line 3492 "Parser/parser.tab.c"
+#line 3530 "Parser/parser.tab.c"
     break;
 
   case 181: /* argument_expression_list_opt: %empty  */
-#line 1494 "Parser/parser.y"
+#line 1532 "Parser/parser.y"
                             {
                                 yyval.treeNode = NULL;
                             }
-#line 3500 "Parser/parser.tab.c"
+#line 3538 "Parser/parser.tab.c"
     break;
 
   case 182: /* argument_expression_list_opt: argument_expression_list  */
-#line 1498 "Parser/parser.y"
+#line 1536 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3508 "Parser/parser.tab.c"
+#line 3546 "Parser/parser.tab.c"
     break;
 
   case 183: /* argument_expression_list: assignment_expression  */
-#line 1505 "Parser/parser.y"
+#line 1543 "Parser/parser.y"
                             {
                                 yyval.treeNode = yyvsp[0].treeNode;
                             }
-#line 3516 "Parser/parser.tab.c"
+#line 3554 "Parser/parser.tab.c"
     break;
 
   case 184: /* argument_expression_list: argument_expression_list TOKEN_COMMA assignment_expression  */
-#line 1509 "Parser/parser.y"
+#line 1547 "Parser/parser.y"
                             {
                                 TreeNode_t *pHead = yyvsp[-2].treeNode;
                                 if (NodeAppendSibling(&pHead, yyvsp[0].treeNode)) { YYERROR; }
                                 yyval.treeNode = pHead;
                             }
-#line 3526 "Parser/parser.tab.c"
+#line 3564 "Parser/parser.tab.c"
     break;
 
   case 185: /* assignment_operator: TOKEN_ASSIGN  */
-#line 1517 "Parser/parser.y"
+#line 1555 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_ASSIGN;
                             }
-#line 3535 "Parser/parser.tab.c"
+#line 3573 "Parser/parser.tab.c"
     break;
 
   case 186: /* assignment_operator: TOKEN_PLUS_ASSIGN  */
-#line 1522 "Parser/parser.y"
+#line 1560 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_PLUS_ASSIGN;
                             }
-#line 3544 "Parser/parser.tab.c"
+#line 3582 "Parser/parser.tab.c"
     break;
 
   case 187: /* assignment_operator: TOKEN_MINUS_ASSIGN  */
-#line 1527 "Parser/parser.y"
+#line 1565 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_MINUS_ASSIGN;
                             }
-#line 3553 "Parser/parser.tab.c"
+#line 3591 "Parser/parser.tab.c"
     break;
 
   case 188: /* assignment_operator: TOKEN_MODULUS_ASSIGN  */
-#line 1532 "Parser/parser.y"
+#line 1570 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_MODULUS_ASSIGN;
                             }
-#line 3562 "Parser/parser.tab.c"
+#line 3600 "Parser/parser.tab.c"
     break;
 
   case 189: /* assignment_operator: TOKEN_LEFT_SHIFT_ASSIGN  */
-#line 1537 "Parser/parser.y"
+#line 1575 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_LEFT_SHIFT_ASSIGN;
                             }
-#line 3571 "Parser/parser.tab.c"
+#line 3609 "Parser/parser.tab.c"
     break;
 
   case 190: /* assignment_operator: TOKEN_RIGHT_SHIFT_ASSIGN  */
-#line 1542 "Parser/parser.y"
+#line 1580 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_RIGHT_SHIFT_ASSIGN;
                             }
-#line 3580 "Parser/parser.tab.c"
+#line 3618 "Parser/parser.tab.c"
     break;
 
   case 191: /* assignment_operator: TOKEN_AND_ASSIGN  */
-#line 1547 "Parser/parser.y"
+#line 1585 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_BITWISE_AND_ASSIGN;
                             }
-#line 3589 "Parser/parser.tab.c"
+#line 3627 "Parser/parser.tab.c"
     break;
 
   case 192: /* assignment_operator: TOKEN_OR_ASSIGN  */
-#line 1552 "Parser/parser.y"
+#line 1590 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_BITWISE_OR_ASSIGN;
                             }
-#line 3598 "Parser/parser.tab.c"
+#line 3636 "Parser/parser.tab.c"
     break;
 
   case 193: /* assignment_operator: TOKEN_XOR_ASSIGN  */
-#line 1557 "Parser/parser.y"
+#line 1595 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_BITWISE_XOR_ASSIGN;
                             }
-#line 3607 "Parser/parser.tab.c"
+#line 3645 "Parser/parser.tab.c"
     break;
 
   case 194: /* assignment_operator: TOKEN_MULTIPLY_ASSIGN  */
-#line 1562 "Parser/parser.y"
+#line 1600 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_MULTIPLY_ASSIGN;
                             }
-#line 3616 "Parser/parser.tab.c"
+#line 3654 "Parser/parser.tab.c"
     break;
 
   case 195: /* assignment_operator: TOKEN_DIVIDE_ASSIGN  */
-#line 1567 "Parser/parser.y"
+#line 1605 "Parser/parser.y"
                             {
                                 NodeCreate(&(yyval.treeNode), NODE_OPERATOR);
                                 yyval.treeNode->nodeData.dVal = OP_DIVIDE_ASSIGN;
                             }
-#line 3625 "Parser/parser.tab.c"
+#line 3663 "Parser/parser.tab.c"
     break;
 
 
-#line 3629 "Parser/parser.tab.c"
+#line 3667 "Parser/parser.tab.c"
 
       default: break;
     }
@@ -3818,7 +3856,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 1576 "Parser/parser.y"
+#line 1614 "Parser/parser.y"
 
 
 void yyerror(const char *s)

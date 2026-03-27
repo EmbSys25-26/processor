@@ -94,12 +94,6 @@ static void NodeValueSuffix(const TreeNode_t* p, char* buf, size_t buflen)
         case NODE_INTEGER:
             snprintf(buf, buflen, " (%ld)", p->nodeData.dVal);
             break;
-        case NODE_CASE:
-            /* case can be int (dVal) or enum identifier (sVal) */
-            if (p->nodeData.sVal && p->nodeData.dVal == 0 && p->nodeData.sVal != (char*)0);
-            else
-                snprintf(buf, buflen, " (%ld)", p->nodeData.dVal);
-            break;
         case NODE_FLOAT:
             snprintf(buf, buflen, " (%g)", p->nodeData.fVal);
             break;

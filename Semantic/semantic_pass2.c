@@ -529,6 +529,395 @@ static int warns_on_const_dropping_cast(const type_t *target, const type_t *sour
   return cast_drops_const(target->as.pointer.base, source->as.pointer.base);
 }
 
+/**
+ * @brief Check whether one semantic type is a floating scalar type.
+ * @param type semantic type pointer.
+ * @return non-zero if the type is a builtin floating family.
+ */
+static int type_is_floating(const type_t *type)
+{
+  return type &&
+         type->kind == TYPE_BUILTIN &&
+         is_floating_builtin(type->as.builtin);
+}
+
+/**
+ * @brief Check whether one semantic type is an incomplete struct/union object type.
+ * @param type semantic type pointer.
+ * @return non-zero if the type is a struct/union tag without a completed declaration body.
+ */
+static int type_is_incomplete_aggregate_object(const type_t *type)
+{
+  const TreeNode_t *decl_node;
+
+  if (!type) {
+    return 0;
+  }
+
+  if (type->kind != TYPE_STRUCT_TAG && type->kind != TYPE_UNION_TAG) {
+    return 0;
+  }
+
+  decl_node = (const TreeNode_t *)type->as.aggregate.decl_node;
+  return decl_node == NULL || decl_node->p_firstChild == NULL;
+}
+
+/**
+ * @brief Check whether an explicit cast involves an incomplete struct/union object type.
+ * @param target cast target type.
+ * @param source source expression type.
+ * @return non-zero if SEM015 should be emitted.
+ */
+static int cast_involves_incomplete_aggregate(const type_t *target, const type_t *source)
+{
+  return type_is_incomplete_aggregate_object(target) ||
+         type_is_incomplete_aggregate_object(source);
+}
+
+/**
+ * @brief Check whether an explicit cast converts between pointer and floating families.
+ * @param target cast target type.
+ * @param source source expression type.
+ * @return non-zero if SEM016 should be emitted.
+ */
+static int cast_between_pointer_and_floating(const type_t *target, const type_t *source)
+{
+  if (!target || !source) {
+    return 0;
+  }
+
+  return (target->kind == TYPE_POINTER && type_is_floating(source)) ||
+         (source->kind == TYPE_POINTER && type_is_floating(target));
+}
+
+/**
+ * @brief Check whether a semantic type is exactly `void`.
+ * @param type semantic type pointer.
+ * @return non-zero if type is builtin void.
+ */
+static int type_is_void(const type_t *type)
+{
+  return type &&
+         type->kind == TYPE_BUILTIN &&
+         type->as.builtin == BUILTIN_VOID;
+}
+
+/**
+ * @brief Function argument compatibility predicate used by SEM042 checks.
+ * @param param_type declared parameter type.
+ * @param arg_type inferred argument type.
+ * @return non-zero if the argument is accepted by current policy.
+ */
+static int argument_compatible(const type_t *param_type, const type_t *arg_type)
+{
+  if (!param_type || !arg_type) {
+    return 0;
+  }
+
+  if (type_equal(param_type, arg_type)) {
+    return 1;
+  }
+
+  /* Allow numeric implicit conversions, same policy as assignments. */
+  if (param_type->kind == TYPE_BUILTIN && arg_type->kind == TYPE_BUILTIN) {
+    if (is_numeric_builtin(param_type->as.builtin) &&
+        is_numeric_builtin(arg_type->as.builtin)) {
+      return 1;
+    }
+  }
+
+  /* Allow array argument to match pointer parameter when element types match. */
+  if (param_type->kind == TYPE_POINTER &&
+      arg_type->kind == TYPE_ARRAY &&
+      param_type->as.pointer.base &&
+      arg_type->as.array.elem &&
+      type_equal(param_type->as.pointer.base, arg_type->as.array.elem)) {
+    return 1;
+  }
+
+  return 0;
+}
+
+typedef enum {
+  CASE_LABEL_INVALID = 0,
+  CASE_LABEL_VALUE,
+  CASE_LABEL_ENUM_NAME
+} case_label_kind_t;
+
+/**
+ * @brief Return the label child of one `case` node.
+ * @param case_node case AST node.
+ * @return first child when present, otherwise NULL.
+ */
+static const TreeNode_t *case_label_expr(const TreeNode_t *case_node)
+{
+  if (!case_node || case_node->nodeType != NODE_CASE) {
+    return NULL;
+  }
+
+  return case_node->p_firstChild;
+}
+
+/**
+ * @brief Return the statement/body child of one `case` node.
+ * @param case_node case AST node.
+ * @return second child when present, otherwise NULL.
+ */
+static const TreeNode_t *case_body_stmt(const TreeNode_t *case_node)
+{
+  const TreeNode_t *label = case_label_expr(case_node);
+  return label ? label->p_sibling : NULL;
+}
+
+/**
+ * @brief Classify one case label according to the currently supported subset.
+ * @param label case label child node.
+ * @param state pass2 execution state.
+ * @param out_value numeric value for literal labels.
+ * @param out_name enum constant name for identifier labels.
+ * @return label classification used by switch-label validation.
+ */
+static case_label_kind_t evaluate_case_label(const TreeNode_t *label,
+                                             pass2_state_t *state,
+                                             long *out_value,
+                                             const char **out_name)
+{
+  scope_t *scope;
+  symbol_t *sym;
+
+  if (out_value) {
+    *out_value = 0;
+  }
+  if (out_name) {
+    *out_name = NULL;
+  }
+
+  if (!label || !state) {
+    return CASE_LABEL_INVALID;
+  }
+
+  switch (label->nodeType) {
+    case NODE_INTEGER:
+    case NODE_CHAR:
+      if (out_value) {
+        *out_value = (long)label->nodeData.dVal;
+      }
+      return CASE_LABEL_VALUE;
+    case NODE_IDENTIFIER:
+      if (!label->nodeData.sVal || label->nodeData.sVal[0] == '\0') {
+        return CASE_LABEL_INVALID;
+      }
+      scope = scope_current(&state->ctx->scope_stack);
+      sym = symbol_lookup_visible(scope, label->nodeData.sVal);
+      if (!sym || sym->kind != SYMBOL_ENUM_CONST) {
+        return CASE_LABEL_INVALID;
+      }
+      if (out_name) {
+        *out_name = label->nodeData.sVal;
+      }
+      return CASE_LABEL_ENUM_NAME;
+    default:
+      return CASE_LABEL_INVALID;
+  }
+}
+
+/**
+ * @brief Scan one switch subtree for duplicate case labels and multiple defaults.
+ * @param node subtree root belonging to the switch body.
+ * @param state pass2 execution state.
+ * @param case_values buffer of already seen case values.
+ * @param case_count number of used entries in case_values.
+ * @param case_capacity total capacity of case_values.
+ * @param default_seen whether a default label was already seen.
+ * @return 0 on success, negative errno-like value on fatal error.
+ */
+static int scan_switch_labels(const TreeNode_t *node,
+                              pass2_state_t *state,
+                              long *case_values,
+                              size_t *case_count,
+                              size_t case_capacity,
+                              const char **case_names,
+                              size_t *name_count,
+                              int *default_seen)
+{
+  const TreeNode_t *it = node;
+
+  while (it) {
+    /* Nested switch starts a new label namespace: do not recurse into it. */
+    if (it->nodeType == NODE_SWITCH) {
+      it = it->p_sibling;
+      continue;
+    }
+
+    if (it->nodeType == NODE_CASE) {
+      const TreeNode_t *label = case_label_expr(it);
+      const char *name = NULL;
+      long value = 0;
+      case_label_kind_t kind = evaluate_case_label(label, state, &value, &name);
+
+      if (kind == CASE_LABEL_INVALID) {
+        pass2_emit(state, "SEM054", it->lineNumber,
+                   "case label must be an integral constant expression");
+      } else if (kind == CASE_LABEL_ENUM_NAME) {
+        size_t i;
+
+        for (i = 0u; i < *name_count; ++i) {
+          if (strcmp(case_names[i], name) == 0) {
+            pass2_emit(state, "SEM055", it->lineNumber, "duplicate case label in same switch");
+            break;
+          }
+        }
+
+        if (*name_count < case_capacity) {
+          case_names[*name_count] = name;
+          (*name_count)++;
+        } else {
+          pass2_emit(state, "SEM900", it->lineNumber, "switch case tracking capacity exceeded");
+          return -EINVAL;
+        }
+      } else {
+        size_t i;
+
+        for (i = 0u; i < *case_count; ++i) {
+          if (case_values[i] == value) {
+            pass2_emit(state, "SEM055", it->lineNumber, "duplicate case label in same switch");
+            break;
+          }
+        }
+
+        if (*case_count < case_capacity) {
+          case_values[*case_count] = value;
+          (*case_count)++;
+        } else {
+          pass2_emit(state, "SEM900", it->lineNumber, "switch case tracking capacity exceeded");
+          return -EINVAL;
+        }
+      }
+    } else if (it->nodeType == NODE_DEFAULT) {
+      if (*default_seen) {
+        pass2_emit(state, "SEM056", it->lineNumber, "multiple default labels in same switch");
+      } else {
+        *default_seen = 1;
+      }
+    }
+
+    if (it->p_firstChild) {
+      const TreeNode_t *child_root = it->p_firstChild;
+      int rc;
+
+      if (it->nodeType == NODE_CASE) {
+        child_root = case_body_stmt(it);
+      }
+
+      if (!child_root) {
+        it = it->p_sibling;
+        continue;
+      }
+
+      rc = scan_switch_labels(child_root, state, case_values, case_count,
+                              case_capacity, case_names, name_count, default_seen);
+      if (rc < 0) {
+        return rc;
+      }
+    }
+
+    it = it->p_sibling;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Validate uniqueness of case/default labels inside one switch statement.
+ * @param switch_node switch AST node.
+ * @param state pass2 execution state.
+ * @return 0 on success, negative errno-like value on fatal error.
+ */
+static int check_switch_labels(TreeNode_t *switch_node, pass2_state_t *state)
+{
+  long case_values[256];
+  const char *case_names[256];
+  size_t case_count = 0u;
+  size_t name_count = 0u;
+  int default_seen = 0;
+  TreeNode_t *switch_expr;
+  TreeNode_t *switch_body;
+
+  if (!switch_node || !state) {
+    return 0;
+  }
+
+  switch_expr = switch_node->p_firstChild;
+  switch_body = switch_expr ? switch_expr->p_sibling : NULL;
+
+  if (!switch_body) {
+    return 0;
+  }
+
+  return scan_switch_labels(switch_body, state, case_values, &case_count,
+                            sizeof(case_values) / sizeof(case_values[0]),
+                            case_names, &name_count, &default_seen);
+}
+
+static int statement_guarantees_return(const TreeNode_t *node);
+
+/**
+ * @brief Check whether a sibling-linked statement sequence guarantees return on any path.
+ * @param node first statement in the sequence.
+ * @return non-zero if execution cannot fall through past the sequence.
+ */
+static int statement_sequence_guarantees_return(const TreeNode_t *node)
+{
+  const TreeNode_t *it = node;
+
+  while (it) {
+    if (statement_guarantees_return(it)) {
+      return 1;
+    }
+    it = it->p_sibling;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Conservative return-path analysis used by SEM045.
+ *        Returns non-zero only when ALL paths through the statement provably return.
+ *        Deliberately under-approximates (no loop termination analysis).
+ * @param node statement node to analyse.
+ * @return non-zero if the statement guarantees a return on all paths.
+ */
+static int statement_guarantees_return(const TreeNode_t *node)
+{
+  const TreeNode_t *cond;
+  const TreeNode_t *then_branch;
+  const TreeNode_t *else_branch;
+
+  if (!node) {
+    return 0;
+  }
+
+  switch (node->nodeType) {
+    case NODE_RETURN:
+      return 1;
+    case NODE_BLOCK:
+      return statement_sequence_guarantees_return(node->p_firstChild);
+    case NODE_IF:
+      cond        = node->p_firstChild;
+      then_branch = cond        ? cond->p_sibling        : NULL;
+      else_branch = then_branch ? then_branch->p_sibling : NULL;
+      /* Only guaranteed if BOTH branches return and an else branch exists. */
+      return then_branch &&
+             else_branch &&
+             statement_guarantees_return(then_branch) &&
+             statement_guarantees_return(else_branch);
+    case NODE_DO_WHILE:
+      return node->p_firstChild && statement_guarantees_return(node->p_firstChild);
+    default:
+      return 0;
+  }
+}
+
 static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state);
 
 /**
@@ -900,6 +1289,7 @@ static const type_t *infer_call_type(TreeNode_t *call_node, pass2_state_t *state
   const type_t *callee_type;
   size_t provided_arity;
   TreeNode_t *arg;
+  size_t arg_index = 0u; 
 
   if (!call_node) {
     pass2_emit(state, "SEM040", call_node ? call_node->lineNumber : 0u, "call target must be a function");
@@ -928,19 +1318,37 @@ static const type_t *infer_call_type(TreeNode_t *call_node, pass2_state_t *state
     return &g_type_invalid;
   }
 
-  arg = callee_expr->p_sibling;
-  while (arg) {
-    (void)infer_expr_type(arg, state);
-    arg = arg->p_sibling;
-  }
-
+  
   provided_arity = count_call_arguments(call_node);
   if (!callee_type->as.function.is_variadic &&
-      provided_arity != callee_type->as.function.param_count) {
-    pass2_emit(state, "SEM041", call_node->lineNumber, "function call argument count mismatch");
+    provided_arity != callee_type->as.function.param_count) {
+      pass2_emit(state, "SEM041", call_node->lineNumber, "function call argument count mismatch");
+    }
+    
+    
+  arg = callee_expr->p_sibling;
+  while (arg) {
+    const type_t *arg_type = infer_expr_type(arg, state);
+    
+    if (arg_type->kind != TYPE_INVALID && 
+        arg_index < callee_type->as.function.param_count)
+    {
+      const type_t *param_type = callee_type->as.function.params[arg_index]; 
+
+      if (param_type &&
+          param_type->kind != TYPE_INVALID &&
+          !argument_compatible(param_type, arg_type)) {
+        pass2_emit(state, "SEM042", arg->lineNumber, "function call argument type mismatch");
+      }
+    }
+
+    arg_index++; 
+    arg = arg->p_sibling; 
   }
 
-  return callee_type->as.function.return_type ? callee_type->as.function.return_type : &g_type_void;
+  return callee_type->as.function.return_type 
+          ? callee_type->as.function.return_type 
+          : &g_type_void;
 }
 
 /**
@@ -1312,6 +1720,16 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
           return &g_type_invalid;
         }
         if (source_type->kind != TYPE_INVALID &&
+            cast_involves_incomplete_aggregate(cast_type, source_type)) {
+          pass2_emit(state, "SEM015", node->lineNumber,
+                     "cast involving incomplete struct/union type");
+        }
+        if (source_type->kind != TYPE_INVALID &&
+            cast_between_pointer_and_floating(cast_type, source_type)) {
+          pass2_emit(state, "SEM016", node->lineNumber,
+                     "pointer to floating cast is forbidden in strict mode");
+        }
+        if (source_type->kind != TYPE_INVALID &&
             warns_on_const_dropping_cast(cast_type, source_type)) {
           pass2_warning(state, "SEMW003", node->lineNumber, "explicit cast removes const qualifier");
         }
@@ -1489,7 +1907,17 @@ static int handle_function_node(TreeNode_t *fn_node, pass2_state_t *state)
     }
   }
 
-  if (scope_pop(&state->ctx->scope_stack) < 0) {
+  if (body &&
+      state->current_return_type &&
+      state->current_return_type->kind != TYPE_INVALID &&
+      !type_is_void(state->current_return_type) &&
+      !statement_guarantees_return(body)) {
+    pass2_emit(state, "SEM045", fn_node->lineNumber,
+               "non-void function may reach end without returning a value");
+  }
+
+  if (scope_pop(&state->ctx->scope_stack) < 0) 
+  {
     pass2_emit(state, "SEM901", fn_node->lineNumber, "scope stack underflow while leaving function scope");
     return -EINVAL;
   }
@@ -1534,23 +1962,73 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
       continue;
     } else if (it->nodeType == NODE_FOR) {
       int rc;
+      TreeNode_t *for_init;
+      TreeNode_t *for_cond;
+      TreeNode_t *for_step;
+      TreeNode_t *for_body;
 
       if (scope_push(&state->ctx->scope_stack) < 0) {
         pass2_emit(state, "SEM900", it->lineNumber, "failed to enter for-loop scope");
         return -EINVAL;
       }
 
-      state->loop_depth++;
+      for_init = it->p_firstChild;
+      for_cond = for_init ? for_init->p_sibling : NULL;
+      for_step = for_cond ? for_cond->p_sibling : NULL;
+      for_body = for_step ? for_step->p_sibling : NULL;
 
-      if (it->p_firstChild) {
-        rc = walk_pass2(it->p_firstChild, state);
-        if (rc < 0) {
-          state->loop_depth--;
-          return rc;
+      /* init: register declaration or evaluate expression. */
+      if (for_init) {
+        if (for_init->nodeType == NODE_VAR_DECLARATION ||
+            for_init->nodeType == NODE_ARRAY_DECLARATION) {
+          register_local_decl(for_init, state, SYMBOL_OBJECT);
+          if (for_init->p_firstChild) {
+            rc = walk_pass2(for_init->p_firstChild, state);
+            if (rc < 0) {
+              (void)scope_pop(&state->ctx->scope_stack);
+              return rc;
+            }
+          }
+        } else if (is_expression_node_type(for_init->nodeType)) {
+          (void)infer_expr_type(for_init, state);
+        } else if (for_init->p_firstChild) {
+          rc = walk_pass2(for_init->p_firstChild, state);
+          if (rc < 0) {
+            (void)scope_pop(&state->ctx->scope_stack);
+            return rc;
+          }
         }
       }
 
+      /* SEM052: for condition must be scalar. */
+      if (for_cond) {
+        const type_t *cond_type = infer_expr_type(for_cond, state);
+        if (cond_type && cond_type->kind != TYPE_INVALID && !type_is_scalar(cond_type)) {
+          pass2_emit(state, "SEM052", it->lineNumber, "control condition must be scalar");
+        }
+      }
+
+      /* step: evaluate expression (runs after body, but type-checked here). */
+      if (for_step) {
+        if (is_expression_node_type(for_step->nodeType)) {
+          (void)infer_expr_type(for_step, state);
+        } else if (for_step->p_firstChild) {
+          rc = walk_pass2(for_step->p_firstChild, state);
+          if (rc < 0) {
+            (void)scope_pop(&state->ctx->scope_stack);
+            return rc;
+          }
+        }
+      }
+
+      /* body */
+      state->loop_depth++;
+      rc = for_body ? walk_pass2(for_body, state) : 0;
       state->loop_depth--;
+      if (rc < 0) {
+        (void)scope_pop(&state->ctx->scope_stack);
+        return rc;
+      }
 
       if (scope_pop(&state->ctx->scope_stack) < 0) {
         pass2_emit(state, "SEM901", it->lineNumber, "scope stack underflow while leaving for-loop scope");
@@ -1570,25 +2048,115 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
                it->nodeType == NODE_UNION_DECLARATION ||
                it->nodeType == NODE_ENUM_DECLARATION) {
       register_tag_declaration(it, state);
-    } else if (it->nodeType == NODE_WHILE || it->nodeType == NODE_DO_WHILE) {
+    } else if (it->nodeType == NODE_WHILE) {
       int rc;
+      TreeNode_t *w_cond = it->p_firstChild;
+      TreeNode_t *w_body = w_cond ? w_cond->p_sibling : NULL;
+
+      /* SEM052: while condition must be scalar; check before walking to avoid double-eval. */
+      if (w_cond) {
+        const type_t *cond_type = infer_expr_type(w_cond, state);
+        if (cond_type && cond_type->kind != TYPE_INVALID && !type_is_scalar(cond_type)) {
+          pass2_emit(state, "SEM052", it->lineNumber, "control condition must be scalar");
+        }
+      }
 
       state->loop_depth++;
-      rc = it->p_firstChild ? walk_pass2(it->p_firstChild, state) : 0;
+      rc = w_body ? walk_pass2(w_body, state) : 0;
       state->loop_depth--;
       if (rc < 0) {
         return rc;
       }
       it = it->p_sibling;
       continue;
+    } else if (it->nodeType == NODE_DO_WHILE) {
+      int rc;
+      TreeNode_t *dw_body = it->p_firstChild;
+      TreeNode_t *dw_cond = dw_body ? dw_body->p_sibling : NULL;
+
+      state->loop_depth++;
+      rc = dw_body ? walk_pass2(dw_body, state) : 0;
+      state->loop_depth--;
+      if (rc < 0) {
+        return rc;
+      }
+
+      /* SEM052: do-while condition must be scalar; checked after body walk. */
+      if (dw_cond) {
+        const type_t *cond_type = infer_expr_type(dw_cond, state);
+        if (cond_type && cond_type->kind != TYPE_INVALID && !type_is_scalar(cond_type)) {
+          pass2_emit(state, "SEM052", it->lineNumber, "control condition must be scalar");
+        }
+      }
+
+      it = it->p_sibling;
+      continue;
     } else if (it->nodeType == NODE_SWITCH) {
       int rc;
+      TreeNode_t *sw_expr = it->p_firstChild;
+
+      /* SEM053: switch expression must be integral or enum. */
+      if (sw_expr) {
+        const type_t *sw_type = infer_expr_type(sw_expr, state);
+        if (sw_type && sw_type->kind != TYPE_INVALID &&
+            !type_is_integral(sw_type) && sw_type->kind != TYPE_ENUM_TAG) {
+          pass2_emit(state, "SEM053", it->lineNumber, "switch expression must be integral or enum");
+        }
+      }
+
+      /* SEM055/SEM056: scan for duplicate case labels and multiple defaults. */
+      rc = check_switch_labels(it, state);
+      if (rc < 0) {
+        return rc;
+      }
 
       state->switch_depth++;
       rc = it->p_firstChild ? walk_pass2(it->p_firstChild, state) : 0;
       state->switch_depth--;
       if (rc < 0) {
         return rc;
+      }
+      it = it->p_sibling;
+      continue;
+    } else if (it->nodeType == NODE_IF) {
+      int rc;
+      TreeNode_t *if_cond    = it->p_firstChild;
+      TreeNode_t *then_branch = if_cond    ? if_cond->p_sibling    : NULL;
+      TreeNode_t *else_branch = then_branch ? then_branch->p_sibling : NULL;
+
+      /* SEM052: if condition must be scalar. */
+      if (if_cond) {
+        const type_t *cond_type = infer_expr_type(if_cond, state);
+        if (cond_type && cond_type->kind != TYPE_INVALID && !type_is_scalar(cond_type)) {
+          pass2_emit(state, "SEM052", it->lineNumber, "control condition must be scalar");
+        }
+      }
+
+      if (then_branch) {
+        rc = walk_pass2(then_branch, state);
+        if (rc < 0) {
+          return rc;
+        }
+      }
+      if (else_branch) {
+        rc = walk_pass2(else_branch, state);
+        if (rc < 0) {
+          return rc;
+        }
+      }
+
+      it = it->p_sibling;
+      continue;
+    } else if (it->nodeType == NODE_CASE || it->nodeType == NODE_DEFAULT) {
+      /* Label values validated by check_switch_labels; just recurse into body. */
+      TreeNode_t *body = (it->nodeType == NODE_CASE)
+                             ? (TreeNode_t *)case_body_stmt(it)
+                             : it->p_firstChild;
+      if (body) {
+        int rc = walk_pass2(body, state);
+        if (rc < 0) {
+          return rc;
+        }
       }
       it = it->p_sibling;
       continue;
@@ -1611,15 +2179,34 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
     } else if (it->nodeType == NODE_RETURN) {
       const type_t *ret_type = &g_type_void;
       state->result.statement_count++;
+
+      /* SEM046: return statement must be inside a function body. */
+      if (!state->in_function) {
+        pass2_emit(state, "SEM046", it->lineNumber, "return statement outside of function");
+        it = it->p_sibling;
+        continue;
+      }
+
       if (it->p_firstChild) {
         ret_type = infer_expr_type(it->p_firstChild, state);
       }
-      if (state->in_function && state->current_return_type &&
-          state->current_return_type->kind != TYPE_INVALID &&
-          ret_type->kind != TYPE_INVALID &&
-          !assignment_compatible(state->current_return_type, ret_type)) {
-        pass2_emit(state, "SEM043", it->lineNumber, "return type mismatch");
+
+      if (state->in_function && state->current_return_type) {
+        int is_void_func = type_is_void(state->current_return_type);
+
+        /* SEM044: void function must not return a value. */
+        if (is_void_func && it->p_firstChild) {
+          pass2_emit(state, "SEM044", it->lineNumber, "return with value in void function");
+        }
+        /* SEM043: non-void return expression must be type-compatible. */
+        else if (!is_void_func &&
+                 state->current_return_type->kind != TYPE_INVALID &&
+                 ret_type->kind != TYPE_INVALID &&
+                 !assignment_compatible(state->current_return_type, ret_type)) {
+          pass2_emit(state, "SEM043", it->lineNumber, "return type mismatch");
+        }
       }
+
       it = it->p_sibling;
       continue;
     } else if (is_expression_node_type(it->nodeType)) {
@@ -1695,53 +2282,55 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
  * 2) se virem que falta algum importante, avisar! e colocar aqui e no docs da drive!
  *
  * PASSE 2 - Tipos, expressoes, chamadas e controlo de fluxo
- * [x] SEM001 Identificador desconhecido deve resolver para simbolo visivel (implementado no fluxo de lookup do pass2)
- * [ ] SEM008 Atribuicao a objeto qualificado como const
- * [x] SEM009 inc/dec em objeto qualificado como const
- * [ ] SEM010 Remocao implicita de qualificador const em atribuicao de ponteiros
- * [x] SEM011 Compatibilidade de tipos em atribuicoes
- * [ ] SEM012 Conversao implicita ponteiro <-> inteiro nao permitida
- * [ ] SEM013 Atribuicao entre ponteiros de tipos incompativeis
- * [ ] SEM014 Atribuicao entre struct/union exige tipos identicos
- * [ ] SEM015 Cast envolvendo struct/union incompleta
- * [ ] SEM016 Cast ponteiro <-> float proibido (modo estrito)
- * [x] SEM020 Operadores aritmeticos requerem operandos aritmeticos
- * [x] SEM021 '%' apenas para operandos integrais
- * [ ] SEM022 Divisao/modulo por zero constante
- * [x] SEM023 Operadores bitwise requerem operandos integrais
- * [x] SEM024 Operadores logicos requerem operandos escalares
- * [ ] SEM025 Compatibilidade de operandos em comparacoes
- * [ ] SEM026 Compatibilidade dos ramos do operador ternario
- * [x] SEM027 LHS da atribuicao deve ser lvalue modificavel
- * [x] SEM028 inc/dec requer lvalue modificavel
- * [ ] SEM029 '&' requer operando lvalue
- * [ ] SEM030 '*' requer operando do tipo ponteiro
- * [x] SEM031 Indice de array deve ser integral
- * [ ] SEM032 Base de [] deve ser array ou ponteiro
- * [x] SEM040 Alvo de chamada deve ser uma funcao
- * [x] SEM041 Numero de argumentos deve coincidir com a assinatura
- * [ ] SEM042 Compatibilidade de tipos dos argumentos da chamada
- * [x] SEM043 Tipo da expressao return compativel com tipo da funcao
- * [ ] SEM044 return com valor dentro de funcao void
- * [ ] SEM045 Funcao nao-void sem return obrigatorio
- * [ ] SEM046 return fora do contexto de funcao
- * [x] SEM050 break apenas valido dentro de loop ou switch
- * [x] SEM051 continue apenas valido dentro de loop
- * [ ] SEM052 Condicao de controlo (if/while/for) deve ser escalar
- * [ ] SEM053 Expressao de switch deve ser integral ou enum
- * [ ] SEM054 Label case deve ser expressao constante integral
- * [ ] SEM055 Label case duplicado no mesmo switch
- * [ ] SEM056 Multiplos default no mesmo switch
- * [x] SEM060 Acesso a membro inexistente em struct/union
- * [x] SEM061 Operador '.' requer objeto struct/union
- * [x] SEM062 Operador '->' requer ponteiro para struct/union
- * [ ] SEM070 Limitacao backend: aritmetica com float nao suportada
- * [ ] SEM071 Limitacao backend: retorno de struct nao suportado
- * [ ] SEM072 Limitacao backend: chamadas variadicas nao suportadas
- * [x] SEMW001 Aviso: cast truncado / narrowing implícito
- * [x] SEMW002 Aviso: conversao suspeita signed/unsigned
- * [x] SEMW003 Aviso: cast explicito que remove const
- *
- * Checks prioritarios ainda em falta:
- * atualizar aqui dps com os checks 
+ * [ X ] SEM001 Identificador desconhecido deve resolver para simbolo visivel (implementado no fluxo de lookup do pass2)
+ * [ X ] SEM008 Atribuicao a objeto qualificado como const
+ * [ X ] SEM009 inc/dec em objeto qualificado como const
+ * [ X ] SEM010 Remocao implicita de qualificador const em atribuicao de ponteiros
+ * [ X ] SEM011 Compatibilidade de tipos em atribuicoes
+ * [ X ] SEM012 Conversao implicita ponteiro <-> inteiro nao permitida
+ * [ X ] SEM013 Atribuicao entre ponteiros de tipos incompativeis
+ * [ X ] SEM014 Atribuicao entre struct/union exige tipos identicos
+ * [ X ] SEM015 Cast envolvendo struct/union incompleta
+ * [ X ] SEM016 Cast ponteiro <-> float proibido (modo estrito)
+ * [ X ] SEM020 Operadores aritmeticos requerem operandos aritmeticos
+ * [ X ] SEM021 '%' apenas para operandos integrais
+ * [ X ] SEM022 Divisao/modulo por zero constante
+ * [ X ] SEM023 Operadores bitwise requerem operandos integrais
+ * [ X ] SEM024 Operadores logicos requerem operandos escalares
+ * [ X ] SEM025 Compatibilidade de operandos em comparacoes
+ * [ X ] SEM026 Compatibilidade dos ramos do operador ternario
+ * [ X ] SEM027 LHS da atribuicao deve ser lvalue modificavel
+ * [ X ] SEM028 inc/dec requer lvalue modificavel
+ * [ X ] SEM029 '&' requer operando lvalue
+ * [ X ] SEM030 '*' requer operando do tipo ponteiro
+ * [ X ] SEM031 Indice de array deve ser integral
+ * [ X ] SEM032 Base de [] deve ser array ou ponteiro
+ * [ X ] SEM040 Alvo de chamada deve ser uma funcao
+ * [ X ] SEM041 Numero de argumentos deve coincidir com a assinatura
+ * [ X ] SEM042 Compatibilidade de tipos dos argumentos da chamada
+ * [ X ] SEM043 Tipo da expressao return compativel com tipo da funcao
+ * [ X ] SEM044 return com valor dentro de funcao void
+ * [ X ] SEM045 Funcao nao-void sem return obrigatorio (analise conservadora de CFG)
+ * [ X ] SEM046 return fora do contexto de funcao
+ * [ X ] SEM050 break apenas valido dentro de loop ou switch
+ * [ X ] SEM051 continue apenas valido dentro de loop
+ * [ X ] SEM052 Condicao de controlo (if/while/for/do-while) deve ser escalar
+ * [ X ] SEM053 Expressao de switch deve ser integral ou enum
+ * [ X ] SEM054 Label case deve ser expressao constante integral
+ * [ X ] SEM055 Label case duplicado no mesmo switch
+ * [ X ] SEM056 Multiplos default no mesmo switch
+ * [ X ] SEM060 Acesso a membro inexistente em struct/union
+ * [ X ] SEM061 Operador '.' requer objeto struct/union
+ * [ X ] SEM062 Operador '->' requer ponteiro para struct/union
+ * [   ] SEM070 Limitacao backend: aritmetica com float nao suportada  <-- missing
+ * [   ] SEM071 Limitacao backend: retorno de struct nao suportado  <-- missing
+ * [   ] SEM072 Limitacao backend: chamadas variadicas nao suportadas  <-- missing
+ * [ X ] SEMW001 Aviso: cast truncado / narrowing implicito
+ * [ X ] SEMW002 Aviso: conversao suspeita signed/unsigned
+ * [ X ] SEMW003 Aviso: cast explicito que remove const
+
+ POSTPONED TO IR: 
+  SEM070/71/72: estão relacionados com as capacidades do processador, para já tratamos apenas
+  das regras semánticas da linguagem ISO C11 
  */
+

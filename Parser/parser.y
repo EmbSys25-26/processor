@@ -304,6 +304,42 @@ static int build_function_call_node(TreeNode_t **out_node,
     return 0;
 }
 
+static int build_case_node(TreeNode_t **out_node,
+                           TreeNode_t *label_expr,
+                           TreeNode_t *body_stmt)
+{
+    int rc;
+    TreeNode_t *case_node = NULL;
+
+    if (!out_node || !label_expr) {
+        return -EINVAL;
+    }
+
+    *out_node = NULL;
+
+    rc = NodeCreate(&case_node, NODE_CASE);
+    if (rc < 0) {
+        return rc;
+    }
+
+    rc = NodeAddChild(case_node, label_expr);
+    if (rc < 0) {
+        NodeFree(case_node);
+        return rc;
+    }
+
+    if (body_stmt) {
+        rc = NodeAddChild(case_node, body_stmt);
+        if (rc < 0) {
+            NodeFree(case_node);
+            return rc;
+        }
+    }
+
+    *out_node = case_node;
+    return 0;
+}
+
 static int build_operator_node(TreeNode_t **out_node,
                                long op_kind,
                                TreeNode_t *lhs,
@@ -637,22 +673,24 @@ case_list       :   case_clause
 
 case_clause     :   TOKEN_CASE TOKEN_NUM TOKEN_COLON statement_sequence   //number
                     {
-                          NodeCreate(&($$.treeNode), NODE_CASE);
-                          $$.treeNode->nodeData.sVal = NULL;
-                          $$.treeNode->nodeData.dVal = $2.nodeData.dVal;
-                          NodeAddChild($$.treeNode, $4.treeNode);
+                          TreeNode_t *pLabel = NULL;
+                          if (NodeCreate(&pLabel, NODE_INTEGER)) { YYERROR; }
+                          pLabel->nodeData.dVal = $2.nodeData.dVal;
+                          if (build_case_node(&$$.treeNode, pLabel, $4.treeNode) < 0) { YYERROR; }
                     }
                 |   TOKEN_CASE TOKEN_CNUM TOKEN_COLON statement_sequence  //char
                     {
-                          NodeCreate(&($$.treeNode), NODE_CASE);
-                          $$.treeNode->nodeData.dVal = $2.nodeData.dVal;
-                          NodeAddChild($$.treeNode, $4.treeNode);
+                          TreeNode_t *pLabel = NULL;
+                          if (NodeCreate(&pLabel, NODE_CHAR)) { YYERROR; }
+                          pLabel->nodeData.dVal = $2.nodeData.dVal;
+                          if (build_case_node(&$$.treeNode, pLabel, $4.treeNode) < 0) { YYERROR; }
                     }
                 |   TOKEN_CASE TOKEN_ID TOKEN_COLON statement_sequence   // case RED --> enum used
                     {
-                          NodeCreate(&($$.treeNode), NODE_CASE);
-                          $$.treeNode->nodeData.sVal = $2.nodeData.sVal;  /* guarda o nome */
-                          NodeAddChild($$.treeNode, $4.treeNode);
+                          TreeNode_t *pLabel = NULL;
+                          if (NodeCreate(&pLabel, NODE_IDENTIFIER)) { YYERROR; }
+                          pLabel->nodeData.sVal = $2.nodeData.sVal;
+                          if (build_case_node(&$$.treeNode, pLabel, $4.treeNode) < 0) { YYERROR; }
                     }
                 ;
 

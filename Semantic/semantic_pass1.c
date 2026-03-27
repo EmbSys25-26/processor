@@ -939,20 +939,19 @@ int semantic_pass1_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass1
  * 2) se virem que falta algum importante, avisar! e colocar aqui e no docs da drive!
  *
  * PASSE 1 - Declaracoes, scopes, simbolos
- * [x] SEM001 Identificador desconhecido deve resolver para simbolo visivel (feito no fluxo de lookup do pass2) 
- * [x] SEM002 Redeclaracao no mesmo scope e rejeitada
- * [x] SEM003 Shadowing em scope aninhado e permitido
- * [x] SEM004 Compatibilidade entre prototipo e definicao de funcao
- * [x] SEM005 Definicao duplicada de funcao e rejeitada
- * [x] SEM006 Uso antes da declaracao na ordem do mesmo bloco
- * [x] SEM007 'inline' invalido para declaracao de variaveis
- * [x] SEM063 Redeclaracao de membro em enum
- * [x] SEM064 Redefinicao incompativel de tag struct/union
+ * [ X ] SEM001 Identificador desconhecido deve resolver para simbolo visivel (feito no fluxo de lookup do pass2)
+ * [ X ] SEM002 Redeclaracao no mesmo scope e rejeitada
+ * [ X ] SEM003 Shadowing em scope aninhado e permitido
+ * [ X ] SEM004 Compatibilidade entre prototipo e definicao de funcao
+ * [ X ] SEM005 Definicao duplicada de funcao e rejeitada
+ * [ X ] SEM006 Uso antes da declaracao na ordem do mesmo bloco
+ * [ X ] SEM007 'inline' invalido para declaracao de variaveis
+ * [ X ] SEM063 Redeclaracao de membro em enum
+ * [ X ] SEM064 Redefinicao incompativel de tag struct/union
  *
  * Checks prioritarios ainda em falta no pass1:
- * [x] SEM006
- * [x] SEM007
- * [x] SEM063
- * [x] SEM064
- *
+ * [   ] SEM080 Expressao inicializadora nao e verificada contra o tipo declarado  <-- missing
+ * [   ] SEM081 Struct/union incompleta (forward decl sem corpo) usada como tipo valor (nao ponteiro)  <-- missing
+ * [   ] SEM082 Constante de enum deve ser tipada como int, nao como TYPE_ENUM_TAG  <-- missing
+ * [   ] SEM083 Dimensao de array deve ser expressao constante integral (ICE) em contexto nao-VLA  <-- missing
  */
