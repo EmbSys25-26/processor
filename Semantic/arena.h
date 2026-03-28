@@ -17,4 +17,10 @@ void sem_arena_reset(sem_arena_t *arena);
 void *sem_arena_alloc(sem_arena_t *arena, size_t size, size_t alignment);
 char *sem_arena_strdup(sem_arena_t *arena, const char *src);
 
+/* Type-safe allocators — mirrors LLVM BumpPtrAllocator::Allocate<T>(). */
+#define SEM_ARENA_NEW(arena, T) \
+  ((T *)sem_arena_alloc((arena), sizeof(T), _Alignof(T)))
+#define SEM_ARENA_NEW_ARRAY(arena, T, n) \
+  ((T *)sem_arena_alloc((arena), (n) * sizeof(T), _Alignof(T)))
+
 #endif

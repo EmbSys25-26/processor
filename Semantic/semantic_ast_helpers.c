@@ -1,3 +1,5 @@
+#include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "semantic_ast_helpers.h"
@@ -289,4 +291,36 @@ void semantic_ast_split_function_children(const TreeNode_t *fn_node,
   *out_preamble = preamble;
   *out_param_head = param_head;
   *out_body = body;
+}
+
+int build_tag_symbol_name(type_kind_t kind,
+                          const char *tag_name,
+                          char *buffer,
+                          size_t buffer_size)
+{
+  const char *prefix;
+
+  if (!tag_name || !buffer || buffer_size == 0u) {
+    return -EINVAL;
+  }
+
+  switch (kind) {
+    case TYPE_STRUCT_TAG:
+      prefix = "struct:";
+      break;
+    case TYPE_UNION_TAG:
+      prefix = "union:";
+      break;
+    case TYPE_ENUM_TAG:
+      prefix = "enum:";
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  if ((size_t)snprintf(buffer, buffer_size, "%s%s", prefix, tag_name) >= buffer_size) {
+    return -ENAMETOOLONG;
+  }
+
+  return 0;
 }

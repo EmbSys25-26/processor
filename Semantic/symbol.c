@@ -78,7 +78,7 @@ int scope_push(scope_stack_t *stack)
     return -EINVAL;
   }
 
-  node = (scope_t *)sem_arena_alloc(stack->arena, sizeof(*node), _Alignof(scope_t));
+  node = SEM_ARENA_NEW(stack->arena, scope_t);
   if (!node) {
     return -ENOMEM;
   }
@@ -128,7 +128,7 @@ symbol_t *symbol_new(sem_arena_t *arena,
     return NULL;
   }
 
-  symbol = (symbol_t *)sem_arena_alloc(arena, sizeof(*symbol), _Alignof(symbol_t));
+  symbol = SEM_ARENA_NEW(arena, symbol_t);
   if (!symbol) {
     return NULL;
   }
@@ -141,6 +141,7 @@ symbol_t *symbol_new(sem_arena_t *arena,
 
   symbol->kind = kind;
   symbol->storage_class = STORAGE_AUTO;
+  symbol->memory_class = MEMORY_CLASS_NONE;
   symbol->type = type;
   symbol->decl_line = decl_line;
   symbol->decl_col = decl_col;

@@ -31,6 +31,14 @@ Lowering requires these guarantees on the semantic context:
 3. Every statement has validated control legality.
 4. Unsupported features are explicitly marked and must trigger deterministic lowering errors.
 5. Symbols, scopes, and semantic types remain valid until `semantic_context_destroy(...)`.
+6. `BUILTIN_STRING` maps to `ptr` to `i8` with implicit `const` pointee qualifier.
+7. Each `symbol_t` carries a `memory_class` field specifying IR locality
+   (`MEMORY_CLASS_GLOBAL`, `MEMORY_CLASS_STACK`, `MEMORY_CLASS_PARAMETER`, or
+   `MEMORY_CLASS_NONE`) for stack slot allocation, global symbol emission, or
+   parameter binding.
+8. Nodes with `SEM_NODE_CODEGEN_BLOCKED` set in `sem_node_info_t.flags` represent
+   features unsupported by the current backend. IR lowering must check this flag
+   and fail with diagnostic `IR001` when it is set.
 
 Lowering must query semantic metadata through the semantic API, not through AST-local fields such as `nodeVarType`.
 
@@ -202,6 +210,10 @@ Examples (until explicitly supported):
 1. Floating-point arithmetic/codegen.
 2. Full struct/union value copy/return semantics.
 3. Variadic call lowering.
+
+These features are flagged at the semantic stage by setting `SEM_NODE_CODEGEN_BLOCKED`
+in the expression's `sem_node_info_t.flags`. IR lowering must check this flag before
+descending into any expression node and emit `IR001` when it is set.
 
 ## 11. Canonical forms required for optimization/regalloc
 1. Basic block ends with single terminator.

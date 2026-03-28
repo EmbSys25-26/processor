@@ -59,45 +59,6 @@ static void pass1_cache_decl_node(pass1_state_t *state,
   (void)semantic_set_node_info(state->ctx, node, &info);
 }
 
-/**
- * @brief Compose a canonical symbol-table key for one tag name.
- * @param kind tag type kind.
- * @param tag_name raw source tag identifier.
- * @param buffer output buffer for the prefixed key.
- * @param buffer_size size of output buffer.
- * @return 0 on success, negative errno-like value on error.
- */
-static int build_tag_symbol_name(type_kind_t kind,
-                                 const char *tag_name,
-                                 char *buffer,
-                                 size_t buffer_size)
-{
-  const char *prefix;
-
-  if (!tag_name || !buffer || buffer_size == 0u) {
-    return -EINVAL;
-  }
-
-  switch (kind) {
-    case TYPE_STRUCT_TAG:
-      prefix = "struct:";
-      break;
-    case TYPE_UNION_TAG:
-      prefix = "union:";
-      break;
-    case TYPE_ENUM_TAG:
-      prefix = "enum:";
-      break;
-    default:
-      return -EINVAL;
-  }
-
-  if ((size_t)snprintf(buffer, buffer_size, "%s%s", prefix, tag_name) >= buffer_size) {
-    return -ENAMETOOLONG;
-  }
-
-  return 0;
-}
 
 /**
  * @brief Check whether one tag declaration node carries a body.
@@ -594,6 +555,14 @@ static int register_symbol(pass1_state_t *state,
     symbol_free(symbol);
     pass1_emit(state, "SEM900", line, "failed to insert symbol");
     return rc;
+  }
+
+  if (kind == SYMBOL_PARAMETER) {
+    symbol->memory_class = MEMORY_CLASS_PARAMETER;
+  } else if (kind == SYMBOL_FUNCTION || (kind == SYMBOL_OBJECT && scope_depth(scope) == 0u)) {
+    symbol->memory_class = MEMORY_CLASS_GLOBAL;
+  } else if (kind == SYMBOL_OBJECT) {
+    symbol->memory_class = MEMORY_CLASS_STACK;
   }
 
   state->result.declaration_count++;

@@ -363,6 +363,133 @@ static int test_function_member_array_annotations(void)
   return 0;
 }
 
+static int test_memory_class_assignment(void)
+{
+  /*
+   * Tree:
+   *   root
+   *     var_decl "g"          <- global (depth 0) -> MEMORY_CLASS_GLOBAL
+   *       type INT
+   *     function "myfn"       <- MEMORY_CLASS_GLOBAL
+   *       type VOID  (return)
+   *       param "p"           <- MEMORY_CLASS_PARAMETER
+   *         type INT
+   *       block
+   *         var_decl "local"  <- MEMORY_CLASS_STACK
+   *           type INT
+   */
+  TreeNode_t *root   = make_node(NODE_NULL, 1u);
+  TreeNode_t *g_decl = make_node(NODE_VAR_DECLARATION, 2u);
+  TreeNode_t *g_type = make_builtin_type(2u, TYPE_INT);
+  TreeNode_t *fn     = make_node(NODE_FUNCTION, 3u);
+  TreeNode_t *fn_ret = make_builtin_type(3u, TYPE_VOID);
+  /* Parameters in the AST are NODE_VAR_DECLARATION nodes placed between the
+     return-type child and the body child; pass1 identifies them via their
+     position and assigns SYMBOL_PARAMETER + MEMORY_CLASS_PARAMETER. */
+  TreeNode_t *param  = make_node(NODE_VAR_DECLARATION, 3u);
+  TreeNode_t *p_type = make_builtin_type(3u, TYPE_INT);
+  TreeNode_t *block  = make_node(NODE_BLOCK, 4u);
+  TreeNode_t *l_decl = make_node(NODE_VAR_DECLARATION, 5u);
+  TreeNode_t *l_type = make_builtin_type(5u, TYPE_INT);
+  semantic_context_t *ctx = NULL;
+  semantic_result_t result = {0u, 0u, 0u};
+  const sem_node_info_t *g_info;
+  const sem_node_info_t *fn_info;
+  const sem_node_info_t *p_info;
+  const sem_node_info_t *l_info;
+  int rc;
+
+  CHECK(root && g_decl && g_type && fn && fn_ret && param && p_type &&
+            block && l_decl && l_type,
+        "memory_class tree allocation");
+
+  g_decl->nodeData.sVal = "g";
+  fn->nodeData.sVal     = "myfn";
+  param->nodeData.sVal  = "p";
+  l_decl->nodeData.sVal = "local";
+
+  CHECK(append_child(g_decl, g_type) == 0, "attach global type");
+  CHECK(append_child(param, p_type)  == 0, "attach param type");
+  CHECK(append_child(l_decl, l_type) == 0, "attach local type");
+  CHECK(append_child(fn, fn_ret)     == 0, "attach function return type");
+  CHECK(append_child(fn, param)      == 0, "attach function param");
+  CHECK(append_child(block, l_decl)  == 0, "attach local decl");
+  CHECK(append_child(fn, block)      == 0, "attach function body");
+  CHECK(append_child(root, g_decl)   == 0, "attach global decl");
+  CHECK(append_child(root, fn)       == 0, "attach function");
+
+  rc = semantic_analyze(root, "memory_class.c", &ctx, &result);
+  CHECK(rc == 0, "semantic_analyze rc");
+  CHECK(ctx != NULL, "context returned");
+  CHECK(result.error_count == 0u, "memory_class test has no semantic errors");
+
+  g_info  = semantic_get_node_info(ctx, g_decl);
+  fn_info = semantic_get_node_info(ctx, fn);
+  p_info  = semantic_get_node_info(ctx, param);
+  l_info  = semantic_get_node_info(ctx, l_decl);
+
+  CHECK(g_info  != NULL && g_info->symbol  != NULL, "global symbol bound");
+  CHECK(fn_info != NULL && fn_info->symbol != NULL, "function symbol bound");
+  CHECK(p_info  != NULL && p_info->symbol  != NULL, "parameter symbol bound");
+  CHECK(l_info  != NULL && l_info->symbol  != NULL, "local symbol bound");
+
+  CHECK(g_info->symbol->memory_class  == MEMORY_CLASS_GLOBAL,
+        "global var -> MEMORY_CLASS_GLOBAL");
+  CHECK(fn_info->symbol->memory_class == MEMORY_CLASS_GLOBAL,
+        "function -> MEMORY_CLASS_GLOBAL");
+  CHECK(p_info->symbol->memory_class  == MEMORY_CLASS_PARAMETER,
+        "parameter -> MEMORY_CLASS_PARAMETER");
+  CHECK(l_info->symbol->memory_class  == MEMORY_CLASS_STACK,
+        "local var -> MEMORY_CLASS_STACK");
+
+  semantic_context_destroy(ctx);
+  free(ctx);
+  free_tree(root);
+  return 0;
+}
+
+static int test_codegen_blocked_flags(void)
+{
+  /*
+   * A float literal inside a function body must carry SEM_NODE_CODEGEN_BLOCKED
+   * because the backend has no floating-point support (IR contract §10).
+   */
+  TreeNode_t *root   = make_node(NODE_NULL, 1u);
+  TreeNode_t *fn     = make_node(NODE_FUNCTION, 1u);
+  TreeNode_t *fn_ret = make_builtin_type(1u, TYPE_VOID);
+  TreeNode_t *block  = make_node(NODE_BLOCK, 2u);
+  TreeNode_t *flit   = make_node(NODE_FLOAT, 3u);
+  semantic_context_t *ctx = NULL;
+  semantic_result_t result = {0u, 0u, 0u};
+  const sem_node_info_t *flit_info;
+  int rc;
+
+  CHECK(root && fn && fn_ret && block && flit, "codegen-blocked tree allocation");
+
+  fn->nodeData.sVal  = "bar";
+  flit->nodeData.fVal = 3.14;
+
+  CHECK(append_child(fn, fn_ret)  == 0, "attach function return type");
+  CHECK(append_child(block, flit) == 0, "attach float literal");
+  CHECK(append_child(fn, block)   == 0, "attach function body");
+  CHECK(append_child(root, fn)    == 0, "attach function");
+
+  rc = semantic_analyze(root, "codegen_blocked.c", &ctx, &result);
+  CHECK(rc == 0, "semantic_analyze rc");
+  CHECK(ctx != NULL, "context returned");
+
+  flit_info = semantic_get_node_info(ctx, flit);
+  CHECK(flit_info != NULL, "float literal node info exists");
+  CHECK((flit_info->flags & SEM_NODE_CODEGEN_BLOCKED) != 0u,
+        "float literal has SEM_NODE_CODEGEN_BLOCKED set");
+  CHECK(flit_info->type != NULL, "float literal type cached");
+
+  semantic_context_destroy(ctx);
+  free(ctx);
+  free_tree(root);
+  return 0;
+}
+
 int main(void)
 {
   semantic_result_t null_result = semantic_run(NULL, "null_root.c");
@@ -375,6 +502,8 @@ int main(void)
   CHECK(test_multiple_default_labels() == 0, "multiple default labels test");
   CHECK(test_semantic_analyze_persistent_context() == 0, "persistent context test");
   CHECK(test_function_member_array_annotations() == 0, "function/member/array annotations test");
+  CHECK(test_memory_class_assignment() == 0, "memory_class assignment test");
+  CHECK(test_codegen_blocked_flags() == 0, "codegen blocked flags test");
 
   printf("PASS test_semantic_api\n");
   return 0;

@@ -57,10 +57,23 @@ typedef struct {
 int semantic_context_init(semantic_context_t *ctx);
 void semantic_context_destroy(semantic_context_t *ctx);
 
+/*
+ * IR pipeline entry point.  Runs both semantic passes; on success the context
+ * pointed to by *out_ctx remains alive until the caller calls
+ * semantic_context_destroy(ctx).  IR lowering MUST use this function — not
+ * semantic_run — so that the annotation table and symbol data are still
+ * accessible after the call returns.
+ */
 int semantic_analyze(TreeNode_t *root,
                      const char *path,
                      semantic_context_t **out_ctx,
                      semantic_result_t *out_result);
+
+/*
+ * Convenience wrapper for tests and stand-alone diagnostics ONLY.
+ * Destroys the context before returning — all annotation table pointers are
+ * invalid after the call.  Do NOT use in the IR lowering pipeline.
+ */
 semantic_result_t semantic_run(TreeNode_t *root, const char *path);
 
 const sem_node_info_t *semantic_get_node_info(const semantic_context_t *ctx,

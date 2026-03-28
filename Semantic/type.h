@@ -85,6 +85,8 @@ const type_t *type_new_tagged(type_context_t *tcx, type_kind_t kind, const char 
 void type_set_aggregate_decl(const type_t *type, const void *decl_node);
 
 const type_t *type_clone(type_context_t *tcx, const type_t *src);
+/* Types are arena-owned. This function is intentionally a no-op.
+   memory is freed via sem_arena_destroy(). */
 void type_free(const type_t *type);
 
 int type_equal(const type_t *lhs, const type_t *rhs);

@@ -35,9 +35,7 @@ static int sem_node_map_grow(semantic_context_t *ctx, size_t min_capacity)
     capacity <<= 1u;
   }
 
-  new_buckets = (sem_node_bucket_t *)sem_arena_alloc(&ctx->persistent_arena,
-                                                      capacity * sizeof(*new_buckets),
-                                                      _Alignof(sem_node_bucket_t));
+  new_buckets = SEM_ARENA_NEW_ARRAY(&ctx->persistent_arena, sem_node_bucket_t, capacity);
   if (!new_buckets) {
     return -ENOMEM;
   }

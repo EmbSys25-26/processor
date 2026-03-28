@@ -48,7 +48,12 @@ static const type_t g_type_double = {
     .qualifiers = 0u,
     .as = {.builtin = BUILTIN_DOUBLE}};
 
-/** @brief Shared builtin type singleton for string literals. */
+/*
+ * Shared builtin type singleton for string literals (IR contract §3.6).
+ * BUILTIN_STRING lowers to `ptr i8` with an implicit const pointee qualifier;
+ * it is NOT flagged SEM_NODE_CODEGEN_BLOCKED — the backend handles it as a
+ * read-only data pointer identical to `const char *`.
+ */
 static const type_t g_type_string = {
     .kind = TYPE_BUILTIN,
     .qualifiers = 0u,
@@ -64,6 +69,8 @@ static void pass2_emit(pass2_state_t *state,
                        const char *code,
                        size_t line,
                        const char *message);
+
+static unsigned pass2_codegen_block_flags(const type_t *type, sem_value_kind_t vk);
 
 static const sem_node_info_t *pass2_get_node_info(pass2_state_t *state, const TreeNode_t *node)
 {
@@ -86,6 +93,7 @@ static const type_t *pass2_cache_expr(pass2_state_t *state,
   info.type = type;
   info.symbol = symbol;
   info.value_kind = value_kind;
+  extra_flags |= pass2_codegen_block_flags(type, value_kind);
   info.flags = SEM_NODE_TYPED | extra_flags;
   if (semantic_set_node_info(state->ctx, node, &info) < 0) {
     pass2_emit(state, "SEM900", node->lineNumber, "failed to cache semantic node info");
@@ -201,7 +209,19 @@ static int is_floating_builtin(builtin_type_t builtin)
 static int is_numeric_builtin(builtin_type_t builtin)
 {
   return is_integral_builtin(builtin) ||
-         is_floating_builtin(builtin); 
+         is_floating_builtin(builtin);
+}
+
+/* Block codegen for types unsupported by the current backend */
+static unsigned pass2_codegen_block_flags(const type_t *type, sem_value_kind_t vk)
+{
+  if (!type) return 0u;
+  if (type->kind == TYPE_BUILTIN && is_floating_builtin(type->as.builtin))
+    return SEM_NODE_CODEGEN_BLOCKED;
+  if ((type->kind == TYPE_STRUCT_TAG || type->kind == TYPE_UNION_TAG)
+      && vk == SEM_VALUE_RVALUE)
+    return SEM_NODE_CODEGEN_BLOCKED;
+  return 0u;
 }
 
 /**
@@ -308,7 +328,7 @@ static int expr_is_explicit_cast(const TreeNode_t *expr)
  * @return non-zero if the node is a constant zero expression; zero otherwise.
 */
 
- int is_constant_zero(const TreeNode_t *node)
+static int is_constant_zero(const TreeNode_t *node)
 {
   if (!node) {
     return 0;
@@ -477,7 +497,11 @@ static int warns_on_signed_to_unsigned_assignment(const type_t *lhs,
     return 0;
   }
 
-  if (rhs_expr->nodeType == NODE_OPERATOR && rhs_expr->nodeData.dVal != OP_UNARY_MINUS) {
+  /* Binary operator results carry their own SEMW002 mixed-sign diagnostic.
+     Suppress the assignment-level warning to avoid doubling up; unary minus
+     (negation of a literal) is the one operator that warrants an extra warning. */
+  if (rhs_expr->nodeType == NODE_OPERATOR &&
+      rhs_expr->nodeData.dVal != OP_UNARY_MINUS) {
     return 0;
   }
 
@@ -936,45 +960,6 @@ static int statement_guarantees_return(const TreeNode_t *node)
 
 static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state);
 
-/**
- * @brief Compose canonical symbol key for a struct/union/enum tag.
- * @param kind tag type kind.
- * @param tag_name source tag identifier.
- * @param buffer output buffer receiving prefixed key.
- * @param buffer_size size of output buffer.
- * @return 0 on success, negative errno-like value on error.
- */
-static int build_tag_symbol_name(type_kind_t kind,
-                                 const char *tag_name,
-                                 char *buffer,
-                                 size_t buffer_size)
-{
-  const char *prefix;
-
-  if (!tag_name || !buffer || buffer_size == 0u) {
-    return -EINVAL;
-  }
-
-  switch (kind) {
-    case TYPE_STRUCT_TAG:
-      prefix = "struct:";
-      break;
-    case TYPE_UNION_TAG:
-      prefix = "union:";
-      break;
-    case TYPE_ENUM_TAG:
-      prefix = "enum:";
-      break;
-    default:
-      return -EINVAL;
-  }
-
-  if ((size_t)snprintf(buffer, buffer_size, "%s%s", prefix, tag_name) >= buffer_size) {
-    return -ENAMETOOLONG;
-  }
-
-  return 0;
-}
 
 /**
  * @brief Lookup currently visible tag symbol by kind and tag name.
@@ -1006,69 +991,6 @@ static symbol_t *lookup_visible_tag_symbol(pass2_state_t *state,
   return symbol_lookup_visible(scope, key);
 }
 
-/**
- * @brief Register one aggregate tag declaration in the current scope.
- * @param decl_node aggregate declaration node.
- * @param state pass2 execution state.
- */
-static void register_tag_declaration(TreeNode_t *decl_node, pass2_state_t *state)
-{
-  symbol_kind_t symbol_kind;
-  type_kind_t type_kind;
-  const type_t *tag_type;
-  symbol_t *symbol;
-  scope_t *scope;
-  char key[256];
-
-  if (!decl_node || !decl_node->nodeData.sVal || !state) {
-    return;
-  }
-
-  switch (decl_node->nodeType) {
-    case NODE_STRUCT_DECLARATION:
-      symbol_kind = SYMBOL_TAG_STRUCT;
-      type_kind = TYPE_STRUCT_TAG;
-      break;
-    case NODE_UNION_DECLARATION:
-      symbol_kind = SYMBOL_TAG_UNION;
-      type_kind = TYPE_UNION_TAG;
-      break;
-    case NODE_ENUM_DECLARATION:
-      symbol_kind = SYMBOL_TAG_ENUM;
-      type_kind = TYPE_ENUM_TAG;
-      break;
-    default:
-      return;
-  }
-
-  if (build_tag_symbol_name(type_kind, decl_node->nodeData.sVal, key, sizeof(key)) < 0) {
-    pass2_emit(state, "SEM900", decl_node->lineNumber, "failed to build tag symbol key");
-    return;
-  }
-
-  scope = scope_current(&state->ctx->scope_stack);
-  if (!scope || symbol_lookup_current(scope, key)) {
-    return;
-  }
-
-  tag_type = type_new_tagged(&state->ctx->type_context, type_kind, decl_node->nodeData.sVal, 0u);
-  if (!tag_type) {
-    pass2_emit(state, "SEM900", decl_node->lineNumber, "failed to build tag type");
-    return;
-  }
-  type_set_aggregate_decl(tag_type, decl_node);
-
-  symbol = symbol_new(&state->ctx->persistent_arena, key, symbol_kind, tag_type, decl_node->lineNumber, 0u);
-  if (!symbol) {
-    type_free(tag_type);
-    pass2_emit(state, "SEM900", decl_node->lineNumber, "failed to allocate tag symbol");
-    return;
-  }
-
-  if (symbol_insert(scope, symbol) < 0) {
-    symbol_free(symbol);
-  }
-}
 
 /**
  * @brief Recursively locate a visible aggregate tag declaration in the AST.
@@ -1696,12 +1618,20 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
       {
         const type_t *call_type = infer_call_type(node, state);
         symbol_t *callee_symbol = NULL;
+        unsigned call_extra = 0u;
         TreeNode_t *callee_expr = node->p_firstChild;
-        const sem_node_info_t *callee_info = callee_expr ? pass2_get_node_info(state, callee_expr) : NULL;
+        const sem_node_info_t *callee_info = callee_expr
+            ? pass2_get_node_info(state, callee_expr) : NULL;
         if (callee_info) {
           callee_symbol = callee_info->symbol;
+          if (callee_symbol && callee_symbol->type &&
+              callee_symbol->type->kind == TYPE_FUNCTION &&
+              callee_symbol->type->as.function.is_variadic) {
+            call_extra |= SEM_NODE_CODEGEN_BLOCKED;
+          }
         }
-        return pass2_cache_expr(state, node, call_type, callee_symbol, SEM_VALUE_RVALUE, 0u);
+        return pass2_cache_expr(state, node, call_type, callee_symbol,
+                                SEM_VALUE_RVALUE, call_extra);
       }
     case NODE_OPERATOR:
       state->result.expression_count++;
@@ -1916,6 +1846,14 @@ static void register_local_decl(TreeNode_t *decl_node, pass2_state_t *state, sym
     return;
   }
 
+  /* Mirror pass1 register_symbol: set IR locality hint on the new symbol.
+     register_local_decl is only called inside functions (scope->depth > 0). */
+  if (kind == SYMBOL_PARAMETER) {
+    symbol->memory_class = MEMORY_CLASS_PARAMETER;
+  } else if (kind == SYMBOL_OBJECT) {
+    symbol->memory_class = MEMORY_CLASS_STACK;
+  }
+
   info.type = symbol->type;
   info.symbol = symbol;
   info.value_kind = pass2_decl_value_kind(kind);
@@ -2122,7 +2060,8 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
     } else if (it->nodeType == NODE_STRUCT_DECLARATION ||
                it->nodeType == NODE_UNION_DECLARATION ||
                it->nodeType == NODE_ENUM_DECLARATION) {
-      register_tag_declaration(it, state);
+      /* Tags were fully registered in pass1; skip type-specifier children
+         to avoid walking IDENTIFIER nodes inside member declarations. */
       it = it->p_sibling;
       continue;
     } else if (it->nodeType == NODE_WHILE) {

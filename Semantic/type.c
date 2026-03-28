@@ -12,7 +12,7 @@ static type_t *type_alloc(type_context_t *tcx, type_kind_t kind, unsigned qualif
     return NULL;
   }
 
-  type = (type_t *)sem_arena_alloc(tcx->arena, sizeof(*type), _Alignof(type_t));
+  type = SEM_ARENA_NEW(tcx->arena, type_t);
   if (!type) {
     return NULL;
   }
@@ -91,9 +91,7 @@ const type_t *type_new_function(type_context_t *tcx,
   }
 
   if (param_count > 0u) {
-    param_copy = (const type_t **)sem_arena_alloc(tcx->arena,
-                                                  param_count * sizeof(*param_copy),
-                                                  _Alignof(const type_t *));
+    param_copy = SEM_ARENA_NEW_ARRAY(tcx->arena, const type_t *, param_count);
     if (!param_copy) {
       return NULL;
     }
@@ -176,9 +174,7 @@ const type_t *type_clone(type_context_t *tcx, const type_t *src)
     }
     case TYPE_FUNCTION:
       if (src->as.function.param_count > 0u) {
-        params = (const type_t **)sem_arena_alloc(tcx->arena,
-                                                  src->as.function.param_count * sizeof(*params),
-                                                  _Alignof(const type_t *));
+        params = SEM_ARENA_NEW_ARRAY(tcx->arena, const type_t *, src->as.function.param_count);
         if (!params) {
           return NULL;
         }
@@ -211,6 +207,8 @@ const type_t *type_clone(type_context_t *tcx, const type_t *src)
   }
 }
 
+/* Types are arena-owned. This function is intentionally a no-op.
+   It exists for call-site symmetry; memory is freed via sem_arena_destroy(). */
 void type_free(const type_t *type)
 {
   (void)type;

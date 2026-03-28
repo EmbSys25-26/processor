@@ -47,6 +47,7 @@ struct symbol_s {
   char *name;
   symbol_kind_t kind;
   storage_class_t storage_class;
+  memory_class_t  memory_class;   /* IR locality hint: GLOBAL/STACK/PARAMETER/NONE */
   unsigned qualifiers;
   const type_t *type;
 

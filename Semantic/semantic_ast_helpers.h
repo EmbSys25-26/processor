@@ -20,4 +20,9 @@ void semantic_ast_split_function_children(const TreeNode_t *fn_node,
                                           const TreeNode_t **out_param_head,
                                           const TreeNode_t **out_body);
 
+int build_tag_symbol_name(type_kind_t kind,
+                          const char *tag_name,
+                          char *buffer,
+                          size_t buffer_size);
+
 #endif
