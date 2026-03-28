@@ -11,6 +11,7 @@ SRCS    = $(PARSER_DIR)/parser.tab.c \
           $(PARSER_DIR)/ASTree.c     \
           $(PARSER_DIR)/ASTPrint.c   \
           $(UTILS_DIR)/logger.c      \
+          $(SEM_DIR)/arena.c         \
           $(SEM_DIR)/type.c          \
           $(SEM_DIR)/symbol.c        \
           $(SEM_DIR)/diagnostics.c   \

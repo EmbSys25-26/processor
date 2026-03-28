@@ -1,48 +1,45 @@
 #include <errno.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "type.h"
 
-static char *dup_cstr(const char *src)
+static type_t *type_alloc(type_context_t *tcx, type_kind_t kind, unsigned qualifiers)
 {
-  size_t n;
-  char *dst;
+  type_t *type;
 
-  if (!src) {
+  if (!tcx || !tcx->arena) {
+    errno = EINVAL;
     return NULL;
   }
 
-  n = strlen(src) + 1u;
-  dst = (char *)malloc(n);
-  if (!dst) {
-    return NULL;
-  }
-
-  (void)memcpy(dst, src, n);
-  return dst;
-}
-
-static type_t *type_alloc(type_kind_t kind, unsigned qualifiers)
-{
-  type_t *type = (type_t *)calloc(1, sizeof(*type));
+  type = (type_t *)sem_arena_alloc(tcx->arena, sizeof(*type), _Alignof(type_t));
   if (!type) {
     return NULL;
   }
 
+  (void)memset(type, 0, sizeof(*type));
   type->kind = kind;
   type->qualifiers = qualifiers;
   return type;
 }
 
-type_t *type_new_invalid(void)
+void type_context_init(type_context_t *tcx, sem_arena_t *arena)
 {
-  return type_alloc(TYPE_INVALID, 0u);
+  if (!tcx) {
+    return;
+  }
+
+  tcx->arena = arena;
 }
 
-type_t *type_new_builtin(builtin_type_t builtin, unsigned qualifiers)
+const type_t *type_new_invalid(type_context_t *tcx)
 {
-  type_t *type = type_alloc(TYPE_BUILTIN, qualifiers);
+  return type_alloc(tcx, TYPE_INVALID, 0u);
+}
+
+const type_t *type_new_builtin(type_context_t *tcx, builtin_type_t builtin, unsigned qualifiers)
+{
+  type_t *type = type_alloc(tcx, TYPE_BUILTIN, qualifiers);
   if (!type) {
     return NULL;
   }
@@ -51,11 +48,10 @@ type_t *type_new_builtin(builtin_type_t builtin, unsigned qualifiers)
   return type;
 }
 
-type_t *type_new_pointer(type_t *base, unsigned qualifiers)
+const type_t *type_new_pointer(type_context_t *tcx, const type_t *base, unsigned qualifiers)
 {
-  type_t *type = type_alloc(TYPE_POINTER, qualifiers);
+  type_t *type = type_alloc(tcx, TYPE_POINTER, qualifiers);
   if (!type) {
-    type_free(base);
     return NULL;
   }
 
@@ -63,11 +59,14 @@ type_t *type_new_pointer(type_t *base, unsigned qualifiers)
   return type;
 }
 
-type_t *type_new_array(type_t *elem, size_t size, int is_known_size, unsigned qualifiers)
+const type_t *type_new_array(type_context_t *tcx,
+                             const type_t *elem,
+                             size_t size,
+                             int is_known_size,
+                             unsigned qualifiers)
 {
-  type_t *type = type_alloc(TYPE_ARRAY, qualifiers);
+  type_t *type = type_alloc(tcx, TYPE_ARRAY, qualifiers);
   if (!type) {
-    type_free(elem);
     return NULL;
   }
 
@@ -77,32 +76,38 @@ type_t *type_new_array(type_t *elem, size_t size, int is_known_size, unsigned qu
   return type;
 }
 
-type_t *type_new_function(type_t *return_type,
-                          type_t **params,
-                          size_t param_count,
-                          int is_variadic,
-                          unsigned qualifiers)
+const type_t *type_new_function(type_context_t *tcx,
+                                const type_t *return_type,
+                                const type_t *const *params,
+                                size_t param_count,
+                                int is_variadic,
+                                unsigned qualifiers)
 {
-  type_t *type = type_alloc(TYPE_FUNCTION, qualifiers);
+  type_t *type = type_alloc(tcx, TYPE_FUNCTION, qualifiers);
+  const type_t **param_copy = NULL;
+
   if (!type) {
-    type_free(return_type);
-    if (params) {
-      for (size_t i = 0; i < param_count; ++i) {
-        type_free(params[i]);
-      }
-      free(params);
-    }
     return NULL;
   }
 
+  if (param_count > 0u) {
+    param_copy = (const type_t **)sem_arena_alloc(tcx->arena,
+                                                  param_count * sizeof(*param_copy),
+                                                  _Alignof(const type_t *));
+    if (!param_copy) {
+      return NULL;
+    }
+    (void)memcpy(param_copy, params, param_count * sizeof(*param_copy));
+  }
+
   type->as.function.return_type = return_type;
-  type->as.function.params = params;
+  type->as.function.params = param_copy;
   type->as.function.param_count = param_count;
   type->as.function.is_variadic = is_variadic;
   return type;
 }
 
-type_t *type_new_tagged(type_kind_t kind, const char *tag, unsigned qualifiers)
+const type_t *type_new_tagged(type_context_t *tcx, type_kind_t kind, const char *tag, unsigned qualifiers)
 {
   type_t *type;
 
@@ -111,15 +116,14 @@ type_t *type_new_tagged(type_kind_t kind, const char *tag, unsigned qualifiers)
     return NULL;
   }
 
-  type = type_alloc(kind, qualifiers);
+  type = type_alloc(tcx, kind, qualifiers);
   if (!type) {
     return NULL;
   }
 
   if (tag) {
-    type->as.aggregate.tag = dup_cstr(tag);
+    type->as.aggregate.tag = sem_arena_strdup(tcx->arena, tag);
     if (!type->as.aggregate.tag) {
-      free(type);
       return NULL;
     }
   }
@@ -127,22 +131,25 @@ type_t *type_new_tagged(type_kind_t kind, const char *tag, unsigned qualifiers)
   return type;
 }
 
-void type_set_aggregate_decl(type_t *type, const void *decl_node)
+void type_set_aggregate_decl(const type_t *type, const void *decl_node)
 {
-  if (!type) {
+  type_t *mutable_type = (type_t *)type;
+
+  if (!mutable_type) {
     return;
   }
 
-  if (type->kind == TYPE_STRUCT_TAG ||
-      type->kind == TYPE_UNION_TAG ||
-      type->kind == TYPE_ENUM_TAG) {
-    type->as.aggregate.decl_node = decl_node;
+  if (mutable_type->kind == TYPE_STRUCT_TAG ||
+      mutable_type->kind == TYPE_UNION_TAG ||
+      mutable_type->kind == TYPE_ENUM_TAG) {
+    mutable_type->as.aggregate.decl_node = decl_node;
   }
 }
 
-type_t *type_clone(const type_t *src)
+const type_t *type_clone(type_context_t *tcx, const type_t *src)
 {
-  type_t *dst = NULL;
+  const type_t **params = NULL;
+  size_t i;
 
   if (!src) {
     return NULL;
@@ -150,118 +157,69 @@ type_t *type_clone(const type_t *src)
 
   switch (src->kind) {
     case TYPE_INVALID:
-      dst = type_new_invalid();
-      break;
+      return type_new_invalid(tcx);
     case TYPE_BUILTIN:
-      dst = type_new_builtin(src->as.builtin, src->qualifiers);
-      break;
-    case TYPE_POINTER:
-      dst = type_new_pointer(type_clone(src->as.pointer.base), src->qualifiers);
-      break;
-    case TYPE_ARRAY:
-      dst = type_new_array(
-          type_clone(src->as.array.elem),
-          src->as.array.size,
-          src->as.array.is_known_size,
-          src->qualifiers);
-      break;
-    case TYPE_FUNCTION: {
-      type_t **params = NULL;
-      type_t *ret_clone = NULL;
-      size_t param_count = src->as.function.param_count;
-
-      if (param_count > 0) {
-        params = (type_t **)calloc(param_count, sizeof(*params));
+      return type_new_builtin(tcx, src->as.builtin, src->qualifiers);
+    case TYPE_POINTER: {
+      const type_t *base = type_clone(tcx, src->as.pointer.base);
+      if (!base) {
+        return NULL;
+      }
+      return type_new_pointer(tcx, base, src->qualifiers);
+    }
+    case TYPE_ARRAY: {
+      const type_t *elem = type_clone(tcx, src->as.array.elem);
+      if (!elem) {
+        return NULL;
+      }
+      return type_new_array(tcx, elem, src->as.array.size, src->as.array.is_known_size, src->qualifiers);
+    }
+    case TYPE_FUNCTION:
+      if (src->as.function.param_count > 0u) {
+        params = (const type_t **)sem_arena_alloc(tcx->arena,
+                                                  src->as.function.param_count * sizeof(*params),
+                                                  _Alignof(const type_t *));
         if (!params) {
           return NULL;
         }
-
-        for (size_t i = 0; i < param_count; ++i) {
-          params[i] = type_clone(src->as.function.params[i]);
+        for (i = 0u; i < src->as.function.param_count; ++i) {
+          params[i] = type_clone(tcx, src->as.function.params[i]);
           if (!params[i]) {
-            for (size_t j = 0; j < i; ++j) {
-              type_free(params[j]);
-            }
-            free(params);
             return NULL;
           }
         }
       }
-
-      ret_clone = type_clone(src->as.function.return_type);
-      if (!ret_clone) {
-        if (params) {
-          for (size_t i = 0; i < param_count; ++i) {
-            type_free(params[i]);
-          }
-          free(params);
-        }
+      return type_new_function(tcx,
+                               type_clone(tcx, src->as.function.return_type),
+                               params,
+                               src->as.function.param_count,
+                               src->as.function.is_variadic,
+                               src->qualifiers);
+    case TYPE_STRUCT_TAG:
+    case TYPE_UNION_TAG:
+    case TYPE_ENUM_TAG: {
+      const type_t *dst = type_new_tagged(tcx, src->kind, src->as.aggregate.tag, src->qualifiers);
+      if (!dst) {
         return NULL;
       }
-
-      dst = type_new_function(
-          ret_clone,
-          params,
-          param_count,
-          src->as.function.is_variadic,
-          src->qualifiers);
-      break;
+      type_set_aggregate_decl(dst, src->as.aggregate.decl_node);
+      return dst;
     }
-    case TYPE_STRUCT_TAG:
-    case TYPE_UNION_TAG:
-    case TYPE_ENUM_TAG:
-      dst = type_new_tagged(src->kind, src->as.aggregate.tag, src->qualifiers);
-      if (dst) {
-        dst->as.aggregate.decl_node = src->as.aggregate.decl_node;
-      }
-      break;
     default:
       errno = EINVAL;
-      break;
+      return NULL;
   }
-
-  return dst;
 }
 
-void type_free(type_t *type)
+void type_free(const type_t *type)
 {
-  if (!type) {
-    return;
-  }
-
-  switch (type->kind) {
-    case TYPE_POINTER:
-      type_free(type->as.pointer.base);
-      break;
-    case TYPE_ARRAY:
-      type_free(type->as.array.elem);
-      break;
-    case TYPE_FUNCTION:
-      type_free(type->as.function.return_type);
-      if (type->as.function.params) {
-        for (size_t i = 0; i < type->as.function.param_count; ++i) {
-          type_free(type->as.function.params[i]);
-        }
-        free(type->as.function.params);
-      }
-      break;
-    case TYPE_STRUCT_TAG:
-    case TYPE_UNION_TAG:
-    case TYPE_ENUM_TAG:
-      free(type->as.aggregate.tag);
-      break;
-    case TYPE_INVALID:
-    case TYPE_BUILTIN:
-    default:
-      break;
-  }
-
-  free(type);
+  (void)type;
 }
 
-// TODO: how to compare (char*) and BUILTING_STRING
 int type_equal(const type_t *lhs, const type_t *rhs)
 {
+  size_t i;
+
   if (lhs == rhs) {
     return 1;
   }
@@ -291,8 +249,7 @@ int type_equal(const type_t *lhs, const type_t *rhs)
           !type_equal(lhs->as.function.return_type, rhs->as.function.return_type)) {
         return 0;
       }
-
-      for (size_t i = 0; i < lhs->as.function.param_count; ++i) {
+      for (i = 0u; i < lhs->as.function.param_count; ++i) {
         if (!type_equal(lhs->as.function.params[i], rhs->as.function.params[i])) {
           return 0;
         }
@@ -323,22 +280,9 @@ int type_is_integral(const type_t *type)
     return 1;
   }
 
-  if (type->kind != TYPE_BUILTIN) {
-    return 0;
-  }
-
-  switch (type->as.builtin) {
-    case BUILTIN_CHAR:
-    case BUILTIN_SHORT:
-    case BUILTIN_INT:
-    case BUILTIN_LONG:
-      return 1;
-    case BUILTIN_FLOAT:
-    case BUILTIN_DOUBLE:
-    case BUILTIN_LONG_DOUBLE:
-    case BUILTIN_STRING:
-    case BUILTIN_VOID:
-    default:
-      return 0;
-  }
+  return type->kind == TYPE_BUILTIN &&
+         (type->as.builtin == BUILTIN_CHAR ||
+          type->as.builtin == BUILTIN_SHORT ||
+          type->as.builtin == BUILTIN_INT ||
+          type->as.builtin == BUILTIN_LONG);
 }

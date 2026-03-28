@@ -4,11 +4,11 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "arena.h"
 #include "type.h"
 
-#define SCOPE_BUCKET_COUNT 127u // prime no. decreases collision per insertion ratio 
+#define SCOPE_BUCKET_COUNT 127u
 
-/// @brief Symbol kinds to emit.
 typedef enum {
   SYMBOL_OBJECT = 0,
   SYMBOL_FUNCTION,
@@ -20,7 +20,6 @@ typedef enum {
   SYMBOL_FIELD
 } symbol_kind_t;
 
-/// @brief Symbol storage metadata.
 typedef enum {
   STORAGE_AUTO = 0,
   STORAGE_STATIC,
@@ -28,7 +27,6 @@ typedef enum {
   STORAGE_PARAMETER
 } storage_class_t;
 
-/// @brief Backend-oriented storage location classification.
 typedef enum {
   MEMORY_CLASS_NONE = 0,
   MEMORY_CLASS_GLOBAL,
@@ -39,34 +37,31 @@ typedef enum {
 typedef struct symbol_s symbol_t;
 typedef struct scope_s scope_t;
 
-/// @brief Manages the lexical scope stack.
 typedef struct {
   scope_t *current;
   size_t next_scope_id;
+  sem_arena_t *arena;
 } scope_stack_t;
 
-/// @brief Symbol table entry.
-/// @note Function-specific metadata parameters (arity/is_defined) are meaningful for analysing SYMBOL_FUNCTION.
 struct symbol_s {
   char *name;
-  symbol_kind_t kind; 
-  storage_class_t storage_class; 
+  symbol_kind_t kind;
+  storage_class_t storage_class;
   unsigned qualifiers;
-  type_t *type;
+  const type_t *type;
 
   size_t decl_line;
   size_t decl_col;
 
   size_t scope_id;
   size_t scope_depth;
-  scope_t *decl_scope; // owner scope pointer
+  scope_t *decl_scope;
 
   size_t arity;
   int is_defined;
-  symbol_t* next; // next symbol in the same bucket entry 
+  symbol_t *next;
 };
 
-/// @brief Scope container.
 struct scope_s {
   size_t id;
   size_t depth;
@@ -74,7 +69,7 @@ struct scope_s {
   symbol_t *buckets[SCOPE_BUCKET_COUNT];
 };
 
-void scope_stack_init(scope_stack_t *stack);
+void scope_stack_init(scope_stack_t *stack, sem_arena_t *arena);
 void scope_stack_destroy(scope_stack_t *stack);
 
 int scope_push(scope_stack_t *stack);
@@ -83,7 +78,7 @@ int scope_pop(scope_stack_t *stack);
 scope_t *scope_current(scope_stack_t *stack);
 size_t scope_depth(const scope_t *scope);
 
-symbol_t *symbol_new(const char *name, symbol_kind_t kind, type_t *type, size_t decl_line, size_t decl_col);
+symbol_t *symbol_new(sem_arena_t *arena, const char *name, symbol_kind_t kind, const type_t *type, size_t decl_line, size_t decl_col);
 void symbol_free(symbol_t *symbol);
 
 int symbol_insert(scope_t *scope, symbol_t *symbol);

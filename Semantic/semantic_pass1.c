@@ -17,7 +17,7 @@ typedef struct {
 static int register_symbol(pass1_state_t *state,
                            const char *name,
                            symbol_kind_t kind,
-                           type_t *type,
+                           const type_t *type,
                            size_t line,
                            int is_function_definition,
                            size_t arity);
@@ -38,6 +38,25 @@ static void pass1_emit(pass1_state_t *state,
   }
 
   (void)diag_emit(&state->ctx->diagnostics, code, DIAG_ERROR, line, 0u, "%s", message);
+}
+
+static void pass1_cache_decl_node(pass1_state_t *state,
+                                  const TreeNode_t *node,
+                                  symbol_t *symbol,
+                                  sem_value_kind_t value_kind,
+                                  unsigned extra_flags)
+{
+  sem_node_info_t info;
+
+  if (!state || !state->ctx || !node || !symbol || !symbol->type) {
+    return;
+  }
+
+  info.type = symbol->type;
+  info.symbol = symbol;
+  info.value_kind = value_kind;
+  info.flags = SEM_NODE_TYPED | extra_flags;
+  (void)semantic_set_node_info(state->ctx, node, &info);
 }
 
 /**
@@ -133,7 +152,7 @@ static int handle_enum_declaration(TreeNode_t *decl_node, pass1_state_t *state)
 
   if (decl_node->nodeData.sVal) {
     char key[256];
-    type_t *tag_type;
+    const type_t *tag_type;
     int rc;
 
     rc = build_tag_symbol_name(TYPE_ENUM_TAG, decl_node->nodeData.sVal, key, sizeof(key));
@@ -142,7 +161,7 @@ static int handle_enum_declaration(TreeNode_t *decl_node, pass1_state_t *state)
       return rc;
     }
 
-    tag_type = type_new_tagged(TYPE_ENUM_TAG, decl_node->nodeData.sVal, 0u);
+    tag_type = type_new_tagged(&state->ctx->type_context, TYPE_ENUM_TAG, decl_node->nodeData.sVal, 0u);
     if (!tag_type) {
       pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to allocate enum tag type");
       return -ENOMEM;
@@ -163,7 +182,7 @@ static int handle_enum_declaration(TreeNode_t *decl_node, pass1_state_t *state)
 
   member = decl_node->p_firstChild;
   while (member) {
-    type_t *member_type;
+    const type_t *member_type;
     int rc;
 
     if (member->nodeType != NODE_ENUM_MEMBER || !member->nodeData.sVal) {
@@ -177,7 +196,7 @@ static int handle_enum_declaration(TreeNode_t *decl_node, pass1_state_t *state)
       continue;
     }
 
-    member_type = type_new_builtin(BUILTIN_INT, 0u);
+    member_type = type_new_builtin(&state->ctx->type_context, BUILTIN_INT, 0u);
     if (!member_type) {
       pass1_emit(state, "SEM900", member->lineNumber, "failed to allocate enum member type");
       return -ENOMEM;
@@ -273,7 +292,7 @@ static int handle_tag_declaration(TreeNode_t *decl_node, pass1_state_t *state)
   }
 
   {
-    type_t *tag_type = type_new_tagged(kind, decl_node->nodeData.sVal, 0u);
+    const type_t *tag_type = type_new_tagged(&state->ctx->type_context, kind, decl_node->nodeData.sVal, 0u);
     if (!tag_type) {
       pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to allocate tag type");
       return -ENOMEM;
@@ -519,7 +538,7 @@ static int pop_scope(pass1_state_t *state, size_t line, const char *code, const 
 static int register_symbol(pass1_state_t *state,
                            const char *name,
                            symbol_kind_t kind,
-                           type_t *type,
+                           const type_t *type,
                            size_t line,
                            int is_function_definition,
                            size_t arity)
@@ -558,7 +577,7 @@ static int register_symbol(pass1_state_t *state,
     return -EEXIST;
   }
 
-  symbol = symbol_new(name, kind, type, line, 0u);
+  symbol = symbol_new(&state->ctx->persistent_arena, name, kind, type, line, 0u);
   if (!symbol) {
     type_free(type);
     pass1_emit(state, "SEM900", line, "failed to allocate symbol");
@@ -589,8 +608,9 @@ static int register_symbol(pass1_state_t *state,
  * @param out_variadic output variadic flag.
  * @return 0 on success, negative errno-like value on allocation failure.
  */
-static int build_function_type(const TreeNode_t *fn_node,
-                               type_t **out_type,
+static int build_function_type(type_context_t *tcx,
+                               const TreeNode_t *fn_node,
+                               const type_t **out_type,
                                size_t *out_arity,
                                int *out_variadic)
 {
@@ -598,8 +618,8 @@ static int build_function_type(const TreeNode_t *fn_node,
   const TreeNode_t *params = NULL;
   const TreeNode_t *body = NULL;
   const TreeNode_t *it;
-  type_t *ret_type = NULL;
-  type_t **param_types = NULL;
+  const type_t *ret_type = NULL;
+  const type_t **param_types = NULL;
   size_t param_count = 0u;
   int is_variadic = 0;
   unsigned qualifiers;
@@ -608,14 +628,14 @@ static int build_function_type(const TreeNode_t *fn_node,
   (void)body;
 
   if (!preamble) {
-    *out_type = type_new_invalid();
+    *out_type = type_new_invalid(tcx);
     *out_arity = 0u;
     *out_variadic = 0;
     return (*out_type != NULL) ? 0 : -ENOMEM;
   }
 
   qualifiers = semantic_ast_collect_qualifiers_from_chain(preamble);
-  ret_type = semantic_ast_build_type_from_type_node(preamble, qualifiers);
+  ret_type = semantic_ast_build_type_from_type_node(tcx, preamble, qualifiers);
   if (!ret_type) {
     return -ENOMEM;
   }
@@ -625,13 +645,13 @@ static int build_function_type(const TreeNode_t *fn_node,
     if (it->nodeType == NODE_PARAMETER && it->nodeData.sVal && strcmp(it->nodeData.sVal, "...") == 0) {
       is_variadic = 1;
     } else if (it->nodeType == NODE_VAR_DECLARATION || it->nodeType == NODE_ARRAY_DECLARATION) {
-      type_t *param_type = semantic_ast_build_type_from_declaration(it);
-      type_t **new_params;
+      const type_t *param_type = semantic_ast_build_type_from_declaration(tcx, it);
+      const type_t **new_params;
       if (!param_type) {
         goto fail;
       }
 
-      new_params = (type_t **)realloc(param_types, (param_count + 1u) * sizeof(*param_types));
+      new_params = (const type_t **)realloc((void *)param_types, (param_count + 1u) * sizeof(*param_types));
       if (!new_params) {
         type_free(param_type);
         goto fail;
@@ -642,7 +662,7 @@ static int build_function_type(const TreeNode_t *fn_node,
     it = it->p_sibling;
   }
 
-  *out_type = type_new_function(ret_type, param_types, param_count, is_variadic, 0u);
+  *out_type = type_new_function(tcx, ret_type, param_types, param_count, is_variadic, 0u);
   if (!*out_type) {
     goto fail;
   }
@@ -680,7 +700,7 @@ static int handle_function_node(TreeNode_t *fn_node, pass1_state_t *state)
   const TreeNode_t *param_head = NULL;
   const TreeNode_t *body = NULL;
   const TreeNode_t *it;
-  type_t *fn_type = NULL;
+  const type_t *fn_type = NULL;
   size_t arity = 0u;
   int is_variadic = 0;
   int is_definition = 0;
@@ -695,7 +715,7 @@ static int handle_function_node(TreeNode_t *fn_node, pass1_state_t *state)
   is_definition = (body != NULL);
 
   if (fn_node->nodeData.sVal) {
-    rc = build_function_type(fn_node, &fn_type, &arity, &is_variadic);
+    rc = build_function_type(&state->ctx->type_context, fn_node, &fn_type, &arity, &is_variadic);
     if (rc < 0 || !fn_type) {
       pass1_emit(state, "SEM900", fn_node->lineNumber, "failed to build function type");
       type_free(fn_type);
@@ -709,6 +729,11 @@ static int handle_function_node(TreeNode_t *fn_node, pass1_state_t *state)
                           fn_node->lineNumber,
                           is_definition,
                           arity);
+    pass1_cache_decl_node(state,
+                          fn_node,
+                          symbol_lookup_current(scope_current(&state->ctx->scope_stack), fn_node->nodeData.sVal),
+                          SEM_VALUE_FUNCTION_DESIGNATOR,
+                          0u);
   }
 
   if (push_scope(state, fn_node->lineNumber) < 0) {
@@ -719,7 +744,7 @@ static int handle_function_node(TreeNode_t *fn_node, pass1_state_t *state)
   while (it && semantic_ast_is_param_node(it)) {
     if ((it->nodeType == NODE_VAR_DECLARATION || it->nodeType == NODE_ARRAY_DECLARATION) &&
         it->nodeData.sVal) {
-      type_t *param_type = semantic_ast_build_type_from_declaration(it);
+      const type_t *param_type = semantic_ast_build_type_from_declaration(&state->ctx->type_context, it);
       if (!param_type) {
         pass1_emit(state, "SEM900", it->lineNumber, "failed to build parameter type");
         return -ENOMEM;
@@ -730,6 +755,11 @@ static int handle_function_node(TreeNode_t *fn_node, pass1_state_t *state)
                             param_type,
                             it->lineNumber,
                             0,
+                            0u);
+      pass1_cache_decl_node(state,
+                            it,
+                            symbol_lookup_current(scope_current(&state->ctx->scope_stack), it->nodeData.sVal),
+                            SEM_VALUE_LVALUE,
                             0u);
     }
     it = it->p_sibling;
@@ -757,7 +787,7 @@ static int handle_function_node(TreeNode_t *fn_node, pass1_state_t *state)
  */
 static int handle_object_declaration(TreeNode_t *decl_node, pass1_state_t *state)
 {
-  type_t *decl_type;
+  const type_t *decl_type;
 
   if (!decl_node || !state) {
     return -EINVAL;
@@ -767,7 +797,7 @@ static int handle_object_declaration(TreeNode_t *decl_node, pass1_state_t *state
     return 0;
   }
 
-  decl_type = semantic_ast_build_type_from_declaration(decl_node);
+  decl_type = semantic_ast_build_type_from_declaration(&state->ctx->type_context, decl_node);
   if (!decl_type) {
     pass1_emit(state, "SEM900", decl_node->lineNumber, "failed to build declaration type");
     return -ENOMEM;
@@ -779,6 +809,11 @@ static int handle_object_declaration(TreeNode_t *decl_node, pass1_state_t *state
                         decl_type,
                         decl_node->lineNumber,
                         0,
+                        0u);
+  pass1_cache_decl_node(state,
+                        decl_node,
+                        symbol_lookup_current(scope_current(&state->ctx->scope_stack), decl_node->nodeData.sVal),
+                        SEM_VALUE_LVALUE,
                         0u);
   return 0;
 }
@@ -907,7 +942,6 @@ int semantic_pass1_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass1
   ctx->scope_enter_count = 0u;
   ctx->scope_leave_count = 0u;
 
-  scope_stack_init(&ctx->scope_stack);
   rc = push_scope(&state, 0u);
   if (rc < 0) {
     *out_result = state.result;

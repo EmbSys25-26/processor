@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "arena.h"
 #include "symbol.h"
 #include "type.h"
 
@@ -35,6 +36,8 @@ static int read_all(FILE *fp, char *buf, size_t cap)
 
 int main(void)
 {
+  sem_arena_t arena;
+  type_context_t tcx;
   scope_stack_t stack;
   scope_t *global_scope;
   scope_t *inner_scope;
@@ -45,7 +48,9 @@ int main(void)
   FILE *fp;
   char dump[2048];
 
-  scope_stack_init(&stack);
+  CHECK(sem_arena_init(&arena, 4096u) == 0, "arena init");
+  type_context_init(&tcx, &arena);
+  scope_stack_init(&stack, &arena);
   CHECK(scope_current(&stack) == NULL, "stack starts empty");
 
   CHECK(scope_push(&stack) == 0, "push global scope");
@@ -54,7 +59,7 @@ int main(void)
   CHECK(global_scope->id == 0u, "global scope id");
   CHECK(scope_depth(global_scope) == 0u, "global scope depth");
 
-  outer = symbol_new("x", SYMBOL_OBJECT, type_new_builtin(BUILTIN_INT, 0u), 10u, 4u);
+  outer = symbol_new(&arena, "x", SYMBOL_OBJECT, type_new_builtin(&tcx, BUILTIN_INT, 0u), 10u, 4u);
   CHECK(outer != NULL, "create outer symbol");
   CHECK(symbol_insert(global_scope, outer) == 0, "insert outer symbol");
   CHECK(outer->decl_scope == global_scope, "decl_scope set");
@@ -73,7 +78,7 @@ int main(void)
   symbol_dump(fp, NULL);
   fclose(fp);
 
-  duplicate = symbol_new("x", SYMBOL_OBJECT, type_new_builtin(BUILTIN_INT, 0u), 11u, 1u);
+  duplicate = symbol_new(&arena, "x", SYMBOL_OBJECT, type_new_builtin(&tcx, BUILTIN_INT, 0u), 11u, 1u);
   CHECK(duplicate != NULL, "create duplicate symbol");
   CHECK(symbol_insert(global_scope, duplicate) == -EEXIST, "duplicate rejected");
   symbol_free(duplicate);
@@ -86,7 +91,7 @@ int main(void)
   CHECK(symbol_lookup_current(inner_scope, "x") == NULL, "current scope does not see outer directly");
   CHECK(symbol_lookup_visible(inner_scope, "x") == outer, "visible lookup reaches parent scope");
 
-  shadow = symbol_new("x", SYMBOL_OBJECT, type_new_builtin(BUILTIN_SHORT, 0u), 20u, 2u);
+  shadow = symbol_new(&arena, "x", SYMBOL_OBJECT, type_new_builtin(&tcx, BUILTIN_SHORT, 0u), 20u, 2u);
   CHECK(shadow != NULL, "create shadow symbol");
   CHECK(symbol_insert(inner_scope, shadow) == 0, "insert shadow symbol");
   CHECK(symbol_lookup_current(inner_scope, "x") == shadow, "current lookup sees shadow");
@@ -101,15 +106,16 @@ int main(void)
   CHECK(scope_current(&stack) == NULL, "stack empty after pops");
   CHECK(scope_pop(&stack) == -EINVAL, "pop empty stack fails");
 
-  invalid = symbol_new("invalid", SYMBOL_OBJECT, type_new_builtin(BUILTIN_INT, 0u), 1u, 1u);
+  invalid = symbol_new(&arena, "invalid", SYMBOL_OBJECT, type_new_builtin(&tcx, BUILTIN_INT, 0u), 1u, 1u);
   CHECK(invalid != NULL, "create standalone symbol");
   CHECK(symbol_insert(NULL, invalid) == -EINVAL, "insert with null scope rejected");
   symbol_free(invalid);
 
-  CHECK(symbol_new(NULL, SYMBOL_OBJECT, type_new_builtin(BUILTIN_INT, 0u), 1u, 0u) == NULL,
+  CHECK(symbol_new(&arena, NULL, SYMBOL_OBJECT, type_new_builtin(&tcx, BUILTIN_INT, 0u), 1u, 0u) == NULL,
         "null name symbol rejected");
 
   scope_stack_destroy(&stack);
+  sem_arena_destroy(&arena);
   printf("PASS test_symbol_api\n");
   return 0;
 }

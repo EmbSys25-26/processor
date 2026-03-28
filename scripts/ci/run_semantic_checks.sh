@@ -176,12 +176,18 @@ check_run "Header compile smoke" cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
   -o "$OUT_DIR/test_headers_compile.o"
 
 # 2) API unit checks (regular build).
+compile_and_run_test regular test_arena_api \
+  "$ROOT_DIR/test_files/semantic_checks/test_arena_api.c" \
+  "$ROOT_DIR/Semantic/arena.c"
+
 compile_and_run_test regular test_type_api \
   "$ROOT_DIR/test_files/semantic_checks/test_type_api.c" \
+  "$ROOT_DIR/Semantic/arena.c" \
   "$ROOT_DIR/Semantic/type.c"
 
 compile_and_run_test regular test_symbol_api \
   "$ROOT_DIR/test_files/semantic_checks/test_symbol_api.c" \
+  "$ROOT_DIR/Semantic/arena.c" \
   "$ROOT_DIR/Semantic/symbol.c" \
   "$ROOT_DIR/Semantic/type.c"
 
@@ -191,6 +197,7 @@ compile_and_run_test regular test_diagnostics_api \
 
 compile_and_run_test regular test_semantic_api \
   "$ROOT_DIR/test_files/semantic_checks/test_semantic_api.c" \
+  "$ROOT_DIR/Semantic/arena.c" \
   "$ROOT_DIR/Semantic/semantic_ast_helpers.c" \
   "$ROOT_DIR/Semantic/semantic_pass1.c" \
   "$ROOT_DIR/Semantic/semantic_pass2.c" \
@@ -402,10 +409,12 @@ check_run "Semantic pass examples" \
 # 5) Memory safety checks with sanitizers.
 compile_and_run_test san test_type_api \
   "$ROOT_DIR/test_files/semantic_checks/test_type_api.c" \
+  "$ROOT_DIR/Semantic/arena.c" \
   "$ROOT_DIR/Semantic/type.c"
 
 compile_and_run_test san test_symbol_api \
   "$ROOT_DIR/test_files/semantic_checks/test_symbol_api.c" \
+  "$ROOT_DIR/Semantic/arena.c" \
   "$ROOT_DIR/Semantic/symbol.c" \
   "$ROOT_DIR/Semantic/type.c"
 
@@ -415,6 +424,7 @@ compile_and_run_test san test_diagnostics_api \
 
 compile_and_run_test san test_semantic_api \
   "$ROOT_DIR/test_files/semantic_checks/test_semantic_api.c" \
+  "$ROOT_DIR/Semantic/arena.c" \
   "$ROOT_DIR/Semantic/semantic_ast_helpers.c" \
   "$ROOT_DIR/Semantic/semantic_pass1.c" \
   "$ROOT_DIR/Semantic/semantic_pass2.c" \

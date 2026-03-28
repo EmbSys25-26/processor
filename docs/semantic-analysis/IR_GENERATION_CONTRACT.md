@@ -11,16 +11,28 @@ The IR must be explicit enough for:
 4. final emission to the project ISA assembler.
 
 ## 2. Pipeline position
-`lexer -> parser -> AST -> semantic pass1 -> semantic pass2 -> IR lowering -> backend -> assembler`
+`lexer -> parser -> AST -> semantic_analyze(pass1 + pass2) -> IR lowering -> backend -> assembler`
 
 IR lowering must only execute if semantic stage has zero errors.
 
 ## 3. Input contract from semantic stage
-Lowering requires these guarantees on AST:
-1. Every expression node has inferred type metadata.
-2. Every identifier/member/function reference has symbol binding.
+Lowering must consume the persistent semantic result returned by:
+
+```c
+int semantic_analyze(TreeNode_t *root,
+                     const char *path,
+                     semantic_context_t **out_ctx,
+                     semantic_result_t *out_result);
+```
+
+Lowering requires these guarantees on the semantic context:
+1. Every lowerable expression node has inferred type metadata in the semantic annotation table.
+2. Every identifier/member/function reference has symbol binding in the semantic annotation table.
 3. Every statement has validated control legality.
 4. Unsupported features are explicitly marked and must trigger deterministic lowering errors.
+5. Symbols, scopes, and semantic types remain valid until `semantic_context_destroy(...)`.
+
+Lowering must query semantic metadata through the semantic API, not through AST-local fields such as `nodeVarType`.
 
 ## 4. IR design choice
 This contract uses a typed three-address CFG IR with virtual registers.
@@ -113,6 +125,10 @@ Contains:
 1. Lowering is recursive per function body to CFG.
 2. Every expression lowering returns a value handle (`%vN`) and type.
 3. Every statement lowering returns current block tail and may create new blocks.
+4. Lowering must treat semantic metadata as the source of truth:
+   - `semantic_get_node_info(ctx, expr_node)->type`
+   - `semantic_get_node_info(ctx, expr_node)->symbol`
+   - `semantic_get_node_info(ctx, expr_node)->value_kind`
 
 ## 8.2 Expression lowering
 1. Literals -> `const`.

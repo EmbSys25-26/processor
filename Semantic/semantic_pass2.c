@@ -17,8 +17,6 @@ typedef struct {
   size_t loop_depth;
   size_t switch_depth;
   TreeNode_t *root;
-  type_t **temporary_types;
-  size_t temporary_type_count;
 } pass2_state_t;
 
 /** @brief Shared invalid type singleton for failed inference paths. */
@@ -67,52 +65,69 @@ static void pass2_emit(pass2_state_t *state,
                        size_t line,
                        const char *message);
 
-/**
- * @brief Free all temporary inferred types retained during pass2.
- * @param state pass2 execution state.
- */
-static void release_temporary_types(pass2_state_t *state)
+static const sem_node_info_t *pass2_get_node_info(pass2_state_t *state, const TreeNode_t *node)
 {
-  size_t i;
-
-  if (!state || !state->temporary_types) {
-    return;
-  }
-
-  for (i = 0u; i < state->temporary_type_count; ++i) {
-    type_free(state->temporary_types[i]);
-  }
-
-  free(state->temporary_types);
-  state->temporary_types = NULL;
-  state->temporary_type_count = 0u;
+  return (state && state->ctx) ? semantic_get_node_info(state->ctx, node) : NULL;
 }
 
-/**
- * @brief Store an inferred heap-allocated type for later cleanup.
- * @param state pass2 execution state.
- * @param type newly allocated type to retain.
- * @return retained type pointer on success; invalid singleton on failure.
- */
-static const type_t *remember_temporary_type(pass2_state_t *state, type_t *type)
+static const type_t *pass2_cache_expr(pass2_state_t *state,
+                                      TreeNode_t *node,
+                                      const type_t *type,
+                                      symbol_t *symbol,
+                                      sem_value_kind_t value_kind,
+                                      unsigned extra_flags)
 {
-  type_t **new_types;
+  sem_node_info_t info;
 
-  if (!state || !type) {
-    return &g_type_invalid;
+  if (!state || !state->ctx || !node || !type || type->kind == TYPE_INVALID) {
+    return type ? type : &g_type_invalid;
   }
 
-  new_types = (type_t **)realloc(state->temporary_types,
-                                 (state->temporary_type_count + 1u) * sizeof(*state->temporary_types));
-  if (!new_types) {
-    type_free(type);
-    pass2_emit(state, "SEM900", 0u, "failed to retain inferred temporary type");
-    return &g_type_invalid;
+  info.type = type;
+  info.symbol = symbol;
+  info.value_kind = value_kind;
+  info.flags = SEM_NODE_TYPED | extra_flags;
+  if (semantic_set_node_info(state->ctx, node, &info) < 0) {
+    pass2_emit(state, "SEM900", node->lineNumber, "failed to cache semantic node info");
   }
 
-  state->temporary_types = new_types;
-  state->temporary_types[state->temporary_type_count++] = type;
   return type;
+}
+
+static sem_value_kind_t pass2_decl_value_kind(symbol_kind_t kind)
+{
+  switch (kind) {
+    case SYMBOL_FUNCTION:
+      return SEM_VALUE_FUNCTION_DESIGNATOR;
+    case SYMBOL_OBJECT:
+    case SYMBOL_PARAMETER:
+    case SYMBOL_FIELD:
+      return SEM_VALUE_LVALUE;
+    default:
+      return SEM_VALUE_RVALUE;
+  }
+}
+
+static int pass2_is_lvalue_kind(const sem_node_info_t *info)
+{
+  return info && info->value_kind == SEM_VALUE_LVALUE;
+}
+
+static int pass2_is_modifiable_lvalue(TreeNode_t *node,
+                                      pass2_state_t *state,
+                                      const type_t *type)
+{
+  const sem_node_info_t *info = pass2_get_node_info(state, node);
+
+  if (!pass2_is_lvalue_kind(info)) {
+    return 0;
+  }
+
+  if (!type) {
+    return 0;
+  }
+
+  return (type->qualifiers & TYPE_QUAL_CONST) == 0u;
 }
 
 /**
@@ -356,6 +371,7 @@ static int is_expression_node_type(NodeType_t node_type)
     case NODE_CHAR:
     case NODE_FLOAT:
     case NODE_STRING:
+    case NODE_IDENTIFIER:
     case NODE_FUNCTION_CALL:
     case NODE_OPERATOR:
     case NODE_ARRAY_ACCESS:
@@ -999,7 +1015,7 @@ static void register_tag_declaration(TreeNode_t *decl_node, pass2_state_t *state
 {
   symbol_kind_t symbol_kind;
   type_kind_t type_kind;
-  type_t *tag_type;
+  const type_t *tag_type;
   symbol_t *symbol;
   scope_t *scope;
   char key[256];
@@ -1035,14 +1051,14 @@ static void register_tag_declaration(TreeNode_t *decl_node, pass2_state_t *state
     return;
   }
 
-  tag_type = type_new_tagged(type_kind, decl_node->nodeData.sVal, 0u);
+  tag_type = type_new_tagged(&state->ctx->type_context, type_kind, decl_node->nodeData.sVal, 0u);
   if (!tag_type) {
     pass2_emit(state, "SEM900", decl_node->lineNumber, "failed to build tag type");
     return;
   }
   type_set_aggregate_decl(tag_type, decl_node);
 
-  symbol = symbol_new(key, symbol_kind, tag_type, decl_node->lineNumber, 0u);
+  symbol = symbol_new(&state->ctx->persistent_arena, key, symbol_kind, tag_type, decl_node->lineNumber, 0u);
   if (!symbol) {
     type_free(tag_type);
     pass2_emit(state, "SEM900", decl_node->lineNumber, "failed to allocate tag symbol");
@@ -1103,39 +1119,78 @@ static const TreeNode_t *find_tag_declaration(const TreeNode_t *node,
   return NULL;
 }
 
-/**
- * @brief Resolve member declaration type inside an aggregate declaration.
- * @param aggregate_decl struct/union declaration node.
- * @param member_name requested member name.
- * @param state pass2 execution state.
- * @return member type, NULL when member missing, or invalid singleton on fatal error.
- */
-static const type_t *resolve_member_decl_type(const TreeNode_t *aggregate_decl,
-                                              const char *member_name,
-                                              pass2_state_t *state)
+static const TreeNode_t *resolve_member_decl(const TreeNode_t *aggregate_decl,
+                                             const char *member_name)
 {
-  const TreeNode_t *member;
+  const TreeNode_t *member = aggregate_decl ? aggregate_decl->p_firstChild : NULL;
 
-  if (!aggregate_decl || !member_name || !state) {
-    return &g_type_invalid;
-  }
-
-  member = aggregate_decl->p_firstChild;
   while (member) {
     if ((member->nodeType == NODE_STRUCT_MEMBER || member->nodeType == NODE_ARRAY_DECLARATION) &&
         member->nodeData.sVal &&
         strcmp(member->nodeData.sVal, member_name) == 0) {
-      type_t *member_type = semantic_ast_build_type_from_declaration(member);
-      if (!member_type) {
-        pass2_emit(state, "SEM900", member->lineNumber, "failed to build member type");
-        return &g_type_invalid;
-      }
-      return remember_temporary_type(state, member_type);
+      return member;
     }
     member = member->p_sibling;
   }
 
   return NULL;
+}
+
+static const type_t *resolve_member_decl_type(const TreeNode_t *member_decl,
+                                              pass2_state_t *state)
+{
+  const type_t *member_type;
+
+  if (!member_decl || !state) {
+    return &g_type_invalid;
+  }
+
+  member_type = semantic_ast_build_type_from_declaration(&state->ctx->type_context, member_decl);
+  if (!member_type) {
+    pass2_emit(state, "SEM900", member_decl->lineNumber, "failed to build member type");
+    return &g_type_invalid;
+  }
+
+  return member_type;
+}
+
+static symbol_t *ensure_field_symbol(const TreeNode_t *member_decl,
+                                     const type_t *member_type,
+                                     pass2_state_t *state)
+{
+  const sem_node_info_t *cached;
+  sem_node_info_t info;
+  symbol_t *symbol;
+
+  if (!member_decl || !member_type || !state || !state->ctx || !member_decl->nodeData.sVal) {
+    return NULL;
+  }
+
+  cached = semantic_get_node_info(state->ctx, member_decl);
+  if (cached && cached->symbol && cached->symbol->kind == SYMBOL_FIELD) {
+    return cached->symbol;
+  }
+
+  symbol = symbol_new(&state->ctx->persistent_arena,
+                      member_decl->nodeData.sVal,
+                      SYMBOL_FIELD,
+                      member_type,
+                      member_decl->lineNumber,
+                      0u);
+  if (!symbol) {
+    pass2_emit(state, "SEM900", member_decl->lineNumber, "failed to allocate field symbol");
+    return NULL;
+  }
+
+  info.type = member_type;
+  info.symbol = symbol;
+  info.value_kind = SEM_VALUE_LVALUE;
+  info.flags = SEM_NODE_TYPED;
+  if (semantic_set_node_info(state->ctx, member_decl, &info) < 0) {
+    pass2_emit(state, "SEM900", member_decl->lineNumber, "failed to cache field node info");
+  }
+
+  return symbol;
 }
 
 /**
@@ -1155,7 +1210,9 @@ static const type_t *infer_member_access_type(TreeNode_t *node,
   const type_t *base_type;
   const type_t *aggregate_type;
   const TreeNode_t *aggregate_decl;
+  const TreeNode_t *member_decl;
   symbol_t *tag_symbol;
+  symbol_t *field_symbol = NULL;
   const type_t *member_type;
   const char *member_name;
   const char *semantic_code;
@@ -1218,42 +1275,45 @@ static const type_t *infer_member_access_type(TreeNode_t *node,
   }
 
   //SEM060: Fail if the requested member doesn't exist inside the struct
-  member_type = resolve_member_decl_type(aggregate_decl, member_name, state);
-  if (!member_type) {
+  member_decl = resolve_member_decl(aggregate_decl, member_name);
+  if (!member_decl) {
     pass2_emit(state, "SEM060", node->lineNumber, "aggregate member not found");
     return &g_type_invalid;
   }
 
-  return member_type;
+  member_type = resolve_member_decl_type(member_decl, state);
+  if (member_type->kind == TYPE_INVALID) {
+    return &g_type_invalid;
+  }
+
+  field_symbol = ensure_field_symbol(member_decl, member_type, state);
+  return pass2_cache_expr(state, node, member_type, field_symbol, SEM_VALUE_LVALUE, 0u);
 }
 /**
- * @brief lookup identifier type through the currently visible scope chain.
+ * @brief Lookup one identifier symbol through the currently visible scope chain.
  * @param name identifier name.
  * @param line source line for diagnostics.
  * @param state pass2 execution state.
- * @return type if found; invalid type singleton otherwise.
+ * @return symbol if found; NULL otherwise.
  */
-static const type_t *lookup_identifier_type(const char *name, size_t line, pass2_state_t *state)
+static symbol_t *lookup_identifier_symbol(const char *name, size_t line, pass2_state_t *state)
 {
-  scope_t *scope = scope_current(&state->ctx->scope_stack);
-  symbol_t *symbol;
+  scope_t *scope;
 
-  if (!scope || !name) {
+  if (!state || !state->ctx || !name) {
+    if (state) {
+      pass2_emit(state, "SEM001", line, "unknown identifier");
+    }
+    return NULL;
+  }
+
+  scope = scope_current(&state->ctx->scope_stack);
+  if (!scope) {
     pass2_emit(state, "SEM001", line, "unknown identifier");
-    return &g_type_invalid;
+    return NULL;
   }
 
-  symbol = symbol_lookup_visible(scope, name);
-  if (!symbol) {
-    pass2_emit(state, "SEM001", line, "unknown identifier");
-    return &g_type_invalid;
-  }
-
-  if (!symbol->type) {
-    return &g_type_invalid;
-  }
-
-  return symbol->type;
+  return symbol_lookup_visible(scope, name);
 }
 
 /**
@@ -1389,18 +1449,9 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
   }
 if (op_kind == OP_ASSIGN) {
     if (lhs_type->kind != TYPE_INVALID && rhs_type->kind != TYPE_INVALID) {
-        
-        //LVALUE CHECK (Is the LHS assignable?)
-        if (!(lhs->nodeType == NODE_IDENTIFIER ||
-                          lhs->nodeType == NODE_ARRAY_ACCESS ||
-                          lhs->nodeType == NODE_POINTER_CONTENT ||
-                          lhs->nodeType == NODE_MEMBER_ACCESS ||
-                          lhs->nodeType == NODE_PTR_MEMBER_ACCESS)) {
-            //Trigger SEM027: Not a modifiable lvalue
+        if (!pass2_is_lvalue_kind(pass2_get_node_info(state, lhs))) {
             pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
-        } 
-        //CONST CHECK (Is the lvalue read-only?)
-        else if (lhs_type->qualifiers & TYPE_QUAL_CONST) {
+        } else if (!pass2_is_modifiable_lvalue(lhs, state, lhs_type)) {
             if (lhs->nodeType == NODE_IDENTIFIER && lhs->nodeData.sVal) {
                 scope_t *scope = scope_current(&state->ctx->scope_stack);
                 symbol_t *sym = symbol_lookup_visible(scope, lhs->nodeData.sVal);
@@ -1602,31 +1653,59 @@ if (op_kind == OP_ASSIGN) {
  */
 static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
 {
+  const sem_node_info_t *cached;
+
   if (!node || !state) {
     return &g_type_invalid;
   }
 
+  cached = pass2_get_node_info(state, node);
+  if (cached && (cached->flags & SEM_NODE_TYPED) != 0u && cached->type) {
+    return cached->type;
+  }
+
   switch (node->nodeType) {
-    
     case NODE_CHAR:
-      return &g_type_char;
+      return pass2_cache_expr(state, node, &g_type_char, NULL, SEM_VALUE_RVALUE, SEM_NODE_CONST_EXPR);
     case NODE_INTEGER:
-      return &g_type_int;
+      return pass2_cache_expr(state, node, &g_type_int, NULL, SEM_VALUE_RVALUE, SEM_NODE_CONST_EXPR);
     case NODE_FLOAT:
-      return &g_type_double;
+      return pass2_cache_expr(state, node, &g_type_double, NULL, SEM_VALUE_RVALUE, SEM_NODE_CONST_EXPR);
     case NODE_STRING:
-      return &g_type_string;
+      return pass2_cache_expr(state, node, &g_type_string, NULL, SEM_VALUE_ADDRESS, SEM_NODE_CONST_EXPR | SEM_NODE_ADDR_TAKEN);
     case NODE_IDENTIFIER:
       if (node->p_firstChild) {
         return infer_expr_type(node->p_firstChild, state);
       }
-      return lookup_identifier_type(node->nodeData.sVal, node->lineNumber, state);
+      if (node->nodeData.sVal) {
+        symbol_t *symbol = lookup_identifier_symbol(node->nodeData.sVal, node->lineNumber, state);
+        if (!symbol || !symbol->type) {
+          pass2_emit(state, "SEM001", node->lineNumber, "unknown identifier");
+          return &g_type_invalid;
+        }
+        return pass2_cache_expr(state,
+                                node,
+                                symbol->type,
+                                symbol,
+                                pass2_decl_value_kind(symbol->kind),
+                                symbol->kind == SYMBOL_ENUM_CONST ? SEM_NODE_CONST_EXPR : 0u);
+      }
+      return &g_type_invalid;
     case NODE_FUNCTION_CALL:
       state->result.expression_count++;
-      return infer_call_type(node, state);
+      {
+        const type_t *call_type = infer_call_type(node, state);
+        symbol_t *callee_symbol = NULL;
+        TreeNode_t *callee_expr = node->p_firstChild;
+        const sem_node_info_t *callee_info = callee_expr ? pass2_get_node_info(state, callee_expr) : NULL;
+        if (callee_info) {
+          callee_symbol = callee_info->symbol;
+        }
+        return pass2_cache_expr(state, node, call_type, callee_symbol, SEM_VALUE_RVALUE, 0u);
+      }
     case NODE_OPERATOR:
       state->result.expression_count++;
-      return infer_operator_type(node, state);
+      return pass2_cache_expr(state, node, infer_operator_type(node, state), NULL, SEM_VALUE_RVALUE, 0u);
     case NODE_ARRAY_ACCESS:
       if (node->p_firstChild) {
         const type_t *base = infer_expr_type(node->p_firstChild, state);
@@ -1649,18 +1728,17 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
 
         /* 4. Return the underlying type if it's valid */
         if (base->kind == TYPE_ARRAY && base->as.array.elem) {
-          return base->as.array.elem;
+          return pass2_cache_expr(state, node, base->as.array.elem, NULL, SEM_VALUE_LVALUE, 0u);
         }
         if (base->kind == TYPE_POINTER && base->as.pointer.base) {
-          return base->as.pointer.base;
+          return pass2_cache_expr(state, node, base->as.pointer.base, NULL, SEM_VALUE_LVALUE, 0u);
         }
       }
       return &g_type_invalid;
     case NODE_REFERENCE:
       if (node->p_firstChild) {
         const type_t *base_type = infer_expr_type(node->p_firstChild, state);
-        type_t *base_copy;
-        type_t *ref_type;
+        const type_t *ref_type;
 
         if (base_type->kind == TYPE_INVALID) {
           return &g_type_invalid;
@@ -1676,21 +1754,13 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
             return &g_type_invalid;
           }
 
-
-        base_copy = type_clone(base_type);
-        if (!base_copy) {
-          pass2_emit(state, "SEM900", node->lineNumber, "failed to clone reference operand type");
-          return &g_type_invalid;
-        }
-
-        ref_type = type_new_pointer(base_copy, 0u);
+        ref_type = type_new_pointer(&state->ctx->type_context, base_type, 0u);
         if (!ref_type) {
-          type_free(base_copy);
           pass2_emit(state, "SEM900", node->lineNumber, "failed to build reference type");
           return &g_type_invalid;
         }
 
-        return remember_temporary_type(state, ref_type);
+        return pass2_cache_expr(state, node, ref_type, NULL, SEM_VALUE_ADDRESS, SEM_NODE_ADDR_TAKEN);
       }
       return &g_type_invalid;
     case NODE_POINTER_CONTENT:
@@ -1700,7 +1770,7 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
             return &g_type_invalid;
         }
         if (ptr_type->kind == TYPE_POINTER && ptr_type->as.pointer.base) {
-          return ptr_type->as.pointer.base;
+          return pass2_cache_expr(state, node, ptr_type->as.pointer.base, NULL, SEM_VALUE_LVALUE, 0u);
         }
         else if(ptr_type->kind != TYPE_POINTER){
           pass2_emit(state, "SEM030", node->lineNumber, "The operator * requires an operand of type pointer.");
@@ -1710,7 +1780,7 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
     case NODE_TYPE_CAST:
       if (node->p_firstChild) {
         unsigned qualifiers = semantic_ast_collect_qualifiers_from_chain(node->p_firstChild);
-        type_t *cast_type = semantic_ast_build_type_from_type_node(node->p_firstChild, qualifiers);
+        const type_t *cast_type = semantic_ast_build_type_from_type_node(&state->ctx->type_context, node->p_firstChild, qualifiers);
         const type_t *source_type = &g_type_invalid;
         if (node->p_firstChild->p_sibling) {
           source_type = infer_expr_type(node->p_firstChild->p_sibling, state);
@@ -1733,7 +1803,7 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
             warns_on_const_dropping_cast(cast_type, source_type)) {
           pass2_warning(state, "SEMW003", node->lineNumber, "explicit cast removes const qualifier");
         }
-        return remember_temporary_type(state, cast_type);
+        return pass2_cache_expr(state, node, cast_type, NULL, SEM_VALUE_RVALUE, 0u);
       }
       return &g_type_invalid;
     case NODE_POST_INC:
@@ -1743,22 +1813,12 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
       if (node->p_firstChild) {
         const type_t *operand_type = infer_expr_type(node->p_firstChild, state);
         if (operand_type->kind != TYPE_INVALID) {
-          /* Verify that the operand is a modifiable object. */
-          if (operand_type->qualifiers & TYPE_QUAL_CONST) {
-            pass2_emit(state, "SEM009", node->lineNumber, "Increment/decrement of a const object");
-          } else if (!(
-              node->p_firstChild->nodeType == NODE_IDENTIFIER ||
-              node->p_firstChild->nodeType == NODE_ARRAY_ACCESS ||
-              node->p_firstChild->nodeType == NODE_POINTER_CONTENT ||
-              node->p_firstChild->nodeType == NODE_MEMBER_ACCESS ||
-              node->p_firstChild->nodeType == NODE_PTR_MEMBER_ACCESS
-          )) { //Checking if the first operand is a non-modifiable lvalue
+          if (!pass2_is_lvalue_kind(pass2_get_node_info(state, node->p_firstChild))) {
             pass2_emit(state, "SEM028", node->lineNumber, "Increment/decrement requires modifiable lvalue");
-          }
-          else if (operand_type->qualifiers & TYPE_QUAL_CONST) { //Verify if the operand is the const qualifier
+          } else if ((operand_type->qualifiers & TYPE_QUAL_CONST) != 0u) {
             pass2_emit(state, "SEM009", node->lineNumber, "Increment/decrement of a const object");
           }
-          return operand_type;
+          return pass2_cache_expr(state, node, operand_type, NULL, SEM_VALUE_RVALUE, 0u);
         }
         return &g_type_invalid;
       }
@@ -1783,10 +1843,10 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
         }
         //If the true and false types are compatible, return the more general type (e.g., int for char vs int)
         if (assignment_compatible(true_type, false_type)) {
-          return true_type;
+          return pass2_cache_expr(state, node, true_type, NULL, SEM_VALUE_RVALUE, 0u);
         }
         if (assignment_compatible(false_type, true_type)) {
-          return false_type;
+          return pass2_cache_expr(state, node, false_type, NULL, SEM_VALUE_RVALUE, 0u);
         }
         // 2. SEM026: If neither is compatible with the other, emit error and return invalid
         pass2_emit(state, "SEM026", node->lineNumber, "Incompatible types in ternary operator");
@@ -1815,8 +1875,9 @@ static const type_t *infer_expr_type(TreeNode_t *node, pass2_state_t *state)
 static void register_local_decl(TreeNode_t *decl_node, pass2_state_t *state, symbol_kind_t kind)
 {
   scope_t *scope;
-  type_t *decl_type;
+  const type_t *decl_type;
   symbol_t *symbol;
+  sem_node_info_t info;
 
   if (!decl_node || !decl_node->nodeData.sVal || !state) {
     return;
@@ -1827,17 +1888,23 @@ static void register_local_decl(TreeNode_t *decl_node, pass2_state_t *state, sym
     return;
   }
 
-  if (symbol_lookup_current(scope, decl_node->nodeData.sVal)) {
+  symbol = symbol_lookup_current(scope, decl_node->nodeData.sVal);
+  if (symbol) {
+    info.type = symbol->type;
+    info.symbol = symbol;
+    info.value_kind = pass2_decl_value_kind(kind);
+    info.flags = symbol->type ? SEM_NODE_TYPED : 0u;
+    (void)semantic_set_node_info(state->ctx, decl_node, &info);
     return;
   }
 
-  decl_type = semantic_ast_build_type_from_declaration(decl_node);
+  decl_type = semantic_ast_build_type_from_declaration(&state->ctx->type_context, decl_node);
   if (!decl_type) {
     pass2_emit(state, "SEM900", decl_node->lineNumber, "failed to build declaration type");
     return;
   }
 
-  symbol = symbol_new(decl_node->nodeData.sVal, kind, decl_type, decl_node->lineNumber, 0u);
+  symbol = symbol_new(&state->ctx->persistent_arena, decl_node->nodeData.sVal, kind, decl_type, decl_node->lineNumber, 0u);
   if (!symbol) {
     type_free(decl_type);
     pass2_emit(state, "SEM900", decl_node->lineNumber, "failed to allocate symbol");
@@ -1846,7 +1913,14 @@ static void register_local_decl(TreeNode_t *decl_node, pass2_state_t *state, sym
 
   if (symbol_insert(scope, symbol) < 0) {
     symbol_free(symbol);
+    return;
   }
+
+  info.type = symbol->type;
+  info.symbol = symbol;
+  info.value_kind = pass2_decl_value_kind(kind);
+  info.flags = symbol->type ? SEM_NODE_TYPED : 0u;
+  (void)semantic_set_node_info(state->ctx, decl_node, &info);
 }
 
 static int walk_pass2(TreeNode_t *node, pass2_state_t *state);
@@ -1922,6 +1996,7 @@ static int handle_function_node(TreeNode_t *fn_node, pass2_state_t *state)
     return -EINVAL;
   }
 
+  sem_arena_reset(&state->ctx->scratch_arena);
   state->current_return_type = prev_return_type;
   state->in_function = prev_in_function;
   return 0;
@@ -2048,6 +2123,8 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
                it->nodeType == NODE_UNION_DECLARATION ||
                it->nodeType == NODE_ENUM_DECLARATION) {
       register_tag_declaration(it, state);
+      it = it->p_sibling;
+      continue;
     } else if (it->nodeType == NODE_WHILE) {
       int rc;
       TreeNode_t *w_cond = it->p_firstChild;
@@ -2162,6 +2239,8 @@ static int walk_pass2(TreeNode_t *node, pass2_state_t *state)
       continue;
     } else if (it->nodeType == NODE_VAR_DECLARATION || it->nodeType == NODE_ARRAY_DECLARATION) {
       register_local_decl(it, state, SYMBOL_OBJECT);
+      it = it->p_sibling;
+      continue;
     } else if (it->nodeType == NODE_BREAK) {
       state->result.statement_count++;
       if (state->loop_depth == 0u && state->switch_depth == 0u) {
@@ -2259,7 +2338,6 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
   if (root) {
     rc = walk_pass2(root, &state);
     if (rc < 0) {
-      release_temporary_types(&state);
       *out_result = state.result;
       return rc;
     }
@@ -2269,7 +2347,7 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
     (void)scope_pop(&ctx->scope_stack);
   }
 
-  release_temporary_types(&state);
+  sem_arena_reset(&ctx->scratch_arena);
   *out_result = state.result;
   return 0;
 }
@@ -2333,4 +2411,3 @@ int semantic_pass2_run(TreeNode_t *root, semantic_context_t *ctx, semantic_pass2
   SEM070/71/72: estão relacionados com as capacidades do processador, para já tratamos apenas
   das regras semánticas da linguagem ISO C11 
  */
-
