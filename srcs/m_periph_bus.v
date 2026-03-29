@@ -224,7 +224,7 @@ assign _int_cause[6] = 1'b0;
         .i_sel(_sel_irq),
         .i_we(i_we),
         .i_re(i_re),
-        .i_wdata(i_wdata),
+        .i_wdata(i_wdata[7:0]),
         .o_rdata(_irq_rdata),
         .i_addr(i_addr[3:1]),
         .o_rdy(_irq_rdy),

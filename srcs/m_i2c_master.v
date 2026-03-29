@@ -24,7 +24,7 @@ module i2c_master(
     input wire i_en,                // Module enable; transaction won't start if low
     input wire i_start,             // Pulse high to begin a transaction
     input wire i_rw,                // 0 = Write to peripheral, 1 = Read from peripheral
-    input wire [7:0] i_addr7,       // 7-bit peripheral address (bits [7:1] used, bit 0 ignored)
+    input wire [6:0] i_addr7,       // 7-bit peripheral address (bits [7:1] used, bit 0 ignored)
     input wire [7:0] i_len,         // Number of data bytes to transfer (excluding address byte)
     input wire [15:0] i_divider,    // SCL period = i_divider * i_clk cycles (per FSM step)
     input wire i_tx_push,           // Pulse high to push one byte into TX FIFO

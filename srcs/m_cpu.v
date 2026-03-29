@@ -230,14 +230,9 @@
         wire _mem_valid;            // Instruction has completed MEM and is ready for WB
         wire [3:0] _mem_rd;
         wire _mem_rf_we;
-        wire [15:0] _mem_wb_data;   // Final writeback value (load result or ALU result)
+        wire [15:0] _mem_alu_data;   // Final writeback value (load result or ALU result)
 
-    
-        // ---- WB stage outputs ----
-        wire _wb_rf_we;
-        wire [3:0] _wb_wa;
-        wire [15:0] _wb_wd;
-    
+      
     /*************************************************************************************
      * SECTION 2. IMPLEMENTATION
      ************************************************************************************/
@@ -271,11 +266,23 @@
         assign o_lw   = _mem_lw;
         assign o_lb   = _mem_lb;
         assign o_data_out = _mem_data_out;
+        
+        //was changed to break combinational loop
+        reg _iret_event_r;
+
+        always @(posedge i_clk) begin
+            if (i_rst)
+                _iret_event_r <= 1'b0;
+            else
+                _iret_event_r <= _iret_event;
+        end
+        
+        assign o_iret_detected = _iret_event_r;
+        //assign o_iret_detected  = _iret_event;
     
         // Status outputs to the interrupt controller
         assign o_br_taken       = _branch_take_commit;
         assign o_in_irq         = _in_irq;
-        assign o_iret_detected  = _iret_event;
         // Interrupts are globally enabled only when: instruction memory has a hit,
         // GIE is set, and no IRQ-interlocked instruction is in ID.
         assign o_int_en = i_hit & _gie & ~(_id_valid & _id_irq_interlock);
@@ -283,9 +290,9 @@
         // Register-file write port arbitration:
         // On IRQ accept, override WB to save PC-2 (the instruction that was about to execute)
         // into register R14 (the link register / return address).
-        assign _rf_we = _accept_irq | _wb_rf_we;
-        assign _rf_wa = _accept_irq ? 4'hE          : _wb_wa;
-        assign _rf_wd = _accept_irq ? (_pc - 16'h0002) : _wb_wd;
+        assign _rf_we = _accept_irq | (_mem_valid & _mem_rf_we);
+        assign _rf_wa = _accept_irq ? 4'hE          : _mem_rd;
+        assign _rf_wd = _accept_irq ? (_pc - 16'h0002) : _mem_alu_data;
     
     /*************************************************************************************
      * 2.2 IF Stage + IF/ID Register
@@ -625,14 +632,9 @@
             .o_valid(_mem_valid),
             .o_rd(_mem_rd),
             .o_rf_we(_mem_rf_we),
-            .o_wb_data(_mem_wb_data)
+            .o_data(_mem_alu_data)
         );
-        
-    // Register file writeback - driven directly from MEM stage
-    assign _wb_rf_we   = _mem_valid & _mem_rf_we;
-    assign _wb_wa      = _mem_rd;
-    assign _wb_wd      = _mem_wb_data;
-    
+          
     
     /*************************************************************************************
      * 2.8 PC and Global State Updates

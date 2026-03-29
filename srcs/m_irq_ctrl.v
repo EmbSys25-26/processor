@@ -18,7 +18,7 @@ module irq_ctrl(
     input wire i_sel,
     input wire i_we,                // Write Enable on IRQ
     input wire i_re,                // Read Enable on IRQ
-    input wire [15:0] i_wdata,      // Data to Write
+    input wire [7:0] i_wdata,      // Data to Write
     output wire [15:0] o_rdata,     // Data to Read
     input wire [2:0] i_addr,        // Data Address to access
     output wire o_rdy,              // Feedback Signal
@@ -251,8 +251,8 @@ module irq_ctrl(
         // Write to IRQ SFRs
         if (i_sel && i_we) begin
             case (i_addr)
-                IRQ_FORCE: _pending_next = _pending_next | i_wdata[7:0];     // Enable pending interrupt source(s)
-                IRQ_CLEAR: _pending_next = _pending_next & ~i_wdata[7:0];    // Deactivate interrupt source(s)
+                IRQ_FORCE: _pending_next = _pending_next | i_wdata;     // Enable pending interrupt source(s)
+                IRQ_CLEAR: _pending_next = _pending_next & ~i_wdata;    // Deactivate interrupt source(s)
                 default: ;
             endcase
         end
@@ -316,7 +316,7 @@ module irq_ctrl(
         if (i_rst) begin
             _mask <= 8'hFF;
         end else if (i_sel && i_we && (i_addr == IRQ_MASK)) begin
-            _mask <= i_wdata[7:0];
+            _mask <= i_wdata;
         end
     end
 

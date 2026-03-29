@@ -104,8 +104,8 @@ module ctrl_unit(
     output wire o_writes_rd,
     output wire o_is_load,
     output wire o_is_store,
-    output wire o_uses_cc,
-    output wire o_uses_carry,
+    //output wire o_uses_cc,
+    //output wire o_uses_carry,
     output wire o_updates_cc,
     output wire o_irq_interlock
 );
@@ -283,8 +283,8 @@ module ctrl_unit(
     assign o_is_load   = _is_lw | _is_lb;
     assign o_is_store  = _is_sw | _is_sb;
 
-    assign o_uses_cc      = _is_bx;
-    assign o_uses_carry   = _is_alu & (_is_adc | _is_sbc);
+    //assign o_uses_cc      = _is_bx;
+    //assign o_uses_carry   = _is_alu & (_is_adc | _is_sbc);
     // An instruction updates CCs if it performs arithmetic (sum/cmp group) or ADDI or SETCC
     assign o_updates_cc   = ((_is_alu & (_is_sum | _is_cmp)) | _is_addi | _is_setcc);
     assign o_irq_interlock = _interlocked_insns;

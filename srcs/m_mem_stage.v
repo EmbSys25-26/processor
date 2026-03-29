@@ -17,11 +17,11 @@
 //       the instruction retires (o_valid = 1) and the load data is
 //       selected as the writeback value.
 //   - If no memory operation: the instruction passes straight through
-//       (o_mem_wait = 0, o_valid = i_valid, o_wb_data = i_wb_pre_data).
+//       (o_mem_wait = 0, o_valid = i_valid, o_data = i_wb_pre_data).
 //
 // Writeback data selection:
-//   Loads: o_wb_data = i_data_in (data received from memory)
-//   Others: o_wb_data = i_wb_pre_data (ALU result from EX stage)
+//   Loads: o_data = i_data_in (data received from memory)
+//   Others: o_data = i_wb_pre_data (ALU result from EX stage)
 
 // ============================================================
 module mem_stage(
@@ -50,7 +50,7 @@ module mem_stage(
     output wire o_valid,                // Instruction has retired from MEM
     output wire [3:0] o_rd,
     output wire o_rf_we,
-    output wire [15:0] o_wb_data       // Final writeback value (load result or ALU result)
+    output wire [15:0] o_data       // Final writeback value (load result or ALU result)
 );
 
 /*************************************************************************************
@@ -95,7 +95,7 @@ module mem_stage(
     assign o_rd      = i_rd;
     assign o_rf_we   = i_rf_we;
     // Select final writeback data: load instructions get memory data, others get ALU result
-    assign o_wb_data = i_is_load ? i_data_in : i_wb_pre_data;
+    assign o_data = i_is_load ? i_data_in : i_wb_pre_data;
 
 
 endmodule
