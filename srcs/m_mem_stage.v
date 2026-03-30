@@ -57,7 +57,7 @@ module mem_stage(
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
 
-    wire _is_mem_op;    // 1 if the instruction accesses data memory
+    (* mark_debug = "true" *) wire _is_mem_op;    // 1 if the instruction accesses data memory
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION

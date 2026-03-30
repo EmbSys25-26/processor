@@ -43,7 +43,7 @@
 // ============================================================
 module hazard_unit(
     // ---- Instruction in ID ----
-    input wire i_id_valid,
+    (* mark_debug = "true" *) input wire i_id_valid,
     input wire [3:0] i_id_rd,          // Rd field of instruction in ID
     input wire [3:0] i_id_rs,          // Rs field
     input wire i_id_reads_rd,          // Instruction reads Rd as a source
@@ -74,7 +74,7 @@ module hazard_unit(
 
     // Register address match: ID instruction reads a register that a downstream
     // stage is about to write
-    wire _match_idex;
+    (* mark_debug = "true" *) wire _match_idex;
 
     // Hazard type flags
     (* mark_debug = "true" *) wire _load_use_hazard;  // Load-use subset of RAW (extra stall cycle needed)

@@ -69,7 +69,16 @@ module if_stage(
 
     // Output is valid only when: instruction memory has a hit AND there are
     // no outstanding flush bubbles still being drained.
-    assign o_valid = i_hit & (_flush_bubble == 2'd0);
+    reg o_valid_r;
+
+    always @(posedge i_clk) begin
+        if (i_rst)
+            o_valid_r <= 1'b0;
+        else if (!i_stall)
+            o_valid_r <= i_hit & (_flush_bubble == 2'd0);
+    end
+    
+    assign o_valid = o_valid_r;
 
     // Pass the instruction word with validation
     // If insn is not valid, a bubble (NOP) is inserted

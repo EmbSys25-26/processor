@@ -45,8 +45,8 @@ module soc(
     (* mark_debug = "true" *) wire [15:0] _imem_dout;
     wire _imem_invalid;
 
-    reg _loaded;
-    wire _mem_rdy;
+    (* mark_debug = "true" *) reg _loaded;
+    (* mark_debug = "true" *) wire _mem_rdy;
 
     wire _is_io;
     wire _byte_lane;
@@ -64,7 +64,7 @@ module soc(
     wire [15:0] _io_rdata;
     wire _io_rdy;
 
-    wire _rdy;
+    (* mark_debug = "true" *) wire _rdy;
     wire _wdt_rst_req; 
     wire _irq_take;
     wire [15:0] _irq_vector;
@@ -102,10 +102,19 @@ module soc(
 /*************************************************************************************
  * 2.3 Load Ready Tracking
  ************************************************************************************/
+    reg _insn_ce_r;
+    //RECENTLY ADDED
+    always @(posedge i_clk) begin
+        if (i_rst)
+            _insn_ce_r <= 1'b0;
+        else
+            _insn_ce_r <= _insn_ce;
+    end
+    
     always @(posedge i_clk) begin
         if (i_rst) begin
             _loaded <= 1'b0;
-        end else if (_insn_ce) begin
+        end else if (_insn_ce_r) begin
             _loaded <= 1'b0;
         end else begin
             _loaded <= (_lw | _lb);
