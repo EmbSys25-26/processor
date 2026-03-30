@@ -62,7 +62,7 @@ module hazard_unit(
     // ---- Control outputs ----
     output wire o_stall_if,
     output wire o_stall_id,
-    output wire o_stall_ex,
+    (* mark_debug = "true" *) output wire o_stall_ex,
     output wire o_flush_ifid,
     output wire o_flush_idex,
     output wire o_accept_irq
@@ -77,9 +77,9 @@ module hazard_unit(
     wire _match_idex;
 
     // Hazard type flags
-    wire _load_use_hazard;  // Load-use subset of RAW (extra stall cycle needed)
+    (* mark_debug = "true" *) wire _load_use_hazard;  // Load-use subset of RAW (extra stall cycle needed)
 
-    wire _decode_hazard;    // Any hazard that requires stalling the decode stage
+    (* mark_debug = "true" *) wire _decode_hazard;    // Any hazard that requires stalling the decode stage
 
     wire _accept_irq;       // Internal IRQ accept signal
 

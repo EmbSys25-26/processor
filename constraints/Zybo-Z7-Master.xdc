@@ -31,3 +31,12 @@ set_property PACKAGE_PIN K14 [get_ports io_i2c_scl]
 set_property IOSTANDARD LVCMOS33 [get_ports io_i2c_scl]
 set_property PULLTYPE PULLUP [get_ports io_i2c_scl]
 
+set_input_delay -clock sys_clk_pin 5.000 [get_ports {i_par_i[*]}]
+set_input_delay -clock sys_clk_pin 5.000 [get_ports i_uart_rx]
+set_input_delay -clock sys_clk_pin 5.000 [get_ports i_rst]
+set_input_delay -clock sys_clk_pin 5.000 [get_ports io_i2c_sda]
+set_output_delay -clock sys_clk_pin 5.000 [get_ports {o_par_o[*]}]
+set_output_delay -clock sys_clk_pin 5.000 [get_ports o_uart_tx]
+set_output_delay -clock sys_clk_pin 5.000 [get_ports io_i2c_scl]
+set_output_delay -clock sys_clk_pin 5.000 [get_ports io_i2c_sda]
+

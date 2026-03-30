@@ -38,8 +38,8 @@
 // ============================================================
 module id_stage(
     input wire i_valid,                 // Instruction in IF/ID is valid
-    input wire [15:0] i_pc,             // PC of the instruction
-    input wire [15:0] i_insn,           // Raw instruction word
+    (* mark_debug = "true" *) input wire [15:0] i_pc,             // PC of the instruction
+    (* mark_debug = "true" *) input wire [15:0] i_insn,           // Raw instruction word
     input wire [15:0] i_rd_data,        // Register-file read data for Rd
     input wire [15:0] i_rs_data,        // Register-file read data for Rs
     input wire i_imm_pre_state,         // 1 if previous instruction was IMM prefix
@@ -70,8 +70,8 @@ module id_stage(
     output wire o_irq_interlock,        // Prevent IRQ accept while this insn is in ID
 
     output wire o_rf_we,
-    output wire o_lw,
-    output wire o_lb,
+    (* mark_debug = "true" *) output wire o_lw,
+    (* mark_debug = "true" *) output wire o_lb,
     output wire o_sw,
     output wire o_sb,
     output wire o_is_jal,

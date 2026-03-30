@@ -45,7 +45,7 @@
 // ============================================================
 module ex_stage(
     input wire i_valid,
-    input wire [15:0] i_pc_dbg,
+    (* mark_debug = "true" *) input wire [15:0] i_pc_dbg,
     input wire [3:0] i_rd,
     input wire [15:0] i_rd_data,    // Register-file value of Rd
     input wire [15:0] i_rs_data,    // Register-file value of Rs

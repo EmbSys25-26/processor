@@ -38,9 +38,9 @@ module mem_stage(
     input wire i_is_load,
     input wire [15:0] i_data_in,        // Load data returned by data memory
     input wire i_rdy,                   // Data memory ready (load/store complete)
-    input wire [15:0] i_pc_dbg,
+    (* mark_debug = "true" *) input wire [15:0] i_pc_dbg,
 
-    output wire o_mem_wait,             // 1 = pipeline stall: waiting for memory
+    (* mark_debug = "true" *) output wire o_mem_wait,             // 1 = pipeline stall: waiting for memory
     output wire o_sw,
     output wire o_sb,
     output wire o_lw,

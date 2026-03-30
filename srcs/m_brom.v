@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+
 module brom_1kb_be(
     input wire i_clk,
     input wire i_rst,

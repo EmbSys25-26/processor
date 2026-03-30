@@ -37,15 +37,15 @@ module if_stage(
     input wire i_clk,
     input wire i_rst,
     input wire i_hit,                   // Instruction memory hit (instruction is valid)
-    input wire i_stall,                 // Stall request from the hazard unit
+    (* mark_debug = "true" *) input wire i_stall,                 // Stall request from the hazard unit
     input wire i_flush,                 // Flush request (branch taken or IRQ accepted)
     input wire [15:0] i_flush_pc,       // PC to redirect to after flush
     input wire [15:0] i_pc,             // Current PC (from the top-level PC register)
     input wire [15:0] i_insn,           // Instruction word returned by instruction memory
     output wire o_insn_ce,              // Chip-enable to instruction memory
     output wire o_valid,                // Instruction at output is valid
-    output reg [15:0] o_pc,             // PC associated with the current instruction
-    output wire [15:0] o_insn           // Instruction word passed to IF/ID register
+    (* mark_debug = "true" *) output reg [15:0] o_pc,             // PC associated with the current instruction
+    (* mark_debug = "true" *) output wire [15:0] o_insn           // Instruction word passed to IF/ID register
 );
 
 /*************************************************************************************
@@ -58,7 +58,7 @@ module if_stage(
     // Counter for post-flush bubble cycles (flush bad inflight instructions)
     // After a flush, 1 bubble slot must be injected to drain the pipeline
     // before a valid instruction from the new PC can appear.
-    reg [1:0]_flush_bubble;    // Counts down from 1 to 0 after a flush
+    (* mark_debug = "true" *) reg [1:0]_flush_bubble;    // Counts down from 1 to 0 after a flush
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION

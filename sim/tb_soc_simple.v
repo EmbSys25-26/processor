@@ -37,7 +37,7 @@ module tb_soc_simple;
     endtask
 
     initial begin
-        wait_clocks(5);
+        wait_clocks(12);
         _rst = 1'b0;
     end
 

@@ -712,7 +712,7 @@
         
         // Udpate condition codes combinationally so that there is no need for CC hazard stall 
         // Check is performed during EX stage
-        always @(*) begin
+        always @(posedge i_clk) begin
             _c   = 1'b0;
             _ccz = 1'b0;
             _ccn = 1'b0;

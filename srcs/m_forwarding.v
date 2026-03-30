@@ -13,8 +13,8 @@ module m_forwarding (
 	input wire i_validM,
 
     // Forwarding Multiplexer Control Outputs
-	output wire o_ForwardAE,  // Selector for ALU input A
-	output wire o_ForwardBE   // Selector for ALU input B
+	(* mark_debug = "true" *) output wire o_ForwardAE,  // Selector for ALU input A
+	(* mark_debug = "true" *) output wire o_ForwardBE   // Selector for ALU input B
 );
 
 assign o_ForwardAE = (i_rdE != 4'h0) && (i_rdE == i_WriteRegM) && i_RegWriteM && i_validM;
