@@ -2,6 +2,8 @@
 
 Date: 2026-03-07
 
+Update #1: 2026-04-05 (Update for Low GIMPLE-like notation)
+
 ## 1. Objective
 Define a complete and stable contract from typed AST to backend-facing IR.
 The IR must be explicit enough for:
@@ -23,7 +25,7 @@ Lowering requires these guarantees on AST:
 4. Unsupported features are explicitly marked and must trigger deterministic lowering errors.
 
 ## 4. IR design choice
-This contract uses a typed three-address CFG IR with virtual registers.
+This contract uses a typed three-address CFG IR with virtual registers. It follows a Low GIMPLE style.
 
 ## 4.1 Core properties
 1. Function-level control-flow graph (basic blocks + terminators).
@@ -33,10 +35,10 @@ This contract uses a typed three-address CFG IR with virtual registers.
 5. Types are explicit per instruction/result.
 
 ## 4.2 Naming conventions
-1. Virtual registers: `%v<number>`.
-2. Basic blocks: `bb<number>`.
-3. Globals: `@name`.
-4. Stack slots: `%slot<number>`.
+1. Virtual registers: `%v<number>`  (all temporaries and named locals use this namespace)
+2. Basic blocks: `bb<number>`
+3. Globals: `@name`
+4. Constants: inline literals written directly in instructions; not a named entity
 
 ## 5. IR type system
 Minimum IR primitive types:
@@ -63,7 +65,7 @@ Contains:
 ## 6.2 Function
 Contains:
 1. Signature: name, return type, params.
-2. Local symbol-to-slot map.
+2. Local symbol table mapping identifiers to their virtual register or address.
 3. Ordered basic blocks.
 
 ## 6.3 Basic block
@@ -75,37 +77,59 @@ Contains:
 ## 7. Instruction set (frontend IR)
 
 ## 7.1 Constants and moves
-1. `const <type> <imm> -> %vdst`
-2. `mov <type> %vsrc -> %vdst`
+1. `%vdst = <imm>`                         (constant: inline literal assigned to a virtual register)
+2. `%vdst = %vsrc`                         (copy/move)
 
 ## 7.2 Arithmetic and bitwise
-1. `add/sub/mul/div/mod <type> %a, %b -> %vdst`
-2. `and/or/xor <type> %a, %b -> %vdst`
-3. `shl/shr_l/shr_a <type> %a, %b -> %vdst`
-4. `neg/not <type> %a -> %vdst`
+1. `%vdst = %a + %b`  /  `%a - %b`  /  `%a * %b`  /  `%a /s %b`  /  `%a /u %b`  /  `%a %s %b`  /  `%a %u %b`
+2. `%vdst = %a & %b`  /  `%a | %b`  /  `%a ^ %b`
+3. `%vdst = %a << %b`  /  `%a >>u %b`  /  `%a >>s %b`    (logical / arithmetic shift)
+4. `%vdst = -%a`  /  `~%a`                 (unary neg / bitwise not)
+
+All arithmetic is typed by the operands; type annotation on the instruction
+is optional in text form but required in the in-memory IR node.
+
+The `s`/`u` suffix on `div` and `mod` is mandatory. Signed and unsigned division
+produce different results and the backend must know which to emit. Shifts follow
+the same convention: `>>u` is logical, `>>s` is arithmetic.
 
 ## 7.3 Comparisons and predicates
-1. `cmp_eq/cmp_ne/cmp_lt/cmp_le/cmp_gt/cmp_ge <type> %a, %b -> %pdst(i1)`
+1. `%pdst:i1 = %a == %b`
+2. `%pdst:i1 = %a != %b`
+3. `%pdst:i1 = %a <s %b`   (signed less-than; use `<u` for unsigned)
+4. `%pdst:i1 = %a <=s %b`
+5. `%pdst:i1 = %a >s %b`
+6. `%pdst:i1 = %a >=s %b`
+
+Signed comparisons are the default. Append `u` suffix for unsigned variants.
+The suffix convention mirrors section 7.2 for consistency.
 
 ## 7.4 Memory
-1. `addr_of <symbol_or_slot> -> %ptr`
-2. `load <type> %ptr -> %vdst`
-3. `store <type> %vsrc, %ptr`
-4. `gep <base_ptr>, <index>, <elem_size> -> %ptr` (or equivalent offset op)
+1. `%ptr = addr_of <symbol>`               (take address of a named local or global)
+2. `%vdst = *%ptr`                         (load)
+3. `*%ptr = %vsrc`                         (store)
+4. `%ptr2 = %base + %idx * <elem_size>`    (address arithmetic / GEP)
 
-## 7.5 Cast/conversion
-1. `zext/sext/trunc <from,to> %src -> %vdst`
-2. `bitcast <from,to> %src -> %vdst` (only when semantically legal)
+## 7.5 Cast / conversion
+1. `%vdst = (zext <to>) %src`              (zero-extend; use for unsigned values)
+2. `%vdst = (sext <to>) %src`             (sign-extend; use for signed values)
+3. `%vdst = (trunc <to>) %src`
+4. `%vdst = (bitcast <to>) %src`          (only when semantically legal)
 
-## 7.6 Control flow
-1. `br bbX` (unconditional)
-2. `cbr %pred, bbTrue, bbFalse`
+## 7.6 Control flow (terminators)
+1. `goto bbX`
+2. `if %pred goto bbTrue else goto bbFalse`
 3. `ret void`
-4. `ret <type> %v`
+4. `ret %v`
 
 ## 7.7 Calls
-1. `call <ret_type> @func(<arg list>) -> %vdst?`
-2. `call void @func(<arg list>)`
+Inline argument list; argument order in IR matches source order.
+ABI push ordering (right-to-left for C convention) is the backend's
+responsibility, not the IR's.
+
+1. `%vdst = @func(%arg0, %arg1, ...)`      (function with return value)
+2. `@func(%arg0, %arg1, ...)`              (void function)
+3. `@func()`                               (no arguments)
 
 ## 8. AST-to-IR lowering contract
 
@@ -115,23 +139,23 @@ Contains:
 3. Every statement lowering returns current block tail and may create new blocks.
 
 ## 8.2 Expression lowering
-1. Literals -> `const`.
-2. Identifier read -> `load` from symbol address/slot unless held in current SSA-like map.
+1. Literals → inline immediate assigned to a fresh virtual register.
+2. Identifier read → `load` from symbol address unless already held in a virtual register.
 3. Assignment:
-- lower RHS,
-- compute LHS address,
-- `store`,
-- result value is assigned value (C semantics).
+   - lower RHS,
+   - compute LHS address via `addr_of`,
+   - `store`,
+   - result value is the assigned value (C semantics).
 4. Pre/post inc/dec:
-- compute address,
-- load old,
-- add/sub 1,
-- store new,
-- return old/new per pre/post form.
+   - compute address,
+   - load old value,
+   - add/sub 1,
+   - store new value,
+   - return old or new per pre/post form.
 5. Ternary:
-- lower condition to predicate,
-- branch to true/false blocks,
-- merge with value move strategy (phi-like handling can be explicit pseudo-phi or temporary slot if SSA is not yet implemented).
+   - lower condition to predicate,
+   - branch to true/false blocks,
+   - merge with value move strategy (explicit pseudo-phi or address-based merge if SSA is not yet implemented).
 
 ## 8.3 Statement lowering
 1. `if/else`: create branch and merge blocks.
@@ -144,11 +168,12 @@ Contains:
 
 ## 8.4 Function lowering
 1. Create entry block.
-2. Allocate stack slots for locals and spilled temporaries representation metadata.
-3. Bind params to symbols.
+2. Allocate entries in the local symbol table for all locals; each entry records
+   the symbol name and its assigned virtual register or address.
+3. Bind params to virtual registers in the local symbol table.
 4. Ensure all paths end with terminator; inject default return only when legal.
 
-## 9. Backend interface contract
+## 9. Next Step - Backend interface contract
 
 ## 9.1 Calling convention mapping (from abi.m4)
 Target register ABI mapping:
@@ -202,8 +227,8 @@ Minimum example:
 module main_mod
 func @sum(i16 %a, i16 %b) -> i16 {
 bb0:
-  %v1 = add i16 %a, %b
-  ret i16 %v1
+  %v1 = %a + %b
+  ret %v1
 }
 ```
 
@@ -218,7 +243,7 @@ Examples:
 1. `IR001`: unsupported node for lowering.
 2. `IR002`: missing symbol binding on identifier.
 3. `IR003`: type mismatch after semantic stage (internal contract violation).
-4. `IR004`: unresolved control target (`break/continue`) in lowering context.
+4. `IR004`: unresolved control target (`break`/`continue`) in lowering context.
 
 ## 14. Validation obligations
 Lowering implementation must include tests for:
