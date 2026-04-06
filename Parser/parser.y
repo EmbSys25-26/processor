@@ -1634,8 +1634,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    yyin = f;  // diz ao flex para ler deste ficheiro em vez de stdin
-
+    yyin = f;
     int result = yyparse();
     fclose(f);
 
@@ -1643,16 +1642,40 @@ int main(int argc, char* argv[])
         printf("Parse succeeded. AST:\n");
         ASTPrint(p_treeRoot);
 
-        semantic_result_t sem_result = semantic_run(p_treeRoot, argv[1]);
+        /* use semantic_analyze instead of semantic_run
+           so the context stays alive after the call */
+        semantic_context_t *sem_ctx  = NULL;
+        semantic_result_t   sem_result = {0u, 0u, 0u};
+
+        if (semantic_analyze(p_treeRoot, argv[1], &sem_ctx, &sem_result) < 0) {
+            fprintf(stderr, "semantic_analyze: internal failure\n");
+            return 2;
+        }
+
         fprintf(stderr,
                 "Semantic summary: errors=%zu warnings=%zu scopes=%zu\n",
                 sem_result.error_count,
                 sem_result.warning_count,
                 sem_result.scope_count);
 
+        /* print symbol table for scope 0 — context is still alive here */
+        scope_t *s = scope_current(&sem_ctx->scope_stack);
+        while (s) {
+            fprintf(stderr, "=== scope depth %zu ===\n", s->depth);
+            symbol_dump(stderr, s);
+            s = s->parent;
+        }
+        
+        // ir code gen should here
+
+        /* now safe to destroy */
+        semantic_context_destroy(sem_ctx);
+        free(sem_ctx);
+
         if (sem_result.error_count > 0u) {
             return 2;
         }
     }
+
     return result;
 }
