@@ -1,6 +1,6 @@
 # Documentation
 
-_Last reviewed: 2026-02-08_
+_Last reviewed: 2026-04-06_
 
 ## Purpose
 
@@ -23,6 +23,8 @@ _Last reviewed: 2026-02-08_
   - Mapping from current boundaries to planned pipeline/compiler/peripheral work.
 - [`ci_baseline_verification.md`](ci_baseline_verification.md)
   - CI regression methodology, domain coverage, GitHub setup, and reproduction.
+- [`pipeline/README.md`](pipeline/README.md)
+  - Implementation-aligned pipeline stage and interstage-register contracts for the active four-stage core.
 - `../wavecfgs/coolWaveBehav.wcfg`, `../wavecfgs/coolWaveSynth.wcfg`, `../wavecfgs/coolWaveImpl.wcfg`
   - Waveform presets for behavioral, post-synthesis, and post-implementation timing runs.
 - [`references.md`](references.md)
@@ -44,3 +46,4 @@ _Last reviewed: 2026-02-08_
 6. `assembler/isa_abi_assembler_checklist.md`
 7. `refactor_extension_map.md`
 8. `ci_baseline_verification.md`
+9. `pipeline/README.md`

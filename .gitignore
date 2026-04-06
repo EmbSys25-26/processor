@@ -38,3 +38,11 @@ test-results/
 .ci_artifacts/
 # ignore admin documentation
 admin-docs/
+# tex compilation by-products
+*.toc
+*.aux
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.log
+*.out
