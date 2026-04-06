@@ -8,7 +8,7 @@
 /* A single contiguous slab of memory.  Blocks are linked in a singly-linked
  * list with the most-recently-allocated block at the front (arena->head).
  *
- *   next     – pointer to the previous (older) block, or NULL for the oldest.
+ *   next     – A pointer to the next block in a linked list. When the current block runs out of space, a new larger block is allocated and linked here. The arena walks this chain when destroying itself.
  *   used     – how many bytes of 'data' have been handed out so far.
  *   capacity – total usable bytes in 'data' (does not include this header).
  *   data[]   – flexible array member; the raw allocation region sits here,
