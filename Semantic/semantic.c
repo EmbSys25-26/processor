@@ -234,3 +234,19 @@ semantic_result_t semantic_run(TreeNode_t *root, const char *path)
   }
   return result;
 }
+
+void semantic_dump_annotations(FILE *out, const semantic_context_t *ctx)
+{
+    if (!ctx || !ctx->node_info.buckets) return;
+    fprintf(out, "\n=== Annotation Table (%zu entries) ===\n",
+            ctx->node_info.count);
+    for (size_t i = 0; i < ctx->node_info.capacity; i++) {
+        sem_node_bucket_t *b = &ctx->node_info.buckets[i];
+        if (!b->occupied) continue;
+        fprintf(out, "node=%p  type_kind=%d  symbol=%s  flags=%u\n",
+                (void *)b->node,
+                b->info.type ? (int)b->info.type->kind : -1,
+                b->info.symbol ? b->info.symbol->name : "(none)",
+                b->info.flags);
+    }
+}

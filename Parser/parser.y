@@ -1657,6 +1657,9 @@ int main(int argc, char* argv[])
                 sem_result.error_count,
                 sem_result.warning_count,
                 sem_result.scope_count);
+         
+        // print annotation table 
+        semantic_dump_annotations(stderr, sem_ctx);
 
         /* print symbol table for scope 0 — context is still alive here */
         scope_t *s = scope_current(&sem_ctx->scope_stack);

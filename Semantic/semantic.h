@@ -82,4 +82,6 @@ int semantic_set_node_info(semantic_context_t *ctx,
                            const TreeNode_t *node,
                            const sem_node_info_t *info);
 
+void semantic_dump_annotations(FILE *out, const semantic_context_t *ctx);
+
 #endif
