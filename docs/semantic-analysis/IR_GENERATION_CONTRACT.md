@@ -95,37 +95,60 @@ Contains:
 ## 7. Instruction set (frontend IR)
 
 ## 7.1 Constants and moves
-1. `const <type> <imm> -> %vdst`
-2. `mov <type> %vsrc -> %vdst`
+1. `%vdst = <imm>`                         (constant: inline literal assigned to a virtual register)
+2. `%vdst = %vsrc`                         (copy/move)
 
 ## 7.2 Arithmetic and bitwise
-1. `add/sub/mul/div/mod <type> %a, %b -> %vdst`
-2. `and/or/xor <type> %a, %b -> %vdst`
-3. `shl/shr_l/shr_a <type> %a, %b -> %vdst`
-4. `neg/not <type> %a -> %vdst`
+1. `%vdst = %a + %b`  /  `%a - %b`  /  `%a * %b`  /  `%a /s %b`  /  `%a /u %b`  /  `%a %s %b`  /  `%a %u %b`
+2. `%vdst = %a & %b`  /  `%a | %b`  /  `%a ^ %b`
+3. `%vdst = %a << %b`  /  `%a >>u %b`  /  `%a >>s %b`    (logical / arithmetic shift)
+4. `%vdst = -%a`  /  `~%a`                 (unary neg / bitwise not)
+
+All arithmetic is typed by the operands; type annotation on the instruction
+is optional in text form but required in the in-memory IR node.
+
+The `s`/`u` suffix on `div` and `mod` is mandatory. Signed and unsigned division
+produce different results and the backend must know which to emit. Shifts follow
+the same convention: `>>u` is logical, `>>s` is arithmetic.
 
 ## 7.3 Comparisons and predicates
-1. `cmp_eq/cmp_ne/cmp_lt/cmp_le/cmp_gt/cmp_ge <type> %a, %b -> %pdst(i1)`
+1. `%pdst:i1 = %a == %b`
+2. `%pdst:i1 = %a != %b`
+3. `%pdst:i1 = %a <s %b`   (signed less-than; use `<u` for unsigned)
+4. `%pdst:i1 = %a <=s %b`
+5. `%pdst:i1 = %a >s %b`
+6. `%pdst:i1 = %a >=s %b`
+
+Signed comparisons are the default. Append `u` suffix for unsigned variants.
+The suffix convention mirrors section 7.2 for consistency.
 
 ## 7.4 Memory
-1. `addr_of <symbol_or_slot> -> %ptr`
-2. `load <type> %ptr -> %vdst`
-3. `store <type> %vsrc, %ptr`
-4. `gep <base_ptr>, <index>, <elem_size> -> %ptr` (or equivalent offset op)
+1. `%ptr = addr_of <symbol>`               (take address of a named local or global)
+2. `%vdst = *%ptr`                         (load)
+3. `*%ptr = %vsrc`                         (store)
+4. `%ptr2 = %base + %idx * <elem_size>`    (address arithmetic / GEP)
 
-## 7.5 Cast/conversion
-1. `zext/sext/trunc <from,to> %src -> %vdst`
-2. `bitcast <from,to> %src -> %vdst` (only when semantically legal)
+## 7.5 Cast / conversion
+1. `%vdst = (zext <to>) %src`              (zero-extend; use for unsigned values)
+2. `%vdst = (sext <to>) %src`             (sign-extend; use for signed values)
+3. `%vdst = (trunc <to>) %src`
+4. `%vdst = (bitcast <to>) %src`          (only when semantically legal)
 
-## 7.6 Control flow
-1. `br bbX` (unconditional)
-2. `cbr %pred, bbTrue, bbFalse`
+## 7.6 Control flow (terminators)
+1. `goto bbX`
+2. `if %pred goto bbTrue else goto bbFalse`
 3. `ret void`
-4. `ret <type> %v`
+4. `ret %v`
 
 ## 7.7 Calls
-1. `call <ret_type> @func(<arg list>) -> %vdst?`
-2. `call void @func(<arg list>)`
+Inline argument list; argument order in IR matches source order.
+ABI push ordering (right-to-left for C convention) is the backend's
+responsibility, not the IR's.
+
+1. `%vdst = @func(%arg0, %arg1, ...)`      (function with return value)
+2. `@func(%arg0, %arg1, ...)`              (void function)
+3. `@func()`                               (no arguments)
+
 
 ## 8. AST-to-IR lowering contract
 
