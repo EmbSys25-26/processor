@@ -19,6 +19,8 @@
 #include "../Util/logger.h"
 #include "ASTPrint.h"
 #include "../Semantic/semantic.h"
+#include "../IR/ir.h"
+#include "../IR/ir_lower.h"
 
 int yylex(void);
 void yyerror(const char *s);
@@ -1668,16 +1670,29 @@ int main(int argc, char* argv[])
             symbol_dump(stderr, s);
             s = s->parent;
         }
-        
-        // ir code gen should here
-
-        /* now safe to destroy */
-        semantic_context_destroy(sem_ctx);
-        free(sem_ctx);
 
         if (sem_result.error_count > 0u) {
-            return 2;
+            return 2; // do not proceed if semantics returned any error
         }
+
+
+        /* ── IR lowering (only if semantic stage is clean) ── */
+        ir_module_t *mod = ir_lower_translation_unit(p_treeRoot, sem_ctx, argv[1]);
+        if (!mod) {
+            fprintf(stderr, "IR lowering failed.\n");
+            semantic_context_destroy(sem_ctx);
+            free(sem_ctx);
+            return 3;
+        }
+
+        /* Serialise IR to stdout */
+        printf("\n; ====== IR dump =====================\n");
+        ir_module_print(stdout, mod);
+
+        // Safe to free
+        ir_module_free(mod);
+        semantic_context_destroy(sem_ctx);
+        free(sem_ctx);
     }
 
     return result;

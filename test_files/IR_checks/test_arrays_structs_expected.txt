@@ -1,0 +1,233 @@
+; ── IR dump ──────────────────────────────
+module test_files/ir_tests/test_arrays_structs.c
+
+func @arr_sum() -> i16 {
+  slot %slot3 : i16  ; n
+  slot %slot2 : i16  ; i
+  slot %slot1 : i16  ; s
+  slot %slot0 : arr<i16, 5>  ; arr
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = *%v0
+    %v2 = gep %v1 + 0 * 2
+    *%v2 = 10
+    %v3 = addr_of %slot0
+    %v4 = *%v3
+    %v5 = gep %v4 + 1 * 2
+    *%v5 = 20
+    %v6 = addr_of %slot0
+    %v7 = *%v6
+    %v8 = gep %v7 + 2 * 2
+    *%v8 = 30
+    %v9 = addr_of %slot0
+    %v10 = *%v9
+    %v11 = gep %v10 + 3 * 2
+    *%v11 = 40
+    %v12 = addr_of %slot0
+    %v13 = *%v12
+    %v14 = gep %v13 + 4 * 2
+    *%v14 = 50
+    %v15 = addr_of %slot1
+    *%v15 = 0
+    %v16 = addr_of %slot2
+    *%v16 = 0
+    goto bb1
+
+bb1:
+    %v17 = addr_of %slot2
+    %v18 = *%v17
+    %v19 = addr_of %slot3
+    %v20 = *%v19
+    %v21 = %v18 lts %v20
+    if %v21 goto bb2 else bb4
+
+bb2:
+    %v22 = addr_of %slot1
+    %v23 = *%v22
+    %v24 = addr_of %slot0
+    %v25 = *%v24
+    %v26 = addr_of %slot2
+    %v27 = *%v26
+    %v28 = gep %v25 + %v27 * 2
+    %v29 = *%v28
+    %v30 = %v23 add %v29
+    %v31 = addr_of %slot1
+    *%v31 = %v30
+    goto bb3
+
+bb3:
+    %v32 = addr_of %slot2
+    %v33 = *%v32
+    %v34 = %v33 add 1
+    *%v32 = %v34
+    goto bb1
+
+bb4:
+    %v35 = addr_of %slot1
+    %v36 = *%v35
+    ret %v36
+
+bb5:
+    ret void
+}
+
+func @arr_access() -> i16 {
+  slot %slot1 : i16  ; r
+  slot %slot0 : arr<i16, 3>  ; arr
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = *%v0
+    %v2 = gep %v1 + 0 * 2
+    *%v2 = 1
+    %v3 = addr_of %slot0
+    %v4 = *%v3
+    %v5 = gep %v4 + 1 * 2
+    *%v5 = 2
+    %v6 = addr_of %slot0
+    %v7 = *%v6
+    %v8 = gep %v7 + 2 * 2
+    *%v8 = 3
+    %v9 = addr_of %slot0
+    %v10 = *%v9
+    %v11 = gep %v10 + 0 * 2
+    %v12 = *%v11
+    %v13 = addr_of %slot0
+    %v14 = *%v13
+    %v15 = gep %v14 + 1 * 2
+    %v16 = *%v15
+    %v17 = %v12 add %v16
+    %v18 = addr_of %slot0
+    %v19 = *%v18
+    %v20 = gep %v19 + 2 * 2
+    %v21 = *%v20
+    %v22 = %v17 add %v21
+    %v23 = addr_of %slot1
+    *%v23 = %v22
+    %v24 = addr_of %slot1
+    %v25 = *%v24
+    ret %v25
+
+bb1:
+    ret void
+}
+
+func @swap() -> void {
+  slot %slot2 : ptr  ; b
+  slot %slot1 : ptr  ; a
+  slot %slot0 : i16  ; t
+
+bb0:
+    %v0 = addr_of %slot1
+    %v1 = *%v0
+    %v2 = *%v1
+    %v3 = addr_of %slot0
+    *%v3 = %v2
+    %v4 = addr_of %slot2
+    %v5 = *%v4
+    %v6 = *%v5
+    %v7 = addr_of %slot1
+    %v8 = *%v7
+    *%v8 = %v6
+    %v9 = addr_of %slot0
+    %v10 = *%v9
+    %v11 = addr_of %slot2
+    %v12 = *%v11
+    *%v12 = %v10
+    ret void
+
+bb1:
+    ret void
+}
+
+func @deref() -> i16 {
+  slot %slot0 : ptr  ; p
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = *%v0
+    %v2 = *%v1
+    ret %v2
+
+bb1:
+    ret void
+}
+
+func @increment() -> void {
+  slot %slot0 : ptr  ; p
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = *%v0
+    %v2 = *%v1
+    %v3 = %v2 add 1
+    %v4 = addr_of %slot0
+    %v5 = *%v4
+    *%v5 = %v3
+    ret void
+
+bb1:
+    ret void
+}
+
+func @double_deref() -> i16 {
+  slot %slot1 : ptr  ; p
+  slot %slot0 : i16  ; r
+
+bb0:
+    %v0 = addr_of %slot1
+    %v1 = *%v0
+    %v2 = *%v1
+    %v3 = %v2 mul 2
+    %v4 = addr_of %slot0
+    *%v4 = %v3
+    %v5 = addr_of %slot0
+    %v6 = *%v5
+    ret %v6
+
+bb1:
+    ret void
+}
+
+func @main() -> i16 {
+  slot %slot2 : i16  ; b
+  slot %slot1 : i16  ; a
+  slot %slot0 : i16  ; r
+
+bb0:
+    %v0 = @arr_sum(5)
+    %v1 = addr_of %slot0
+    *%v1 = %v0
+    %v2 = @arr_access()
+    %v3 = addr_of %slot0
+    *%v3 = %v2
+    %v4 = addr_of %slot1
+    *%v4 = 5
+    %v5 = addr_of %slot2
+    *%v5 = 10
+    %v6 = addr_of %slot1
+    %v7 = addr_of %slot2
+    @swap(%v6, %v7)
+    %v8 = addr_of %slot1
+    %v9 = @deref(%v8)
+    %v10 = addr_of %slot0
+    *%v10 = %v9
+    %v11 = addr_of %slot2
+    @increment(%v11)
+    %v12 = addr_of %slot2
+    %v13 = @deref(%v12)
+    %v14 = addr_of %slot0
+    *%v14 = %v13
+    %v15 = addr_of %slot1
+    %v16 = @double_deref(%v15)
+    %v17 = addr_of %slot0
+    *%v17 = %v16
+    %v18 = addr_of %slot0
+    %v19 = *%v18
+    ret %v19
+
+bb1:
+    ret void
+}
+

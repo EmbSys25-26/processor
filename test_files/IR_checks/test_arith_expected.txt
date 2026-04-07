@@ -1,0 +1,284 @@
+; ── IR dump ──────────────────────────────
+module test_files/ir_tests/test_arith.c
+
+global @x : i16
+global @y : i16
+
+func @arithmetic() -> i16 {
+  slot %slot2 : i16  ; b
+  slot %slot1 : i16  ; a
+  slot %slot0 : i16  ; r
+
+bb0:
+    %v0 = addr_of %slot1
+    %v1 = *%v0
+    %v2 = addr_of %slot2
+    %v3 = *%v2
+    %v4 = %v1 add %v3
+    %v5 = addr_of %slot0
+    *%v5 = %v4
+    %v6 = addr_of %slot1
+    %v7 = *%v6
+    %v8 = addr_of %slot2
+    %v9 = *%v8
+    %v10 = %v7 sub %v9
+    %v11 = addr_of %slot0
+    *%v11 = %v10
+    %v12 = addr_of %slot1
+    %v13 = *%v12
+    %v14 = addr_of %slot2
+    %v15 = *%v14
+    %v16 = %v13 mul %v15
+    %v17 = addr_of %slot0
+    *%v17 = %v16
+    %v18 = addr_of %slot1
+    %v19 = *%v18
+    %v20 = addr_of %slot2
+    %v21 = *%v20
+    %v22 = %v19 divs %v21
+    %v23 = addr_of %slot0
+    *%v23 = %v22
+    %v24 = addr_of %slot1
+    %v25 = *%v24
+    %v26 = addr_of %slot2
+    %v27 = *%v26
+    %v28 = %v25 mods %v27
+    %v29 = addr_of %slot0
+    *%v29 = %v28
+    %v30 = addr_of %slot0
+    %v31 = *%v30
+    %v32 = %v31 add 1
+    %v33 = addr_of %slot0
+    *%v33 = %v32
+    %v34 = addr_of %slot0
+    %v35 = *%v34
+    %v36 = %v35 sub 1
+    %v37 = addr_of %slot0
+    *%v37 = %v36
+    %v38 = addr_of %slot0
+    %v39 = *%v38
+    %v40 = %v39 mul 2
+    %v41 = addr_of %slot0
+    *%v41 = %v40
+    %v42 = addr_of %slot0
+    %v43 = *%v42
+    %v44 = %v43 divs 2
+    %v45 = addr_of %slot0
+    *%v45 = %v44
+    %v46 = addr_of %slot0
+    %v47 = *%v46
+    %v48 = %v47 mods 3
+    %v49 = addr_of %slot0
+    *%v49 = %v48
+    %v50 = addr_of %slot0
+    %v51 = *%v50
+    ret %v51
+
+bb1:
+    ret void
+}
+
+func @assignment() -> i16 {
+  slot %slot1 : i16  ; a
+  slot %slot0 : i16  ; r
+
+bb0:
+    %v0 = addr_of %slot1
+    %v1 = *%v0
+    %v2 = addr_of %slot0
+    *%v2 = %v1
+    %v3 = addr_of %slot0
+    %v4 = *%v3
+    %v5 = %v4 add 1
+    %v6 = addr_of %slot0
+    *%v6 = %v5
+    %v7 = addr_of %slot0
+    %v8 = *%v7
+    %v9 = %v8 add 10
+    *%v7 = %v9
+    %v10 = addr_of %slot0
+    %v11 = *%v10
+    %v12 = %v11 sub 5
+    *%v10 = %v12
+    %v13 = addr_of %slot0
+    %v14 = *%v13
+    %v15 = %v14 mul 2
+    *%v13 = %v15
+    %v16 = addr_of %slot0
+    %v17 = *%v16
+    %v18 = %v17 divs 3
+    *%v16 = %v18
+    %v19 = addr_of %slot0
+    %v20 = *%v19
+    %v21 = %v20 mods 7
+    *%v19 = %v21
+    %v22 = addr_of %slot0
+    %v23 = *%v22
+    ret %v23
+
+bb1:
+    ret void
+}
+
+func @bitwise() -> i16 {
+  slot %slot2 : i16  ; b
+  slot %slot1 : i16  ; a
+  slot %slot0 : i16  ; r
+
+bb0:
+    %v0 = addr_of %slot1
+    %v1 = *%v0
+    %v2 = addr_of %slot2
+    %v3 = *%v2
+    %v4 = %v1 and %v3
+    %v5 = addr_of %slot0
+    *%v5 = %v4
+    %v6 = addr_of %slot1
+    %v7 = *%v6
+    %v8 = addr_of %slot2
+    %v9 = *%v8
+    %v10 = %v7 or %v9
+    %v11 = addr_of %slot0
+    *%v11 = %v10
+    %v12 = addr_of %slot1
+    %v13 = *%v12
+    %v14 = addr_of %slot2
+    %v15 = *%v14
+    %v16 = %v13 xor %v15
+    %v17 = addr_of %slot0
+    *%v17 = %v16
+    %v18 = addr_of %slot1
+    %v19 = *%v18
+    %v20 = ~%v19
+    %v21 = addr_of %slot0
+    *%v21 = %v20
+    %v22 = addr_of %slot1
+    %v23 = *%v22
+    %v24 = %v23 shl 2
+    %v25 = addr_of %slot0
+    *%v25 = %v24
+    %v26 = addr_of %slot1
+    %v27 = *%v26
+    %v28 = %v27 shrs 1
+    %v29 = addr_of %slot0
+    *%v29 = %v28
+    %v30 = addr_of %slot0
+    %v31 = *%v30
+    %v32 = %v31 and 255
+    *%v30 = %v32
+    %v33 = addr_of %slot0
+    %v34 = *%v33
+    %v35 = %v34 or 1
+    *%v33 = %v35
+    %v36 = addr_of %slot0
+    %v37 = *%v36
+    %v38 = %v37 xor 16
+    *%v36 = %v38
+    %v39 = addr_of %slot0
+    %v40 = *%v39
+    %v41 = %v40 shl 1
+    *%v39 = %v41
+    %v42 = addr_of %slot0
+    %v43 = *%v42
+    %v44 = %v43 shrs 1
+    *%v42 = %v44
+    %v45 = addr_of %slot0
+    %v46 = *%v45
+    ret %v46
+
+bb1:
+    ret void
+}
+
+func @unary() -> i16 {
+  slot %slot1 : i16  ; a
+  slot %slot0 : i16  ; r
+
+bb0:
+    %v0 = addr_of %slot1
+    %v1 = *%v0
+    %v2 = -%v1
+    %v3 = addr_of %slot0
+    *%v3 = %v2
+    %v4 = addr_of %slot1
+    %v5 = *%v4
+    %v6 = addr_of %slot0
+    *%v6 = %v5
+    %v7 = addr_of %slot0
+    %v8 = *%v7
+    %v9 = %v8 add 1
+    *%v7 = %v9
+    %v10 = addr_of %slot0
+    %v11 = *%v10
+    %v12 = %v11 sub 1
+    *%v10 = %v12
+    %v13 = addr_of %slot0
+    %v14 = *%v13
+    %v15 = %v14 add 1
+    *%v13 = %v15
+    %v16 = addr_of %slot0
+    %v17 = *%v16
+    %v18 = %v17 sub 1
+    *%v16 = %v18
+    %v19 = addr_of %slot0
+    %v20 = *%v19
+    ret %v20
+
+bb1:
+    ret void
+}
+
+func @main() -> i16 {
+  slot %slot2 : i16  ; r
+  slot %slot1 : i16  ; b
+  slot %slot0 : i16  ; a
+
+bb0:
+    %v0 = addr_of %slot0
+    *%v0 = 10
+    %v1 = addr_of %slot1
+    *%v1 = 3
+    %v2 = addr_of %slot0
+    %v3 = *%v2
+    %v4 = addr_of %slot1
+    %v5 = *%v4
+    %v6 = @arithmetic(%v3, %v5)
+    %v7 = addr_of %slot2
+    *%v7 = %v6
+    %v8 = addr_of %slot0
+    %v9 = *%v8
+    %v10 = @assignment(%v9)
+    %v11 = addr_of %slot2
+    *%v11 = %v10
+    %v12 = addr_of %slot0
+    %v13 = *%v12
+    %v14 = addr_of %slot1
+    %v15 = *%v14
+    %v16 = @bitwise(%v13, %v15)
+    %v17 = addr_of %slot2
+    *%v17 = %v16
+    %v18 = addr_of %slot0
+    %v19 = *%v18
+    %v20 = @unary(%v19)
+    %v21 = addr_of %slot2
+    *%v21 = %v20
+    %v22 = addr_of %slot0
+    %v23 = *%v22
+    %v24 = addr_of %slot1
+    %v25 = *%v24
+    %v26 = %v23 add %v25
+    %v27 = addr_of @x
+    *%v27 = %v26
+    %v28 = addr_of @x
+    %v29 = *%v28
+    %v30 = %v29 mul 2
+    %v31 = addr_of @y
+    *%v31 = %v30
+    %v32 = addr_of %slot2
+    %v33 = *%v32
+    ret %v33
+
+bb1:
+    ret void
+}
+

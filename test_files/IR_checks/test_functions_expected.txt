@@ -1,0 +1,180 @@
+; ── IR dump ──────────────────────────────
+module test_files/ir_tests/test_functions.c
+
+func @add() -> i16 {
+  slot %slot1 : i16  ; b
+  slot %slot0 : i16  ; a
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = *%v0
+    %v2 = addr_of %slot1
+    %v3 = *%v2
+    %v4 = %v1 add %v3
+    ret %v4
+
+bb1:
+    ret void
+}
+
+func @sub() -> i16 {
+  slot %slot1 : i16  ; b
+  slot %slot0 : i16  ; a
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = *%v0
+    %v2 = addr_of %slot1
+    %v3 = *%v2
+    %v4 = %v1 sub %v3
+    ret %v4
+
+bb1:
+    ret void
+}
+
+func @mul() -> i16 {
+  slot %slot1 : i16  ; b
+  slot %slot0 : i16  ; a
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = *%v0
+    %v2 = addr_of %slot1
+    %v3 = *%v2
+    %v4 = %v1 mul %v3
+    ret %v4
+
+bb1:
+    ret void
+}
+
+func @set_zero() -> void {
+  slot %slot0 : i16  ; a
+
+bb0:
+    %v0 = addr_of %slot0
+    *%v0 = 0
+    ret void
+
+bb1:
+    ret void
+}
+
+func @identity() -> i16 {
+  slot %slot0 : i16  ; x
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = *%v0
+    ret %v1
+
+bb1:
+    ret void
+}
+
+func @double_val() -> i16 {
+  slot %slot0 : i16  ; x
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = *%v0
+    %v2 = addr_of %slot0
+    %v3 = *%v2
+    %v4 = @add(%v1, %v3)
+    ret %v4
+
+bb1:
+    ret void
+}
+
+func @triple_val() -> i16 {
+  slot %slot1 : i16  ; x
+  slot %slot0 : i16  ; d
+
+bb0:
+    %v0 = addr_of %slot1
+    %v1 = *%v0
+    %v2 = @double_val(%v1)
+    %v3 = addr_of %slot0
+    *%v3 = %v2
+    %v4 = addr_of %slot0
+    %v5 = *%v4
+    %v6 = addr_of %slot1
+    %v7 = *%v6
+    %v8 = @add(%v5, %v7)
+    ret %v8
+
+bb1:
+    ret void
+}
+
+func @compute() -> i16 {
+  slot %slot4 : i16  ; c
+  slot %slot3 : i16  ; b
+  slot %slot2 : i16  ; a
+  slot %slot1 : i16  ; t2
+  slot %slot0 : i16  ; t1
+
+bb0:
+    %v0 = addr_of %slot2
+    %v1 = *%v0
+    %v2 = addr_of %slot3
+    %v3 = *%v2
+    %v4 = @add(%v1, %v3)
+    %v5 = addr_of %slot0
+    *%v5 = %v4
+    %v6 = addr_of %slot0
+    %v7 = *%v6
+    %v8 = addr_of %slot4
+    %v9 = *%v8
+    %v10 = @mul(%v7, %v9)
+    %v11 = addr_of %slot1
+    *%v11 = %v10
+    %v12 = addr_of %slot1
+    %v13 = *%v12
+    %v14 = addr_of %slot2
+    %v15 = *%v14
+    %v16 = @sub(%v13, %v15)
+    ret %v16
+
+bb1:
+    ret void
+}
+
+func @main() -> i16 {
+  slot %slot0 : i16  ; r
+
+bb0:
+    %v0 = @add(3, 4)
+    %v1 = addr_of %slot0
+    *%v1 = %v0
+    %v2 = @sub(10, 3)
+    %v3 = addr_of %slot0
+    *%v3 = %v2
+    %v4 = @mul(4, 5)
+    %v5 = addr_of %slot0
+    *%v5 = %v4
+    %v6 = addr_of %slot0
+    %v7 = *%v6
+    @set_zero(%v7)
+    %v8 = @identity(42)
+    %v9 = addr_of %slot0
+    *%v9 = %v8
+    %v10 = @double_val(5)
+    %v11 = addr_of %slot0
+    *%v11 = %v10
+    %v12 = @triple_val(3)
+    %v13 = addr_of %slot0
+    *%v13 = %v12
+    %v14 = @compute(2, 3, 4)
+    %v15 = addr_of %slot0
+    *%v15 = %v14
+    %v16 = addr_of %slot0
+    %v17 = *%v16
+    ret %v17
+
+bb1:
+    ret void
+}
+

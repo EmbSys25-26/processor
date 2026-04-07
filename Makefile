@@ -5,6 +5,7 @@ LEXER_DIR  = Lexer
 PARSER_DIR = Parser
 UTILS_DIR  = Util
 SEM_DIR    = Semantic
+IR_DIR     = IR
 
 SRCS    = $(PARSER_DIR)/parser.tab.c \
           $(LEXER_DIR)/lex.yy.c      \
@@ -18,7 +19,12 @@ SRCS    = $(PARSER_DIR)/parser.tab.c \
           $(SEM_DIR)/semantic_ast_helpers.c\
           $(SEM_DIR)/semantic_pass1.c\
           $(SEM_DIR)/semantic_pass2.c\
-          $(SEM_DIR)/semantic.c
+          $(SEM_DIR)/semantic.c      \
+          $(IR_DIR)/ir.c             \
+          $(IR_DIR)/ir_lower.c       \
+          $(IR_DIR)/ir_lower_decl.c  \
+          $(IR_DIR)/ir_lower_expr.c  \
+          $(IR_DIR)/ir_lower_stmt.c
 
 TARGET  = compiler
 
