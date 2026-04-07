@@ -72,12 +72,12 @@ module if_stage(
     reg o_valid_r;
 
     always @(posedge i_clk) begin
-        if (i_rst)
+        if (i_rst || i_flush)                
             o_valid_r <= 1'b0;
         else if (!i_stall)
             o_valid_r <= i_hit & (_flush_bubble == 2'd0);
     end
-    
+        
     assign o_valid = o_valid_r;
 
     // Pass the instruction word with validation
@@ -96,7 +96,7 @@ module if_stage(
             // and arm the 1-cycle bubble counter.
             _pc_d1 <= i_flush_pc;
             o_pc   <= i_flush_pc;
-            _flush_bubble <= 2'd2;
+            _flush_bubble <= 2'd1;
         end else begin
             if (i_hit & ~i_stall) begin
                 // Normal advance: shift the PC pipeline forward and

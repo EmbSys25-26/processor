@@ -55,11 +55,11 @@
         reg _gie;                   // Global Interrupt Enable flag (1 = interrupts enabled)
     
         // Condition codes (Z, N, C-flag alias, C, V) — committed at WB
-        reg _c;     // Carry bit used by ADC/SBC (separate from _ccc for historical reasons)
-        reg _ccz;   // Zero flag
-        reg _ccn;   // Negative flag
-        reg _ccc;   // Carry flag (for BX conditions)
-        reg _ccv;   // Overflow flag
+        wire _c;     // Carry bit used by ADC/SBC (separate from _ccc for historical reasons)
+        wire _ccz;   // Zero flag
+        wire _ccn;   // Negative flag
+        wire _ccc;   // Carry flag (for BX conditions)
+        wire _ccv;   // Overflow flag
     
         // Interrupt nesting depth counter (saturating 2-bit, max depth = 3)
         reg [1:0] _irq_depth;      // Current nesting level
@@ -653,6 +653,29 @@
             .i_irq_vector(i_irq_vector),
             .o_pc_next(_pc_next)
         );
+        
+        
+        /*************************************************************************************
+         * 2.9 CC Register with bypass
+         ************************************************************************************/
+            cc_flag u_cc_flag (
+                .i_clk      (i_clk),
+                .i_rst      (i_rst),
+                // Write port - driven by EX stage outputs
+                .i_flag_we  (_ex_flag_we),
+                .i_new_ccz  (_ex_new_ccz),
+                .i_new_ccn  (_ex_new_ccn),
+                .i_new_ccc  (_ex_new_ccc),
+                .i_new_ccv  (_ex_new_ccv),
+                .i_carry_we (_ex_carry_we),
+                .i_new_c    (_ex_new_c),
+                // Read port - with bypass, seen by ID and EX
+                .o_ccz      (_ccz),
+                .o_ccn      (_ccn),
+                .o_ccc      (_ccc),
+                .o_ccv      (_ccv),
+                .o_c        (_c)
+            );
     
         // PC register: advances to _pc_next unless the IF stage is stalled
         always @(posedge i_clk) begin
@@ -710,35 +733,7 @@
             end
         end
         
-        // Udpate condition codes combinationally so that there is no need for CC hazard stall 
-        // Check is performed during EX stage
-        always @(posedge i_clk) begin
-            _c   <= 1'b0;
-            _ccz <= 1'b0;
-            _ccn <= 1'b0;
-            _ccc <= 1'b0;
-            _ccv <= 1'b0;
         
-             if (_ex_flag_we) begin
-                _ccz <= _ex_new_ccz;
-                _ccn <= _ex_new_ccn;
-                _ccc <= _ex_new_ccc;
-                _ccv <= _ex_new_ccv;
-            end
-                
-            if (_ex_carry_we) begin
-                _c <= _ex_new_c;
-            end
-            
-            if (i_rst) begin
-                _c   <= 1'b0;
-                _ccz <= 1'b0;
-                _ccn <= 1'b0;
-                _ccc <= 1'b0;
-                _ccv <= 1'b0;
-            end
-            
-        end
         
     
     /*************************************************************************************

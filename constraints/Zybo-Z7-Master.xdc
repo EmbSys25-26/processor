@@ -11,8 +11,11 @@ set_property -dict {PACKAGE_PIN D18 IOSTANDARD LVCMOS33} [get_ports {o_par_o[3]}
 set_property -dict {PACKAGE_PIN N15 IOSTANDARD LVCMOS33} [get_ports o_uart_tx]
 set_property -dict {PACKAGE_PIN L14 IOSTANDARD LVCMOS33} [get_ports i_uart_rx]
 ## This file is a .xdc for the Zybo Z7-10
-## Clock signal. Currently @ 50MHz. Change accordingly.
+## Clock signal options:
+## 50 MHz:
 create_clock -period 20.000 -name sys_clk_pin -waveform {0.000 10.000} -add [get_ports i_clk]
+## 100 MHz:
+#create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_ports i_clk]
 
 ## Switches
 
@@ -39,4 +42,3 @@ set_output_delay -clock sys_clk_pin 5.000 [get_ports {o_par_o[*]}]
 set_output_delay -clock sys_clk_pin 5.000 [get_ports o_uart_tx]
 set_output_delay -clock sys_clk_pin 5.000 [get_ports io_i2c_scl]
 set_output_delay -clock sys_clk_pin 5.000 [get_ports io_i2c_sda]
-
