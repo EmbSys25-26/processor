@@ -160,9 +160,47 @@ unsigned ir_lower_local_decl(ir_lower_ctx_t *lctx, const TreeNode_t *decl_node)
 
     unsigned slot = ir_new_slot(lctx->func, sym->name, ir_t);
 
-    // G1 TODO: find the initialiser child node
-    //       lower it with ir_lower_expr
-    //       emit addr_of slot + store
+    const TreeNode_t *init = decl_initialiser(decl_node);
+    if (init) {
+        ir_type_t rhs_type;
+        ir_value_t rval = ir_lower_expr(lctx, init, &rhs_type);
+        /* Cast if needed (same rules as expression lowering). */
+        if (!ir_type_equal(rhs_type, ir_t) &&
+            ir_type_is_integer(rhs_type) && ir_type_is_integer(ir_t)) {
+            int src_sz = (rhs_type.kind == IR_TYPE_I1) ? 1 :
+                         (rhs_type.kind == IR_TYPE_I8) ? 8 :
+                         (rhs_type.kind == IR_TYPE_I16) ? 16 : 32;
+            int dst_sz = (ir_t.kind == IR_TYPE_I1) ? 1 :
+                         (ir_t.kind == IR_TYPE_I8) ? 8 :
+                         (ir_t.kind == IR_TYPE_I16) ? 16 : 32;
+            ir_opcode_t op = IR_OP_BITCAST;
+            if (dst_sz > src_sz) {
+                op = (sym->type && (sym->type->qualifiers & TYPE_QUAL_UNSIGNED))
+                       ? IR_OP_ZEXT : IR_OP_SEXT;
+            } else if (dst_sz < src_sz) {
+                op = IR_OP_TRUNC;
+            }
+            if (op != IR_OP_BITCAST) {
+                unsigned r = ir_new_vreg(lctx->func);
+                ir_instr_t *cast = ir_instr_new(op);
+                cast->dst    = ir_val_vreg(r, ir_t);
+                cast->src[0] = rval;
+                ir_instr_push(lctx->cur_block, cast);
+                rval = ir_val_vreg(r, ir_t);
+            }
+        }
+        ir_value_t addr = ir_val_slot(slot, ir_t);
+        unsigned pr = ir_new_vreg(lctx->func);
+        ir_instr_t *addr_i = ir_instr_new(IR_OP_ADDR_OF);
+        addr_i->dst    = ir_val_vreg(pr, ir_type_ptr());
+        addr_i->src[0] = addr;
+        ir_instr_push(lctx->cur_block, addr_i);
+
+        ir_instr_t *store_i = ir_instr_new(IR_OP_STORE);
+        store_i->src[0] = ir_val_vreg(pr, ir_type_ptr());
+        store_i->src[1] = rval;
+        ir_instr_push(lctx->cur_block, store_i);
+    }
     return slot;
 
 }

@@ -35,22 +35,33 @@
 static ir_value_t emit_load(ir_lower_ctx_t *lctx, ir_value_t ptr_val,
                              ir_type_t pointee_type)
 {
-    // G1 TODO: allocate new vreg, emit IR_OP_LOAD instruction, return vreg
-    return ir_val_none();
+    unsigned r = ir_new_vreg(lctx->func);
+    ir_instr_t *i = ir_instr_new(IR_OP_LOAD);
+    i->dst    = ir_val_vreg(r, pointee_type);
+    i->src[0] = ptr_val;
+    ir_instr_push(lctx->cur_block, i);
+    return ir_val_vreg(r, pointee_type);
 }
 
 /* Emit a store */
 static void emit_store(ir_lower_ctx_t *lctx, ir_value_t ptr_val,
                        ir_value_t val)
 {
-    // G1 TODO: emit IR_OP_STORE instruction
+    ir_instr_t *i = ir_instr_new(IR_OP_STORE);
+    i->src[0] = ptr_val;
+    i->src[1] = val;
+    ir_instr_push(lctx->cur_block, i);
 }
 
 /* Emit addr_of a slot/global and return the pointer vreg */
 static ir_value_t emit_addr_of(ir_lower_ctx_t *lctx, ir_value_t sym_val)
 {
-    // G1 TODO: allocate new vreg, emit IR_OP_ADDR_OF instruction, return vreg
-    return ir_val_none();
+    unsigned r = ir_new_vreg(lctx->func);
+    ir_instr_t *i = ir_instr_new(IR_OP_ADDR_OF);
+    i->dst    = ir_val_vreg(r, ir_type_ptr());
+    i->src[0] = sym_val;
+    ir_instr_push(lctx->cur_block, i);
+    return ir_val_vreg(r, ir_type_ptr());
 }
 
 /* Look up a symbol by name and return the appropriate ir_value_t reference */
@@ -125,6 +136,50 @@ static ir_value_t maybe_widen(ir_lower_ctx_t *lctx, ir_value_t v,
         return ir_val_vreg(r, ir_type_i16());
     }
     return v;
+}
+
+/* Cast a value to the target IR type when required. */
+static ir_value_t cast_value(ir_lower_ctx_t *lctx,
+                              ir_value_t v,
+                              ir_type_t to_type,
+                              int is_unsigned)
+{
+    if (ir_type_equal(v.type, to_type)) return v;
+
+    if (!ir_type_is_integer(v.type) || !ir_type_is_integer(to_type)) {
+        if (v.type.kind == IR_TYPE_PTR || to_type.kind == IR_TYPE_PTR) {
+            unsigned r = ir_new_vreg(lctx->func);
+            ir_instr_t *i = ir_instr_new(IR_OP_BITCAST);
+            i->dst    = ir_val_vreg(r, to_type);
+            i->src[0] = v;
+            ir_instr_push(lctx->cur_block, i);
+            return ir_val_vreg(r, to_type);
+        }
+        return v;
+    }
+
+    int src_sz = (v.type.kind == IR_TYPE_I1) ? 1 :
+                 (v.type.kind == IR_TYPE_I8) ? 8 :
+                 (v.type.kind == IR_TYPE_I16) ? 16 : 32;
+    int dst_sz = (to_type.kind == IR_TYPE_I1) ? 1 :
+                 (to_type.kind == IR_TYPE_I8) ? 8 :
+                 (to_type.kind == IR_TYPE_I16) ? 16 : 32;
+
+    ir_opcode_t op = IR_OP_BITCAST;
+    if (dst_sz > src_sz) {
+        op = is_unsigned ? IR_OP_ZEXT : IR_OP_SEXT;
+    } else if (dst_sz < src_sz) {
+        op = IR_OP_TRUNC;
+    } else {
+        return v;
+    }
+
+    unsigned r = ir_new_vreg(lctx->func);
+    ir_instr_t *i = ir_instr_new(op);
+    i->dst    = ir_val_vreg(r, to_type);
+    i->src[0] = v;
+    ir_instr_push(lctx->cur_block, i);
+    return ir_val_vreg(r, to_type);
 }
    
 /************************************************************
@@ -225,12 +280,10 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
 
     /* ── §8.2 rule 1: Literals ─────────────────────────── */
     case NODE_INTEGER:
-        // G1: TODO: return an immediate ir_value_t with ir_val_imm()
-        return ir_val_none();
+        return ir_val_imm((long)expr->nodeData.dVal, expr_type);
 
     case NODE_CHAR:
-        // G1: TODO: return an immediate ir_value_t with ir_val_imm()
-        return ir_val_none();
+        return ir_val_imm((long)expr->nodeData.dVal, expr_type);
 
     case NODE_STRING: {
         /* BUILTIN_STRING → ptr to read-only i8; name is emitted as global */
@@ -255,34 +308,178 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
 
     /* ── §8.2 rule 2: Identifier read ─────────────────── */
     case NODE_IDENTIFIER: {
-        // G1: TODO: look up symbol from annotation table
-        //       resolve to slot or global via resolve_symbol_ref
-        //       emit addr_of + load
-        return ir_val_none();
+        if (!info || !info->symbol) {
+            ir_diag(lctx, "IR002", expr->lineNumber,
+                    "identifier '%s' has no symbol",
+                    expr->nodeData.sVal ? expr->nodeData.sVal : "?");
+            return ir_val_none();
+        }
+        ir_value_t ref = resolve_symbol_ref(lctx, info->symbol, expr_type,
+                                             expr->lineNumber);
+        ir_value_t addr = emit_addr_of(lctx, ref);
+        return emit_load(lctx, addr, expr_type);
     }
 
     /* ── §8.2 rule 3: Assignment ────────────────────────── */
     case NODE_OPERATOR: {
-        // G1: TODO: handle OP_ASSIGN
-        //       handle OP_PLUS_ASSIGN, OP_MINUS_ASSIGN, etc.
-        //       handle binary arithmetic ops (OP_PLUS, OP_MINUS, OP_MULTIPLY, OP_DIVIDE, OP_MODULE)
-        //       handle bitwise ops (OP_BITWISE_AND, OP_BITWISE_OR, OP_BITWISE_XOR, OP_BITWISE_NOT)
-        //       handle shift ops (OP_LEFT_SHIFT, OP_RIGHT_SHIFT)
-        //       handle unary minus (OP_UNARY_MINUS, OP_NEGATIVE)
-        return ir_val_none();   
+        OperatorType_t op = (OperatorType_t)expr->nodeData.dVal;
+        const TreeNode_t *lhs = expr->p_firstChild;
+        const TreeNode_t *rhs = lhs ? lhs->p_sibling : NULL;
+
+        if (op == OP_ASSIGN) {
+            ir_type_t lhs_type;
+            ir_value_t addr = ir_lower_lvalue_addr(lctx, lhs, &lhs_type);
+            ir_type_t rhs_type;
+            ir_value_t rval = ir_lower_expr(lctx, rhs, &rhs_type);
+            int is_unsigned = sem_type_is_unsigned(info ? info->type : NULL);
+            rval = cast_value(lctx, rval, lhs_type, is_unsigned);
+            emit_store(lctx, addr, rval);
+            *out_type = lhs_type;
+            return rval;
+        }
+
+        if (op == OP_PLUS_ASSIGN || op == OP_MINUS_ASSIGN ||
+            op == OP_MULTIPLY_ASSIGN || op == OP_DIVIDE_ASSIGN ||
+            op == OP_MODULUS_ASSIGN || op == OP_LEFT_SHIFT_ASSIGN ||
+            op == OP_RIGHT_SHIFT_ASSIGN || op == OP_BITWISE_AND_ASSIGN ||
+            op == OP_BITWISE_OR_ASSIGN || op == OP_BITWISE_XOR_ASSIGN) {
+            ir_type_t lhs_type;
+            ir_value_t addr = ir_lower_lvalue_addr(lctx, lhs, &lhs_type);
+            ir_value_t old = emit_load(lctx, addr, lhs_type);
+            ir_type_t rhs_type;
+            ir_value_t rval = ir_lower_expr(lctx, rhs, &rhs_type);
+            int is_unsigned = sem_type_is_unsigned(info ? info->type : NULL);
+            rval = cast_value(lctx, rval, lhs_type, is_unsigned);
+
+            OperatorType_t base = OP_PLUS;
+            switch (op) {
+            case OP_PLUS_ASSIGN:        base = OP_PLUS; break;
+            case OP_MINUS_ASSIGN:       base = OP_MINUS; break;
+            case OP_MULTIPLY_ASSIGN:    base = OP_MULTIPLY; break;
+            case OP_DIVIDE_ASSIGN:      base = OP_DIVIDE; break;
+            case OP_MODULUS_ASSIGN:     base = OP_MODULE; break;
+            case OP_LEFT_SHIFT_ASSIGN:  base = OP_LEFT_SHIFT; break;
+            case OP_RIGHT_SHIFT_ASSIGN: base = OP_RIGHT_SHIFT; break;
+            case OP_BITWISE_AND_ASSIGN: base = OP_BITWISE_AND; break;
+            case OP_BITWISE_OR_ASSIGN:  base = OP_BITWISE_OR; break;
+            case OP_BITWISE_XOR_ASSIGN: base = OP_BITWISE_XOR; break;
+            default: break;
+            }
+
+            unsigned r = ir_new_vreg(lctx->func);
+            ir_instr_t *i = ir_instr_new(binop_opcode(base, is_unsigned));
+            i->dst    = ir_val_vreg(r, lhs_type);
+            i->src[0] = old;
+            i->src[1] = rval;
+            ir_instr_push(lctx->cur_block, i);
+            ir_value_t res = ir_val_vreg(r, lhs_type);
+            emit_store(lctx, addr, res);
+            *out_type = lhs_type;
+            return res;
+        }
+
+        if (op == OP_LOGICAL_NOT) {
+            ir_type_t lt;
+            ir_value_t v = ir_lower_expr(lctx, lhs, &lt);
+            v = maybe_widen(lctx, v, 0);
+            unsigned r = ir_new_vreg(lctx->func);
+            ir_instr_t *i = ir_instr_new(IR_OP_EQ);
+            i->dst    = ir_val_vreg(r, ir_type_i1());
+            i->src[0] = v;
+            i->src[1] = ir_val_imm(0, v.type);
+            ir_instr_push(lctx->cur_block, i);
+            *out_type = ir_type_i1();
+            return ir_val_vreg(r, ir_type_i1());
+        }
+
+        if (op == OP_UNARY_MINUS || op == OP_NEGATIVE || op == OP_BITWISE_NOT) {
+            ir_type_t lt;
+            ir_value_t v = ir_lower_expr(lctx, lhs, &lt);
+            unsigned r = ir_new_vreg(lctx->func);
+            ir_instr_t *i = ir_instr_new(op == OP_BITWISE_NOT ? IR_OP_NOT : IR_OP_NEG);
+            i->dst    = ir_val_vreg(r, lt);
+            i->src[0] = v;
+            ir_instr_push(lctx->cur_block, i);
+            *out_type = lt;
+            return ir_val_vreg(r, lt);
+        }
+
+        if (op == OP_LOGICAL_AND || op == OP_LOGICAL_OR) {
+            ir_diag(lctx, "IR001", expr->lineNumber,
+                    "logical operators require control-flow lowering");
+            return ir_val_none();
+        }
+
+        if (!lhs || !rhs) {
+            ir_diag(lctx, "IR001", expr->lineNumber,
+                    "malformed operator node");
+            return ir_val_none();
+        }
+
+        /* Binary ops (arithmetic, bitwise, shifts, comparisons) */
+        ir_type_t lt, rt;
+        ir_value_t lv = ir_lower_expr(lctx, lhs, &lt);
+        ir_value_t rv = ir_lower_expr(lctx, rhs, &rt);
+
+        int is_unsigned = sem_type_is_unsigned(info ? info->type : NULL);
+        lv = maybe_widen(lctx, lv, is_unsigned);
+        rv = maybe_widen(lctx, rv, is_unsigned);
+
+        ir_opcode_t ir_op = binop_opcode(op, is_unsigned);
+        ir_type_t dst_type = expr_type;
+        if (ir_op == IR_OP_EQ || ir_op == IR_OP_NEQ ||
+            ir_op == IR_OP_LTS || ir_op == IR_OP_LES ||
+            ir_op == IR_OP_GTS || ir_op == IR_OP_GES ||
+            ir_op == IR_OP_LTU || ir_op == IR_OP_LEU ||
+            ir_op == IR_OP_GTU || ir_op == IR_OP_GEU) {
+            dst_type = ir_type_i1();
+            *out_type = dst_type;
+        }
+
+        unsigned r = ir_new_vreg(lctx->func);
+        ir_instr_t *i = ir_instr_new(ir_op);
+        i->dst    = ir_val_vreg(r, dst_type);
+        i->src[0] = lv;
+        i->src[1] = rv;
+        ir_instr_push(lctx->cur_block, i);
+        return ir_val_vreg(r, dst_type);
     }
 
     /* ── §8.2 rule 4: Pre/post inc/dec ────────────────── */
     case NODE_PRE_INC:
     case NODE_PRE_DEC: {
-        // G1: TODO: compute address, load old, add/sub 1, store new, return new
-        return ir_val_none();
+        ir_type_t pt;
+        ir_value_t addr = ir_lower_lvalue_addr(lctx, expr->p_firstChild, &pt);
+        ir_value_t oldv = emit_load(lctx, addr, pt);
+        ir_value_t one = ir_val_imm(1, pt);
+        unsigned r = ir_new_vreg(lctx->func);
+        ir_instr_t *i = ir_instr_new((expr->nodeType == NODE_PRE_INC) ? IR_OP_ADD : IR_OP_SUB);
+        i->dst    = ir_val_vreg(r, pt);
+        i->src[0] = oldv;
+        i->src[1] = one;
+        ir_instr_push(lctx->cur_block, i);
+        ir_value_t newv = ir_val_vreg(r, pt);
+        emit_store(lctx, addr, newv);
+        *out_type = pt;
+        return newv;
     }
 
     case NODE_POST_INC:
     case NODE_POST_DEC: {
-        // G1: TODO: compute address, load old, add/sub 1, store new, return old
-        return ir_val_none();
+        ir_type_t pt;
+        ir_value_t addr = ir_lower_lvalue_addr(lctx, expr->p_firstChild, &pt);
+        ir_value_t oldv = emit_load(lctx, addr, pt);
+        ir_value_t one = ir_val_imm(1, pt);
+        unsigned r = ir_new_vreg(lctx->func);
+        ir_instr_t *i = ir_instr_new((expr->nodeType == NODE_POST_INC) ? IR_OP_ADD : IR_OP_SUB);
+        i->dst    = ir_val_vreg(r, pt);
+        i->src[0] = oldv;
+        i->src[1] = one;
+        ir_instr_push(lctx->cur_block, i);
+        ir_value_t newv = ir_val_vreg(r, pt);
+        emit_store(lctx, addr, newv);
+        *out_type = pt;
+        return oldv;
     }
 
     /* ── §8.2 rule 5: Ternary ── */
