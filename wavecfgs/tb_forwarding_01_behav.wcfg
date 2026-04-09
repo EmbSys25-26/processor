@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_forwarding_01_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_forwarding_01" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="100 ns"></ZoomStartTime>
+      <ZoomEndTime time="460 ns"></ZoomEndTime>
+      <Cursor1Time time="115 ns"></Cursor1Time>
+      <Cursor2Time time="175 ns"></Cursor2Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="240"></NameColumnWidth>
+      <ValueColumnWidth column_width="80"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="60" />
+
+   <!-- ======================= CLOCK ======================= -->
+   <wvobject type="divider" fp_name="div_clk">
+      <obj_property name="label">CLOCK / RESET</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/_clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/_rst">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+
+   <!-- ======================= IF ========================== -->
+   <wvobject type="divider" fp_name="div_if">
+      <obj_property name="label">━━ IF ━━━━━━━━━━━━━━━━━━━━━━━━━━━━</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/if_v">
+      <obj_property name="ElementShortName">IF  valid</obj_property>
+      <obj_property name="ObjectShortName">IF  valid</obj_property>
+      <obj_property name="CustomSignalColor">#00DDDD</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/if_pc">
+      <obj_property name="ElementShortName">IF  PC</obj_property>
+      <obj_property name="ObjectShortName">IF  PC</obj_property>
+      <obj_property name="RadixType">HEX</obj_property>
+      <obj_property name="CustomSignalColor">#00DDDD</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/if_insn">
+      <obj_property name="ElementShortName">IF  insn</obj_property>
+      <obj_property name="ObjectShortName">IF  insn</obj_property>
+      <obj_property name="RadixType">HEX</obj_property>
+      <obj_property name="CustomSignalColor">#00DDDD</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+
+   <!-- ======================= ID ========================== -->
+   <wvobject type="divider" fp_name="div_id">
+      <obj_property name="label">━━ ID ━━━━━━━━━━━━━━━━━━━━━━━━━━━━</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/id_v">
+      <obj_property name="ElementShortName">ID  valid</obj_property>
+      <obj_property name="ObjectShortName">ID  valid</obj_property>
+      <obj_property name="CustomSignalColor">#DDDD00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/id_pc">
+      <obj_property name="ElementShortName">ID  PC</obj_property>
+      <obj_property name="ObjectShortName">ID  PC</obj_property>
+      <obj_property name="RadixType">HEX</obj_property>
+      <obj_property name="CustomSignalColor">#DDDD00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/u_id_stage/i_insn">
+      <obj_property name="ElementShortName">ID  insn</obj_property>
+      <obj_property name="ObjectShortName">ID  insn</obj_property>
+      <obj_property name="RadixType">HEX</obj_property>
+      <obj_property name="CustomSignalColor">#DDDD00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/_id_rd">
+      <obj_property name="ElementShortName">ID  rd</obj_property>
+      <obj_property name="ObjectShortName">ID  rd</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/_id_rs">
+      <obj_property name="ElementShortName">ID  rs</obj_property>
+      <obj_property name="ObjectShortName">ID  rs</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+
+   <!-- ======================= EX ========================== -->
+   <wvobject type="divider" fp_name="div_ex">
+      <obj_property name="label">━━ EX ━━━━━━━━━━━━━━━━━━━━━━━━━━━━</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/ex_v">
+      <obj_property name="ElementShortName">EX  valid</obj_property>
+      <obj_property name="ObjectShortName">EX  valid</obj_property>
+      <obj_property name="CustomSignalColor">#AAAAAA</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/ex_pc">
+      <obj_property name="ElementShortName">EX  PC</obj_property>
+      <obj_property name="ObjectShortName">EX  PC</obj_property>
+      <obj_property name="RadixType">HEX</obj_property>
+      <obj_property name="CustomSignalColor">#AAAAAA</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/_idex_rd">
+      <obj_property name="ElementShortName">EX  rd</obj_property>
+      <obj_property name="ObjectShortName">EX  rd</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/_idex_rs">
+      <obj_property name="ElementShortName">EX  rs</obj_property>
+      <obj_property name="ObjectShortName">EX  rs</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+   <!-- Operandos antes do forward mux — valor "stale" do regfile -->
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/_idex_rd_data">
+      <obj_property name="ElementShortName">EX  rd_data [regfile]</obj_property>
+      <obj_property name="ObjectShortName">EX  rd_data [regfile]</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/_idex_rs_data">
+      <obj_property name="ElementShortName">EX  rs_data [regfile]</obj_property>
+      <obj_property name="ObjectShortName">EX  rs_data [regfile]</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+   <!-- ALU result — valor que sai do EX -->
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/u_ex_stage/o_wb_pre_data">
+      <obj_property name="ElementShortName">EX  ALU result</obj_property>
+      <obj_property name="ObjectShortName">EX  ALU result</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+      <obj_property name="CustomSignalColor">#AAAAAA</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+
+   <!-- ======================= FORWARDING ================== -->
+   <!-- Este é o grupo mais importante para debugging do forwarding -->
+   <wvobject type="divider" fp_name="div_fwd">
+      <obj_property name="label">━━ FORWARDING ★ ━━━━━━━━━━━━━━━━━━</obj_property>
+   </wvobject>
+   <!-- ForwardAE e ForwardBE: quando = 1 há forwarding activo -->
+   <wvobject type="logic" fp_name="/tb_forwarding_01/fwd_a">
+      <obj_property name="ElementShortName">★ ForwardAE  (rd usa MEM)</obj_property>
+      <obj_property name="ObjectShortName">★ ForwardAE  (rd usa MEM)</obj_property>
+      <obj_property name="CustomSignalColor">#FF5500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/fwd_b">
+      <obj_property name="ElementShortName">★ ForwardBE  (rs usa MEM)</obj_property>
+      <obj_property name="ObjectShortName">★ ForwardBE  (rs usa MEM)</obj_property>
+      <obj_property name="CustomSignalColor">#FF5500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <!-- O dado que é efectivamente forwarded para o EX -->
+   <wvobject type="array" fp_name="/tb_forwarding_01/fwd_dat">
+      <obj_property name="ElementShortName">★ FWD_DATA   (exmem_wb)</obj_property>
+      <obj_property name="ObjectShortName">★ FWD_DATA   (exmem_wb)</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+      <obj_property name="CustomSignalColor">#FF5500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <!-- Registos comparados pelo forwarding unit -->
+   <wvobject type="array" fp_name="/tb_forwarding_01/frd_ex">
+      <obj_property name="ElementShortName">  rdE   (reg em EX lê)</obj_property>
+      <obj_property name="ObjectShortName">  rdE   (reg em EX lê)</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/frs_ex">
+      <obj_property name="ElementShortName">  rsE   (reg em EX lê)</obj_property>
+      <obj_property name="ObjectShortName">  rsE   (reg em EX lê)</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/frd_mem">
+      <obj_property name="ElementShortName">  WriteRegM (reg em MEM escreve)</obj_property>
+      <obj_property name="ObjectShortName">  WriteRegM (reg em MEM escreve)</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+
+   <!-- ======================= MEM ========================= -->
+   <wvobject type="divider" fp_name="div_mem">
+      <obj_property name="label">━━ MEM ━━━━━━━━━━━━━━━━━━━━━━━━━━━</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/mem_v">
+      <obj_property name="ElementShortName">MEM valid</obj_property>
+      <obj_property name="ObjectShortName">MEM valid</obj_property>
+      <obj_property name="CustomSignalColor">#CC6600</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/mem_pc">
+      <obj_property name="ElementShortName">MEM PC</obj_property>
+      <obj_property name="ObjectShortName">MEM PC</obj_property>
+      <obj_property name="RadixType">HEX</obj_property>
+      <obj_property name="CustomSignalColor">#CC6600</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/_exmem_rd">
+      <obj_property name="ElementShortName">MEM rd  (dest que vai escrever)</obj_property>
+      <obj_property name="ObjectShortName">MEM rd  (dest que vai escrever)</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/dut/u_cpu/_exmem_rf_we">
+      <obj_property name="ElementShortName">MEM rf_we</obj_property>
+      <obj_property name="ObjectShortName">MEM rf_we</obj_property>
+   </wvobject>
+
+   <!-- ======================= WB ========================== -->
+   <wvobject type="divider" fp_name="div_wb">
+      <obj_property name="label">━━ WB ━━━━━━━━━━━━━━━━━━━━━━━━━━━━</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/wb_v">
+      <obj_property name="ElementShortName">WB  valid</obj_property>
+      <obj_property name="ObjectShortName">WB  valid</obj_property>
+      <obj_property name="CustomSignalColor">#BB44BB</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <!-- rf_we + rf_wa + rf_wd: o trio mais útil para confirmar resultados -->
+   <wvobject type="logic" fp_name="/tb_forwarding_01/rf_we">
+      <obj_property name="ElementShortName">WB  rf_we</obj_property>
+      <obj_property name="ObjectShortName">WB  rf_we</obj_property>
+      <obj_property name="CustomSignalColor">#BB44BB</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/rf_wa">
+      <obj_property name="ElementShortName">WB  rf_wa  (dest)</obj_property>
+      <obj_property name="ObjectShortName">WB  rf_wa  (dest)</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+      <obj_property name="CustomSignalColor">#BB44BB</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/rf_wd">
+      <obj_property name="ElementShortName">WB  rf_wd  (valor)</obj_property>
+      <obj_property name="ObjectShortName">WB  rf_wd  (valor)</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+      <obj_property name="CustomSignalColor">#BB44BB</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+
+   <!-- ======================= HAZARD ====================== -->
+   <wvobject type="divider" fp_name="div_haz">
+      <obj_property name="label">━━ HAZARD ━━━━━━━━━━━━━━━━━━━━━━━━</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/stall_if">
+      <obj_property name="ElementShortName">stall_if</obj_property>
+      <obj_property name="ObjectShortName">stall_if</obj_property>
+      <obj_property name="CustomSignalColor">#FF0000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/stall_id">
+      <obj_property name="ElementShortName">stall_id</obj_property>
+      <obj_property name="ObjectShortName">stall_id</obj_property>
+      <obj_property name="CustomSignalColor">#FF0000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/luh">
+      <obj_property name="ElementShortName">load_use_hazard</obj_property>
+      <obj_property name="ObjectShortName">load_use_hazard</obj_property>
+      <obj_property name="CustomSignalColor">#FF0000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/flush_if">
+      <obj_property name="ElementShortName">flush_ifid</obj_property>
+      <obj_property name="ObjectShortName">flush_ifid</obj_property>
+      <obj_property name="CustomSignalColor">#FF8800</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+
+   <!-- ======================= CONDITION CODES ============= -->
+   <wvobject type="divider" fp_name="div_cc">
+      <obj_property name="label">━━ CC  (TEST 5) ━━━━━━━━━━━━━━━━━━</obj_property>
+   </wvobject>
+   <!-- ex_flag_we=1 é o momento exacto em que o CC é válido -->
+   <wvobject type="logic" fp_name="/tb_forwarding_01/ex_flag_we">
+      <obj_property name="ElementShortName">EX  flag_we  (CC update)</obj_property>
+      <obj_property name="ObjectShortName">EX  flag_we  (CC update)</obj_property>
+      <obj_property name="CustomSignalColor">#00CC44</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <!-- Ler ex_new_ccz no ciclo em que ex_flag_we=1 — valor correcto -->
+   <wvobject type="logic" fp_name="/tb_forwarding_01/ex_ccz">
+      <obj_property name="ElementShortName">EX  new_ccz  (Z gerado)</obj_property>
+      <obj_property name="ObjectShortName">EX  new_ccz  (Z gerado)</obj_property>
+      <obj_property name="CustomSignalColor">#00CC44</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/ex_ccn">
+      <obj_property name="ElementShortName">EX  new_ccn  (N gerado)</obj_property>
+      <obj_property name="ObjectShortName">EX  new_ccn  (N gerado)</obj_property>
+      <obj_property name="CustomSignalColor">#00CC44</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <!-- _ccz arquitectural — vês aqui o bug: reseta a 0 no ciclo seguinte -->
+   <wvobject type="logic" fp_name="/tb_forwarding_01/dut/u_cpu/_ccz">
+      <obj_property name="ElementShortName">CPU _ccz  (BUG: reseta a 0)</obj_property>
+      <obj_property name="ObjectShortName">CPU _ccz  (BUG: reseta a 0)</obj_property>
+      <obj_property name="CustomSignalColor">#FF0000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_forwarding_01/dut/u_cpu/_ccn">
+      <obj_property name="ElementShortName">CPU _ccn</obj_property>
+      <obj_property name="ObjectShortName">CPU _ccn</obj_property>
+   </wvobject>
+
+   <!-- ======================= REGFILE MIRRORS ============= -->
+   <wvobject type="divider" fp_name="div_rf">
+      <obj_property name="label">━━ REGFILE ━━━━━━━━━━━━━━━━━━━━━━━</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/u_regfile/_t0">
+      <obj_property name="ElementShortName">t0  r4</obj_property>
+      <obj_property name="ObjectShortName">t0  r4</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+      <obj_property name="CustomSignalColor">#00CC44</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/u_regfile/_t1">
+      <obj_property name="ElementShortName">t1  r5</obj_property>
+      <obj_property name="ObjectShortName">t1  r5</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+      <obj_property name="CustomSignalColor">#00CC44</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/u_regfile/_t2">
+      <obj_property name="ElementShortName">t2  r6</obj_property>
+      <obj_property name="ObjectShortName">t2  r6</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+      <obj_property name="CustomSignalColor">#00CC44</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/u_regfile/_t3">
+      <obj_property name="ElementShortName">t3  r7</obj_property>
+      <obj_property name="ObjectShortName">t3  r7</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+      <obj_property name="CustomSignalColor">#00CC44</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_forwarding_01/dut/u_cpu/u_regfile/_s0">
+      <obj_property name="ElementShortName">s0  r8  (gap)</obj_property>
+      <obj_property name="ObjectShortName">s0  r8  (gap)</obj_property>
+      <obj_property name="RadixType">UNSIGNED</obj_property>
+   </wvobject>
+
+</wave_config>

@@ -1,4 +1,6 @@
 `timescale 1ns / 1ps
+
+
 module brom_1kb_be(
     input wire i_clk,
     input wire i_rst,
@@ -7,19 +9,25 @@ module brom_1kb_be(
     output wire [7:0] o_dout_h,
     output wire [7:0] o_dout_l
 );
+
 /*************************************************************************************
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
     reg [7:0] _mem_h [0:511];
     reg [7:0] _mem_l [0:511];
+
     reg [7:0] _dout_h;
     reg [7:0] _dout_l;
+
     integer _i;
+
     reg [1023:0] _mem_hex_lo;
     reg [1023:0] _mem_hex_hi;
+
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
  ************************************************************************************/
+
 /*************************************************************************************
  * 2.1 Initialization
  ************************************************************************************/
@@ -31,6 +39,7 @@ module brom_1kb_be(
         _dout_h = 8'hF0;
         _dout_l = 8'h00;
     end
+
     initial begin
         // Optional overrides for synthesis/implementation:
         // -DBROM_MEM_LO_PATH=\"/abs/path/to/mem_lo.hex\"
@@ -47,16 +56,20 @@ module brom_1kb_be(
         _mem_hex_lo = "srcs/mem/mem_lo.hex";
         _mem_hex_hi = "srcs/mem/mem_hi.hex";
 `elsif SIM
-        _mem_hex_lo = "/home/mendes/Transferências/processor-pipeline-4-stage/srcs/mem/mem_lo.hex";
-        _mem_hex_hi = "/home/mendes/Transferências/processor-pipeline-4-stage/srcs/mem/mem_hi.hex";
+        // Vivado behavioral sim launch directory depth.
+     //   _mem_hex_lo = "../../../../srcs/mem/mem_lo.hex";
+     //   _mem_hex_hi = "../../../../srcs/mem/mem_hi.hex";
+          _mem_hex_lo = "/home/brunoa/Documents/processor-pipeline-4-stage/processor-pipeline-4-stage/srcs/mem/mem_lo.hex";
+        _mem_hex_hi = "/home/brunoa/Documents/processor-pipeline-4-stage/processor-pipeline-4-stage/srcs/mem/mem_hi.hex";
 `else
         // Board-flow default absolute paths (override via BROM_MEM_*_PATH if needed).
-        _mem_hex_lo = "/home/mendes/Transferências/processor-pipeline-4-stage/srcs/mem/mem_lo.hex";
-        _mem_hex_hi = "/home/mendes/Transferências/processor-pipeline-4-stage/srcs/mem/mem_hi.hex";
+        _mem_hex_lo = "/home/brunoa/Documents/processor-pipeline-4-stage/processor-pipeline-4-stage/srcs/mem/mem_lo.hex";
+        _mem_hex_hi = "/home/brunoa/Documents/processor-pipeline-4-stage/processor-pipeline-4-stage/srcs/mem/mem_hi.hex";
 `endif
         $readmemh(_mem_hex_lo, _mem_l);
         $readmemh(_mem_hex_hi, _mem_h);
     end
+
 /*************************************************************************************
  * 2.2 Instruction Read
  ************************************************************************************/
@@ -69,6 +82,8 @@ module brom_1kb_be(
             _dout_l <= _mem_l[i_addr];
         end
     end
+
     assign o_dout_h = _dout_h;
     assign o_dout_l = _dout_l;
+
 endmodule
