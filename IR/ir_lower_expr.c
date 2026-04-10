@@ -323,14 +323,14 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
     /* ── §8.2 rule 3: Assignment ────────────────────────── */
     case NODE_OPERATOR: {
         OperatorType_t op = (OperatorType_t)expr->nodeData.dVal;
-        const TreeNode_t *lhs = expr->p_firstChild;
-        const TreeNode_t *rhs = lhs ? lhs->p_sibling : NULL;
+        const TreeNode_t *lhs_node = expr->p_firstChild;
+        const TreeNode_t *rhs_node = lhs_node ? lhs_node->p_sibling : NULL;
 
         if (op == OP_ASSIGN) {
             ir_type_t lhs_type;
-            ir_value_t addr = ir_lower_lvalue_addr(lctx, lhs, &lhs_type);
+            ir_value_t addr = ir_lower_lvalue_addr(lctx, lhs_node, &lhs_type);
             ir_type_t rhs_type;
-            ir_value_t rval = ir_lower_expr(lctx, rhs, &rhs_type);
+            ir_value_t rval = ir_lower_expr(lctx, rhs_node, &rhs_type);
             int is_unsigned = sem_type_is_unsigned(info ? info->type : NULL);
             rval = cast_value(lctx, rval, lhs_type, is_unsigned);
             emit_store(lctx, addr, rval);
@@ -344,10 +344,10 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
             op == OP_RIGHT_SHIFT_ASSIGN || op == OP_BITWISE_AND_ASSIGN ||
             op == OP_BITWISE_OR_ASSIGN || op == OP_BITWISE_XOR_ASSIGN) {
             ir_type_t lhs_type;
-            ir_value_t addr = ir_lower_lvalue_addr(lctx, lhs, &lhs_type);
+            ir_value_t addr = ir_lower_lvalue_addr(lctx, lhs_node, &lhs_type);
             ir_value_t old = emit_load(lctx, addr, lhs_type);
             ir_type_t rhs_type;
-            ir_value_t rval = ir_lower_expr(lctx, rhs, &rhs_type);
+            ir_value_t rval = ir_lower_expr(lctx, rhs_node, &rhs_type);
             int is_unsigned = sem_type_is_unsigned(info ? info->type : NULL);
             rval = cast_value(lctx, rval, lhs_type, is_unsigned);
 
@@ -380,7 +380,7 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
 
         if (op == OP_LOGICAL_NOT) {
             ir_type_t lt;
-            ir_value_t v = ir_lower_expr(lctx, lhs, &lt);
+            ir_value_t v = ir_lower_expr(lctx, lhs_node, &lt);
             v = maybe_widen(lctx, v, 0);
             unsigned r = ir_new_vreg(lctx->func);
             ir_instr_t *i = ir_instr_new(IR_OP_EQ);
@@ -417,7 +417,7 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
 
         if (op == OP_UNARY_MINUS || op == OP_NEGATIVE || op == OP_BITWISE_NOT) {
             ir_type_t lt;
-            ir_value_t v = ir_lower_expr(lctx, lhs, &lt);
+            ir_value_t v = ir_lower_expr(lctx, lhs_node, &lt);
             unsigned r = ir_new_vreg(lctx->func);
             ir_instr_t *i = ir_instr_new(op == OP_BITWISE_NOT ? IR_OP_NOT : IR_OP_NEG);
             i->dst    = ir_val_vreg(r, lt);
@@ -433,7 +433,7 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
             return ir_val_none();
         }
 
-        if (!lhs || !rhs) {
+        if (!lhs_node || !rhs_node) {
             ir_diag(lctx, "IR001", expr->lineNumber,
                     "malformed operator node");
             return ir_val_none();
@@ -441,8 +441,8 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
 
         /* Binary ops (arithmetic, bitwise, shifts, comparisons) */
         ir_type_t lt, rt;
-        ir_value_t lv = ir_lower_expr(lctx, lhs, &lt);
-        ir_value_t rv = ir_lower_expr(lctx, rhs, &rt);
+        ir_value_t lv = ir_lower_expr(lctx, lhs_node, &lt);
+        ir_value_t rv = ir_lower_expr(lctx, rhs_node, &rt);
 
         int is_unsigned = sem_type_is_unsigned(info ? info->type : NULL);
         lv = maybe_widen(lctx, lv, is_unsigned);
