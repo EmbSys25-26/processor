@@ -392,6 +392,29 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
             return ir_val_vreg(r, ir_type_i1());
         }
 
+        /* ── Sizeof ── */
+        if (op == OP_SIZEOF) {
+            /* Resolved to a constant at IR time based on IR type size */
+            long sz = 2; /* default */
+            if (lhs_node) {
+                const sem_node_info_t *si =
+                    semantic_get_node_info(lctx->sem_ctx, lhs_node);
+                if (si && si->type) {
+                    ir_type_t it = ir_type_from_sem(si->type);
+                    switch (it.kind) {
+                    case IR_TYPE_I1:  sz = 1; break;
+                    case IR_TYPE_I8:  sz = 1; break;
+                    case IR_TYPE_I16: sz = 2; break;
+                    case IR_TYPE_I32: sz = 4; break;
+                    case IR_TYPE_PTR: sz = 2; break;
+                    default:          sz = 2; break;
+                    }
+                }
+            }
+            *out_type = ir_type_i16();
+            return ir_val_imm(sz, ir_type_i16());
+        }
+
         if (op == OP_UNARY_MINUS || op == OP_NEGATIVE || op == OP_BITWISE_NOT) {
             ir_type_t lt;
             ir_value_t v = ir_lower_expr(lctx, lhs, &lt);
