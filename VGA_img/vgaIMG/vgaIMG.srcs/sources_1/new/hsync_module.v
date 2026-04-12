@@ -1,168 +1,178 @@
-`timescale 1ns / 1ps
-
-`include "constants.vh"
-
-module m_hsync_vga(
-    input wire i_clk,               // VGA pixel CLK
-    input wire i_rst,
-    input wire i_enVGA,
-    input wire [15:0] i_axis_tdata,   // Pixel: [15:12]=R [11:8]=G [7:4]=B
-    input wire i_axis_tvalid,  // VDMA has pixel ready to send
-    input wire i_axis_tuser,
-    input wire i_axis_tlast,
-    output wire o_axis_tready,  // hsync tells VDMA to send pixel
-    output wire o_endLine, 
-    output wire [`VGA_CHANNEL_SIZE:0] o_vga_red,
-    output wire [`VGA_CHANNEL_SIZE:0] o_vga_green,
-    output wire [`VGA_CHANNEL_SIZE:0] o_vga_blue,
-    output wire o_hsync,
-    output wire [1:0] o_state_debug
-);
-
-/*************************************************************************************
- * SECTION 1. DECLARE/DEFINE VARIABLES
- ************************************************************************************/
-
-/****************************************************************************
- * 1.1 DEFINE FSM STATES 
- ***************************************************************************/
-    localparam [1:0] FRONT_PORCH = 2'b00;
-    localparam [1:0] SYNC        = 2'b01;
-    localparam [1:0] BACK_PORCH  = 2'b10;
-    localparam [1:0] VISIBLE     = 2'b11; 
-  
-/****************************************************************************
- * 1.2 DEFINE THRESHOLDS (in pixel CLK units)
- ***************************************************************************/ 
-    localparam [9:0] THRES_FP      = 10'd16;
-    localparam [9:0] THRES_SYNC    = 10'd96;
-    localparam [9:0] THRES_BP      = 10'd48;
-    localparam [9:0] THRES_VISIBLE = 10'd640;    
- 
-/****************************************************************************
- * 1.3 DECLARE VARIABLES    
- ***************************************************************************/
-    reg [1:0]  _state;
-    reg        _endLine;
-    reg [9:0]  _pixelCounter;
-    reg        _hsync;
-
-    reg [`VGA_CHANNEL_SIZE:0] _vga_red;
-    reg [`VGA_CHANNEL_SIZE:0] _vga_green;
-    reg [`VGA_CHANNEL_SIZE:0] _vga_blue;
-
-    wire _unused = |i_axis_tdata[3:0];  
-
-/*************************************************************************************
- * SECTION 2. IMPLEMENTATION
- ************************************************************************************/
- 
-/****************************************************************************
- * 2.1 STATIC ASSIGNMENTS  
- ***************************************************************************/
-    wire _in_visible   = (_state == VISIBLE) && i_enVGA && ~i_rst;
-    wire _pixel_accept = _in_visible && i_axis_tvalid;
-    assign o_axis_tready = _in_visible;
+    `timescale 1ns / 1ps
     
-    assign o_endLine = _endLine;
-    assign o_hsync   = _hsync;
-    assign o_state_debug = _state;
+    `include "constants.vh"
     
-    assign o_vga_red   = _vga_red;
-    assign o_vga_green = _vga_green;
-    assign o_vga_blue  = _vga_blue;
-
+    module m_hsync_vga(
+        input wire i_clk,               // VGA pixel CLK
+        input wire i_rst,
+        input wire i_enVGA,
+        input wire [15:0] i_axis_tdata,   // Pixel: [15:12]=R [11:8]=G [7:4]=B
+        input wire i_axis_tvalid,  // VDMA has pixel ready to send
+        input wire i_axis_tuser,
+        input wire i_axis_tlast,
+        output wire o_axis_tready,  // hsync tells VDMA to send pixel
+        output wire o_endLine, 
+        output wire [`VGA_CHANNEL_SIZE:0] o_vga_red,
+        output wire [`VGA_CHANNEL_SIZE:0] o_vga_green,
+        output wire [`VGA_CHANNEL_SIZE:0] o_vga_blue,
+        output wire o_hsync,
+        output wire [1:0] o_state_debug,
+        input wire i_vactive
+    );
+    
+    /*************************************************************************************
+     * SECTION 1. DECLARE/DEFINE VARIABLES
+     ************************************************************************************/
+    
+    /****************************************************************************
+     * 1.1 DEFINE FSM STATES 
+     ***************************************************************************/
+        localparam [1:0] FRONT_PORCH = 2'b00;
+        localparam [1:0] SYNC        = 2'b01;
+        localparam [1:0] BACK_PORCH  = 2'b10;
+        localparam [1:0] VISIBLE     = 2'b11; 
       
-/****************************************************************************
- * 2.2 FSM   
- ***************************************************************************/
- always @(posedge i_clk) begin
-    if (i_rst || ~i_enVGA) begin
-        _state        <= FRONT_PORCH;
-        _endLine      <= 1'b0;
-        _pixelCounter <= 10'b0;
-        _hsync        <= 1'b1;
-        _vga_red      <= 4'b0000;
-        _vga_green    <= 4'b0000;
-        _vga_blue     <= 4'b0000;
-    end
-    else begin
-        _endLine <= 1'b0;
+    /****************************************************************************
+     * 1.2 DEFINE THRESHOLDS (in pixel CLK units)
+     ***************************************************************************/ 
+        localparam [9:0] THRES_FP      = 10'd16;
+        localparam [9:0] THRES_SYNC    = 10'd96;
+        localparam [9:0] THRES_BP      = 10'd48;
+        localparam [9:0] THRES_VISIBLE = 10'd640;    
+     
+    /****************************************************************************
+     * 1.3 DECLARE VARIABLES    
+     ***************************************************************************/
+        (* mark_debug = "true" *) reg [1:0]  _state;
+        (* mark_debug = "true" *) reg        _endLine;
+        (* mark_debug = "true" *) reg [9:0]  _pixelCounter;
+        (* mark_debug = "true" *) reg        _hsync;
+    
+        reg [`VGA_CHANNEL_SIZE:0] _vga_red;
+        reg [`VGA_CHANNEL_SIZE:0] _vga_green;
+        reg [`VGA_CHANNEL_SIZE:0] _vga_blue;
+    
+        wire _unused = |i_axis_tdata[3:0];  
+    
+    /*************************************************************************************
+     * SECTION 2. IMPLEMENTATION
+     ************************************************************************************/
+     
+    /****************************************************************************
+     * 2.1 STATIC ASSIGNMENTS  
+     ***************************************************************************/
+        wire _in_visible   = (_state == VISIBLE) && i_enVGA && ~i_rst && i_vactive;
+        wire _pixel_accept = _in_visible && i_axis_tvalid;
+        assign o_axis_tready = _in_visible;
+        
+        assign o_endLine = _endLine;
+        assign o_hsync   = _hsync;
+        assign o_state_debug = _state;
+        
+        assign o_vga_red   = _vga_red;
+        assign o_vga_green = _vga_green;
+        assign o_vga_blue  = _vga_blue;
+        
+  
+        
+        
+        reg endline_raw;
 
-        case (_state)
+        always @(posedge i_clk) begin
+        // gera o pulso exatamente no ciclo do pixel 639
+        endline_raw <= (_state == VISIBLE && _pixelCounter == THRES_VISIBLE - 1);
 
-            FRONT_PORCH: begin
-                _hsync <= 1'b1;
-                _vga_red   <= 4'b0000;
-                _vga_green <= 4'b0000;
-                _vga_blue  <= 4'b0000;
-                                
-                if (_pixelCounter < THRES_FP - 1) begin
-                    _pixelCounter <= _pixelCounter + 1;
-                end else begin
-                    _pixelCounter <= 10'b0;
-                    _state <= SYNC;
+        // endLine agora fica alinhado com o tlast
+        _endLine <= endline_raw;
+        end
+
+       
+    
+          
+    /****************************************************************************
+     * 2.2 FSM   
+     ***************************************************************************/
+     always @(posedge i_clk) begin
+        if (i_rst || ~i_enVGA) begin
+            _state        <= FRONT_PORCH;
+            //_endLine      <= 1'b0;
+            _pixelCounter <= 10'b0;
+            _hsync        <= 1'b1;
+            _vga_red      <= 4'b0000;
+            _vga_green    <= 4'b0000;
+            _vga_blue     <= 4'b0000;
+        end
+        else begin
+            //_endLine <= 1'b0;
+    
+            case (_state)
+    
+                FRONT_PORCH: begin
+                    _hsync <= 1'b1;
+                    _vga_red   <= 4'b0000;
+                    _vga_green <= 4'b0000;
+                    _vga_blue  <= 4'b0000;
+                                    
+                    if (_pixelCounter < THRES_FP - 1) begin
+                        _pixelCounter <= _pixelCounter + 1;
+                    end else begin
+                        _pixelCounter <= 10'b0;
+                        _state <= SYNC;
+                    end
                 end
-            end
-
-            SYNC: begin
-                _hsync <= 1'b0;
-                           
-                if (_pixelCounter < THRES_SYNC - 1) begin
-                    _pixelCounter <= _pixelCounter + 1;
-                end else begin
-                    _pixelCounter <= 10'b0;
-                    _state <= BACK_PORCH;
+    
+                SYNC: begin
+                    _hsync <= 1'b0;
+                               
+                    if (_pixelCounter < THRES_SYNC - 1) begin
+                        _pixelCounter <= _pixelCounter + 1;
+                    end else begin
+                        _pixelCounter <= 10'b0;
+                        _state <= BACK_PORCH;
+                    end
                 end
-            end
-
-            BACK_PORCH: begin
-                _hsync <= 1'b1;
-                                
-                if (_pixelCounter < THRES_BP - 1) begin
-                    _pixelCounter <= _pixelCounter + 1;
-                end else begin
-                    _pixelCounter <= 10'b0;
-                    _state <= VISIBLE;
+    
+                BACK_PORCH: begin
+                    _hsync <= 1'b1;
+                                    
+                    if (_pixelCounter < THRES_BP - 1) begin
+                        _pixelCounter <= _pixelCounter + 1;
+                    end else begin
+                        _pixelCounter <= 10'b0;
+                        _state <= VISIBLE;
+                    end
                 end
-            end
+    
+                VISIBLE: begin
+                    _hsync <= 1'b1;
 
-            VISIBLE: begin
-                _hsync <= 1'b1;
-                
-                /*if (i_axis_tvalid && i_axis_tuser && (_pixelCounter != 10'd0)) begin
-                    _pixelCounter <= 10'b0;
-                    _state        <= BACK_PORCH;
-                end*/
-                
-                if (_pixel_accept && i_axis_tlast) begin
-                    _vga_red      <= i_axis_tdata[15:12];
-                    _vga_green    <= i_axis_tdata[11:8];
-                    _vga_blue     <= i_axis_tdata[7:4];
-                    _pixelCounter <= 10'b0;
-                    _state        <= FRONT_PORCH;
-                    _endLine      <= 1'b1;
-                end
-                
-                else if (_pixel_accept) begin
-                    _vga_red   <= i_axis_tdata[15:12];
-                    _vga_green <= i_axis_tdata[11:8];
-                    _vga_blue  <= i_axis_tdata[7:4];
- 
+                    // 1) AVANÇA SEMPRE O CONTADOR DE PIXELS
                     if (_pixelCounter == THRES_VISIBLE - 1) begin
+                        //_endLine      <= 1'b1;
                         _pixelCounter <= 10'b0;
                         _state        <= FRONT_PORCH;
-                        _endLine      <= 1'b1;
+                        
                     end else begin
                         _pixelCounter <= _pixelCounter + 1;
                     end
-                end
-            
-            end
-            
 
-        endcase 
-    end    
- end 
+                    // 2) ATUALIZA AS CORES APENAS SE O VDMA TIVER PIXEL VÁLIDO
+                    if (i_axis_tvalid) begin
+                        _vga_red   <= i_axis_tdata[15:12];
+                        _vga_green <= i_axis_tdata[11:8];
+                        _vga_blue  <= i_axis_tdata[7:4];
+                    end else begin
+                    // Se não houver pixel, mostra preto - here maybe we have to replace to show the last pixel valid
+                        _vga_red   <= 4'b0000;
+                        _vga_green <= 4'b0000;
+                        _vga_blue  <= 4'b0000;
+                    end
+                    end
 
-endmodule
+                
+    
+            endcase 
+        end    
+     end 
+    
+    endmodule

@@ -1,4 +1,4 @@
-verilog xil_defaultlib -i "../../../../../../../../Vivado/2025.1/data/rsb/busdef" --include "/home/mariana/Vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../ipstatic" \
+verilog xil_defaultlib -i "../../../../../../../../../../../vivado/2025.1/data/rsb/busdef" --include "/home/simba/vivado/2025.1/Vivado/data/xilinx_vip/include" --include "../../../ipstatic" \
 "../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_clk_wiz.v" \
 "../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0.v" \
 

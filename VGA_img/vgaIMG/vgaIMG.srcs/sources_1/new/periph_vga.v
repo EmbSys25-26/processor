@@ -77,14 +77,15 @@ module m_vga_mmio(
     wire _enVGA_sync;
     wire _rst_sync_vga;
     
+    wire _vactive;
  /****************************************************************************
  * 1.4 DECLARE INTERNAL SIGNALS OF AXI4-STREAM OF VDMA
  ***************************************************************************/
-    wire [15:0] _axis_tdata;    
-    wire        _axis_tvalid;   
-    wire        _axis_tready; 
-    wire        _axis_tuser; 
-    wire        _axis_tlast;   
+   (* mark_debug = "true" *)  wire [15:0] _axis_tdata;    
+   (* mark_debug = "true" *)  wire        _axis_tvalid;   
+    (* mark_debug = "true" *) wire        _axis_tready; 
+    (* mark_debug = "true" *) wire        _axis_tuser; 
+   (* mark_debug = "true" *)  wire        _axis_tlast;   
     
     wire _clk_pixel;   // 25 MHz from internal clocking wizard
     wire _rst_n;       // Reset from PS
@@ -146,7 +147,8 @@ module m_vga_mmio(
         .o_vga_green(o_vga_green),
         .o_vga_blue(o_vga_blue),
         .o_hsync(o_hsync),
-        .o_state_debug(_hsync_state_debug)
+        .o_state_debug(_hsync_state_debug),
+        .i_vactive(_vactive)
      );
      
      m_vsync_vga vsync_module (
@@ -155,7 +157,8 @@ module m_vga_mmio(
         .i_enVGA (_enVGA_sync),
         .i_endLine(_endLine),
         .o_vsync(o_vsync),
-        .o_state_debug(_vsync_state_debug)
+        .o_state_debug(_vsync_state_debug),
+        .o_vactive(_vactive)
      );
      
      /*ila_0 ila (

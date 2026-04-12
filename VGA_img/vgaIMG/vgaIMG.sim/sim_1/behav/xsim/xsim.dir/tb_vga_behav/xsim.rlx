@@ -1,11 +1,11 @@
 
 { 
-    crc :  17578107869606484885  , 
+    crc :  6874737478528869835  , 
     ccp_crc :  0  , 
-    cmdline : " --incr --debug typical --relax --mt 8 -L xil_defaultlib -L xilinx_vip -L unisims_ver -L unimacro_ver -L secureip -L xpm --snapshot tb_vga_behav xil_defaultlib.tb_vga xil_defaultlib.glbl" , 
+    cmdline : " --incr --debug typical --relax --mt 8 -L xil_defaultlib -L unisims_ver -L unimacro_ver -L secureip -L xpm --snapshot tb_vga_behav xil_defaultlib.tb_vga xil_defaultlib.glbl" , 
     buildDate : "May 21 2025" , 
     buildTime : "22:59:56" , 
-    linkCmd : "/home/mariana/Vivado/2025.1/Vivado/lib/lnx64.o/../../tps/lnx64/gcc-9.3.0/bin/g++ -Wa,-W  -O -fPIC  -m64  -Wl,--no-as-needed  -Wl,--unresolved-symbols=ignore-all  -o \"xsim.dir/tb_vga_behav/xsimk\"   \"xsim.dir/tb_vga_behav/obj/xsim_0.lnx64.o\" \"xsim.dir/tb_vga_behav/obj/xsim_1.lnx64.o\" -L\"/home/mariana/Vivado/2025.1/Vivado/lib/lnx64.o\" -lxv_simulator_kernel    -L/home/mariana/Vivado/2025.1/Vivado/lib/lnx64.o/../../tps/lnx64/gcc-9.3.0/bin/../lib64 -Wl,--disable-new-dtags -Wl,-rpath=/home/mariana/Vivado/2025.1/Vivado/lib/lnx64.o/../../tps/lnx64/gcc-9.3.0/bin/../lib64 -lxv_simbridge_kernel" , 
+    linkCmd : "/home/simba/vivado/2025.1/Vivado/lib/lnx64.o/../../tps/lnx64/gcc-9.3.0/bin/g++ -Wa,-W  -O -fPIC  -m64  -Wl,--no-as-needed  -Wl,--unresolved-symbols=ignore-all  -o \"xsim.dir/tb_vga_behav/xsimk\"   \"xsim.dir/tb_vga_behav/obj/xsim_0.lnx64.o\" \"xsim.dir/tb_vga_behav/obj/xsim_1.lnx64.o\" -L\"/home/simba/vivado/2025.1/Vivado/lib/lnx64.o\" -lxv_simulator_kernel    -L/home/simba/vivado/2025.1/Vivado/lib/lnx64.o/../../tps/lnx64/gcc-9.3.0/bin/../lib64 -Wl,--disable-new-dtags -Wl,-rpath=/home/simba/vivado/2025.1/Vivado/lib/lnx64.o/../../tps/lnx64/gcc-9.3.0/bin/../lib64 -lxv_simbridge_kernel" , 
     aggregate_nets : 
     [ 
     ] 

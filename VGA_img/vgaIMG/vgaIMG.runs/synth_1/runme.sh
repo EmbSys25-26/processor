@@ -8,9 +8,9 @@
 # 
 
 if [ -z "$PATH" ]; then
-  PATH=/home/mariana/Vivado/2025.1/Vitis/bin:/home/mariana/Vivado/2025.1/Vivado/ids_lite/ISE/bin/lin64:/home/mariana/Vivado/2025.1/Vivado/bin
+  PATH=/home/simba/vivado/2025.1/Vitis/bin:/home/simba/vivado/2025.1/Vivado/ids_lite/ISE/bin/lin64:/home/simba/vivado/2025.1/Vivado/bin
 else
-  PATH=/home/mariana/Vivado/2025.1/Vitis/bin:/home/mariana/Vivado/2025.1/Vivado/ids_lite/ISE/bin/lin64:/home/mariana/Vivado/2025.1/Vivado/bin:$PATH
+  PATH=/home/simba/vivado/2025.1/Vitis/bin:/home/simba/vivado/2025.1/Vivado/ids_lite/ISE/bin/lin64:/home/simba/vivado/2025.1/Vivado/bin:$PATH
 fi
 export PATH
 
@@ -21,7 +21,7 @@ else
 fi
 export LD_LIBRARY_PATH
 
-HD_PWD='/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.runs/synth_1'
+HD_PWD='/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.runs/synth_1'
 cd "$HD_PWD"
 
 HD_LOG=runme.log

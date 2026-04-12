@@ -7,7 +7,8 @@ module m_vsync_vga(
     input wire i_enVGA,
     input wire i_endLine,   // Pulso de 1 clock vindo do HSync ao fim de cada linha
     output wire o_vsync,
-    output wire [1:0] o_state_debug
+    output wire [1:0] o_state_debug,
+    output wire o_vactive
  );
 
     // Estados da FSM [cite: 123, 124]
@@ -22,12 +23,13 @@ module m_vsync_vga(
     localparam [9:0] THRES_SYNC    = 10'd2;
     localparam [9:0] THRES_BP      = 10'd33;
 
-    reg [1:0] _state;
-    reg [9:0] _lineCounter;
-    reg       _vsync;
+   (* mark_debug = "true" *) reg [1:0] _state;
+   (* mark_debug = "true" *)  reg [9:0] _lineCounter;
+   (* mark_debug = "true" *)  reg       _vsync;
 
     assign o_vsync = _vsync;
     assign o_state_debug = _state; 
+    assign o_vactive = (_state == VISIBLE);
 
     always @(posedge i_clk) begin
         if (i_rst || ~i_enVGA) begin

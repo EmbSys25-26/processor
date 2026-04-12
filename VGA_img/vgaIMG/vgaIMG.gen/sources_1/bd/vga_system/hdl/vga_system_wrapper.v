@@ -2,8 +2,8 @@
 //Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
-//Date        : Thu Mar 19 22:54:22 2026
-//Host        : panda running 64-bit Ubuntu 22.04.5 LTS
+//Date        : Sun Apr 12 15:50:22 2026
+//Host        : torradeira running 64-bit Ubuntu 22.04.5 LTS
 //Command     : generate_target vga_system_wrapper.bd
 //Design      : vga_system_wrapper
 //Purpose     : IP block netlist

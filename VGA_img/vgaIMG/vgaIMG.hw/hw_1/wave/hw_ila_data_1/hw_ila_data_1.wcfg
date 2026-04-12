@@ -3,39 +3,23 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="/home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.hw/hw_1/wave/hw_ila_data_1/hw_ila_data_1.wdb" id="1">
+      <db_ref path="/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.hw/hw_1/wave/hw_ila_data_1/hw_ila_data_1.wdb" id="1">
          <top_modules>
          </top_modules>
       </db_ref>
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0"></ZoomStartTime>
-      <ZoomEndTime time="19,061"></ZoomEndTime>
+      <ZoomEndTime time="2,049"></ZoomEndTime>
       <Cursor1Time time="0"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="215"></NameColumnWidth>
-      <ValueColumnWidth column_width="92"></ValueColumnWidth>
+      <ValueColumnWidth column_width="80"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="5" />
+   <WVObjectSize size="9" />
    <wave_markers>
    </wave_markers>
-   <wvobject type="logic" fp_name="periph_vga/o_hsync">
-      <obj_property name="DisplayName">FullPathName</obj_property>
-      <obj_property name="ElementShortName">periph_vga/o_hsync</obj_property>
-      <obj_property name="ObjectShortName">o_hsync</obj_property>
-      <obj_property name="Radix">HEXRADIX</obj_property>
-      <obj_property name="LABELRADIX">true</obj_property>
-      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="periph_vga/o_vsync">
-      <obj_property name="DisplayName">FullPathName</obj_property>
-      <obj_property name="ElementShortName">periph_vga/o_vsync</obj_property>
-      <obj_property name="ObjectShortName">o_vsync</obj_property>
-      <obj_property name="Radix">HEXRADIX</obj_property>
-      <obj_property name="LABELRADIX">true</obj_property>
-      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
-   </wvobject>
    <wvobject type="logic" fp_name="periph_vga/_axis_tvalid">
       <obj_property name="DisplayName">FullPathName</obj_property>
       <obj_property name="ElementShortName">periph_vga/_axis_tvalid</obj_property>
@@ -44,11 +28,17 @@
       <obj_property name="LABELRADIX">true</obj_property>
       <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="periph_vga/_endLine">
+   <wvobject type="logic" fp_name="periph_vga/_axis_tready">
       <obj_property name="DisplayName">FullPathName</obj_property>
-      <obj_property name="ElementShortName">periph_vga/_endLine</obj_property>
-      <obj_property name="ObjectShortName">_endLine</obj_property>
-      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="ElementShortName">periph_vga/_axis_tready</obj_property>
+      <obj_property name="ObjectShortName">_axis_tready</obj_property>
+      <obj_property name="LABELRADIX">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="periph_vga/_axis_tuser">
+      <obj_property name="DisplayName">FullPathName</obj_property>
+      <obj_property name="ElementShortName">periph_vga/_axis_tuser</obj_property>
+      <obj_property name="ObjectShortName">_axis_tuser</obj_property>
       <obj_property name="LABELRADIX">true</obj_property>
       <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
    </wvobject>
@@ -57,6 +47,43 @@
       <obj_property name="ElementShortName">periph_vga/_axis_tlast</obj_property>
       <obj_property name="ObjectShortName">_axis_tlast</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="LABELRADIX">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="periph_vga/hsync_module/_state">
+      <obj_property name="DisplayName">FullPathName</obj_property>
+      <obj_property name="ElementShortName">periph_vga/hsync_module/_state[1:0]</obj_property>
+      <obj_property name="ObjectShortName">_state[1:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="LABELRADIX">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="periph_vga/hsync_module/_pixelCounter">
+      <obj_property name="DisplayName">FullPathName</obj_property>
+      <obj_property name="ElementShortName">periph_vga/hsync_module/_pixelCounter[9:0]</obj_property>
+      <obj_property name="ObjectShortName">_pixelCounter[9:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="LABELRADIX">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="periph_vga/hsync_module/_hsync">
+      <obj_property name="DisplayName">FullPathName</obj_property>
+      <obj_property name="ElementShortName">periph_vga/hsync_module/_hsync</obj_property>
+      <obj_property name="ObjectShortName">_hsync</obj_property>
+      <obj_property name="LABELRADIX">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="periph_vga/hsync_module/_endLine">
+      <obj_property name="DisplayName">FullPathName</obj_property>
+      <obj_property name="ElementShortName">periph_vga/hsync_module/_endLine</obj_property>
+      <obj_property name="ObjectShortName">_endLine</obj_property>
+      <obj_property name="LABELRADIX">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="periph_vga/_axis_tlast">
+      <obj_property name="DisplayName">FullPathName</obj_property>
+      <obj_property name="ElementShortName">periph_vga/_axis_tlast</obj_property>
+      <obj_property name="ObjectShortName">_axis_tlast</obj_property>
       <obj_property name="LABELRADIX">true</obj_property>
       <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
    </wvobject>

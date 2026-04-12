@@ -1,0 +1,17 @@
+vhdl xil_defaultlib  \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/proc_common_v3_00_a/hdl/src/vhdl/clk_wiz_0_conv_funs_pkg.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/proc_common_v3_00_a/hdl/src/vhdl/clk_wiz_0_proc_common_pkg.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/proc_common_v3_00_a/hdl/src/vhdl/clk_wiz_0_ipif_pkg.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_clk_mon.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/proc_common_v3_00_a/hdl/src/vhdl/clk_wiz_0_family_support.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/proc_common_v3_00_a/hdl/src/vhdl/clk_wiz_0_family.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/proc_common_v3_00_a/hdl/src/vhdl/clk_wiz_0_soft_reset.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/proc_common_v3_00_a/hdl/src/vhdl/clk_wiz_0_pselect_f.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/axi_lite_ipif_v1_01_a/hdl/src/vhdl/clk_wiz_0_address_decoder.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/axi_lite_ipif_v1_01_a/hdl/src/vhdl/clk_wiz_0_slave_attachment.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/axi_lite_ipif_v1_01_a/hdl/src/vhdl/clk_wiz_0_axi_lite_ipif.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_clk_wiz_drp.vhd" \
+"../../../../vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_axi_clk_config.vhd" \
+
+# Do not sort compile order
+nosort

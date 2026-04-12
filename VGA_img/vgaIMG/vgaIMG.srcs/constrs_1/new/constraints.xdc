@@ -35,11 +35,73 @@ create_clock -period 8.000 -name i_clk [get_ports i_clk]
 
 set_false_path -from [get_ports i_rst]
 
-set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 \
--max 0 \
-[get_ports {o_vga_red[*] o_vga_green[*] o_vga_blue[*] o_hsync o_vsync}]
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -max 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
 
-set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 \
--min 0 -add_delay \
-[get_ports {o_vga_red[*] o_vga_green[*] o_vga_blue[*] o_hsync o_vsync}]
-                             
+set_output_delay -clock clk_pixel_vga_system_clk_wiz_0_1 -min -add_delay 0.000 [get_ports {{o_vga_red[*]} {o_vga_green[*]} {o_vga_blue[*]} o_hsync o_vsync}]
+
+
+connect_debug_port u_ila_0/probe5 [get_nets [list periph_vga/_axis_tuser]]
+
+
+create_debug_core u_ila_0 ila
+set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
+set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
+set_property C_ADV_TRIGGER false [get_debug_cores u_ila_0]
+set_property C_DATA_DEPTH 2048 [get_debug_cores u_ila_0]
+set_property C_EN_STRG_QUAL false [get_debug_cores u_ila_0]
+set_property C_INPUT_PIPE_STAGES 0 [get_debug_cores u_ila_0]
+set_property C_TRIGIN_EN false [get_debug_cores u_ila_0]
+set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
+set_property port_width 1 [get_debug_ports u_ila_0/clk]
+connect_debug_port u_ila_0/clk [get_nets [list periph_vga/u_system/vga_system_i/clk_wiz_0/inst/clk_pixel]]
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
+set_property port_width 10 [get_debug_ports u_ila_0/probe0]
+connect_debug_port u_ila_0/probe0 [get_nets [list {periph_vga/hsync_module/_pixelCounter[0]} {periph_vga/hsync_module/_pixelCounter[1]} {periph_vga/hsync_module/_pixelCounter[2]} {periph_vga/hsync_module/_pixelCounter[3]} {periph_vga/hsync_module/_pixelCounter[4]} {periph_vga/hsync_module/_pixelCounter[5]} {periph_vga/hsync_module/_pixelCounter[6]} {periph_vga/hsync_module/_pixelCounter[7]} {periph_vga/hsync_module/_pixelCounter[8]} {periph_vga/hsync_module/_pixelCounter[9]}]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe1]
+set_property port_width 2 [get_debug_ports u_ila_0/probe1]
+connect_debug_port u_ila_0/probe1 [get_nets [list {periph_vga/hsync_module/_state[0]} {periph_vga/hsync_module/_state[1]}]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe2]
+set_property port_width 10 [get_debug_ports u_ila_0/probe2]
+connect_debug_port u_ila_0/probe2 [get_nets [list {periph_vga/vsync_module/_lineCounter[0]} {periph_vga/vsync_module/_lineCounter[1]} {periph_vga/vsync_module/_lineCounter[2]} {periph_vga/vsync_module/_lineCounter[3]} {periph_vga/vsync_module/_lineCounter[4]} {periph_vga/vsync_module/_lineCounter[5]} {periph_vga/vsync_module/_lineCounter[6]} {periph_vga/vsync_module/_lineCounter[7]} {periph_vga/vsync_module/_lineCounter[8]} {periph_vga/vsync_module/_lineCounter[9]}]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe3]
+set_property port_width 2 [get_debug_ports u_ila_0/probe3]
+connect_debug_port u_ila_0/probe3 [get_nets [list {periph_vga/vsync_module/_state[0]} {periph_vga/vsync_module/_state[1]}]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe4]
+set_property port_width 16 [get_debug_ports u_ila_0/probe4]
+connect_debug_port u_ila_0/probe4 [get_nets [list {periph_vga/_axis_tdata[0]} {periph_vga/_axis_tdata[1]} {periph_vga/_axis_tdata[2]} {periph_vga/_axis_tdata[3]} {periph_vga/_axis_tdata[4]} {periph_vga/_axis_tdata[5]} {periph_vga/_axis_tdata[6]} {periph_vga/_axis_tdata[7]} {periph_vga/_axis_tdata[8]} {periph_vga/_axis_tdata[9]} {periph_vga/_axis_tdata[10]} {periph_vga/_axis_tdata[11]} {periph_vga/_axis_tdata[12]} {periph_vga/_axis_tdata[13]} {periph_vga/_axis_tdata[14]} {periph_vga/_axis_tdata[15]}]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe5]
+set_property port_width 1 [get_debug_ports u_ila_0/probe5]
+connect_debug_port u_ila_0/probe5 [get_nets [list periph_vga/_axis_tlast]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe6]
+set_property port_width 1 [get_debug_ports u_ila_0/probe6]
+connect_debug_port u_ila_0/probe6 [get_nets [list periph_vga/_axis_tready]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe7]
+set_property port_width 1 [get_debug_ports u_ila_0/probe7]
+connect_debug_port u_ila_0/probe7 [get_nets [list periph_vga/_axis_tuser]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe8]
+set_property port_width 1 [get_debug_ports u_ila_0/probe8]
+connect_debug_port u_ila_0/probe8 [get_nets [list periph_vga/_axis_tvalid]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe9]
+set_property port_width 1 [get_debug_ports u_ila_0/probe9]
+connect_debug_port u_ila_0/probe9 [get_nets [list periph_vga/hsync_module/_endLine]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe10]
+set_property port_width 1 [get_debug_ports u_ila_0/probe10]
+connect_debug_port u_ila_0/probe10 [get_nets [list periph_vga/hsync_module/_hsync]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe11]
+set_property port_width 1 [get_debug_ports u_ila_0/probe11]
+connect_debug_port u_ila_0/probe11 [get_nets [list periph_vga/vsync_module/_vsync]]
+set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
+set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
+set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
+connect_debug_port dbg_hub/clk [get_nets u_ila_0_clk_pixel]

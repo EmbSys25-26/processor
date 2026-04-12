@@ -2,10 +2,10 @@
 -- Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
--- Date        : Sat Mar 14 23:32:56 2026
--- Host        : panda running 64-bit Ubuntu 22.04.5 LTS
+-- Date        : Sun Apr 12 10:25:34 2026
+-- Host        : torradeira running 64-bit Ubuntu 22.04.5 LTS
 -- Command     : write_vhdl -force -mode funcsim
---               /home/mariana/Desktop/Peripherals/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_sim_netlist.vhdl
+--               /home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_sim_netlist.vhdl
 -- Design      : clk_wiz_0
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
