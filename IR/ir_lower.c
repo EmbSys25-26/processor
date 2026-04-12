@@ -179,6 +179,8 @@ void ir_seal_branch(ir_lower_ctx_t *lctx, ir_value_t pred,
  */
 void ir_lower_function(ir_lower_ctx_t *lctx, const TreeNode_t *func_node)
 {
+    const TreeNode_t *body_node = NULL;
+
     if (!func_node) return;
 
     /* ── Retrieve semantic info for the function itself ── */
@@ -223,16 +225,25 @@ void ir_lower_function(ir_lower_ctx_t *lctx, const TreeNode_t *func_node)
     ir_block_t *entry = ir_new_block(lctx);
     lctx->cur_block = entry;
 
-    // G3 TODO: walk children to find NODE_PARAMETER nodes
-    //       for each parameter:
-    //         get type and name from annotation
-    //         register in func->param_names / param_types
-    //         allocate stack slot
-    //         emit addr_of slot + store of incoming param vreg
-    // TODO: find NODE_BLOCK body child
-    // TODO: call ir_lower_stmt on the body
-    // TODO: inject default ret void if block not terminated
-    // TODO: add function to module
+    /* Find function body (compound statement) and lower it. */
+    for (const TreeNode_t *ch = func_node->p_firstChild; ch; ch = ch->p_sibling) {
+        if (ch->nodeType == NODE_BLOCK) {
+            body_node = ch;
+            break;
+        }
+    }
+
+    if (body_node) {
+        ir_lower_stmt(lctx, body_node);
+    }
+
+    /* Ensure every function has an explicit terminator in the active block.
+       If control can fall through, inject a default return. */
+    if (!ir_block_terminated(lctx)) {
+        ir_instr_t *ret = ir_instr_new(IR_OP_RET);
+        ret->src[0] = ir_val_none();
+        ir_instr_push(lctx->cur_block, ret);
+    }
 
     ir_module_add_function(lctx->module, func);
     lctx->func = NULL;

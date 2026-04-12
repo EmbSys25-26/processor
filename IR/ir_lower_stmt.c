@@ -33,10 +33,33 @@
  */
 static ir_value_t coerce_to_pred(ir_lower_ctx_t *lctx, ir_value_t v)
 {
-    // G2 TODO: if already i1 return as-is
-    //       otherwise emit IR_OP_NEQ against immediate 0
-    //       return the i1 result vreg
-    return ir_val_none();
+    /* ── Predicate coercion: normalize to i1 for control-flow decisions ── */
+    ir_instr_t *cmp;
+    unsigned pred_reg;
+
+    /* No value means the expression lowering failed earlier; propagate a
+       structural diagnostic here so the branch builder does not consume
+       an invalid predicate. */
+    if (v.kind == IR_VAL_NONE) {
+        ir_diag(lctx, "IR003", 0, "cannot coerce empty value to predicate");
+        return ir_val_none();
+    }
+
+    /* If expression lowering already produced i1, keep it as-is to avoid
+       creating redundant compare instructions. */
+    if (v.type.kind == IR_TYPE_I1) {
+        return v;
+    }
+
+    /* Canonical lowering for control predicates: (value != 0) -> i1. */
+    pred_reg = ir_new_vreg(lctx->func);
+    cmp = ir_instr_new(IR_OP_NEQ);
+    cmp->dst = ir_val_vreg(pred_reg, ir_type_i1());
+    cmp->src[0] = v;
+    cmp->src[1] = ir_val_imm(0, v.type.kind == IR_TYPE_VOID ? ir_type_i16() : v.type);
+    ir_instr_push(lctx->cur_block, cmp);
+
+    return ir_val_vreg(pred_reg, ir_type_i1());
 }
 
 /************************************************************
@@ -46,23 +69,46 @@ static ir_value_t coerce_to_pred(ir_lower_ctx_t *lctx, ir_value_t v)
 typedef struct switch_case_s switch_case_t;
 struct switch_case_s {
     long          value;        /* case constant value     */
-    unsigned      target_block; /* bb id for case body     */
+    ir_block_t   *block;        /* block for case body     */
     int           is_default;
     switch_case_t *next;
 };
 
-static switch_case_t *collect_cases(const TreeNode_t *switch_node,
-                                     ir_lower_ctx_t *lctx)
+/* Remove an empty tail block that was created only to keep the
+   traversal invariant after a terminator (e.g., break in switch).
+   This avoids emitting dead empty bb artifacts for case clauses. */
+static void prune_empty_tail_block(ir_lower_ctx_t *lctx)
 {
-    /* switch body is the last child (NODE_BLOCK) */
-    const TreeNode_t *body = NULL;
-    for (const TreeNode_t *ch = switch_node->p_firstChild; ch; ch = ch->p_sibling) {
-        if (ch->nodeType == NODE_BLOCK) body = ch;
-    }
-    if (!body) return NULL;
+    ir_block_t *tail;
+    ir_block_t *prev;
 
+    if (!lctx || !lctx->func) return;
+
+    tail = lctx->func->block_tail;
+    if (!tail || tail != lctx->cur_block) return;
+
+    /* Only prune truly empty tail blocks. */
+    if (tail->head || tail->tail) return;
+
+    /* Keep function entry intact. */
+    if (lctx->func->entry == tail) return;
+
+    prev = lctx->func->entry;
+    while (prev && prev->next != tail) {
+        prev = prev->next;
+    }
+    if (!prev) return;
+
+    prev->next = NULL;
+    lctx->func->block_tail = prev;
+    lctx->cur_block = prev;
+    free(tail);
+}
+
+static switch_case_t *collect_cases(const TreeNode_t *switch_body, ir_lower_ctx_t *lctx)
+{
     switch_case_t *head = NULL, *tail = NULL;
-    for (const TreeNode_t *stmt = body->p_firstChild; stmt; stmt = stmt->p_sibling) {
+    for (const TreeNode_t *stmt = switch_body; stmt; stmt = stmt->p_sibling) {
         if (stmt->nodeType == NODE_CASE || stmt->nodeType == NODE_DEFAULT) {
             switch_case_t *sc = (switch_case_t *)calloc(1, sizeof(*sc));
             if (!sc) continue;
@@ -80,7 +126,7 @@ static switch_case_t *collect_cases(const TreeNode_t *switch_node,
             }
             /* Allocate a block for this case body */
             ir_block_t *cb = ir_new_block(lctx);
-            sc->target_block = cb->id;
+            sc->block = cb;
             if (!head) { head = sc; tail = sc; }
             else { tail->next = sc; tail = sc; }
         }
@@ -167,163 +213,531 @@ static void ir_lower_single_stmt(ir_lower_ctx_t *lctx, const TreeNode_t *s)
 
     /* ── §8.3 rule 7: return ────────────────────────────── */
     case NODE_RETURN:
-        // G2 TODO: lower return value expression if present
-        //       emit IR_OP_RET
-        //       create dead block and set as cur_block
+    {
+        /* ── Return statement: emit value + terminator + fresh block ── */
+
+        // s is the current return statement node. Its first child (if present) is the return expression.
+        const TreeNode_t *ret_expr = s->p_firstChild;
+
+        // create a new IR instruction for the return operation
+        ir_instr_t *ret = ir_instr_new(IR_OP_RET);
+
+        /* return <expr>; lower expression and place it in src[0].
+           return; uses IR_VAL_NONE to encode void return. */
+        if (ret_expr) {
+            ir_type_t ret_type;
+            // Just uses the first source operand to hold the return value
+
+            /*Lowering context, AST node for the return expression and
+              a pointer to the IR storage type for the return value */
+            ret->src[0] = ir_lower_expr(lctx, ret_expr, &ret_type);
+
+        } else {
+            /*If the first child of the return node is NULL, it means we have a void return,
+             so we set the source operand to IR_VAL_NONE. */         
+            ret->src[0] = ir_val_none();    
+
+        }
+
+        // Push the created IR instruction to the current basic block with the current block lowering context.
+        ir_instr_push(lctx->cur_block, ret);
+
+          /* Keep the statement walker invariant: after a terminator, point to a 
+              fresh block so subsequent sibling nodes never append after RET. */
+        lctx->cur_block = ir_new_block(lctx);
         break;
+    }
 
     /* ── §8.3 rule 6: break ─────────────────────────────── */
     case NODE_BREAK:
-        // G2 TODO: get top ctrl frame
-        //       seal goto frame->break_block
-        //       create dead block
+    {
+        /* ── Break statement: resolve frame and jump to exit block ── */
+
+        /*  Get the current control frame from the lowering context.
+            The control frame is a structure that holds information about the current control flow constructs
+            (like loops and switches) that we're inside. It includes the target basic blocks for break and continue statements.
+            The control frame stack is managed by loop/switch lowering to keep track of valid
+            break/continue targets at each nesting level.
+        */
+        ir_ctrl_frame_t *frame = ir_ctrl_top(lctx);
+
+        /* break must resolve inside nearest loop/switch frame. */
+        if (!frame) {
+            /* If there is no valid control frame, it means the break statement is used outside of any loop
+            or switch context, which is illegal in C. We emit a diagnostic message to indicate this error.
+            IR004 is the error code for "break outside loop/switch".
+            We also include the line number of the offending break statement. 
+            */
+
+            ir_diag(lctx, "IR004", s->lineNumber, "break outside loop/switch");
+            break;
+        }
+
+        /* Emit jump to the frame exit block, then move lowering to a dead/open
+           block to preserve the single-terminator discipline. */
+        /*  This function updates the current blocks terminator to jump to the break target block specified in the control frame.
+            We create a new instruction for an unconditional jump (IR_OP_GOTO) to the break target block and push it to the current block.
+            After emitting the jump instruction, we move the current block to a new block. This is necessary to maintain the invariant 
+            that a basic block can only have one terminator instruction.
+        */
+        ir_seal_goto(lctx, frame->break_block);
+        lctx->cur_block = ir_new_block(lctx);
         break;
+    }
 
     /* ── §8.3 rule 6: continue ──────────────────────────── */
     case NODE_CONTINUE:
-        // G2 TODO: get top ctrl frame
-        //       seal goto frame->continue_block
-        //       create dead block
+    {
+        /* ── Continue statement: resolve loop frame and jump to cond/update ── */
+
+        /*  Get the current control frame from the lowering context.
+            The control frame is a structure that holds information about the current control flow constructs
+            (like loops and switches) that we're inside. It includes the target basic blocks for break and continue statements.
+            The control frame stack is managed by loop/switch lowering to keep track of valid
+            break/continue targets at each nesting level.
+        */
+        ir_ctrl_frame_t *frame = ir_ctrl_top(lctx);
+
+        /* continue is legal only for loop frames that expose a continue target. */
+        if (!frame || !frame->has_continue) {
+            /*  If there is no valid control frame, it means the continue statement is used outside of any loop
+                context, which is illegal in C. We emit a diagnostic message to indicate this error.
+                IR004 is the error code for "break outside loop/switch".
+                We also include the line number of the offending break statement. 
+            */
+            ir_diag(lctx, "IR004", s->lineNumber, "continue outside loop");
+            break;  // We break out of the case for NODE_CONTINUE since we cannot proceed with an invalid continue statement
+        }
+
+        /* Jump to loop continue target (cond/update depending on loop shape),
+           then advance to a dead/open block for subsequent sibling traversal. */
+        /*  This function updates the current blocks terminator to jump to the continue target block specified in the control frame.
+            We create a new instruction for an unconditional jump (IR_OP_GOTO) to the continue target block and push it to the current block.
+            After emitting the jump instruction, we move the current block to a new block. This is necessary to maintain the invariant 
+            that a basic block can only have one terminator instruction.
+        */
+        ir_seal_goto(lctx, frame->continue_block);
+        lctx->cur_block = ir_new_block(lctx);
         break;
+    }
 
     /* ── §8.3 rule 1: if / if-else ──────────────────────── */
-    case NODE_IF:     
-        // G2 TODO: lower condition with ir_lower_expr
-        //       coerce to predicate (compare != 0)
-        //       create then_block, else_block (if present), merge_block
-        //       emit ir_seal_branch
-        //       lower then body, seal goto merge
-        //       lower else body if present, seal goto merge
-        //       set cur_block to merge
+    case NODE_IF:
+    {
+        /* ── If/else CFG: decision block branching to then/else/merge ── */
+
+        // condition is always the first child of the if statement node
+        const TreeNode_t *cond_node = s->p_firstChild;          
+        
+        // if the condition node is present, then the "then" block is the next sibling; otherwise, it's NULL (malformed if)
+        const TreeNode_t *then_node = cond_node ? cond_node->p_sibling : NULL;  
+        
+        // the "else" block is the sibling after the "then" block, but only if the "then" block is present; otherwise, it's NULL (no else)
+        const TreeNode_t *else_node = then_node ? then_node->p_sibling : NULL;
+        ir_type_t cond_type;            // Type of the condition expression(what type of value it returns), to be filled by ir_lower_expr
+        ir_value_t cond_val;            // IR value resulting from lowering the condition expression, to be filled by ir_lower_expr
+        ir_value_t pred;                // The predicate value that will be used for branching; it will be the result of coercing(boolean) cond_val to i1 if necessary
+        ir_block_t *then_block;         // Declare the basic block for the "then" branch; 
+        ir_block_t *else_block = NULL;  // Declare the basic block for the "else" branch; its NULL by default
+        ir_block_t *merge_block;        // Declare the basic block for the merge point after the if statement;
+
+        // if either the condition node or the then node are missing, it means the if statement is malformed
+        if (!cond_node || !then_node) {
+            /*  IR001 is the error code for "malformed if statement". 
+                We emit a diagnostic message with this code, including the 
+                line number of the offending if statement. */
+            ir_diag(lctx, "IR001", s->lineNumber, "malformed if statement");
+            break;  // Exit the case for NODE_IF since we cannot proceed with a malformed if statement
+        }
+
+        /* Evaluate condition in current block and normalize it to i1. */
+        cond_val = ir_lower_expr(lctx, cond_node, &cond_type);  // Lower the condition expression and get its type
+        pred = coerce_to_pred(lctx, cond_val);  // coerce the condition value to a predicate (i1) boolean value 
+
+        /* Pre-allocate structural blocks for both arms and merge point.
+           No-else if statements branch false directly into merge. */
+        then_block = ir_new_block(lctx);    // Create a new basic block for the "then" branch of the if statement
+        merge_block = ir_new_block(lctx);   // Create a new basic block for the merge point after the if statement
+        if (else_node) {
+            else_block = ir_new_block(lctx);    // Only create a new basic block for the "else" branch if there is an else node present
+        }
+
+        /*  Defines the structure of the current block as a branch based on the predicate value. 
+            Emit conditional branch to then/else or then/merge depending on presence of else. 
+            This function updates the current block's terminator to be a conditional branch based on the predicate value.
+            If there is an else block, the true target is the then_block and the false target is the else_block; otherwise, the false target is the merge_block.
+        */
+        ir_seal_branch(lctx, pred,
+                       then_block->id,
+                       else_block ? else_block->id : merge_block->id);
+
+        /* Lower then arm and ensure it reconnects to merge if not already
+           terminated by return/break/etc. */
+        lctx->cur_block = then_block;           
+        ir_lower_single_stmt(lctx, then_node);      // Lower the "then" block by recursively calling ir_lower_single_stmt with the "then" node
+        ir_seal_goto(lctx, merge_block->id);        // Merge it to the merge block if it did not already terminate
+
+        /* Lower else arm when present and seal it to merge as well. */
+        if (else_block) {
+            lctx->cur_block = else_block;
+            ir_lower_single_stmt(lctx, else_node);  // Lower the "else" block by recursively calling ir_lower_single_stmt with the "else" node
+            ir_seal_goto(lctx, merge_block->id);    // Merge it to the merge block if it did not already terminate
+        }
+
+        lctx->cur_block = merge_block;
         break;
+    }
 
     /* ── §8.3 rule 2: while ─────────────────────────────── */
-    case NODE_WHILE: 
-        // G2 TODO: create cond_block, body_block, exit_block
-        //       seal goto cond_block
-        //       lower condition, emit branch
-        //       push ctrl frame (break=exit, continue=cond)
-        //       lower body, seal goto cond
-        //       pop ctrl frame
-        //       set cur_block to exit
+    case NODE_WHILE:
+    {
+        /* ── While loop CFG: condition-checked bounded iteration ── */
+        const TreeNode_t *cond_node = s->p_firstChild;
+        const TreeNode_t *body_node = cond_node ? cond_node->p_sibling : NULL;  
+        ir_type_t cond_type;
+        ir_value_t cond_val;
+        ir_value_t pred;
+        ir_block_t *cond_block;
+        ir_block_t *body_block;
+        ir_block_t *exit_block;
+
+        if (!cond_node || !body_node) {
+            ir_diag(lctx, "IR001", s->lineNumber, "malformed while statement");
+            break;
+        }
+
+        /* Canonical while CFG:
+           preheader -> cond, cond -> body/exit, body -> cond. */
+        // Create new basic block for each of the structural components of the while loop
+        cond_block = ir_new_block(lctx);
+        body_block = ir_new_block(lctx);
+        exit_block = ir_new_block(lctx);
+
+        ir_seal_goto(lctx, cond_block->id);
+
+        /*  Move to the condition block to lower the loop condition expression, 
+            coerce it to a predicate, and emit the conditional branch to the body and exit blocks. */
+        lctx->cur_block = cond_block;                           // Move to the condition block
+        cond_val = ir_lower_expr(lctx, cond_node, &cond_type);  // Lower the condition expression and get its ttype
+        pred = coerce_to_pred(lctx, cond_val);                  // Coerce the condition value to a predicate (i1) boolean value
+        ir_seal_branch(lctx, pred, body_block->id, exit_block->id); // Emit the conditional branch 
+
+        /* Inside body, expose break->exit and continue->cond targets. */
+        lctx->cur_block = body_block;                           // Move to the body block
+        ir_ctrl_push(lctx, exit_block->id, cond_block->id, 1);  // Move to a new control frame for the loop body (PUSH)
+        ir_lower_single_stmt(lctx, body_node);                  // Recursively lower the loop body
+        ir_ctrl_pop(lctx);                                      // Exit the control for the loop body (POP)
+        ir_seal_goto(lctx, cond_block->id);                     // Emit an unconditional jump back to the condition block to complete the loop
+
+        lctx->cur_block = exit_block;
         break;
+    }
 
     /* ── §8.3 rule 3: do-while ──────────────────────────── */
-    case NODE_DO_WHILE: 
-        // G2 TODO: create body_block, cond_block, exit_block
-        //       seal goto body
-        //       push ctrl frame
-        //       lower body, seal goto cond
-        //       pop ctrl frame
-        //       lower condition, emit branch back to body or exit
+    case NODE_DO_WHILE:
+    {
+        /* ── Do-while loop CFG: body-first then condition-checked iteration ── */
+
+        /*  'Do-while' IR generation is similar to 'while', 
+            with only the sequence of blocks changed to reflect the do-while semantics,
+            in this case, the body block is processed before the condition block
+        */
+        
+        const TreeNode_t *body_node = s->p_firstChild;
+        const TreeNode_t *cond_node = body_node ? body_node->p_sibling : NULL;
+        ir_type_t cond_type;
+        ir_value_t cond_val;
+        ir_value_t pred;
+        ir_block_t *body_block;
+        ir_block_t *cond_block;
+        ir_block_t *exit_block;
+
+        if (!body_node || !cond_node) {
+            ir_diag(lctx, "IR001", s->lineNumber, "malformed do-while statement");
+            break;
+        }
+
+        /* Canonical do-while CFG:
+           preheader -> body, body -> cond, cond -> body/exit. */
+        // Create new basic block for each of the structural components of the do-while loop
+        body_block = ir_new_block(lctx);
+        cond_block = ir_new_block(lctx);
+        exit_block = ir_new_block(lctx);
+    
+        /*  As opposed to while loops, do-while loops execute the body
+            at least once before checking the condition, which is reflected here
+            by having the preheader jump directly to the body block (goto) before any condition evaluation. 
+        */
+        ir_seal_goto(lctx, body_block->id);
+
+        // Move to the body block to lower the loop body
+        lctx->cur_block = body_block;
+        /* continue in do-while jumps to condition block, not body. */
+        ir_ctrl_push(lctx, exit_block->id, cond_block->id, 1);  // Move to a new control frame for the loop body (PUSH) 
+        ir_lower_single_stmt(lctx, body_node);                  // Recursively lower the loop body
+        ir_ctrl_pop(lctx);                                      // Exit the control for the loop body (POP)
+        ir_seal_goto(lctx, cond_block->id);                     // Emit an unconditional jump to the condition block to complete the loop
+
+
+        // Only after lowering the body do we move to the condition block to lower the loop condition expression
+        lctx->cur_block = cond_block;                           // Move to the condition block
+        cond_val = ir_lower_expr(lctx, cond_node, &cond_type);  // Lower the condition expression and get its type
+        pred = coerce_to_pred(lctx, cond_val);                  // Coerce the condition value to a predicate (i1) boolean value
+        ir_seal_branch(lctx, pred, body_block->id, exit_block->id); // Emit the conditional branch
+
+        lctx->cur_block = exit_block;
         break;
+    }
 
     /* ── §8.3 rule 4: for ───────────────────────────────── */
-    case NODE_FOR: 
-        // G2 TODO: lower init (expr or decl)
-        //       create cond_block, body_block, update_block, exit_block
-        //       lower condition, emit branch
-        //       push ctrl frame (break=exit, continue=update)
-        //       lower body, seal goto update
-        //       pop ctrl frame
-        //       lower update, seal goto cond
+    case NODE_FOR:
+    {
+        /* ── For loop CFG: init + cond + body + update + exit structure ── */
+
+        /*
+         * A for-loop is represented in the AST as four siblings:
+         * init ; cond ; update ; body
+         * This extraction keeps the lowering logic explicit and robust.
+         */
+        const TreeNode_t *init_node = s->p_firstChild;
+        const TreeNode_t *cond_node = init_node ? init_node->p_sibling : NULL;
+        const TreeNode_t *update_node = cond_node ? cond_node->p_sibling : NULL;
+        const TreeNode_t *body_node = update_node ? update_node->p_sibling : NULL;
+        ir_type_t cond_type;
+        ir_value_t cond_val;
+        ir_value_t pred;
+        ir_block_t *cond_block;
+        ir_block_t *body_block;
+        ir_block_t *update_block;
+        ir_block_t *exit_block;
+
+        if (!init_node || !cond_node || !update_node || !body_node) {
+            ir_diag(lctx, "IR001", s->lineNumber, "malformed for statement");
+            break;
+        }
+
+        /*
+         * Lower the initializer in the current preheader block before
+         * entering loop control flow.
+         * If init is a declaration (e.g., for (int i = 0; ...)), create its
+         * local slot here; otherwise lower it as a normal expression.
+         */
+        if (init_node->nodeType != NODE_NULL) {
+            if (init_node->nodeType == NODE_VAR_DECLARATION ||
+                init_node->nodeType == NODE_ARRAY_DECLARATION) {
+                ir_lower_local_decl(lctx, init_node);
+            } else {
+                ir_type_t t;
+                (void)ir_lower_expr(lctx, init_node, &t);
+            }
+        }
+
+        /*
+         * Build canonical for-loop CFG blocks:
+         * preheader -> cond
+         * cond -> body | exit
+         * body -> update
+         * update -> cond
+         */
+        cond_block = ir_new_block(lctx);
+        body_block = ir_new_block(lctx);
+        update_block = ir_new_block(lctx);
+        exit_block = ir_new_block(lctx);
+
+        ir_seal_goto(lctx, cond_block->id);
+
+        lctx->cur_block = cond_block;
+        /*
+         * No condition means an implicit true loop condition.
+         * In that case we jump directly to body and rely on break/return to exit.
+         */
+        if (cond_node->nodeType == NODE_NULL) {
+            ir_seal_goto(lctx, body_block->id);
+        } else {
+            cond_val = ir_lower_expr(lctx, cond_node, &cond_type);
+            pred = coerce_to_pred(lctx, cond_val);
+            ir_seal_branch(lctx, pred, body_block->id, exit_block->id);
+        }
+
+        /*
+         * While lowering the body, publish loop targets so nested
+         * break/continue statements resolve correctly:
+         * break -> exit, continue -> update.
+         */
+        lctx->cur_block = body_block;
+        ir_ctrl_push(lctx, exit_block->id, update_block->id, 1);
+        ir_lower_single_stmt(lctx, body_node);
+        ir_ctrl_pop(lctx);
+        ir_seal_goto(lctx, update_block->id);
+
+        lctx->cur_block = update_block;
+        /*
+         * Lower optional update expression after body execution, then reconnect
+         * control back to the condition block.
+         */
+        if (update_node->nodeType != NODE_NULL) {
+            ir_type_t t;
+            (void)ir_lower_expr(lctx, update_node, &t);
+        }
+        ir_seal_goto(lctx, cond_block->id);
+
+        lctx->cur_block = exit_block;
         break;
+    }
 
     /* ── §8.3 rule 5: switch ────────────────────────────── */
     case NODE_SWITCH: {
+        /* ── Switch CFG: comparison chain + case blocks + exits ── */
+
         /*
-         * AST: NODE_SWITCH → expr, NODE_BLOCK(cases)
-         *
-         * Strategy (phase 1): comparison chain.
-         *   1. Evaluate the switch expression.
-         *   2. Collect case labels and pre-allocate their blocks.
-         *   3. Emit a chain of eq-comparisons with jumps.
-         *   4. Lower each case body in order.
+         * Parser shape: NODE_SWITCH has two direct children:
+         * child[0] = expression
+         * child[1] = case/default sibling chain
          */
         const TreeNode_t *expr_node = s->p_firstChild;
-        const TreeNode_t *body_node = NULL;
-        for (const TreeNode_t *ch = s->p_firstChild; ch; ch = ch->p_sibling) {
-            if (ch->nodeType == NODE_BLOCK) { body_node = ch; break; }
-        }
+        const TreeNode_t *body_node = expr_node ? expr_node->p_sibling : NULL;
+        const TreeNode_t *clause;
 
+        /* Dedicated switch exit target used by break statements. */
         ir_block_t *exit_block = ir_new_block(lctx);
 
-        /* Evaluate switch expression */
+        if (!expr_node || !body_node) {
+            ir_diag(lctx, "IR001", s->lineNumber, "malformed switch statement");
+            break;
+        }
+
+        if (body_node->nodeType != NODE_CASE && body_node->nodeType != NODE_DEFAULT) {
+            ir_diag(lctx, "IR001", s->lineNumber, "malformed switch body");
+            break;
+        }
+
+        /* Evaluate the controlling switch expression once. */
         ir_type_t et;
         ir_value_t eval = ir_lower_expr(lctx, expr_node, &et);
 
-        /* Collect cases (pre-allocates blocks) */
-        switch_case_t *cases = collect_cases(s, lctx);
-        unsigned default_block_id = exit_block->id;
+        /*
+            Collect cases/default logic and pre-allocate one block per clause. 
+            These are actually each of the case logic, meaning the basic blocks the
+            comparisons will jump to when the comparison for that case is true,
+            and not the comparison blocks themselves, which will be created in the comparison chain below.
+        */
+        switch_case_t *cases = collect_cases(body_node, lctx);
+
+        ir_block_t *default_block = exit_block;
         for (switch_case_t *sc = cases; sc; sc = sc->next) {
-            if (sc->is_default) { default_block_id = sc->target_block; break; }
+            if (sc->is_default) { default_block = sc->block; break; }
         }
 
-        /* Emit comparison chain */
-        ir_block_t *chain_tail = lctx->cur_block; /* starts from cur */
+        /*
+         * Create linear comparison chain from current block:
+         * if (eval == case_k) goto case_k_block else goto next_chain_block
+         */
+        ir_block_t *chain_tail = lctx->cur_block; /* chain starts at current block */
+
+        /*
+         *  Creating of the comparison chain for the switch statement.
+         *  They a sequence of basic blocks, each containing a comparison against one of the case labels.
+         *  This is just for basic blocks contains the case comparisons,
+         *  the actual case logic bodies will be lowered later in their respective pre-allocated blocks.
+         */
         for (switch_case_t *sc = cases; sc; sc = sc->next) {
             if (sc->is_default) continue; /* handled at end */
 
+            // Create a new virtual register to hold the result of the comparison for this case
             unsigned cmp_r = ir_new_vreg(lctx->func);
+
+            /*  
+                Create a new IR instruction for the equality comparison between 
+                the switch expression and the case constant value   
+            */  
             ir_instr_t *cmp = ir_instr_new(IR_OP_EQ);
-            cmp->dst    = ir_val_vreg(cmp_r, ir_type_i1());
-            cmp->src[0] = eval;
-            cmp->src[1] = ir_val_imm(sc->value, et);
-            ir_instr_push(chain_tail, cmp);
 
-            /* Next chain block (fallthrough when no match) */
+            /*  Fill the instruction fields:
+                dst = new virtual register for the comparison result
+                src[0] = the evaluated switch expression (eval)
+                src[1] = the immediate value of the case constant (sc->value) with the same type as the switch expression (et)
+            */  
+            cmp->dst    = ir_val_vreg(cmp_r, ir_type_i1()); // The result of the comparison is a predicate (i1)
+            cmp->src[0] = eval;                             // Equals to the expression node body of the switch statement
+            cmp->src[1] = ir_val_imm(sc->value, et);        // Equals to the constant value of the current switch case
+            
+            /*  
+                Push the comparison instruction to the current tail of the comparison chain
+                The comparison chain is a sequence of basic blocks, each containing a comparison against one 
+                of the case labels.
+                ir_instr_push adds the comparison instruction to the current basic block (chain_tail)
+                and updates the block's instruction list accordingly.
+            */ 
+            ir_instr_push(chain_tail, cmp);                 
+
+            /* Next comparison block reached when this case does not match. */
             ir_block_t *next_chain = ir_new_block(lctx);
-            ir_seal_branch(lctx, ir_val_vreg(cmp_r, ir_type_i1()),
-                            sc->target_block, next_chain->id);
-            chain_tail = next_chain;
-            lctx->cur_block = next_chain;
-        }
-        /* End of chain: goto default or exit */
-        ir_seal_goto(lctx, default_block_id);
 
-        /* Lower case bodies */
+            /* 
+                Complete the branchs for each of the switches cases by using the result of the comparison (cmp_r)
+                as the predicate for a conditional branch instruction. If the comparison is true 
+                we branch to the target block for this case (sc->block), and if it is false we branch to the
+                next block in the comparison chain (next_chain->id)
+            */
+            ir_seal_branch(lctx, ir_val_vreg(cmp_r, ir_type_i1()), sc->block->id, next_chain->id);
+
+            chain_tail = next_chain;        // Change the chain tail to the new comparison block
+            lctx->cur_block = next_chain;   // Change the lowering context to the next comparison block
+        }
+
+        /* End of comparison chain: jump to default block or exit if absent. */
+        ir_seal_goto(lctx, default_block->id);
+
+        /*
+         * Lower clause bodies in AST order, using their pre-allocated blocks.
+         * switch frame rules:
+         * break is valid and targets exit_block; continue is disabled here.
+         */
         ir_ctrl_push(lctx, exit_block->id, 0, /*has_continue=*/0);
 
         if (body_node) {
-            switch_case_t *sc = cases;
-            for (const TreeNode_t *stmt2 = body_node->p_firstChild;
-                 stmt2; stmt2 = stmt2->p_sibling)
-            {
-                if (stmt2->nodeType == NODE_CASE ||
-                    stmt2->nodeType == NODE_DEFAULT) {
-                    /* Switch to the pre-allocated block for this case */
-                    if (sc) {
-                        lctx->cur_block = lctx->func->entry;
-                        /* Walk to the block with the right id */
-                        for (ir_block_t *b = lctx->func->entry; b; b = b->next) {
-                            if (b->id == sc->target_block) {
-                                lctx->cur_block = b;
-                                break;
-                            }
-                        }
-                        sc = sc->next;
-                    }
-                    /* Lower the statements following this label */
-                    const TreeNode_t *label_stmts =
-                        stmt2->p_firstChild
-                        ? stmt2->p_firstChild->p_sibling /* skip label value */
-                        : NULL;
-                    if (label_stmts)
-                        ir_lower_single_stmt(lctx, label_stmts);
-                } else {
-                    ir_lower_single_stmt(lctx, stmt2);
+            switch_case_t *sc = cases;  // Pointer to the head of the linked list of collected switch cases
+
+            // Where there are new clauses (case/default) in the switch body, loop through them
+            for (clause = body_node; clause && sc; clause = clause->p_sibling) {
+                const TreeNode_t *clause_body;
+
+                // If it isnt a standard case or a default, then it is not a valid clause
+                if (clause->nodeType != NODE_CASE && clause->nodeType != NODE_DEFAULT) {
+                    continue;   // Proceed to the next sibling without modifying the switch case list
                 }
+
+                /* Move lowering cursor to this clause's dedicated block. */
+                lctx->cur_block = sc->block;
+
+                /* CASE body starts after label expression; DEFAULT starts at first child. */
+                clause_body = (clause->nodeType == NODE_DEFAULT)
+                    ? clause->p_firstChild
+                    : (clause->p_firstChild ? clause->p_firstChild->p_sibling : NULL);
+
+                if (clause_body) {
+                    /* Lower the full statement chain for this clause so
+                       trailing statements like break are not skipped. */
+                    ir_lower_stmt(lctx, clause_body);
+                    prune_empty_tail_block(lctx);
+                }
+
+                sc = sc->next;
             }
         }
+
         ir_ctrl_pop(lctx);
 
-        /* Seal into exit if not already terminated */
+        /* If the last visited clause block is open, close it to switch exit. */
         ir_seal_goto(lctx, exit_block->id);
-
-        /* Free case list */
-        switch_case_t *sc = cases;
-        while (sc) { switch_case_t *next = sc->next; free(sc); sc = next; }
-
+        
+        /* Free temporary case metadata list used only during lowering. */
+        for (switch_case_t *sc = cases; sc; ) {
+            switch_case_t *next = sc->next;
+            free(sc);
+            sc = next;
+        }
+        
         lctx->cur_block = exit_block;
         break;
     }

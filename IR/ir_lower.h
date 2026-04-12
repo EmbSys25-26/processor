@@ -48,7 +48,7 @@ ir_module_t *ir_lower_translation_unit(const TreeNode_t    *root,
  * Loop / switch control targets — a stack entry per enclosing
  * break/continue target (§8.3 rule 6).
  */
-#define IR_CTRL_STACK_MAX 64
+#define IR_CTRL_STACK_MAX 64 
 
 typedef struct {
     unsigned break_block;     /* bb to jump to on break    */
@@ -56,22 +56,22 @@ typedef struct {
     int      has_continue;    /* 0 for switch              */
 } ir_ctrl_frame_t;
 
-typedef struct ir_lower_ctx_s {
-    ir_module_t        *module;
-    semantic_context_t *sem_ctx;
+typedef struct ir_lower_ctx_s { 
+    ir_module_t        *module;     // The IR module being built
+    semantic_context_t *sem_ctx;    // Live semantic context for type info, diagnostics, etc.
 
     /* current function being lowered */
-    ir_function_t      *func;
+    ir_function_t      *func;       // The current function being lowered (NULL if not inside a function)
 
     /* current basic block (lowering appends here) */
-    ir_block_t         *cur_block;
+    ir_block_t         *cur_block;  // The current basic block to which new instructions will be appended
 
     /* error counter — if > 0, lowering aborts */
-    unsigned            error_count;
+    unsigned            error_count;    // Count of errors encountered during lowering; if > 0, the process should abort
 
     /* break/continue target stack */
-    ir_ctrl_frame_t     ctrl_stack[IR_CTRL_STACK_MAX];
-    int                 ctrl_depth;
+    ir_ctrl_frame_t     ctrl_stack[IR_CTRL_STACK_MAX];  // Stack of control-flow contexts for break/continue resolution
+    int                 ctrl_depth;   /* current depth of nested control contexts; 0 means we're not inside any loop/switch */
 } ir_lower_ctx_t;
 
 /* ────────────────────────────────────────────────────────────

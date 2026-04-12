@@ -313,6 +313,49 @@ bb8:
     ret void
 }
 
+func @switch_case() -> i16 {
+  slot %slot1 : i16  ; x
+  slot %slot0 : i16  ; r
+
+bb0:
+    %v0 = addr_of %slot1
+    %v1 = *%v0
+    %v2 = %v1 eq 1
+    if %v2 goto bb2 else bb5
+
+bb1:
+    %v7 = addr_of %slot0
+    %v8 = *%v7
+    ret %v8
+
+bb2:
+    %v3 = addr_of %slot0
+    *%v3 = 10
+    goto bb1
+
+bb3:
+    %v5 = addr_of %slot0
+    *%v5 = 20
+    goto bb1
+
+bb4:
+    %v6 = addr_of %slot0
+    *%v6 = 0
+    goto bb1
+
+bb5:
+    %v4 = %v1 eq 2
+    if %v4 goto bb3 else bb6
+
+bb6:
+    goto bb4
+
+bb9:
+    ret void
+
+}
+
+
 func @main() -> i16 {
   slot %slot0 : i16  ; r
 
@@ -345,9 +388,18 @@ bb0:
     %v17 = @loop_continue(10)
     %v18 = addr_of %slot0
     *%v18 = %v17
-    %v19 = addr_of %slot0
-    %v20 = *%v19
-    ret %v20
+    %v19 = @switch_case(1)
+    %v20 = addr_of %slot0
+    *%v20 = %v19
+    %v21 = @switch_case(2)
+    %v22 = addr_of %slot0
+    *%v22 = %v21
+    %v23 = @switch_case(3)
+    %v24 = addr_of %slot0
+    *%v24 = %v23
+    %v25 = addr_of %slot0
+    %v26 = *%v25
+    ret %v26
 
 bb1:
     ret void

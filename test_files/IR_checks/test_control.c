@@ -74,6 +74,23 @@ int loop_continue(int n) {
     return s;
 }
 
+
+int switch_case(int x) {
+    int r;
+    switch (x) {
+        case 1:
+            r = 10;
+            break;
+        case 2:
+            r = 20;
+            break;
+        default:
+            r = 0;
+    }
+    return r;
+}
+
+
 int main(void) {
     int r;
     r = classify(-5);
@@ -85,5 +102,8 @@ int main(void) {
     r = sum_for(10);
     r = loop_break(10);
     r = loop_continue(10);
+    r = switch_case(1);
+    r = switch_case(2);
+    r = switch_case(3);
     return r;
 }
