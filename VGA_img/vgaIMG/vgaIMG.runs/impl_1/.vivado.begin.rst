@@ -78,3 +78,13 @@
     <Process Command="vivado" Owner="simba" Host="torradeira" Pid="164111" HostCore="8" HostMemory="16170112">
     </Process>
 </ProcessHandle>
+<?xml version="1.0"?>
+<ProcessHandle Version="1" Minor="0">
+    <Process Command="vivado" Owner="simba" Host="torradeira" Pid="171702" HostCore="8" HostMemory="16170112">
+    </Process>
+</ProcessHandle>
+<?xml version="1.0"?>
+<ProcessHandle Version="1" Minor="0">
+    <Process Command="vivado" Owner="simba" Host="torradeira" Pid="184175" HostCore="8" HostMemory="16170112">
+    </Process>
+</ProcessHandle>

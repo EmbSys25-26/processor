@@ -17,7 +17,8 @@
         output wire [`VGA_CHANNEL_SIZE:0] o_vga_blue,
         output wire o_hsync,
         output wire [1:0] o_state_debug,
-        input wire i_vactive
+        input wire i_vactive,
+        input wire i_flush
     );
     
     /*************************************************************************************
@@ -63,7 +64,7 @@
      ***************************************************************************/
         wire _in_visible   = (_state == VISIBLE) && i_enVGA && ~i_rst && i_vactive;
         wire _pixel_accept = _in_visible && i_axis_tvalid;
-        assign o_axis_tready = _in_visible;
+        assign o_axis_tready = _in_visible || i_flush;
         
         assign o_endLine = _endLine;
         assign o_hsync   = _hsync;

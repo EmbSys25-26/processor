@@ -3,8 +3,8 @@
 # SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
 # IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
 # SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
-# Start of session at: Sun Apr 12 15:50:57 2026
-# Process ID         : 151147
+# Start of session at: Sun Apr 12 16:31:22 2026
+# Process ID         : 171300
 # Current directory  : /home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.runs/synth_1
 # Command line       : vivado -log controller.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source controller.tcl
 # Log file           : /home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.runs/synth_1/controller.vds
@@ -13,13 +13,13 @@
 # Platform           : Ubuntu
 # Operating System   : Ubuntu 22.04.5 LTS
 # Processor Detail   : 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
-# CPU Frequency      : 3503.469 MHz
+# CPU Frequency      : 3939.627 MHz
 # CPU Physical cores : 4
 # CPU Logical cores  : 8
 # Host memory        : 16558 MB
 # Swap memory        : 8192 MB
 # Total Virtual      : 24750 MB
-# Available Virtual  : 14350 MB
+# Available Virtual  : 13322 MB
 #-----------------------------------------------------------
 source controller.tcl -notrace
 INFO: [IP_Flow 19-234] Refreshing IP repositories
@@ -37,13 +37,13 @@ INFO: [Designutils 20-5440] No compile time benefit to using incremental synthes
 INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
 INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 7 processes.
 INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
-INFO: [Synth 8-7075] Helper process launched with PID 151221
+INFO: [Synth 8-7075] Helper process launched with PID 171374
 ---------------------------------------------------------------------------------
-Starting RTL Elaboration : Time (s): cpu = 00:00:04 ; elapsed = 00:00:05 . Memory (MB): peak = 2160.977 ; gain = 441.797 ; free physical = 1044 ; free virtual = 12354
+Starting RTL Elaboration : Time (s): cpu = 00:00:04 ; elapsed = 00:00:05 . Memory (MB): peak = 2162.004 ; gain = 441.797 ; free physical = 314 ; free virtual = 11591
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-6157] synthesizing module 'controller' [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/controller.v:4]
-INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-151147-torradeira/realtime/clk_wiz_0_stub.v:6]
-INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (0#1) [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-151147-torradeira/realtime/clk_wiz_0_stub.v:6]
+INFO: [Synth 8-6157] synthesizing module 'clk_wiz_0' [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-171300-torradeira/realtime/clk_wiz_0_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'clk_wiz_0' (0#1) [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.runs/synth_1/.Xil/Vivado-171300-torradeira/realtime/clk_wiz_0_stub.v:6]
 INFO: [Synth 8-6157] synthesizing module 'm_vga_mmio' [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:5]
 INFO: [Synth 8-6157] synthesizing module 'vga_system_wrapper' [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/hdl/vga_system_wrapper.v:13]
 INFO: [Synth 8-6157] synthesizing module 'vga_system' [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:13]
@@ -640,8 +640,8 @@ INFO: [Synth 8-6155] done synthesizing module 'bd_ead3' (0#1) [/home/simba/Docum
 INFO: [Synth 8-6155] done synthesizing module 'vga_system_smartconnect_0_0' (0#1) [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/ip/vga_system_smartconnect_0_0/synth/vga_system_smartconnect_0_0.v:53]
 INFO: [Synth 8-6155] done synthesizing module 'vga_system' (0#1) [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/synth/vga_system.v:13]
 INFO: [Synth 8-6155] done synthesizing module 'vga_system_wrapper' (0#1) [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.gen/sources_1/bd/vga_system/hdl/vga_system_wrapper.v:13]
-WARNING: [Synth 8-7071] port 'M_AXIS_MM2S_0_tkeep' of module 'vga_system_wrapper' is unconnected for instance 'u_system' [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:103]
-WARNING: [Synth 8-7023] instance 'u_system' of module 'vga_system_wrapper' has 29 connections declared, but only 28 given [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:103]
+WARNING: [Synth 8-7071] port 'M_AXIS_MM2S_0_tkeep' of module 'vga_system_wrapper' is unconnected for instance 'u_system' [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:105]
+WARNING: [Synth 8-7023] instance 'u_system' of module 'vga_system_wrapper' has 29 connections declared, but only 28 given [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:105]
 INFO: [Synth 8-6157] synthesizing module 'm_hsync_vga' [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/hsync_module.v:5]
 INFO: [Synth 8-6155] done synthesizing module 'm_hsync_vga' (0#1) [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/hsync_module.v:5]
 INFO: [Synth 8-6157] synthesizing module 'm_vsync_vga' [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/vsync_module.v:4]
@@ -657,7 +657,7 @@ INFO: [Synth 8-6157] synthesizing module 'xpm_cdc_single__parameterized6' [/home
 	Parameter SIM_ASSERT_CHK bound to: 0 - type: integer 
 	Parameter SRC_INPUT_REG bound to: 1 - type: integer 
 INFO: [Synth 8-6155] done synthesizing module 'xpm_cdc_single__parameterized6' (0#1) [/home/simba/vivado/2025.1/Vivado/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv:152]
-INFO: [Synth 8-155] case statement is not full and has no default [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:223]
+INFO: [Synth 8-155] case statement is not full and has no default [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:229]
 INFO: [Synth 8-6155] done synthesizing module 'm_vga_mmio' (0#1) [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:5]
 INFO: [Synth 8-155] case statement is not full and has no default [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/controller.v:141]
 INFO: [Synth 8-6155] done synthesizing module 'controller' (0#1) [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/controller.v:4]
@@ -687,9 +687,9 @@ INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_r
 INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
 INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
 INFO: [Synth 8-4490] FSM extraction disabled for register 'gen_pipelined.state_reg' through user attribute
-INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'hsync_module'. This will prevent further optimization [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:135]
-INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'vsync_module'. This will prevent further optimization [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:154]
-INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'u_system'. This will prevent further optimization [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:103]
+INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'hsync_module'. This will prevent further optimization [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:137]
+INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'vsync_module'. This will prevent further optimization [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:157]
+INFO: [Synth 8-6071] Mark debug on the nets applies keep_hierarchy on instance 'u_system'. This will prevent further optimization [/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.srcs/sources_1/new/periph_vga.v:105]
 WARNING: [Synth 8-7129] Port i_axis_tdata[3] in module m_hsync_vga is either unconnected or has no load
 WARNING: [Synth 8-7129] Port i_axis_tdata[2] in module m_hsync_vga is either unconnected or has no load
 WARNING: [Synth 8-7129] Port i_axis_tdata[1] in module m_hsync_vga is either unconnected or has no load
@@ -792,18 +792,18 @@ WARNING: [Synth 8-7129] Port dinb[20] in module xpm_memory_base__parameterized1 
 WARNING: [Synth 8-7129] Port dinb[19] in module xpm_memory_base__parameterized1 is either unconnected or has no load
 INFO: [Common 17-14] Message 'Synth 8-7129' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
 ---------------------------------------------------------------------------------
-Finished RTL Elaboration : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2563.453 ; gain = 844.273 ; free physical = 785 ; free virtual = 12099
+Finished RTL Elaboration : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2563.480 ; gain = 843.273 ; free physical = 210 ; free virtual = 11235
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2563.453 ; gain = 844.273 ; free physical = 785 ; free virtual = 12099
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2563.480 ; gain = 843.273 ; free physical = 210 ; free virtual = 11235
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2563.453 ; gain = 844.273 ; free physical = 785 ; free virtual = 12099
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:12 ; elapsed = 00:00:13 . Memory (MB): peak = 2563.480 ; gain = 843.273 ; free physical = 210 ; free virtual = 11235
 ---------------------------------------------------------------------------------
-Netlist sorting complete. Time (s): cpu = 00:00:00.89 ; elapsed = 00:00:00.89 . Memory (MB): peak = 2563.453 ; gain = 0.000 ; free physical = 804 ; free virtual = 12106
+Netlist sorting complete. Time (s): cpu = 00:00:00.86 ; elapsed = 00:00:00.87 . Memory (MB): peak = 2563.480 ; gain = 0.000 ; free physical = 215 ; free virtual = 11240
 INFO: [Netlist 29-17] Analyzing 5 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
@@ -905,29 +905,29 @@ Resolution: To avoid this warning, move constraints listed in [.Xil/controller_p
 INFO: [Project 1-1714] 56 XPM XDC files have been applied to the design.
 Completed Processing XDC Constraints
 
-Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2827.973 ; gain = 0.000 ; free physical = 673 ; free virtual = 11975
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2828.664 ; gain = 0.000 ; free physical = 203 ; free virtual = 11151
 INFO: [Project 1-111] Unisim Transformation Summary:
   A total of 3 instances were transformed.
   SRL16 => SRL16E: 3 instances
 
-Constraint Validation Runtime : Time (s): cpu = 00:00:00.1 ; elapsed = 00:00:00.1 . Memory (MB): peak = 2828.008 ; gain = 0.000 ; free physical = 673 ; free virtual = 11975
+Constraint Validation Runtime : Time (s): cpu = 00:00:00.1 ; elapsed = 00:00:00.1 . Memory (MB): peak = 2828.699 ; gain = 0.000 ; free physical = 203 ; free virtual = 11151
 INFO: [Designutils 20-5440] No compile time benefit to using incremental synthesis; A full resynthesis will be run
 INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
 ---------------------------------------------------------------------------------
-Finished Constraint Validation : Time (s): cpu = 00:00:26 ; elapsed = 00:00:26 . Memory (MB): peak = 2828.008 ; gain = 1108.828 ; free physical = 663 ; free virtual = 11966
+Finished Constraint Validation : Time (s): cpu = 00:00:26 ; elapsed = 00:00:26 . Memory (MB): peak = 2828.699 ; gain = 1108.492 ; free physical = 251 ; free virtual = 11141
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Loading Part and Timing Information
 ---------------------------------------------------------------------------------
 Loading part: xc7z010clg400-1
 ---------------------------------------------------------------------------------
-Finished Loading Part and Timing Information : Time (s): cpu = 00:00:26 ; elapsed = 00:00:26 . Memory (MB): peak = 2835.977 ; gain = 1116.797 ; free physical = 663 ; free virtual = 11966
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:26 ; elapsed = 00:00:26 . Memory (MB): peak = 2836.668 ; gain = 1116.461 ; free physical = 251 ; free virtual = 11141
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying 'set_property' XDC Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:27 ; elapsed = 00:00:27 . Memory (MB): peak = 2835.977 ; gain = 1116.797 ; free physical = 664 ; free virtual = 11966
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:27 ; elapsed = 00:00:27 . Memory (MB): peak = 2836.668 ; gain = 1116.461 ; free physical = 251 ; free virtual = 11141
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-802] inferred FSM for state register 'gen_axi.gen_write.write_cs_reg' in module 'sc_mmu_v1_0_15_decerr_slave'
 INFO: [Synth 8-802] inferred FSM for state register 'gen_endpoint.w_state_reg' in module 'sc_mmu_v1_0_15_top'
@@ -1066,10 +1066,12 @@ INFO: [Synth 8-6159] Found Keep on FSM register '_state_reg' in module 'm_vsync_
 ---------------------------------------------------------------------------------------------------
                    State |                     New Encoding |                Previous Encoding 
 ---------------------------------------------------------------------------------------------------
-                 VISIBLE |                               00 |                               00
-             FRONT_PORCH |                               01 |                               01
-                    SYNC |                               10 |                               10
-              BACK_PORCH |                               11 |                               11
+*
+                WAIT_SOF |                              000 |                              000
+                 VISIBLE |                              001 |                              001
+             FRONT_PORCH |                              010 |                              010
+                    SYNC |                              011 |                              011
+              BACK_PORCH |                              100 |                              100
 ---------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------
                    State |                     New Encoding |                Previous Encoding 
@@ -1083,7 +1085,7 @@ INFO: [Synth 8-6159] Found Keep on FSM register '_state_reg' in module 'm_vsync_
 ---------------------------------------------------------------------------------------------------
 INFO: [Synth 8-3354] encoded FSM with state register '_state_reg' using encoding 'sequential' in module 'controller'
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:30 ; elapsed = 00:00:30 . Memory (MB): peak = 2835.977 ; gain = 1116.797 ; free physical = 659 ; free virtual = 11967
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:30 ; elapsed = 00:00:30 . Memory (MB): peak = 2836.668 ; gain = 1116.461 ; free physical = 214 ; free virtual = 11112
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
 ---------------------------------------------------------------------------------
@@ -1165,8 +1167,8 @@ Detailed RTL Component Info :
 	   2 Input   12 Bit        Muxes := 14    
 	   5 Input   12 Bit        Muxes := 1     
 	   2 Input   11 Bit        Muxes := 1     
-	   2 Input   10 Bit        Muxes := 3     
-	   4 Input   10 Bit        Muxes := 2     
+	   2 Input   10 Bit        Muxes := 8     
+	   4 Input   10 Bit        Muxes := 1     
 	   5 Input    9 Bit        Muxes := 1     
 	   2 Input    9 Bit        Muxes := 6     
 	   2 Input    8 Bit        Muxes := 31    
@@ -1179,18 +1181,18 @@ Detailed RTL Component Info :
 	   4 Input    4 Bit        Muxes := 4     
 	   2 Input    4 Bit        Muxes := 12    
 	   3 Input    4 Bit        Muxes := 1     
-	   2 Input    3 Bit        Muxes := 36    
+	   2 Input    3 Bit        Muxes := 45    
 	   5 Input    3 Bit        Muxes := 1     
 	   4 Input    3 Bit        Muxes := 8     
-	   6 Input    3 Bit        Muxes := 2     
-	   2 Input    2 Bit        Muxes := 82    
-	   4 Input    2 Bit        Muxes := 16    
+	   6 Input    3 Bit        Muxes := 3     
+	   2 Input    2 Bit        Muxes := 78    
+	   4 Input    2 Bit        Muxes := 15    
 	   5 Input    2 Bit        Muxes := 2     
 	   3 Input    2 Bit        Muxes := 1     
 	   2 Input    1 Bit        Muxes := 241   
 	   3 Input    1 Bit        Muxes := 17    
-	   6 Input    1 Bit        Muxes := 62    
-	   4 Input    1 Bit        Muxes := 38    
+	   6 Input    1 Bit        Muxes := 64    
+	   4 Input    1 Bit        Muxes := 37    
 	   7 Input    1 Bit        Muxes := 6     
 	   5 Input    1 Bit        Muxes := 27    
 	  12 Input    1 Bit        Muxes := 8     
@@ -1238,7 +1240,7 @@ WARNING: [Synth 8-3332] Sequential element (BSR_OUT_DFF[0].FDRE_BSR) is unused a
 WARNING: [Synth 8-3332] Sequential element (ACTIVE_LOW_BSR_OUT_DFF[0].FDRE_BSR_N) is unused and will be removed from module proc_sys_reset__parameterized1.
 WARNING: [Synth 8-3332] Sequential element (PR_OUT_DFF[0].FDRE_PER) is unused and will be removed from module proc_sys_reset__parameterized1.
 ---------------------------------------------------------------------------------
-Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:44 ; elapsed = 00:00:44 . Memory (MB): peak = 2835.977 ; gain = 1116.797 ; free physical = 643 ; free virtual = 11955
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:45 ; elapsed = 00:00:45 . Memory (MB): peak = 2836.668 ; gain = 1116.461 ; free physical = 191 ; free virtual = 11077
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
 INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
@@ -1271,7 +1273,7 @@ Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
 Start Applying XDC Timing Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:48 ; elapsed = 00:00:49 . Memory (MB): peak = 2835.977 ; gain = 1116.797 ; free physical = 590 ; free virtual = 11902
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:49 ; elapsed = 00:00:49 . Memory (MB): peak = 2836.668 ; gain = 1116.461 ; free physical = 162 ; free virtual = 11037
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Timing Optimization
@@ -1279,7 +1281,7 @@ Start Timing Optimization
 INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
 INFO: [Synth 8-5775] Found 'rw_addr_collision' attribute set to 'no' on SDP RAM gen_wr_a.gen_word_narrow.mem_reg. Setting write mode to NO_CHANGE 
 ---------------------------------------------------------------------------------
-Finished Timing Optimization : Time (s): cpu = 00:00:49 ; elapsed = 00:00:50 . Memory (MB): peak = 2835.977 ; gain = 1116.797 ; free physical = 565 ; free virtual = 11887
+Finished Timing Optimization : Time (s): cpu = 00:00:50 ; elapsed = 00:00:50 . Memory (MB): peak = 2836.668 ; gain = 1116.461 ; free physical = 153 ; free virtual = 11028
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -1308,7 +1310,7 @@ Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
 Start Technology Mapping
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Technology Mapping : Time (s): cpu = 00:00:51 ; elapsed = 00:00:52 . Memory (MB): peak = 2835.977 ; gain = 1116.797 ; free physical = 579 ; free virtual = 11891
+Finished Technology Mapping : Time (s): cpu = 00:00:52 ; elapsed = 00:00:52 . Memory (MB): peak = 2836.668 ; gain = 1116.461 ; free physical = 265 ; free virtual = 11041
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start IO Insertion
@@ -1326,37 +1328,37 @@ Start Final Netlist Cleanup
 Finished Final Netlist Cleanup
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished IO Insertion : Time (s): cpu = 00:00:54 ; elapsed = 00:00:55 . Memory (MB): peak = 2960.789 ; gain = 1241.609 ; free physical = 456 ; free virtual = 11793
+Finished IO Insertion : Time (s): cpu = 00:00:55 ; elapsed = 00:00:55 . Memory (MB): peak = 2961.480 ; gain = 1241.273 ; free physical = 155 ; free virtual = 10933
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Instances
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Instances : Time (s): cpu = 00:00:54 ; elapsed = 00:00:55 . Memory (MB): peak = 2960.789 ; gain = 1241.609 ; free physical = 456 ; free virtual = 11792
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:55 ; elapsed = 00:00:55 . Memory (MB): peak = 2961.480 ; gain = 1241.273 ; free physical = 155 ; free virtual = 10933
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Rebuilding User Hierarchy
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:55 ; elapsed = 00:00:55 . Memory (MB): peak = 2960.789 ; gain = 1241.609 ; free physical = 462 ; free virtual = 11807
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:55 ; elapsed = 00:00:56 . Memory (MB): peak = 2961.480 ; gain = 1241.273 ; free physical = 258 ; free virtual = 10944
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Ports
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Ports : Time (s): cpu = 00:00:55 ; elapsed = 00:00:55 . Memory (MB): peak = 2960.789 ; gain = 1241.609 ; free physical = 476 ; free virtual = 11811
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:55 ; elapsed = 00:00:56 . Memory (MB): peak = 2961.480 ; gain = 1241.273 ; free physical = 258 ; free virtual = 10944
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:55 ; elapsed = 00:00:55 . Memory (MB): peak = 2960.789 ; gain = 1241.609 ; free physical = 475 ; free virtual = 11810
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:55 ; elapsed = 00:00:56 . Memory (MB): peak = 2961.480 ; gain = 1241.273 ; free physical = 258 ; free virtual = 10944
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Nets
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Nets : Time (s): cpu = 00:00:55 ; elapsed = 00:00:55 . Memory (MB): peak = 2960.789 ; gain = 1241.609 ; free physical = 475 ; free virtual = 11810
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:55 ; elapsed = 00:00:56 . Memory (MB): peak = 2961.480 ; gain = 1241.273 ; free physical = 258 ; free virtual = 10944
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -1408,11 +1410,11 @@ Report Cell Usage:
 |4     |CARRY4     |    79|
 |5     |FIFO36E1   |     1|
 |6     |LUT1       |   312|
-|7     |LUT2       |   297|
-|8     |LUT3       |   408|
+|7     |LUT2       |   301|
+|8     |LUT3       |   411|
 |9     |LUT4       |   332|
-|10    |LUT5       |   303|
-|11    |LUT6       |   575|
+|10    |LUT5       |   306|
+|11    |LUT6       |   591|
 |12    |MMCME2_ADV |     1|
 |13    |PS7        |     1|
 |14    |RAM32M     |    25|
@@ -1421,37 +1423,37 @@ Report Cell Usage:
 |17    |SRL16E     |   118|
 |18    |FDCE       |    66|
 |19    |FDPE       |     8|
-|20    |FDRE       |  2252|
+|20    |FDRE       |  2253|
 |21    |FDSE       |    80|
 |22    |IBUF       |     2|
 |23    |OBUF       |    14|
 +------+-----------+------+
 ---------------------------------------------------------------------------------
-Finished Writing Synthesis Report : Time (s): cpu = 00:00:55 ; elapsed = 00:00:55 . Memory (MB): peak = 2960.789 ; gain = 1241.609 ; free physical = 475 ; free virtual = 11810
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:55 ; elapsed = 00:00:56 . Memory (MB): peak = 2961.480 ; gain = 1241.273 ; free physical = 258 ; free virtual = 10944
 ---------------------------------------------------------------------------------
 Synthesis finished with 0 errors, 0 critical warnings and 13 warnings.
-Synthesis Optimization Runtime : Time (s): cpu = 00:00:45 ; elapsed = 00:00:46 . Memory (MB): peak = 2960.789 ; gain = 977.055 ; free physical = 475 ; free virtual = 11810
-Synthesis Optimization Complete : Time (s): cpu = 00:00:55 ; elapsed = 00:00:55 . Memory (MB): peak = 2960.797 ; gain = 1241.609 ; free physical = 475 ; free virtual = 11810
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:45 ; elapsed = 00:00:47 . Memory (MB): peak = 2961.480 ; gain = 976.055 ; free physical = 247 ; free virtual = 10933
+Synthesis Optimization Complete : Time (s): cpu = 00:00:55 ; elapsed = 00:00:56 . Memory (MB): peak = 2961.488 ; gain = 1241.273 ; free physical = 248 ; free virtual = 10934
 INFO: [Project 1-571] Translating synthesized netlist
-Netlist sorting complete. Time (s): cpu = 00:00:00.16 ; elapsed = 00:00:00.16 . Memory (MB): peak = 2963.758 ; gain = 0.000 ; free physical = 657 ; free virtual = 11979
+Netlist sorting complete. Time (s): cpu = 00:00:00.15 ; elapsed = 00:00:00.15 . Memory (MB): peak = 2964.449 ; gain = 0.000 ; free physical = 410 ; free virtual = 11098
 INFO: [Netlist 29-17] Analyzing 113 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 3028.691 ; gain = 0.000 ; free physical = 640 ; free virtual = 11941
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 3029.383 ; gain = 0.000 ; free physical = 410 ; free virtual = 11097
 INFO: [Project 1-111] Unisim Transformation Summary:
   A total of 28 instances were transformed.
   RAM32M => RAM32M (RAMD32(x6), RAMS32(x2)): 25 instances
   SRL16 => SRL16E: 3 instances
 
-Synth Design complete | Checksum: abc72f7c
+Synth Design complete | Checksum: 4898fb99
 INFO: [Common 17-83] Releasing license: Synthesis
 421 Infos, 193 Warnings, 0 Critical Warnings and 0 Errors encountered.
 synth_design completed successfully
-synth_design: Time (s): cpu = 00:01:04 ; elapsed = 00:01:02 . Memory (MB): peak = 3028.727 ; gain = 1490.102 ; free physical = 639 ; free virtual = 11940
-INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 2243.411; main = 2147.009; forked = 268.108
-INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3799.531; main = 3028.695; forked = 963.551
-Write ShapeDB Complete: Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.01 . Memory (MB): peak = 3052.703 ; gain = 0.000 ; free physical = 639 ; free virtual = 11940
+synth_design: Time (s): cpu = 00:01:05 ; elapsed = 00:01:02 . Memory (MB): peak = 3029.418 ; gain = 1489.766 ; free physical = 410 ; free virtual = 11097
+INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 2242.041; main = 2147.232; forked = 268.115
+INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3800.223; main = 3029.387; forked = 963.551
+Write ShapeDB Complete: Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00 . Memory (MB): peak = 3053.395 ; gain = 0.000 ; free physical = 410 ; free virtual = 11097
 INFO: [Common 17-1381] The checkpoint '/home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.runs/synth_1/controller.dcp' has been generated.
 INFO: [Vivado 12-24828] Executing command : report_utilization -file controller_utilization_synth.rpt -pb controller_utilization_synth.pb
-INFO: [Common 17-206] Exiting Vivado at Sun Apr 12 15:52:05 2026...
+INFO: [Common 17-206] Exiting Vivado at Sun Apr 12 16:32:29 2026...

@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
-| Date             : Sun Apr 12 15:53:30 2026
+| Date             : Sun Apr 12 16:33:53 2026
 | Host             : torradeira running 64-bit Ubuntu 22.04.5 LTS
 | Command          : report_power -file controller_power_routed.rpt -pb controller_power_summary_routed.pb -rpx controller_power_routed.rpx
 | Design           : controller
@@ -30,10 +30,10 @@ Table of Contents
 ----------
 
 +--------------------------+--------------+
-| Total On-Chip Power (W)  | 1.779        |
+| Total On-Chip Power (W)  | 1.778        |
 | Design Power Budget (W)  | Unspecified* |
 | Power Budget Margin (W)  | NA           |
-| Dynamic (W)              | 1.653        |
+| Dynamic (W)              | 1.652        |
 | Device Static (W)        | 0.126        |
 | Effective TJA (C/W)      | 11.5         |
 | Max Ambient (C)          | 64.5         |
@@ -53,21 +53,21 @@ Table of Contents
 | On-Chip                  | Power (W) | Used     | Available | Utilization (%) |
 +--------------------------+-----------+----------+-----------+-----------------+
 | Clocks                   |     0.013 |        9 |       --- |             --- |
-| Slice Logic              |     0.003 |     9925 |       --- |             --- |
-|   LUT as Logic           |     0.003 |     3008 |     17600 |           17.09 |
+| Slice Logic              |     0.003 |     9954 |       --- |             --- |
+|   LUT as Logic           |     0.003 |     3034 |     17600 |           17.24 |
 |   LUT as Distributed RAM |    <0.001 |      124 |      6000 |            2.07 |
 |   CARRY4                 |    <0.001 |      130 |      4400 |            2.95 |
-|   Register               |    <0.001 |     4730 |     35200 |           13.44 |
+|   Register               |    <0.001 |     4731 |     35200 |           13.44 |
 |   LUT as Shift Register  |    <0.001 |      228 |      6000 |            3.80 |
 |   F7/F8 Muxes            |    <0.001 |        3 |     17600 |            0.02 |
-|   Others                 |     0.000 |      746 |       --- |             --- |
-| Signals                  |     0.004 |     7044 |       --- |             --- |
+|   Others                 |     0.000 |      748 |       --- |             --- |
+| Signals                  |     0.004 |     7073 |       --- |             --- |
 | Block RAM                |     0.002 |        8 |        60 |           13.33 |
 | MMCM                     |     0.226 |        2 |         2 |          100.00 |
 | I/O                      |    <0.001 |       16 |       100 |           16.00 |
 | PS7                      |     1.404 |        1 |       --- |             --- |
 | Static Power             |     0.126 |          |           |                 |
-| Total                    |     1.779 |          |           |                 |
+| Total                    |     1.778 |          |           |                 |
 +--------------------------+-----------+----------+-----------+-----------------+
 
 
@@ -77,7 +77,7 @@ Table of Contents
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
 | Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
-| Vccint    |       1.000 |     0.031 |       0.023 |      0.008 |       NA    | Unspecified | NA         |
+| Vccint    |       1.000 |     0.030 |       0.023 |      0.008 |       NA    | Unspecified | NA         |
 | Vccaux    |       1.800 |     0.134 |       0.125 |      0.008 |       NA    | Unspecified | NA         |
 | Vcco33    |       3.300 |     0.001 |       0.000 |      0.001 |       NA    | Unspecified | NA         |
 | Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
@@ -159,13 +159,13 @@ Table of Contents
 +--------------------------+-----------+
 | Name                     | Power (W) |
 +--------------------------+-----------+
-| controller               |     1.653 |
+| controller               |     1.652 |
 |   dbg_hub                |     0.002 |
 |     inst                 |     0.002 |
 |       BSCANID.u_xsdbm_id |     0.002 |
-|   periph_vga             |     1.542 |
-|     u_system             |     1.542 |
-|       vga_system_i       |     1.542 |
+|   periph_vga             |     1.541 |
+|     u_system             |     1.541 |
+|       vga_system_i       |     1.541 |
 |   u_clk_wiz              |     0.106 |
 |     inst                 |     0.106 |
 |   u_ila_0                |     0.003 |

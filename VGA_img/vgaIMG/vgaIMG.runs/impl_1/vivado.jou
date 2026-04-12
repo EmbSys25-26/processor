@@ -3,8 +3,8 @@
 # SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
 # IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
 # SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
-# Start of session at: Sun Apr 12 15:53:56 2026
-# Process ID         : 164162
+# Start of session at: Sun Apr 12 16:34:04 2026
+# Process ID         : 184225
 # Current directory  : /home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.runs/impl_1
 # Command line       : vivado -log controller.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source controller.tcl -notrace
 # Log file           : /home/simba/Documents/Embedded_Systems/2nd_semester/VGA_simba/processor/VGA_img/vgaIMG/vgaIMG.runs/impl_1/controller.vdi
@@ -13,12 +13,12 @@
 # Platform           : Ubuntu
 # Operating System   : Ubuntu 22.04.5 LTS
 # Processor Detail   : 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
-# CPU Frequency      : 4100.000 MHz
+# CPU Frequency      : 1060.818 MHz
 # CPU Physical cores : 4
 # CPU Logical cores  : 8
 # Host memory        : 16558 MB
 # Swap memory        : 8192 MB
 # Total Virtual      : 24750 MB
-# Available Virtual  : 14290 MB
+# Available Virtual  : 13412 MB
 #-----------------------------------------------------------
 source controller.tcl -notrace

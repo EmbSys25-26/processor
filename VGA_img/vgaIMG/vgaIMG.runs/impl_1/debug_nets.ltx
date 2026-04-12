@@ -314,8 +314,7 @@
                                 "nets": [
                                     {
                                         "name": "periph_vga/hsync_module/_endLine",
-                                        "isBus": false,
-                                        "parentNetId": 44
+                                        "isBus": false
                                     }
                                 ]
                             },
@@ -417,20 +416,24 @@
                                 "name": "periph_vga/vsync_module/_state_reg[1]",
                                 "states": [
                                     {
+                                        "name": "WAIT_SOF",
+                                        "val": "000"
+                                    },
+                                    {
                                         "name": "VISIBLE",
-                                        "val": "00"
+                                        "val": "001"
                                     },
                                     {
                                         "name": "FRONT_PORCH",
-                                        "val": "01"
+                                        "val": "010"
                                     },
                                     {
                                         "name": "SYNC",
-                                        "val": "10"
+                                        "val": "011"
                                     },
                                     {
                                         "name": "BACK_PORCH",
-                                        "val": "11"
+                                        "val": "100"
                                     }
                                 ]
                             }
@@ -444,47 +447,24 @@
                                 "name": "periph_vga/vsync_module/_state_reg[0]",
                                 "states": [
                                     {
+                                        "name": "WAIT_SOF",
+                                        "val": "000"
+                                    },
+                                    {
                                         "name": "VISIBLE",
-                                        "val": "00"
+                                        "val": "001"
                                     },
                                     {
                                         "name": "FRONT_PORCH",
-                                        "val": "01"
+                                        "val": "010"
                                     },
                                     {
                                         "name": "SYNC",
-                                        "val": "10"
+                                        "val": "011"
                                     },
                                     {
                                         "name": "BACK_PORCH",
-                                        "val": "11"
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "id": 44,
-                        "name": "periph_vga/hsync_module/_endLine",
-                        "state_reg": [
-                            {
-                                "name": "periph_vga/vsync_module/_state_reg[0]",
-                                "states": [
-                                    {
-                                        "name": "VISIBLE",
-                                        "val": "00"
-                                    },
-                                    {
-                                        "name": "FRONT_PORCH",
-                                        "val": "01"
-                                    },
-                                    {
-                                        "name": "SYNC",
-                                        "val": "10"
-                                    },
-                                    {
-                                        "name": "BACK_PORCH",
-                                        "val": "11"
+                                        "val": "100"
                                     }
                                 ]
                             }

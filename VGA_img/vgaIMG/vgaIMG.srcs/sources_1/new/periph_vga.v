@@ -67,7 +67,7 @@ module m_vga_mmio(
  
     wire _endLine;
     wire [1:0] _hsync_state_debug;
-    wire [1:0] _vsync_state_debug;
+    wire [2:0] _vsync_state_debug;
     
     // --- CDC: sync imgData from clkSystem -> clkVGA ---
     // The _sync variables are safe to use internally (to pass to the submodules)
@@ -78,6 +78,8 @@ module m_vga_mmio(
     wire _rst_sync_vga;
     
     wire _vactive;
+    
+    wire _flush;
  /****************************************************************************
  * 1.4 DECLARE INTERNAL SIGNALS OF AXI4-STREAM OF VDMA
  ***************************************************************************/
@@ -148,7 +150,8 @@ module m_vga_mmio(
         .o_vga_blue(o_vga_blue),
         .o_hsync(o_hsync),
         .o_state_debug(_hsync_state_debug),
-        .i_vactive(_vactive)
+        .i_vactive(_vactive),
+        .i_flush(_flush)
      );
      
      m_vsync_vga vsync_module (
@@ -156,9 +159,12 @@ module m_vga_mmio(
         .i_rst (_rst_sync_vga),
         .i_enVGA (_enVGA_sync),
         .i_endLine(_endLine),
+        .i_axis_tvalid(_axis_tvalid),
+        .i_axis_tuser(_axis_tuser),
         .o_vsync(o_vsync),
         .o_state_debug(_vsync_state_debug),
-        .o_vactive(_vactive)
+        .o_vactive(_vactive),
+        .o_flush(_flush)
      );
      
      /*ila_0 ila (
