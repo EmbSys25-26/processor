@@ -1,0 +1,116 @@
+name: Rotation planning
+description: Manager/admin planning issue aligned with ROTATION_NOTES.md
+labels: ["planning"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Keep this plan aligned with `/docs/templates/github/ROTATION_NOTES.md` so planning and release reporting use the same structure.
+  - type: input
+    id: milestone
+    attributes:
+      label: Milestone name
+      description: Milestone referring to this rotation. 
+      placeholder: Milestone \# or something
+    validations:
+      required: true
+  - type: textarea
+    id: tldr
+    attributes:
+      label: TL;DR planning summary (3 bullets)
+      description: Short planning summary for this rotation.
+      placeholder: |
+        - Focus x this rotation.
+        - Fix y regression.
+        - Prepare z for next release.
+    validations:
+      required: true
+  - type: textarea
+    id: pipeline_plan
+    attributes:
+      label: Planned work - Pipeline
+      description: Planned issue set + intended deliverables for pipeline.
+      placeholder: |
+        - Issue #... (owner/group)
+        - Issue #... (owner/group)
+    validations:
+      required: false
+  - type: textarea
+    id: compiler_plan
+    attributes:
+      label: Planned work - Compiler
+      description: Planned issue set + intended deliverables for compiler backend.
+      placeholder: |
+        - Issue #... (owner/group)
+        - Issue #... (owner/group)
+    validations:
+      required: false
+  - type: textarea
+    id: peripherals_plan
+    attributes:
+      label: Planned work - Peripherals
+      description: Planned issue set + intended deliverables for peripherals.
+      placeholder: |
+        - Issue #... (owner/group)
+        - Issue #... (owner/group)
+    validations:
+      required: false
+  - type: textarea
+    id: issue_set
+    attributes:
+      label: Consolidated issue set and assignments
+      description: Final list of issues to create/update and assignees/groups.
+      placeholder: |
+        - pipeline: ... (Group A)
+        - compiler backend: ... (Group B)
+        - peripherals: ... (Group C)
+    validations:
+      required: true
+  - type: textarea
+    id: behavior_changes
+    attributes:
+      label: Expected behavior changes
+      description: Any expected user-visible behavior change this rotation.
+      placeholder: None / list behavior deltas to watch.
+    validations:
+      required: false
+  - type: textarea
+    id: planned_verification
+    attributes:
+      label: Planned tests / verification
+      description: Planned benches/sim/CI checks to validate this rotation.
+      placeholder: |
+        - tb_...
+        - CI check ...
+    validations:
+      required: false
+  - type: textarea
+    id: carry_over
+    attributes:
+      label: Known issues to carry from previous rotation
+      description: Open issues and why they remain open.
+      placeholder: |
+        - Issue #... - blocker/rationale
+    validations:
+      required: false
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks / callouts for this rotation
+      description: Key risks and mitigation notes.
+      placeholder: |
+        - Timing risk on ...
+        - Verification gap on ...
+    validations:
+      required: false
+  - type: textarea
+    id: next_focus
+    attributes:
+      label: Suggested focus for next rotation
+      description: Seed items for next planning cycle.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: false
