@@ -1,0 +1,46 @@
+#-----------------------------------------------------------
+# Vivado v2025.1 (64-bit)
+# SW Build 6140274 on Wed May 21 22:58:25 MDT 2025
+# IP Build 6138677 on Thu May 22 03:10:11 MDT 2025
+# SharedData Build 6139179 on Tue May 20 17:58:58 MDT 2025
+# Start of session at: Sat Apr 11 15:33:53 2026
+# Process ID         : 5415
+# Current directory  : /home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA
+# Command line       : vivado processor.xpr
+# Log file           : /home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA/vivado.log
+# Journal file       : /home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA/vivado.jou
+# Running On         : andre-HP-Laptop-15s-eq2xxx
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : AMD Ryzen 7 5700U with Radeon Graphics
+# CPU Frequency      : 4240.694 MHz
+# CPU Physical cores : 8
+# CPU Logical cores  : 16
+# Host memory        : 11823 MB
+# Swap memory        : 2147 MB
+# Total Virtual      : 13970 MB
+# Available Virtual  : 9040 MB
+#-----------------------------------------------------------
+start_gui
+open_project processor.xpr
+launch_simulation
+launch_simulation
+open_wave_config /home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA/wavecfgs/tb_soc_behav.wcfg
+source tb_soc.tcl
+run all
+current_wave_config {tb_soc_behav.wcfg}
+add_wave {{/tb_soc/u_soc/u_periph/u_ps2/u_ps2_d2h/o_rx_data}} 
+current_wave_config {tb_soc_behav.wcfg}
+add_wave {{/tb_soc/u_soc/u_periph/u_ps2/u_ps2_d2h/o_rx_valid}} 
+current_wave_config {tb_soc_behav.wcfg}
+add_wave {{/tb_soc/io_ps2_clk}} 
+current_wave_config {tb_soc_behav.wcfg}
+add_wave {{/tb_soc/io_ps2_data}} 
+save_wave_config {/home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA/wavecfgs/tb_soc_behav.wcfg}
+relaunch_sim
+run all
+save_wave_config {/home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA/wavecfgs/tb_soc_behav.wcfg}
+save_wave_config {/home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA/wavecfgs/tb_soc_behav.wcfg}
+relaunch_sim
+run all
+close_sim

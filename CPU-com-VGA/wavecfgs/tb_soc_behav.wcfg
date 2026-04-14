@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_soc_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_soc" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="1.390000000 ms"></ZoomStartTime>
+      <ZoomEndTime time="23.610000001 ms"></ZoomEndTime>
+      <Cursor1Time time="2.420599999 ms"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="146"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="46" />
+   <wvobject type="logic" fp_name="/tb_soc/_clk">
+      <obj_property name="ElementShortName">_clk</obj_property>
+      <obj_property name="ObjectShortName">_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_rst">
+      <obj_property name="ElementShortName">_rst</obj_property>
+      <obj_property name="ObjectShortName">_rst</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/_par_o">
+      <obj_property name="ElementShortName">_par_o[3:0]</obj_property>
+      <obj_property name="ObjectShortName">_par_o[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_uart_tx">
+      <obj_property name="ElementShortName">_uart_tx</obj_property>
+      <obj_property name="ObjectShortName">_uart_tx</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_io_i2c_sda">
+      <obj_property name="ElementShortName">_io_i2c_sda</obj_property>
+      <obj_property name="ObjectShortName">_io_i2c_sda</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_io_i2c_scl">
+      <obj_property name="ElementShortName">_io_i2c_scl</obj_property>
+      <obj_property name="ObjectShortName">_io_i2c_scl</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/_vga_red">
+      <obj_property name="ElementShortName">_vga_red[3:0]</obj_property>
+      <obj_property name="ObjectShortName">_vga_red[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/_vga_green">
+      <obj_property name="ElementShortName">_vga_green[3:0]</obj_property>
+      <obj_property name="ObjectShortName">_vga_green[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/_vga_blue">
+      <obj_property name="ElementShortName">_vga_blue[3:0]</obj_property>
+      <obj_property name="ObjectShortName">_vga_blue[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_hsync">
+      <obj_property name="ElementShortName">_hsync</obj_property>
+      <obj_property name="ObjectShortName">_hsync</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_vsync">
+      <obj_property name="ElementShortName">_vsync</obj_property>
+      <obj_property name="ObjectShortName">_vsync</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/io_ps2_clk">
+      <obj_property name="ElementShortName">io_ps2_clk</obj_property>
+      <obj_property name="ObjectShortName">io_ps2_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/io_ps2_data">
+      <obj_property name="ElementShortName">io_ps2_data</obj_property>
+      <obj_property name="ObjectShortName">io_ps2_data</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/ps2_clk_drv">
+      <obj_property name="ElementShortName">ps2_clk_drv</obj_property>
+      <obj_property name="ObjectShortName">ps2_clk_drv</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/ps2_data_drv">
+      <obj_property name="ElementShortName">ps2_data_drv</obj_property>
+      <obj_property name="ObjectShortName">ps2_data_drv</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/file">
+      <obj_property name="ElementShortName">file[31:0]</obj_property>
+      <obj_property name="ObjectShortName">file[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/_timeout">
+      <obj_property name="ElementShortName">_timeout[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_timeout[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_clk">
+      <obj_property name="ElementShortName">_clk</obj_property>
+      <obj_property name="ObjectShortName">_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_rst">
+      <obj_property name="ElementShortName">_rst</obj_property>
+      <obj_property name="ObjectShortName">_rst</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/io_ps2_clk">
+      <obj_property name="ElementShortName">io_ps2_clk</obj_property>
+      <obj_property name="ObjectShortName">io_ps2_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/io_ps2_data">
+      <obj_property name="ElementShortName">io_ps2_data</obj_property>
+      <obj_property name="ObjectShortName">io_ps2_data</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_ps2/u_ps2_d2h/o_rx_data">
+      <obj_property name="ElementShortName">o_rx_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">o_rx_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/u_soc/u_periph/u_ps2/u_ps2_d2h/o_rx_valid">
+      <obj_property name="ElementShortName">o_rx_valid</obj_property>
+      <obj_property name="ObjectShortName">o_rx_valid</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/i_ascii_code">
+      <obj_property name="ElementShortName">i_ascii_code[7:0]</obj_property>
+      <obj_property name="ObjectShortName">i_ascii_code[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/u_soc/u_periph/u_vga/i_ascii_valid">
+      <obj_property name="ElementShortName">i_ascii_valid</obj_property>
+      <obj_property name="ObjectShortName">i_ascii_valid</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_char_addr">
+      <obj_property name="ElementShortName">_char_addr[11:0]</obj_property>
+      <obj_property name="ObjectShortName">_char_addr[11:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_char_wdata">
+      <obj_property name="ElementShortName">_char_wdata[7:0]</obj_property>
+      <obj_property name="ObjectShortName">_char_wdata[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/u_soc/u_periph/u_vga/_char_we">
+      <obj_property name="ElementShortName">_char_we</obj_property>
+      <obj_property name="ObjectShortName">_char_we</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_clk">
+      <obj_property name="ElementShortName">_clk</obj_property>
+      <obj_property name="ObjectShortName">_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_rst">
+      <obj_property name="ElementShortName">_rst</obj_property>
+      <obj_property name="ObjectShortName">_rst</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_lineCounter">
+      <obj_property name="ElementShortName">_lineCounter[8:0]</obj_property>
+      <obj_property name="ObjectShortName">_lineCounter[8:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_pixelCounter">
+      <obj_property name="ElementShortName">_pixelCounter[9:0]</obj_property>
+      <obj_property name="ObjectShortName">_pixelCounter[9:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_char_col">
+      <obj_property name="ElementShortName">_char_col[2:0]</obj_property>
+      <obj_property name="ObjectShortName">_char_col[2:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_char_row">
+      <obj_property name="ElementShortName">_char_row[3:0]</obj_property>
+      <obj_property name="ObjectShortName">_char_row[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_char_ascii">
+      <obj_property name="ElementShortName">_char_ascii[7:0]</obj_property>
+      <obj_property name="ObjectShortName">_char_ascii[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_font_data">
+      <obj_property name="ElementShortName">_font_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">_font_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/u_soc/u_periph/u_vga/_pixel_activo">
+      <obj_property name="ElementShortName">_pixel_activo</obj_property>
+      <obj_property name="ObjectShortName">_pixel_activo</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_clk">
+      <obj_property name="ElementShortName">_clk</obj_property>
+      <obj_property name="ObjectShortName">_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/_rst">
+      <obj_property name="ElementShortName">_rst</obj_property>
+      <obj_property name="ObjectShortName">_rst</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_lineCounter">
+      <obj_property name="ElementShortName">_lineCounter[8:0]</obj_property>
+      <obj_property name="ObjectShortName">_lineCounter[8:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_pixelCounter">
+      <obj_property name="ElementShortName">_pixelCounter[9:0]</obj_property>
+      <obj_property name="ObjectShortName">_pixelCounter[9:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_char_col">
+      <obj_property name="ElementShortName">_char_col[2:0]</obj_property>
+      <obj_property name="ObjectShortName">_char_col[2:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_char_row">
+      <obj_property name="ElementShortName">_char_row[3:0]</obj_property>
+      <obj_property name="ObjectShortName">_char_row[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_char_ascii">
+      <obj_property name="ElementShortName">_char_ascii[7:0]</obj_property>
+      <obj_property name="ObjectShortName">_char_ascii[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc/u_soc/u_periph/u_vga/_font_data">
+      <obj_property name="ElementShortName">_font_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">_font_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc/u_soc/u_periph/u_vga/_pixel_activo">
+      <obj_property name="ElementShortName">_pixel_activo</obj_property>
+      <obj_property name="ObjectShortName">_pixel_activo</obj_property>
+   </wvobject>
+</wave_config>

@@ -1,0 +1,519 @@
+/*
+
+AMD Vivado v2025.1 (64-bit) [Major: 2025, Minor: 1]
+SW Build: 6140274 on Wed May 21 22:58:25 MDT 2025
+IP Build: 6138677 on Thu May 22 03:10:11 MDT 2025
+IP Build: 6138677 on Thu May 22 03:10:11 MDT 2025
+
+Process ID (PID): 11831
+License: Customer
+Mode: GUI Mode
+
+Current time: 	Tue Apr 14 17:33:41 WEST 2026
+Time zone: 	Western European Standard Time (Europe/Lisbon)
+
+OS: Ubuntu
+OS Version: 6.8.0-107-generic
+OS Architecture: amd64
+Available processors (cores): 16
+LSB Release Description: Ubuntu 22.04.5 LTS
+
+Display: 0
+Screen size: 1920x1080
+Local screen bounds: x = 70, y = 27, width = 1850, height = 1053
+Screen resolution (DPI): 100
+Available screens: 1
+Default font: family=Dialog,name=Dialog,style=plain,size=12
+Scale size: 12
+OS font scaling: 100%
+Anti-Alias Enabled: false
+
+Java version: 	21.0.1 64-bit
+
+Java home: 	/tools/Xilinx/2025.1/tps/lnx64/jre21.0.1_12
+Java executable: 	/tools/Xilinx/2025.1/tps/lnx64/jre21.0.1_12/bin/java
+Java arguments: 	[-Dsun.java2d.pmoffscreen=false, -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2, -Dsun.java2d.xrender=false, -Dsun.java2d.uiScale.enabled=false, -Dswing.aatext=true, -XX:-UsePerfData, -Djdk.map.althashing.threshold=512, -XX:StringTableSize=4072, -XX:+UseStringDeduplication, -XX:MaxGCPauseMillis=200, -XX:ParallelGCThreads=4, -XX:+ParallelRefProcEnabled, --add-opens=java.desktop/javax.swing.plaf.synth=ALL-UNNAMED, --add-opens=java.base/java.nio=ALL-UNNAMED, --add-opens=java.desktop/sun.swing=ALL-UNNAMED, --add-opens=java.desktop/javax.swing=ALL-UNNAMED, --add-opens=java.desktop/javax.swing.tree=ALL-UNNAMED, --add-opens=java.desktop/javax.swing.plaf.basic=ALL-UNNAMED, --add-opens=java.desktop/javax.swing.plaf.synth=ALL-UNNAMED, --add-opens=java.desktop/javax.swing.plaf.basic=ALL-UNNAMED, --add-opens=java.desktop/javax.swing=ALL-UNNAMED, --add-opens=java.desktop/javax.swing.tree=ALL-UNNAMED, --add-opens=java.desktop/java.awt.event=ALL-UNNAMED, --add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED, --add-exports=java.desktop/javax.swing.plaf.synth=ALL-UNNAMED, --add-exports=java.base/java.nio=ALL-UNNAMED, --add-exports=java.desktop/sun.swing=ALL-UNNAMED, --add-exports=java.desktop/javax.swing=ALL-UNNAMED, --add-exports=java.desktop/javax.swing.tree=ALL-UNNAMED, --add-exports=java.desktop/javax.swing.plaf.basic=ALL-UNNAMED, --add-exports=java.desktop/sun.swing=ALL-UNNAMED, --add-exports=java.desktop/sun.swing.table=ALL-UNNAMED, --add-exports=java.desktop/sun.swing.plaf.synth=ALL-UNNAMED, --add-exports=java.desktop/sun.awt.shell=ALL-UNNAMED, --add-exports=java.base/sun.security.action=ALL-UNNAMED, --add-exports=java.desktop/sun.font=ALL-UNNAMED, --add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED, -XX:NewSize=80m, -XX:MaxNewSize=80m, -Xms812m, -Xmx6144m, -Xss10m, -Xrs]
+Java initial memory (-Xms): 	812 MB
+Java maximum memory (-Xmx):	 6 GB
+
+User name: 	andre
+User home directory: /home/andre
+User working directory: /home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA
+User country: 	US
+User language: 	en
+User locale: 	en_US
+
+RDI_BASEROOT: /tools/Xilinx/2025.1
+HDI_APPROOT: /tools/Xilinx/2025.1/Vivado
+RDI_DATADIR: /tools/Xilinx/2025.1/data
+RDI_BINDIR: /tools/Xilinx/2025.1/Vivado/bin
+
+Vivado preferences file: /home/andre/.Xilinx/Vivado/2025.1/vivado.xml
+Vivado preferences directory: /home/andre/.Xilinx/Vivado/2025.1/
+Vivado layouts directory: /home/andre/.Xilinx/Vivado/2025.1/data/layouts
+PlanAhead jar file: 	/tools/Xilinx/2025.1/Vivado/lib/classes/planAhead.jar
+Vivado log file: 	/home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA/vivado.log
+Vivado journal file: 	/home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA/vivado.jou
+Engine tmp dir: 	./.Xil/Vivado-11831-andre-HP-Laptop-15s-eq2xxx
+Non-Default Parameters:	[]
+
+Xilinx & AMD Environment Variables
+--------------------------------------------------------------------------------------------
+GNOME_SHELL_SESSION_MODE: ubuntu
+JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+RDI_APPROOT: /tools/Xilinx/2025.1/Vivado
+RDI_BASEROOT: /tools/Xilinx/2025.1
+RDI_BINROOT: /tools/Xilinx/2025.1/Vivado/bin
+RDI_BUILD: yes
+RDI_DATADIR: /tools/Xilinx/2025.1/Vivado/data
+RDI_INSTALLROOT: /tools/Xilinx
+RDI_INSTALLVER: Vivado
+RDI_JAVA_PLATFORM: 
+RDI_JAVA_VERSION: 21.0.1_12
+RDI_LIBDIR: /tools/Xilinx/2025.1/Vivado/lib/lnx64.o/Ubuntu/22:/tools/Xilinx/2025.1/Vivado/lib/lnx64.o/Ubuntu:/tools/Xilinx/2025.1/Vivado/lib/lnx64.o
+RDI_OPT_EXT: .o
+RDI_PATCHROOT: 
+RDI_PLATFORM: lnx64
+RDI_PREPEND_PATH: /tools/Xilinx/2025.1/Vitis/bin:/tools/Xilinx/2025.1/Vivado/ids_lite/ISE/bin/lin64
+RDI_PROG: /tools/Xilinx/2025.1/Vivado/bin/unwrapped/lnx64.o/vivado
+RDI_SESSION_INFO: /home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA:andre-HP-Laptop-15s-eq2xxx_1776184405_11784
+RDI_SHARED_DATA: /tools/Xilinx/SharedData/Vivado/data
+RDI_TPS_ROOT: /tools/Xilinx/2025.1/Vivado/tps/lnx64
+RDI_USE_JDK21: True
+SHELL: /bin/bash
+XILINX: /tools/Xilinx/2025.1/Vivado/ids_lite/ISE
+XILINX_DSP: /tools/Xilinx/2025.1/Vivado/ids_lite/ISE
+XILINX_HLS: /tools/Xilinx/2025.1/Vitis
+XILINX_PLANAHEAD: /tools/Xilinx/2025.1/Vivado
+XILINX_SDK: /tools/Xilinx/2025.1/Vitis
+XILINX_VITIS: /tools/Xilinx/2025.1/Vitis
+XILINX_VIVADO: /tools/Xilinx/2025.1/Vivado
+
+
+GUI allocated memory:	812 MB
+GUI max memory:		6,144 MB
+Engine allocated memory: 2,105 MB
+
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+*/
+
+// TclEventType: START_GUI
+// Tcl Message: start_gui 
+// TclEventType: PROJECT_OPEN_DIALOG
+// Opening Vivado Project: processor.xpr. Version: Vivado v2025.1 
+// TclEventType: DEBUG_PROBE_SET_CHANGE
+// TclEventType: FLOW_ADDED
+// TclEventType: MSGMGR_MOVEMSG
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: FILE_SET_NEW
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_CURRENT
+// TclEventType: MSGMGR_REFRESH_MSG
+// TclEventType: PROJECT_DASHBOARD_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: COMPOSITE_FILE_CHANGE
+// TclEventType: PROJECT_NEW
+// [GUI Memory]: 95 MB (+97516kb) [00:00:08]
+// [Engine Memory]: 1,917 MB (+1858574kb) [00:00:08]
+// [GUI Memory]: 139 MB (+40446kb) [00:00:09]
+// [Engine Memory]: 2,071 MB (+61230kb) [00:00:09]
+// WARNING: HEventQueue.dispatchEvent() is taking  1898 ms.
+// [GUI Memory]: 151 MB (+5815kb) [00:00:10]
+// Tcl Message: open_project processor.xpr 
+// Tcl Message: Scanning sources... Finished scanning sources 
+// Tcl Message: INFO: [IP_Flow 19-234] Refreshing IP repositories INFO: [IP_Flow 19-1704] No user IP repositories specified INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/tools/Xilinx/2025.1/Vivado/data/ip'. 
+// Project name: processor; location: /home/andre/Desktop/CPUcomVGA/processor-CPU-com-VGA/CPU-com-VGA; part: xc7z010clg400-1
+dismissDialog("Open Project"); // bk (Open Project Progress)
+// HMemoryUtils.trashcanNow. Engine heap size: 2,106 MB. GUI used memory: 71 MB. Current time: 4/14/26, 5:33:42 PM WEST
+// TclEventType: DG_GRAPH_GENERATED
+// Elapsed time: 28 seconds
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, soc (m_soc.v)]", 2); // E (PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, soc (m_soc.v), u_periph : periph_bus (m_periph_bus.v)]", 7); // E (PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, soc (m_soc.v), u_periph : periph_bus (m_periph_bus.v), u_vga : m_vga_mmio (m_vga_mmio.v)]", 15); // E (PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, soc (m_soc.v), u_periph : periph_bus (m_periph_bus.v), u_ps2_filter : ps2_to_ascii_filter (ps2_to_ascii_filter.v)]", 14); // E (PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, soc (m_soc.v), u_periph : periph_bus (m_periph_bus.v), u_ps2_filter : ps2_to_ascii_filter (ps2_to_ascii_filter.v), u_conv : PS2ScanToAscii (PS2ScanToAscii.v)]", 15, false); // E (PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, soc (m_soc.v), u_periph : periph_bus (m_periph_bus.v), u_ps2_filter : ps2_to_ascii_filter (ps2_to_ascii_filter.v), u_conv : PS2ScanToAscii (PS2ScanToAscii.v)]", 15, false, false, false, false, false, true); // E (PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE) - Double Click
+// HMemoryUtils.trashcanNow. Engine heap size: 2,152 MB. GUI used memory: 73 MB. Current time: 4/14/26, 5:34:32 PM WEST
+// Elapsed time: 779 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, soc (m_soc.v), u_periph : periph_bus (m_periph_bus.v), u_vga : m_vga_mmio (m_vga_mmio.v)]", 16, true); // E (PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, soc (m_soc.v), u_periph : periph_bus (m_periph_bus.v), u_vga : m_vga_mmio (m_vga_mmio.v)]", 16, true, false, false, false, false, true); // E (PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE) - Double Click - Node
+// [Engine Memory]: 2,175 MB (+619kb) [00:13:57]
+// HMemoryUtils.trashcanNow. Engine heap size: 2,186 MB. GUI used memory: 74 MB. Current time: 4/14/26, 5:47:32 PM WEST
+selectCodeEditor("m_vga_mmio.v", 291, 295); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 423, 295); // ae (m_vga_mmio.v)
+// Elapsed time: 14 seconds
+selectCodeEditor("m_vga_mmio.v", 289, 291); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+// Elapsed time: 13 seconds
+selectCodeEditor("m_vga_mmio.v", 172, 326); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 518, 327); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 518, 327, false, false, false, false, true); // ae (m_vga_mmio.v) - Double Click
+selectCodeEditor("m_vga_mmio.v", 195, 326); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 193, 325); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 229, 320); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 217, 322); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 217, 322, false, false, false, false, true); // ae (m_vga_mmio.v) - Double Click
+selectCodeEditor("m_vga_mmio.v", 217, 322); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 217, 322); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 190, 324); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 189, 370); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 337, 416); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 140, 446); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 414, 431); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+// Elapsed time: 13 seconds
+selectCodeEditor("m_vga_mmio.v", 379, 467); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 411, 443); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 415, 463); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 453, 322); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 295, 352); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+// Elapsed time: 12 seconds
+selectCodeEditor("m_vga_mmio.v", 506, 461); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 360, 462); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 550, 534); // ae (m_vga_mmio.v)
+// Elapsed time: 467 seconds
+selectCodeEditor("m_vga_mmio.v", 442, 161); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 438, 175); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 443, 179); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 750, 173); // ae (m_vga_mmio.v)
+// Elapsed time: 16 seconds
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+selectCodeEditor("m_vga_mmio.v", 290, 249); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 308, 249); // ae (m_vga_mmio.v)
+// Elapsed time: 25 seconds
+selectCodeEditor("m_vga_mmio.v", 193, 277); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 194, 278); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 381, 278); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 189, 322); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 191, 323); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 258, 325); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 319, 346); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 233, 322); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 363, 427); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 192, 322); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 238, 310); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 191, 324); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 197, 325); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 260, 322); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 327, 368); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 405, 414); // ae (m_vga_mmio.v)
+// Elapsed time: 13 seconds
+selectCodeEditor("m_vga_mmio.v", 573, 321); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 541, 323); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 668, 442); // ae (m_vga_mmio.v)
+// Elapsed time: 75 seconds
+selectCodeEditor("m_vga_mmio.v", 525, 437); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 386, 449); // ae (m_vga_mmio.v)
+// Elapsed time: 12 seconds
+selectCodeEditor("m_vga_mmio.v", 115, 469); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 246, 478); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 139, 442); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 273, 442); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 160, 444); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 169, 442); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 517, 448); // ae (m_vga_mmio.v)
+// Elapsed time: 20 seconds
+selectCodeEditor("m_vga_mmio.v", 600, 443); // ae (m_vga_mmio.v)
+// Elapsed time: 11 seconds
+selectCodeEditor("m_vga_mmio.v", 628, 472); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 433, 474); // ae (m_vga_mmio.v)
+// Elapsed time: 44 seconds
+selectCodeEditor("m_vga_mmio.v", 439, 489); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 449, 489); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 751, 483); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 617, 519); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 542, 503); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 443, 505); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 651, 547); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 463, 548); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 533, 575); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 316, 581); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 316, 581, false, false, false, false, true); // ae (m_vga_mmio.v) - Double Click
+selectCodeEditor("m_vga_mmio.v", 477, 573); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 319, 581); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 324, 582); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 457, 568); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 436, 619); // ae (m_vga_mmio.v)
+// Elapsed time: 78 seconds
+selectCodeEditor("m_vga_mmio.v", 358, 456); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 365, 459); // ae (m_vga_mmio.v)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Elapsed Time for: 'PAResourceItoN.MsgLongTask_MESSAGE_LONG_TASK/L.f': 32m:00s
+// TclEventType: DG_GRAPH_GENERATED
+// Elapsed Time for: 'PAResourceItoN.MsgLongTask_MESSAGE_LONG_TASK/L.f': 32m:02s
+// HMemoryUtils.trashcanNow. Engine heap size: 2,233 MB. GUI used memory: 75 MB. Current time: 4/14/26, 6:05:42 PM WEST
+// Elapsed time: 16 seconds
+selectCodeEditor("m_vga_mmio.v", 644, 503); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 127, 484); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 113, 410); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 192, 510); // ae (m_vga_mmio.v)
+// Elapsed time: 219 seconds
+selectCodeEditor("m_vga_mmio.v", 291, 474); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 172, 488); // ae (m_vga_mmio.v)
+// Elapsed time: 11 seconds
+selectCodeEditor("m_vga_mmio.v", 170, 507); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 181, 487); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 268, 488); // ae (m_vga_mmio.v)
+// Elapsed time: 12 seconds
+selectCodeEditor("m_vga_mmio.v", 481, 489); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 790, 490); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 836, 483); // ae (m_vga_mmio.v)
+// Elapsed time: 12 seconds
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 166, 488); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 169, 503); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 163, 487); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'c'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 159, 502); // ae (m_vga_mmio.v)
+typeControlKey((HResource) null, "m_vga_mmio.v", 'v'); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 851, 503); // ae (m_vga_mmio.v)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Elapsed Time for: 'PAResourceItoN.MsgLongTask_MESSAGE_LONG_TASK/L.f': 37m:20s
+// TclEventType: DG_GRAPH_GENERATED
+// Elapsed Time for: 'PAResourceItoN.MsgLongTask_MESSAGE_LONG_TASK/L.f': 37m:22s
+// Elapsed time: 30 seconds
+selectCodeEditor("m_vga_mmio.v", 196, 405, false, false, false, true, false); // ae (m_vga_mmio.v) - Popup Trigger
+selectCodeEditor("m_vga_mmio.v", 177, 378); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 191, 383); // ae (m_vga_mmio.v)
+selectCodeEditor("m_vga_mmio.v", 191, 383, false, false, false, true, false); // ae (m_vga_mmio.v) - Popup Trigger
+selectMenuItem(PAResourceOtoP.PACodeEditor_GOTO_DEFINITION, "Go to Definition"); // ap (PAResourceOtoP.PACodeEditor_GOTO_DEFINITION)
+// Elapsed time: 32 seconds
+selectCodeEditor("m_vga_mmio.v", 263, 526); // ae (m_vga_mmio.v)
+// Elapsed time: 14 seconds
+selectCodeEditor("m_vga_mmio.v", 153, 367); // ae (m_vga_mmio.v)
+// Elapsed time: 13 seconds
+selectCodeEditor("m_vga_mmio.v", 291, 560); // ae (m_vga_mmio.v)
+// Elapsed time: 31 seconds
+selectCodeEditor("m_vga_mmio.v", 249, 482); // ae (m_vga_mmio.v)
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Elapsed Time for: 'PAResourceItoN.MsgLongTask_MESSAGE_LONG_TASK/L.f': 39m:32s
+// HMemoryUtils.trashcanNow. Engine heap size: 2,263 MB. GUI used memory: 75 MB. Current time: 4/14/26, 6:13:12 PM WEST
+// TclEventType: DG_GRAPH_GENERATED
+// Elapsed Time for: 'PAResourceItoN.MsgLongTask_MESSAGE_LONG_TASK/L.f': 39m:34s
