@@ -213,7 +213,7 @@ module periph_bus(
         .i_sel       (_sel_ps2),
         .i_we        (i_we),
         .i_re        (i_re),
-        .i_addr      (i_addr[2:1]),
+        .i_addr      (i_addr[3:1]),
         .i_wdata     (i_wdata),
         .o_rdata     (_ps2_rdata),
         .o_rdy       (_ps2_rdy),

@@ -16,7 +16,7 @@ module ps2_mmio (
     input  wire        i_sel,           // IO selection
     input  wire        i_we,            // IO write enable
     (* mark_debug = "true" *) input  wire        i_re,            // IO read enable
-    input  wire [1:0]  i_addr,          // Address used to identify the peripheral register
+    input  wire [2:0]  i_addr,          // Address used to identify the peripheral register
     input  wire [15:0] i_wdata,         // Data to write
     output wire [15:0] o_rdata,         // Data read
     output wire        o_rdy,           // Feedback peripheral ready
@@ -32,9 +32,15 @@ module ps2_mmio (
 /****************************************************************************
  * 1.1 DEFINE SFRs - MMIO REGISTERS' ADDRESSES (LS nibble)
  ***************************************************************************/
-    localparam [1:0] PS2DR = 2'b00;   // Data Register
-    localparam [1:0] PS2SR = 2'b01;   // Status Register
-    localparam [1:0] PS2CR = 2'b10;   // Control Register
+    localparam [2:0] PS2DR = 3'b00;   // Data Register
+    localparam [2:0] PS2SR = 3'b01;   // Status Register
+    localparam [2:0] PS2CR = 3'b10;   // Control Register
+
+    // registers for mouse related stuff
+    localparam [2:0] MOUSE_SR = 3'b011;
+    localparam [2:0] MOUSE_X  = 3'b100;
+    localparam [2:0] MOUSE_Y  = 3'b101;
+    localparam [2:0] MOUSE_BTN = 3'b110;
 
 /****************************************************************************
  * 1.2 DECLARE SFRs - MMIO REGISTERS
@@ -60,6 +66,8 @@ module ps2_mmio (
     /* PS2CR */
     reg _rxie;              // [0] RX Interrupt Enable
     reg _en;                // [1] Peripheral Enable
+    reg _mode;               // [2] device mode  0:keyboard | 1: mouse
+    
 
 /****************************************************************************
  * 1.3 DECLARE WIRES / REGS
@@ -88,6 +96,33 @@ module ps2_mmio (
     // Falling edge detection
     reg  _clk_prev;
     wire _fall_edge;
+
+    // Mouse routing
+    wire _rx_valid_kbd   = _rx_valid && !_mode;
+    wire _rx_valid_mouse = _rx_valid &&  _mode;
+
+    // Mouse submodule wires
+    wire _mouse_ready;
+    wire _mouse_is_mouse;    
+    wire [7:0] _mouse_tx_data;
+    wire _mouse_tx_valid;
+
+    wire signed [8:0] _mouse_dx;
+    wire signed [8:0] _mouse_dy;
+    wire _mouse_btn_l;
+    wire _mouse_btn_r;
+    wire _mouse_btn_m;
+    wire _mouse_pkt_valid;
+
+    // Mouse cursor position registers
+    reg [6:0] _mouse_x;
+    reg [4:0] _mouse_y;
+    reg _mouse_pkt_flag;
+    
+    // signals that are going to VGA module but not implemented yet
+    wire [11:0] _mouse_buf_addr;
+    wire [7:0]  _mouse_buf_wdata;
+    wire        _mouse_buf_we;
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
@@ -128,10 +163,14 @@ module ps2_mmio (
  * 2.3 PS/2 Submodule Instances
  ***************************************************************************/
 
-    // Combinational flags
+    // Combinational flags 
     assign _rxif     = _rxne & _rxie;
     assign o_irq_req = _rxif;
     assign o_rdy     = i_sel;
+    
+    wire _tx_start_mux = _mouse_tx_valid ? 1'b1 : _tx_start;
+    wire[7:0] _txd_mux = _mouse_tx_valid? _mouse_tx_data : _txd;
+    
 
     // Device -> Host: receives scancodes from keyboard
     ps2_d2h u_ps2_d2h (
@@ -151,8 +190,8 @@ module ps2_mmio (
     ps2_h2d u_ps2_h2d (
         .i_clk        (i_clk),
         .i_rst        (i_rst),
-        .i_start      (_tx_start),
-        .i_data       (_txd),
+        .i_start      (_tx_start_mux), // here it was changed since we now have to see in which mode : keyboard or mouse
+        .i_data       (_txd_mux), // same as above
         .i_fall_edge  (_fall_edge),
         .i_ps2_data_s (_ps2_data_s),
         .io_ps2_clk   (io_ps2_clk),
@@ -160,6 +199,53 @@ module ps2_mmio (
         .o_tx_done    (),
         .o_tx_busy    (_txb),
         .o_tx_aerr    (_tx_aerr)
+    );
+
+     m_mouse_init #(
+        .CLK_FREQ(50_000_000)
+      ) u_mouse_init (
+        .i_clk      (i_clk),
+        .i_rst      (i_rst),
+        .i_rx_data  (_rx_data_wire),
+        .i_rx_valid (_rx_valid_mouse),
+        .i_tx_busy  (_txb),
+        .o_tx_data  (_mouse_tx_data),
+        .o_tx_valid (_mouse_tx_valid),
+        .o_is_mouse (_mouse_is_mouse),
+        .o_ready    (_mouse_ready)
+    );
+
+      m_mouse_packet u_mouse_packet (
+        .i_clk         (i_clk),
+        .i_rst         (i_rst),
+        .i_rx_data     (_rx_data_wire),
+        .i_rx_valid    (_rx_valid_mouse),
+        .i_mouse_ready (_mouse_ready),
+        .o_dx          (_mouse_dx),
+        .o_dy          (_mouse_dy),
+        .o_btn_l       (_mouse_btn_l),
+        .o_btn_r       (_mouse_btn_r),
+        .o_btn_m       (_mouse_btn_m),
+        .o_valid       (_mouse_pkt_valid)
+    );
+
+      m_mouse_cursor #(
+         .COLS(80),
+         .ROWS(30),
+         .SCALE(3)
+      ) u_mouse_cursor (
+        .i_clk       (i_clk),
+        .i_rst       (i_rst),
+        .i_dx        (_mouse_dx),
+        .i_dy        (_mouse_dy),
+        .i_btn_l     (_mouse_btn_l),
+        .i_btn_r     (_mouse_btn_r),
+        .i_pkt_valid (_mouse_pkt_valid),
+        .o_buf_addr  (_mouse_buf_addr),
+        .o_buf_wdata (_mouse_buf_wdata),
+        .o_buf_we    (_mouse_buf_we),
+        .o_col       (_mouse_x),
+        .o_row       (_mouse_y)
     );
 
 /****************************************************************************
@@ -176,6 +262,9 @@ module ps2_mmio (
             _aerr     <= 1'b0;
             _rxie     <= 1'b0;
             _en       <= 1'b0;
+            _mode     <= 1'b0;
+            _mouse_pkt_flag <= 1'b0;
+            
         end else begin
             // Default: deassert tx_start every cycle unless set below
             _tx_start <= 1'b0;
@@ -184,13 +273,22 @@ module ps2_mmio (
             // New frame received from D2H module
             // Note: if CPU has not read PS2DR yet, data is overwritten.
             // Software must read PS2DR promptly in the ISR or polling loop.
-            if (_rx_valid) begin
+            // kbd -> keyboard
+            if (_rx_valid_kbd) begin
                 _rxne <= 1'b1;
                 _rxd  <= _rx_data_wire;
                 _pe   <= _rx_pe;
                 _err  <= _rx_err;
             end
-
+            
+            if(_mouse_pkt_valid) begin
+                _mouse_pkt_flag <= 1'b1;
+            end
+            
+            if (i_sel && i_re && (i_addr == MOUSE_SR)) begin
+                _mouse_pkt_flag <= 1'b0;
+            end
+             
             // CPU writes to PS2 SFRs
             if (i_sel && i_we) begin
                 case (i_addr)
@@ -203,6 +301,7 @@ module ps2_mmio (
                         // Configure peripheral
                         _rxie <= i_wdata[0];
                         _en   <= i_wdata[1];
+                        _mode <= i_wdata[2]; 
                     end
                     default: ;
                 endcase
@@ -227,7 +326,11 @@ module ps2_mmio (
             case (i_addr)
                 PS2DR: _rdata = {8'h00, _rxd};
                 PS2SR: _rdata = {10'b0,_aerr,_rxif, _err, _pe, _txb, _rxne};
-                PS2CR: _rdata = {14'b0, _en, _rxie};
+                PS2CR: _rdata = {13'b0,_mode, _en, _rxie};
+                MOUSE_SR: _rdata = {13'b0, _mouse_pkt_flag, _mouse_is_mouse, _mouse_ready};
+                MOUSE_X: _rdata = {9'b0, _mouse_x};
+                MOUSE_Y: _rdata = {11'b0, _mouse_y};
+                MOUSE_BTN: _rdata = {13'b0, _mouse_btn_m, _mouse_btn_r, _mouse_btn_l};
                 default: _rdata = 16'h0000;
             endcase
         end
