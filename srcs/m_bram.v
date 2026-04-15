@@ -24,9 +24,9 @@ module bram_1kb_be(
 
     integer _i;
 
-    (* mark_debug = "true" *) reg [15:0] _mem0_dbg;
-    (* mark_debug = "true" *) reg [15:0] _mem1_dbg;
-    (* mark_debug = "true" *) reg [15:0] _mem2_dbg;
+    reg [15:0] _mem0_dbg;
+    reg [15:0] _mem1_dbg;
+    reg [15:0] _mem2_dbg;
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION

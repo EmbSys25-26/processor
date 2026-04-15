@@ -95,9 +95,13 @@ module cc_flag (
  * This is identical in principle to the write-first register file:
  *   assign o_ra = (we && wa==ra) ? i_wd : _mem[ra];
  ************************************************************************************/
-    assign o_ccz = i_flag_we  ? i_new_ccz : _ccz;
-    assign o_ccn = i_flag_we  ? i_new_ccn : _ccn;
-    assign o_ccc = i_flag_we  ? i_new_ccc : _ccc;
-    assign o_ccv = i_flag_we  ? i_new_ccv : _ccv;
+    // Pure registered outputs — no write-first bypass.
+    // The CC hazard (CMP in EX, BX in ID) is now resolved by a 1-cycle
+    // stall in the hazard unit instead of a combinational bypass here.
+    // This breaks the critical path EX→CC→BDU→PC that violated timing.
+    assign o_ccz = _ccz;
+    assign o_ccn = _ccn;
+    assign o_ccc = _ccc;
+    assign o_ccv = _ccv;
       
 endmodule

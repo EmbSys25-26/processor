@@ -19,22 +19,22 @@ module regfile16x16(
  ************************************************************************************/
     reg [`CPU_N:0] _mem [15:0];
 
-    (* mark_debug = "true" *) reg [15:0] _r0;
-    (* mark_debug = "true" *) reg [15:0] _a0;
-    (* mark_debug = "true" *) reg [15:0] _a1;
-    (* mark_debug = "true" *) reg [15:0] _a2;
-    (* mark_debug = "true" *) reg [15:0] _t0;
-    (* mark_debug = "true" *) reg [15:0] _t1;
-    (* mark_debug = "true" *) reg [15:0] _t2;
-    (* mark_debug = "true" *) reg [15:0] _t3;
-    (* mark_debug = "true" *) reg [15:0] _s0;
-    (* mark_debug = "true" *) reg [15:0] _s1;
-    (* mark_debug = "true" *) reg [15:0] _s2;
-    (* mark_debug = "true" *) reg [15:0] _s3;
-    (* mark_debug = "true" *) reg [15:0] _fp;
-    (* mark_debug = "true" *) reg [15:0] _sp;
-    (* mark_debug = "true" *) reg [15:0] _lr;
-    (* mark_debug = "true" *) reg [15:0] _gp;
+    reg [15:0] _r0;
+    reg [15:0] _a0;
+    reg [15:0] _a1;
+    reg [15:0] _a2;
+    reg [15:0] _t0;
+    reg [15:0] _t1;
+(* mark_debug = "true" *) reg [15:0] _t2;
+    reg [15:0] _t3;
+    reg [15:0] _s0;
+    reg [15:0] _s1;
+    reg [15:0] _s2;
+    reg [15:0] _s3;
+    reg [15:0] _fp;
+    reg [15:0] _sp;
+    reg [15:0] _lr;
+    reg [15:0] _gp;
 
     reg [4:0] _i;
 

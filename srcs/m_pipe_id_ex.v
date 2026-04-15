@@ -55,6 +55,7 @@ module pipe_id_ex(
     output reg o_valid,
     output reg [15:0] o_pc,
     output reg [3:0] o_rd,
+    output reg [3:0] o_rd_second,
     output reg [3:0] o_rs,
     output reg [15:0] o_rd_data,
     output reg [15:0] o_rs_data,
@@ -100,6 +101,7 @@ module pipe_id_ex(
             o_valid        <= 1'b0;
             o_pc           <= 16'h0000;
             o_rd           <= 4'h0;
+            o_rd_second    <= 4'h0;
             o_rs           <= 4'h0;
             o_rd_data      <= 16'h0000;
             o_rs_data      <= 16'h0000;
@@ -131,6 +133,7 @@ module pipe_id_ex(
             o_valid        <= i_valid;
             o_pc           <= i_pc;
             o_rd           <= i_rd;
+            o_rd_second    <= i_rd;
             o_rs           <= i_rs;
             o_rd_data      <= i_rd_data;
             o_rs_data      <= i_rs_data;

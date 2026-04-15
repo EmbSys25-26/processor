@@ -105,7 +105,10 @@ module i2c_master(
 
     reg [7:0] _rx_fifo [0:255];
     reg [7:0] _rx_wr_idx;
-    reg [7:0] _rx_rd_idx;
+    // max_fanout=16: forces Vivado to replicate this register so each copy drives
+    // at most 16 loads. Without this the 256-entry FIFO mux causes fanout>100 on
+    // individual bits, adding >5 ns of routing delay that violates timing at 100 MHz.
+    (* max_fanout = 16 *) reg [7:0] _rx_rd_idx;
     reg [8:0] _rx_count;
 
     integer _i;
@@ -187,7 +190,7 @@ module i2c_master(
                     _tx_wr_idx <= _tx_wr_idx + 8'd1;
                     _tx_count <= _tx_count + 9'd1;
                 end else begin
-                    _ack_err <= 1'b1;   // TX FIFO overflow — signal error
+                    _ack_err <= 1'b1;   // TX FIFO overflow - signal error
                 end
             end
 
@@ -283,7 +286,7 @@ module i2c_master(
                      * TX_LOW:  SCL low, drive SDA to the current bit of _tx_byte.
                      *          SDA is inverted because _sda_oe_low=1 means LOW:
                      *          bit=1 -> release line (HIGH), bit=0 -> pull LOW.
-                     * TX_HIGH: Release SCL (HIGH) — peripheral samples SDA here.
+                     * TX_HIGH: Release SCL (HIGH) - peripheral samples SDA here.
                      * TX_FALL: Pull SCL LOW again.
                      *          If all 8 bits sent (_bit_idx==0) -> go to ACK.
                      *          Otherwise decrement _bit_idx and repeat.
@@ -386,8 +389,8 @@ module i2c_master(
 
                     /*------------------------------------------------------
                      * RX BIT CYCLE  (receive bytes from peripheral)
-                     * RX_LOW:  SCL low, release SDA — peripheral drives the bit.
-                     * RX_HIGH: Release SCL (HIGH) — SDA is now stable and valid - data is captured
+                     * RX_LOW:  SCL low, release SDA - peripheral drives the bit.
+                     * RX_HIGH: Release SCL (HIGH) - SDA is now stable and valid - data is captured
                      * RX_FALL: SCL falls.
                      *          Capture SDA  into _rx_byte_work at position _bit_idx.
                      *          (Using blocking assignment in _rx_byte_work so the
@@ -438,7 +441,7 @@ module i2c_master(
                      * MACK_LOW:  SCL low, drive SDA according to _send_nack.
                      *            _send_nack=0 -> ACK  (SDA low  -> oe_low=1)
                      *            _send_nack=1 -> NACK (SDA high -> oe_low=0)
-                     * MACK_HIGH: Release SCL (HIGH) — peripheral sees master ACK/NACK.
+                     * MACK_HIGH: Release SCL (HIGH) - peripheral sees master ACK/NACK.
                      * MACK_FALL: SCL falls.
                      *            NACK was sent -> go to STOP (all bytes received).
                      *            ACK  was sent -> receive next byte.
@@ -470,7 +473,7 @@ module i2c_master(
                     /*------------------------------------------------------
                      * STOP CONDITION
                      * I2C STOP: SDA rises while SCL is high.
-                     * STOP0: SCL low, SDA low   (setup — ensure SDA is low before SCL rises)
+                     * STOP0: SCL low, SDA low   (setup - ensure SDA is low before SCL rises)
                      * STOP1: SCL high, SDA low  (hold before SDA rises)
                      * STOP2: SCL high, SDA high (SDA rises -> STOP condition on bus)
                      *        -> Clear _busy, latch _done, return to IDLE.

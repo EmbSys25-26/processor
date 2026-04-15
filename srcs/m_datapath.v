@@ -51,7 +51,7 @@ module datapath(
 /*************************************************************************************
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
-    (* mark_debug = "true" *) reg [`CPU_AN:0] _IR;
+     reg [`CPU_AN:0] _IR;
     reg [`CPU_AN:0] _IR_q;
     wire [`CPU_N:0] _IRincd;
 
@@ -65,9 +65,9 @@ module datapath(
     wire [`CPU_N:0] _dreg;
     wire [`CPU_N:0] _sreg;
     wire [`CPU_N:0] _regfile_din_normal;
-    (* mark_debug = "true" *) wire _rf_we_final;
+ wire _rf_we_final;
     wire [3:0] _rf_wr_ad_final;
-    (* mark_debug = "true" *) wire [`CPU_N:0] _regfile_din;
+     wire [`CPU_N:0] _regfile_din;
 
     wire [`CPU_N:0] _a;
     wire [`CPU_N:0] _b;

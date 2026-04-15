@@ -18,11 +18,11 @@ module pipe_if_id(
     input wire i_stall,
     input wire i_flush,
     input wire i_valid,
-    input wire [15:0] i_pc,
-    input wire [15:0] i_insn,
+  (* mark_debug = "true" *)   input wire [15:0] i_pc,
+  (* mark_debug = "true" *)   input wire [15:0] i_insn,
     output reg o_valid,
-    output reg [15:0] o_pc,
-    output reg [15:0] o_insn
+    (* mark_debug = "true" *) output reg [15:0] o_pc,
+    (* mark_debug = "true" *) output reg [15:0] o_insn
 );
 
 /*************************************************************************************

@@ -23,14 +23,14 @@ module soc(
     wire [15:0] _PC;
     wire _hit;
 
-    (* mark_debug = "true" *) wire [15:0] _d_ad;
+    wire [15:0] _d_ad;
     wire _sw;
     wire _sb;
     wire _lw;
     wire _lb;
 
-    (* mark_debug = "true" *) wire [15:0] _cpu_do;
-    (* mark_debug = "true" *) wire [15:0] _cpu_di;
+    wire [15:0] _cpu_do;
+    wire [15:0] _cpu_di;
 
     wire [7:0] _imem_dout_h;
     wire [7:0] _imem_dout_l;
@@ -39,14 +39,14 @@ module soc(
 
     wire [15:0] _i_ad_rst;
 
-    (* mark_debug = "true" *) reg [15:0] _insn_q;
+    reg [15:0] _insn_q;
     wire _br_taken;
 
-    (* mark_debug = "true" *) wire [15:0] _imem_dout;
+    wire [15:0] _imem_dout;
     wire _imem_invalid;
 
-    (* mark_debug = "true" *) reg _loaded;
-    (* mark_debug = "true" *) wire _mem_rdy;
+    reg _loaded;
+    wire _mem_rdy;
 
     wire _is_io;
     wire _byte_lane;
@@ -54,7 +54,7 @@ module soc(
     wire _mem_we_l;
     wire [7:0] _mem_din_h;
     wire [7:0] _mem_din_l;
-    (* mark_debug = "true" *) wire [15:0] _mem_dout;
+    wire [15:0] _mem_dout;
     wire [15:0] _mem_load_data;
 
     wire _io_sel;
@@ -64,11 +64,11 @@ module soc(
     wire [15:0] _io_rdata;
     wire _io_rdy;
 
-    (* mark_debug = "true" *) wire _rdy;
+    wire _rdy;
     wire _wdt_rst_req; 
     wire _irq_take;
     wire [15:0] _irq_vector;
-    (* mark_debug = "true" *) wire _in_irq;
+    wire _in_irq;
     wire _int_en_cpu;
     wire _iret_detected;
 

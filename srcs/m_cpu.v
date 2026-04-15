@@ -157,6 +157,7 @@
         wire _idex_valid;
         wire [15:0] _idex_pc;
         wire [3:0] _idex_rd;
+        wire [3:0] _idex_rd_second;
         wire [3:0] _idex_rs;
         wire [15:0] _idex_rd_data;
         wire [15:0] _idex_rs_data;
@@ -406,6 +407,12 @@
     /*************************************************************************************
      * 2.4 Hazard Unit
      ************************************************************************************/
+        // CC-updating predicate for hazard detection: matches ex_stage's flag_we condition
+        wire _idex_updates_cc;
+        assign _idex_updates_cc = _idex_valid &
+            (((_idex_is_rr | _idex_is_ri) & (_idex_is_sum | _idex_is_cmp)) |
+              _idex_is_addi | _idex_restore_cc);
+
         hazard_unit u_hazard_unit (
             // Instruction in ID — what it reads and which registers
             .i_id_valid(_id_valid),
@@ -413,14 +420,16 @@
             .i_id_rs(_id_rs),
             .i_id_reads_rd(_id_reads_rd),
             .i_id_reads_rs(_id_reads_rs),
+            .i_id_is_bx(_id_is_bx),
             // External events
             .i_branch_take(_branch_take_commit),
             .i_mem_wait(_mem_wait),
             .i_irq_take(_irq_take_oneshot),
             // ID/EX stage — what's pending in EX
             .i_idex_valid(_idex_valid),
-            .i_idex_rd(_idex_rd),
+            .i_idex_rd(_idex_rd_second),
             .i_idex_is_load(_idex_is_load),
+            .i_idex_updates_cc(_idex_updates_cc),
             // Control outputs
             .o_stall_if(_stall_if),
             .o_stall_id(_stall_id),
@@ -486,6 +495,7 @@
             .o_valid(_idex_valid),
             .o_pc(_idex_pc),
             .o_rd(_idex_rd),
+            .o_rd_second (_idex_rd_second),
             .o_rs(_idex_rs),
             .o_rd_data(_idex_rd_data),
             .o_rs_data(_idex_rs_data),

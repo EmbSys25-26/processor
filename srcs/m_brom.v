@@ -1,6 +1,4 @@
 `timescale 1ns / 1ps
-
-
 module brom_1kb_be(
     input wire i_clk,
     input wire i_rst,
@@ -9,25 +7,17 @@ module brom_1kb_be(
     output wire [7:0] o_dout_h,
     output wire [7:0] o_dout_l
 );
-
 /*************************************************************************************
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
     reg [7:0] _mem_h [0:511];
     reg [7:0] _mem_l [0:511];
-
     reg [7:0] _dout_h;
     reg [7:0] _dout_l;
-
     integer _i;
-
-    reg [1023:0] _mem_hex_lo;
-    reg [1023:0] _mem_hex_hi;
-
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
  ************************************************************************************/
-
 /*************************************************************************************
  * 2.1 Initialization
  ************************************************************************************/
@@ -41,35 +31,20 @@ module brom_1kb_be(
     end
 
     initial begin
-        // Optional overrides for synthesis/implementation:
-        // -DBROM_MEM_LO_PATH=\"/abs/path/to/mem_lo.hex\"
-        // -DBROM_MEM_HI_PATH=\"/abs/path/to/mem_hi.hex\"
 `ifdef BROM_MEM_LO_PATH
-        _mem_hex_lo = `BROM_MEM_LO_PATH;
-        _mem_hex_hi = `BROM_MEM_HI_PATH;
+        $readmemh(`BROM_MEM_LO_PATH, _mem_l);
+        $readmemh(`BROM_MEM_HI_PATH, _mem_h);
 `elsif BRAM_MEM_LO_PATH
-        // Backward compatibility with existing board-flow defines.
-        _mem_hex_lo = `BRAM_MEM_LO_PATH;
-        _mem_hex_hi = `BRAM_MEM_HI_PATH;
+        $readmemh(`BRAM_MEM_LO_PATH, _mem_l);
+        $readmemh(`BRAM_MEM_HI_PATH, _mem_h);
 `elsif CI
-        // CI/local script flow runs from repository root.
-        _mem_hex_lo = "srcs/mem/mem_lo.hex";
-        _mem_hex_hi = "srcs/mem/mem_hi.hex";
-`elsif SIM
-        // Vivado behavioral sim launch directory depth.
-     //   _mem_hex_lo = "../../../../srcs/mem/mem_lo.hex";
-     //   _mem_hex_hi = "../../../../srcs/mem/mem_hi.hex";
-          _mem_hex_lo = "/home/brunoa/Documents/processor-pipeline-4-stage/processor-pipeline-4-stage/srcs/mem/mem_lo.hex";
-        _mem_hex_hi = "/home/brunoa/Documents/processor-pipeline-4-stage/processor-pipeline-4-stage/srcs/mem/mem_hi.hex";
+        $readmemh("srcs/mem/mem_lo.hex", _mem_l);
+        $readmemh("srcs/mem/mem_hi.hex", _mem_h);
 `else
-        // Board-flow default absolute paths (override via BROM_MEM_*_PATH if needed).
-        _mem_hex_lo = "/home/brunoa/Documents/processor-pipeline-4-stage/processor-pipeline-4-stage/srcs/mem/mem_lo.hex";
-        _mem_hex_hi = "/home/brunoa/Documents/processor-pipeline-4-stage/processor-pipeline-4-stage/srcs/mem/mem_hi.hex";
+        $readmemh("/home/mendes/Transferências/processor-pipeline-4-stage/srcs/mem/mem_lo.hex", _mem_l);
+        $readmemh("/home/mendes/Transferências/processor-pipeline-4-stage/srcs/mem/mem_hi.hex", _mem_h);
 `endif
-        $readmemh(_mem_hex_lo, _mem_l);
-        $readmemh(_mem_hex_hi, _mem_h);
     end
-
 /*************************************************************************************
  * 2.2 Instruction Read
  ************************************************************************************/
@@ -85,5 +60,4 @@ module brom_1kb_be(
 
     assign o_dout_h = _dout_h;
     assign o_dout_l = _dout_l;
-
 endmodule

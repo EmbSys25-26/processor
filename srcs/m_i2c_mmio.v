@@ -70,6 +70,18 @@ module i2c_mmio(
     wire _ack_err;
     wire _rx_valid;
     wire [7:0] _rx_data;
+    // Registered snapshot of the RX FIFO front byte.
+    // _rx_data is combinational: _rx_fifo[_rx_rd_idx]. With a 256-entry FIFO,
+    // _rx_rd_idx has fanout>100 on some bits, putting >5 ns of routing delay
+    // on the path _rx_rd_idx → _rx_data → _rdata → CPU writeback → PC.
+    // Registering the byte here breaks that combinational chain: the critical
+    // path now starts from this local flip-flop instead of from _rx_rd_idx,
+    // eliminating the FIFO mux tree from the CPU's timing-critical path.
+    // Correctness: _rx_rd_idx only advances on _rx_pop (= i_sel & i_re & DATA
+    // address), which fires simultaneously with the read. At the moment the CPU
+    // reads DATA, _rx_rd_idx has been stable since the previous read, so
+    // _rx_data_reg already holds the correct front-of-FIFO byte.
+    reg [7:0] _rx_data_reg;
     reg _done_d;
     reg _ack_err_d;
 
@@ -109,6 +121,17 @@ module i2c_mmio(
         .io_i2c_sda(io_i2c_sda),
         .io_i2c_scl(io_i2c_scl)
     );
+
+    // Register the front-of-FIFO byte every cycle.
+    // Safe because _rx_rd_idx is only advanced by _rx_pop, which fires on the
+    // rising edge simultaneous with the read - so _rx_data_reg always holds the
+    // correct byte at the time the CPU's MEM stage samples o_rdata.
+    always @(posedge i_clk) begin
+        if (i_rst)
+            _rx_data_reg <= 8'h00;
+        else
+            _rx_data_reg <= _rx_data;
+    end
 
 /*************************************************************************************
  * 2.2 Register Writes and IRQ Latch
@@ -229,7 +252,7 @@ module i2c_mmio(
                 DIVIDER: _rdata = _div;
                 ADDR: _rdata = {8'h00, _addr};
                 DATA_LEN: _rdata = {8'h00, _len};
-                DATA: _rdata = {8'h00, _rx_data};
+                DATA: _rdata = {8'h00, _rx_data_reg};  // registered: breaks I2C FIFO mux from CPU critical path
                 default: _rdata = 16'h0000;
             endcase
         end

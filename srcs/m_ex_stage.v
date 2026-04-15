@@ -45,7 +45,7 @@
 // ============================================================
 module ex_stage(
     input wire i_valid,
-    (* mark_debug = "true" *) input wire [15:0] i_pc_dbg,
+    input wire [15:0] i_pc_dbg,
     input wire [3:0] i_rd,
     input wire [15:0] i_rd_data,    // Register-file value of Rd
     input wire [15:0] i_rs_data,    // Register-file value of Rs
@@ -117,8 +117,8 @@ module ex_stage(
     
     // Forwarded operand values: select between EX/MEM result (10), MEM/WB result (01),
     // or the original register-file value (00) based on forwarding control signals.
-    wire [15:0] _rd_fwd;  // Forwarded value for Rd (ALU operand A / store source)
-    wire [15:0] _rs_fwd; // Forwarded value for Rs (ALU operand B)
+    (* keep = "true" *) wire [15:0] _rd_fwd;  // Forwarded value for Rd (ALU operand A / store source)
+    (* keep = "true" *) wire [15:0] _rs_fwd; // Forwarded value for Rs (ALU operand B)
 
     // ALU outputs
     wire [15:0] _sum;       // Arithmetic result (add/sub)

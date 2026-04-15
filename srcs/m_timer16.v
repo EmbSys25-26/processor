@@ -19,12 +19,12 @@ module timer16(
     reg [15:0] _rdata;
     reg _int_req;
 
-    (* mark_debug = "true" *) reg _int_en;
-    (* mark_debug = "true" *) reg _timer_mode;
-    (* mark_debug = "true" *) wire _int_req_dbg;
+    reg _int_en;
+    reg _timer_mode;
+    wire _int_req_dbg;
 
-    (* mark_debug = "true" *) reg [15:0] _cnt_start;
-    (* mark_debug = "true" *) reg [15:0] _cnt;
+    reg [15:0] _cnt_start;
+    reg [15:0] _cnt;
     wire _tick;
     wire [16:0] _cnt_nxt;
     wire _overflow;
