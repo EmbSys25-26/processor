@@ -128,6 +128,7 @@ typedef enum {
     /* §7.6 Terminators */
     IR_OP_GOTO,         /* goto bbX                      */
     IR_OP_BRANCH,       /* if %pred goto bbT else bbF    */
+    IR_OP_SWITCH,       /* NEW -> switch %v default bbD [k->bbX] */
     IR_OP_RET,          /* ret void | ret %v             */
 
     /* §7.7 Calls */
@@ -146,10 +147,11 @@ typedef enum {
     This is imposed for simpliciy, instead of having dynamic arrays.
 */
 #define IR_MAX_ARGS 16    /* (>3 go to stack per ABI) -- irrelevant for now */
+#define IR_MAX_SWITCH_CASES 64
 
 typedef struct ir_instr_s ir_instr_t;
 
-struct ir_instr_s {
+struct ir_instr_s { // quadruple representation: op dst src1 src2
     ir_opcode_t  op;
     ir_value_t   dst;        /* Destination virtual register: IR_VAL_NONE for stores/void calls/ret */
     ir_value_t   src[2];     /* up to two operands for most instructions */
@@ -159,18 +161,22 @@ struct ir_instr_s {
             /* For GEP (Get Element Pointer): width */
             long width;    /* <=> sizeof(array_data_type) (compile time element size)*/
         } gep;
-
         struct {
             char       callee[128];
             ir_value_t args[IR_MAX_ARGS];
             unsigned   arg_count;
             int        is_void_call;  /* 1 -> no dst assigned                   */
         } call;
-
         struct {
             unsigned true_block;
             unsigned false_block;
         } branch;
+        struct {
+            unsigned default_block;                     // default target bb id
+            long     case_values[IR_MAX_SWITCH_CASES];  // case values (sorted ascending)
+            unsigned case_blocks[IR_MAX_SWITCH_CASES];  // target bb id for each case value
+            unsigned case_count;                        // number of cases
+        } sw;
     } as;
 
     ir_instr_t *next;

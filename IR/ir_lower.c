@@ -38,6 +38,18 @@ void ir_diag(ir_lower_ctx_t *lctx, const char *code,
     if (lctx) lctx->error_count++;
 }
 
+void ir_warn(ir_lower_ctx_t *lctx, const char *code,
+             size_t line, const char *fmt, ...)
+{
+    va_list ap;
+    fprintf(stderr, "[%s] line %zu: ", code ? code : "IRW??", line);
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, "\n");
+    (void)lctx;
+}
+
 /* ***********************************************************
  * Semantic type → IR type  (§5)
  * ************************************************************/
@@ -137,7 +149,7 @@ int ir_block_terminated(const ir_lower_ctx_t *lctx)
 {
     if (!lctx->cur_block || !lctx->cur_block->tail) return 0;
     ir_opcode_t op = lctx->cur_block->tail->op;
-    return (op == IR_OP_GOTO || op == IR_OP_BRANCH || op == IR_OP_RET);
+    return (op == IR_OP_GOTO || op == IR_OP_BRANCH || op == IR_OP_SWITCH || op == IR_OP_RET);
 }
 
 void ir_seal_goto(ir_lower_ctx_t *lctx, unsigned target_id)
@@ -157,6 +169,38 @@ void ir_seal_branch(ir_lower_ctx_t *lctx, ir_value_t pred,
     i->src[0]     = pred;
     i->as.branch.true_block  = true_id;
     i->as.branch.false_block = false_id;
+    ir_instr_push(lctx->cur_block, i);
+}
+
+void ir_seal_switch(ir_lower_ctx_t *lctx,
+                    ir_value_t value,
+                    unsigned default_id,
+                    const long *case_values,
+                    const unsigned *case_blocks,
+                    unsigned case_count)
+{
+    if (ir_block_terminated(lctx)) return;
+
+    ir_instr_t *i = ir_instr_new(IR_OP_SWITCH);
+    if (!i) {
+        ir_diag(lctx, "IR001", 0, "out of memory creating switch terminator");
+        return;
+    }
+
+    if (case_count > IR_MAX_SWITCH_CASES) {
+        ir_diag(lctx, "IR001", 0, "switch has too many cases for IR_OP_SWITCH");
+        free(i);
+        return;
+    }
+
+    i->src[0] = value;
+    i->as.sw.default_block = default_id;
+    i->as.sw.case_count = case_count;
+    for (unsigned k = 0; k < case_count; ++k) {
+        i->as.sw.case_values[k] = case_values[k];
+        i->as.sw.case_blocks[k] = case_blocks[k];
+    }
+
     ir_instr_push(lctx->cur_block, i);
 }
 

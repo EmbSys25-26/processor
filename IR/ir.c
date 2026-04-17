@@ -393,6 +393,7 @@ static const char *opname(ir_opcode_t op)
     case IR_OP_BITCAST: return "bitcast";
     case IR_OP_GOTO:    return "goto";
     case IR_OP_BRANCH:  return "branch";
+    case IR_OP_SWITCH:  return "switch";
     case IR_OP_RET:     return "ret";
     case IR_OP_CALL:    return "call";
     default:            return "?op";
@@ -412,6 +413,18 @@ void ir_instr_print(FILE *out, const ir_instr_t *i)
         fprintf(out, "    if ");
         ir_value_print(out, &i->src[0]);
         fprintf(out, " goto bb%u else bb%u\n", i->as.branch.true_block, i->as.branch.false_block);
+        break;
+    case IR_OP_SWITCH:
+        fprintf(out, "    switch ");
+        ir_value_print(out, &i->src[0]);
+        fprintf(out, " default bb%u", i->as.sw.default_block);
+        for (unsigned k = 0; k < i->as.sw.case_count; ++k) {
+            fprintf(out, " [");
+            // case_values and case_blocks are parallel arrays, so we can just index them with k
+            fprintf(out, "%ld:bb%u", i->as.sw.case_values[k], i->as.sw.case_blocks[k]);
+            fprintf(out, "]");
+        }
+        fprintf(out, "\n");
         break;
     case IR_OP_RET:
         if (i->src[0].kind == IR_VAL_NONE) {

@@ -80,6 +80,8 @@ typedef struct ir_lower_ctx_s {
 
 void ir_diag(ir_lower_ctx_t *lctx, const char *code,
              size_t line, const char *fmt, ...);
+void ir_warn(ir_lower_ctx_t *lctx, const char *code,
+             size_t line, const char *fmt, ...);
 
 /* ────────────────────────────────────────────────────────────
  * Type mapping: semantic type_t  →  ir_type_t
@@ -170,6 +172,15 @@ void ir_seal_goto(ir_lower_ctx_t *lctx, unsigned target_id);
 /* Emit a conditional branch from cur_block. */
 void ir_seal_branch(ir_lower_ctx_t *lctx, ir_value_t pred,
                     unsigned true_id, unsigned false_id);
+
+/* Emit a switch terminator from cur_block.
+ * case_values[k] branches to case_blocks[k], otherwise default_id. */
+void ir_seal_switch(ir_lower_ctx_t *lctx,
+                    ir_value_t value,
+                    unsigned default_id,
+                    const long *case_values,
+                    const unsigned *case_blocks,
+                    unsigned case_count);
 
 /* Return 1 if cur_block already has a terminator */
 int ir_block_terminated(const ir_lower_ctx_t *lctx);
