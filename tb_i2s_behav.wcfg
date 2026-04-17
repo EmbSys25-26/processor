@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_i2s_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_i2s" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000000 us"></ZoomStartTime>
+      <ZoomEndTime time="25.847780 us"></ZoomEndTime>
+      <Cursor1Time time="23.478130 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="257"></NameColumnWidth>
+      <ValueColumnWidth column_width="80"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="19" />
+   <wvobject type="logic" fp_name="/tb_i2s/clk_100m">
+      <obj_property name="ElementShortName">clk_100m</obj_property>
+      <obj_property name="ObjectShortName">clk_100m</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/clk_12m">
+      <obj_property name="ElementShortName">clk_12m</obj_property>
+      <obj_property name="ObjectShortName">clk_12m</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/rst">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_i2s/addr">
+      <obj_property name="ElementShortName">addr[2:0]</obj_property>
+      <obj_property name="ObjectShortName">addr[2:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/sel">
+      <obj_property name="ElementShortName">sel</obj_property>
+      <obj_property name="ObjectShortName">sel</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/we">
+      <obj_property name="ElementShortName">we</obj_property>
+      <obj_property name="ObjectShortName">we</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/re">
+      <obj_property name="ElementShortName">re</obj_property>
+      <obj_property name="ObjectShortName">re</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_i2s/wdata">
+      <obj_property name="ElementShortName">wdata[15:0]</obj_property>
+      <obj_property name="ObjectShortName">wdata[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_i2s/rdata">
+      <obj_property name="ElementShortName">rdata[15:0]</obj_property>
+      <obj_property name="ObjectShortName">rdata[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/rdy">
+      <obj_property name="ElementShortName">rdy</obj_property>
+      <obj_property name="ObjectShortName">rdy</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_i2s/axis_tdata">
+      <obj_property name="ElementShortName">axis_tdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">axis_tdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/axis_tvalid">
+      <obj_property name="ElementShortName">axis_tvalid</obj_property>
+      <obj_property name="ObjectShortName">axis_tvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/axis_tready">
+      <obj_property name="ElementShortName">axis_tready</obj_property>
+      <obj_property name="ObjectShortName">axis_tready</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/o_mclk">
+      <obj_property name="ElementShortName">o_mclk</obj_property>
+      <obj_property name="ObjectShortName">o_mclk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/o_bclk">
+      <obj_property name="ElementShortName">o_bclk</obj_property>
+      <obj_property name="ObjectShortName">o_bclk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/o_lrclk">
+      <obj_property name="ElementShortName">o_lrclk</obj_property>
+      <obj_property name="ObjectShortName">o_lrclk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/o_pbdat">
+      <obj_property name="ElementShortName">o_pbdat</obj_property>
+      <obj_property name="ObjectShortName">o_pbdat</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/io_i2c_sda">
+      <obj_property name="ElementShortName">io_i2c_sda</obj_property>
+      <obj_property name="ObjectShortName">io_i2c_sda</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_i2s/io_i2c_scl">
+      <obj_property name="ElementShortName">io_i2c_scl</obj_property>
+      <obj_property name="ObjectShortName">io_i2c_scl</obj_property>
+   </wvobject>
+</wave_config>

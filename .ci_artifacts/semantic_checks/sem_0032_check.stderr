@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_0032_check.c:8:0: error: SEM032: Base of [] access must be an array or pointer
+Semantic summary: errors=1 warnings=0 scopes=3

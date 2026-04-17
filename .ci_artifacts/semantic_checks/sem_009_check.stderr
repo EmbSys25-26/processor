@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_009_check.c:2:0: error: SEM009: Increment/decrement of a const object
+Semantic summary: errors=1 warnings=0 scopes=3

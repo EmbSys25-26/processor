@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_029_check.c:5:0: error: SEM029: Address-of operator requires lvalue operand
+Semantic summary: errors=1 warnings=0 scopes=3

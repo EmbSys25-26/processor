@@ -1,0 +1,18 @@
+Parse succeeded. AST:
+TRANSLATION_UNIT
+├── STRUCT_DECL (P)
+│   └── STRUCT_MEMBER (x)
+│       └── TYPE (int)
+└── FUNCTION (main)
+    ├── TYPE (int)
+    └── BLOCK
+        ├── VAR_DECL (p)
+        │   └── TYPE (struct)
+        │       ├── IDENTIFIER (P)
+        │       └── STRUCT_DECL (P)
+        │           └── STRUCT_MEMBER (y)
+        │               └── TYPE (int)
+        └── RETURN
+            └── MEMBER_ACCESS
+                ├── IDENTIFIER (p)
+                └── IDENTIFIER (y)

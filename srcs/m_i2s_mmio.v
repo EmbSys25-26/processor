@@ -28,25 +28,31 @@ module i2s_mmio (
     output wire        o_bclk,        // Bit clock
     output wire        o_lrclk,       // Left/Right word clock
     output wire        o_pbdat,       // Serial playback data
+    
+    //I2S signals for AXI4-Stream
+    input wire [31:0] s_axis_tdata,   //Audio Data from DDR3 Left[15:0] and Right[15:0]
+    input wire s_axis_tvalid,         //DMA is sending valid data
+    output wire s_axis_tready,        //Ready to recieve data
 
     // I2C signals for SSM2603 configuration
     inout  wire        io_i2c_sda,
     inout  wire        io_i2c_scl
+    
 );
 
 /****************************************************************************
  * 1.1 REGISTER ADDRESSES (Base offset: 0x8700)
  ***************************************************************************/
-    localparam [2:0] TX_LEFT  = 3'd0; // [W/R] Left channel PCM sample
-    localparam [2:0] TX_RIGHT = 3'd1; // [W/R] Right channel PCM sample (commits pair)
+//    localparam [2:0] TX_LEFT  = 3'd0; // [W/R] Left channel PCM sample
+//    localparam [2:0] TX_RIGHT = 3'd1; // [W/R] Right channel PCM sample (commits pair)
     localparam [2:0] STATUS   = 3'd2; // [R]   Read-only status flags
     localparam [2:0] CTRL     = 3'd3; // [W/R] Control flags (Enable, IRQ, etc.)
 
 /****************************************************************************
  * 1.2 MMIO REGISTERS
  ***************************************************************************/
-    reg [31:0] _tx_word;              // Holds {Left[15:0], Right[15:0]}
-    reg        _pair_pending;         // Flags that Left channel is waiting for Right
+//    reg [31:0] _tx_word;              // Holds {Left[15:0], Right[15:0]}
+//    reg        _pair_pending;         // Flags that Left channel is waiting for Right
     reg        _tx_enable;            // Enables I2S hardware transmission
     reg        _irq_enable;           // Enables FIFO almost-empty interrupts
     reg        _irq_pend;             // Latched interrupt request
@@ -118,6 +124,12 @@ module i2s_mmio (
     assign _init_busy = (_init_state != INIT_IDLE);
     assign _tx_ready = _codec_init_done && !_fifo_empty_s2;
     assign _tx_busy  = _tx_enable && _tx_ready;
+    
+    
+    //NEW: AXI4-Stream to FIFO Logic
+    assign s_axis_tready = !_fifo_full;                //ready if fifo is not full
+    assign _fifo_wr_en = s_axis_tvalid && s_axis_tready;  //Write to fifo when DMA sends valid data and we are ready
+    assign _fifo_wdata = s_axis_tdata;                    //Connect the 32-bit DMA data directly to the FIFO
 
 /*************************************************************************************
  * 2.2 Submodule Instances
@@ -131,7 +143,7 @@ module i2s_mmio (
     i2s_tx u_tx (
         .i_bclk        (_bclk),
         .i_rst         (i_rst),
-        .i_enable      (_tx_enable),
+        .i_enable      (_codec_init_done),
         .i_fifo_rdata  (_fifo_rdata),
         .i_fifo_empty  (_fifo_empty_bclk),
         .o_fifo_rd_en  (_fifo_rd_en),
@@ -155,8 +167,8 @@ module i2s_mmio (
         .o_almost_empty (_fifo_aempty_bclk)
     );
 
-    assign _fifo_wr_en = i_sel && i_we && (i_addr == TX_RIGHT) && _pair_pending && !_fifo_full;
-    assign _fifo_wdata = {_tx_word[31:16], i_wdata};
+//    assign _fifo_wr_en = i_sel && i_we && (i_addr == TX_RIGHT) && _pair_pending && !_fifo_full;
+//    assign _fifo_wdata = {_tx_word[31:16], i_wdata};
 
     i2c_master u_i2c_master (
         .i_clk          (i_clk),
@@ -208,19 +220,20 @@ module i2s_mmio (
 /*************************************************************************************
  * 2.3 SSM2603 Init Sequence Table (Restored full 11-command sequence)
  ************************************************************************************/
-    always @(posedge i_clk) begin
-        _init_seq[0]  <= {7'h0F, 9'h000}; // Reset codec
-        _init_seq[1]  <= {7'h06, 9'h000}; // Power: Turn everything ON
-        _init_seq[2]  <= {7'h00, 9'h017}; // Left Line In volume
-        _init_seq[3]  <= {7'h01, 9'h017}; // Right Line In volume
-        _init_seq[4]  <= {7'h02, 9'h079}; // Left Headphone Volume (0x79)
-        _init_seq[5]  <= {7'h03, 9'h079}; // Right Headphone Volume (0x79)
-        _init_seq[6]  <= {7'h04, 9'h010}; // Analog Audio Path: Select DAC
-        _init_seq[7]  <= {7'h05, 9'h000}; // Digital Audio Path: EXPLICITLY DISABLE DAC MUTE
-        _init_seq[8]  <= {7'h07, 9'h002}; // Digital Audio I/F: 16-bit I2S
-        _init_seq[9]  <= {7'h08, 9'h000}; // Sampling Control: 48kHz
-        _init_seq[10] <= {7'h09, 9'h001}; // Active Control: Enable Digital Core
-    end
+    integer k;
+initial begin
+    _init_seq[0]  = {7'h0F, 9'h000};
+    _init_seq[1]  = {7'h06, 9'h000};
+    _init_seq[2]  = {7'h00, 9'h017};
+    _init_seq[3]  = {7'h01, 9'h017};
+    _init_seq[4]  = {7'h02, 9'h079};
+    _init_seq[5]  = {7'h03, 9'h079};
+    _init_seq[6]  = {7'h04, 9'h010};
+    _init_seq[7]  = {7'h05, 9'h000};
+    _init_seq[8]  = {7'h07, 9'h002};
+    _init_seq[9]  = {7'h08, 9'h000};
+    _init_seq[10] = {7'h09, 9'h001};
+end
 
 /*************************************************************************************
  * 2.4 SSM2603 Initialization FSM
@@ -253,14 +266,13 @@ module i2s_mmio (
 
             case (_init_state)
                 INIT_IDLE: begin
-                    if (_init_trigger) begin
-                        _init_trigger    <= 1'b0;
-                        _init_reg_idx    <= 4'd0;
-                        _codec_init_done <= 1'b0;
-                        _init_state      <= INIT_PUSH_H;
-                    end
-                end
-
+    if (_init_trigger) begin
+        _init_trigger    <= 1'b0;
+        _init_reg_idx    <= 4'd0;
+        _codec_init_done <= 1'b0;
+        _init_state      <= INIT_PUSH_H;
+    end
+end
                 INIT_PUSH_H: begin
                     _init_word        <= _init_seq[_init_reg_idx];
                     _i2c_tx_push      <= 1'b1;
@@ -319,8 +331,8 @@ module i2s_mmio (
  ************************************************************************************/
     always @(posedge i_clk) begin
         if (i_rst) begin
-            _tx_word          <= 32'h0000_0000;
-            _pair_pending     <= 1'b0;
+//            _tx_word          <= 32'h0000_0000;
+//            _pair_pending     <= 1'b0;
             _tx_enable        <= 1'b0;
             _irq_enable       <= 1'b0;
             _irq_pend         <= 1'b0;
@@ -336,6 +348,7 @@ module i2s_mmio (
 
             if (i_sel && i_we) begin
                 case (i_addr)
+                /*
                     TX_LEFT: begin
                         _tx_word[31:16] <= i_wdata;
                         _pair_pending <= 1'b1;
@@ -346,6 +359,7 @@ module i2s_mmio (
                             _pair_pending <= 1'b0;
                         _irq_pend <= 1'b0; // Auto-clear IRQ flag on audio refill
                     end
+                    */
                     CTRL: begin
                         _tx_enable  <= i_wdata[0];
                         _irq_enable <= i_wdata[1];
@@ -366,8 +380,8 @@ module i2s_mmio (
             _rdata = 16'h0000;
         end else begin
             case (i_addr)
-                TX_LEFT:  _rdata = _tx_word[31:16];
-                TX_RIGHT: _rdata = _tx_word[15:0];
+//                TX_LEFT:  _rdata = _tx_word[31:16];
+//                TX_RIGHT: _rdata = _tx_word[15:0];
                 STATUS:   _rdata = {8'b0, _underrun_latched, _irq_pend, _tx_busy,
                                     _tx_ready, _init_error, _init_busy, 
                                     _codec_init_done, _fifo_full};

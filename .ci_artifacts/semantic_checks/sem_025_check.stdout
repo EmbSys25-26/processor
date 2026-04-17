@@ -1,0 +1,28 @@
+Parse succeeded. AST:
+TRANSLATION_UNIT
+├── STRUCT_DECL (Ponto)
+│   ├── STRUCT_MEMBER (x)
+│   │   └── TYPE (int)
+│   └── STRUCT_MEMBER (y)
+│       └── TYPE (int)
+└── FUNCTION (main)
+    ├── TYPE (int)
+    └── BLOCK
+        ├── VAR_DECL (p)
+        │   └── TYPE (struct)
+        │       └── IDENTIFIER (Ponto)
+        ├── VAR_DECL (a)
+        │   └── TYPE (int)
+        ├── OPERATOR (=)
+        │   ├── IDENTIFIER (a)
+        │   └── INTEGER (10)
+        ├── IF
+        │   ├── OPERATOR (==)
+        │   │   ├── IDENTIFIER (p)
+        │   │   └── IDENTIFIER (a)
+        │   └── BLOCK
+        │       └── OPERATOR (=)
+        │           ├── IDENTIFIER (a)
+        │           └── INTEGER (1)
+        └── RETURN
+            └── INTEGER (0)

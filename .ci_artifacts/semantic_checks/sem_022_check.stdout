@@ -1,0 +1,24 @@
+Parse succeeded. AST:
+TRANSLATION_UNIT
+└── FUNCTION (main)
+    ├── TYPE (int)
+    └── BLOCK
+        ├── VAR_DECL (a)
+        │   └── TYPE (int)
+        ├── OPERATOR (=)
+        │   ├── IDENTIFIER (a)
+        │   └── INTEGER (10)
+        ├── VAR_DECL (b)
+        │   └── TYPE (int)
+        ├── OPERATOR (=)
+        │   ├── IDENTIFIER (b)
+        │   └── OPERATOR (/)
+        │       ├── IDENTIFIER (a)
+        │       └── INTEGER (0)
+        ├── OPERATOR (=)
+        │   ├── IDENTIFIER (b)
+        │   └── OPERATOR (%)
+        │       ├── IDENTIFIER (a)
+        │       └── INTEGER (0)
+        └── RETURN
+            └── INTEGER (0)

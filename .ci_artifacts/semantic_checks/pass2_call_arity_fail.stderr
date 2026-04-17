@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/pass2_call_arity_fail.c:6:0: error: SEM041: function call argument count mismatch
+Semantic summary: errors=1 warnings=0 scopes=5

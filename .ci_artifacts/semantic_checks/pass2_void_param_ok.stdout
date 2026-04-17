@@ -1,0 +1,13 @@
+Parse succeeded. AST:
+TRANSLATION_UNIT
+├── FUNCTION (f)
+│   ├── TYPE (int)
+│   └── BLOCK
+│       └── RETURN
+│           └── INTEGER (0)
+└── FUNCTION (main)
+    ├── TYPE (int)
+    └── BLOCK
+        └── RETURN
+            └── FUNC_CALL (f)
+                └── IDENTIFIER (f)

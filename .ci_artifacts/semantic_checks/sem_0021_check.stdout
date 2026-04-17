@@ -1,0 +1,19 @@
+Parse succeeded. AST:
+TRANSLATION_UNIT
+└── FUNCTION (main)
+    ├── TYPE (int)
+    └── BLOCK
+        ├── VAR_DECL (my_float)
+        │   └── TYPE (float)
+        ├── OPERATOR (=)
+        │   ├── IDENTIFIER (my_float)
+        │   └── FLOAT (3.14)
+        ├── VAR_DECL (result)
+        │   └── TYPE (int)
+        ├── OPERATOR (=)
+        │   ├── IDENTIFIER (result)
+        │   └── OPERATOR (%)
+        │       ├── INTEGER (10)
+        │       └── IDENTIFIER (my_float)
+        └── RETURN
+            └── INTEGER (0)

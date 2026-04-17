@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_0012_check.c:5:0: error: SEM012: Implicit conversion between pointer and integer not allowed
+Semantic summary: errors=1 warnings=0 scopes=3

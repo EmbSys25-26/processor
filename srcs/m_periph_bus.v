@@ -30,6 +30,7 @@ module periph_bus(
     output wire o_uart_tx,
     inout wire io_i2c_sda,
     inout wire io_i2c_scl,
+    
     // ── NEW: I2S ports ──────────────────────────────────────────────────────
     input  wire i_i2s_mclk,        // 12.288 MHz audio MCLK from soc-level Clock Wizard
     output wire o_i2s_mclk,        // -> SSM2603 MCLK pin
@@ -39,6 +40,13 @@ module periph_bus(
     inout  wire io_i2s_sda,        // I2C for SSM2603 config (can share io_i2c_sda)
     inout  wire io_i2s_scl,        // I2C for SSM2603 config (can share io_i2c_scl)
     // ────────────────────────────────────────────────────────────────────────
+    
+    // ── NEW: AXI-Stream for I2S DMA ─────────────────────────────────────────
+    input wire [31:0] i_s_axis_tdata,
+    input wire i_s_axis_tvalid,
+    output wire o_s_axis_tready,
+    // ────────────────────────────────────────────────────────────────────────
+    
     input wire i_int_en,
     input wire i_in_irq,
     output wire [15:0] o_irq_vector,
@@ -169,6 +177,13 @@ module periph_bus(
         .o_rdata     (_i2s_rdata),
         .o_rdy       (_i2s_rdy),
         .o_irq_req   (_i2s_int_req),
+        
+        // ── NEW: AXI Stream passed down to the I2S module ───────────────────────
+        .s_axis_tdata (i_s_axis_tdata),
+        .s_axis_tvalid (i_s_axis_tvalid),
+        .s_axis_tready (o_s_axis_tready),
+        // ────────────────────────────────────────────────────────────────────────
+        
         .o_mclk      (o_i2s_mclk),
         .o_bclk      (o_i2s_bclk),
         .o_lrclk     (o_i2s_lrclk),

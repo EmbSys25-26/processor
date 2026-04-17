@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_007_check.c:2:0: error: SEM007: inline não é válido para declaração de variáveis
+Semantic summary: errors=1 warnings=0 scopes=3

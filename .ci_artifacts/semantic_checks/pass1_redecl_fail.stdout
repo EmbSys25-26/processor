@@ -1,0 +1,11 @@
+Parse succeeded. AST:
+TRANSLATION_UNIT
+└── FUNCTION (main)
+    ├── TYPE (int)
+    └── BLOCK
+        ├── VAR_DECL (a)
+        │   └── TYPE (int)
+        ├── VAR_DECL (a)
+        │   └── TYPE (int)
+        └── RETURN
+            └── INTEGER (0)

@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_010_check.c:2:0: error: SEM010: Implicit removal of the const qualifier in pointer assignment
+Semantic summary: errors=1 warnings=0 scopes=3

@@ -1,0 +1,9 @@
+Parse succeeded. AST:
+TRANSLATION_UNIT
+└── FUNCTION (main)
+    ├── TYPE (int)
+    └── BLOCK
+        ├── PRE_INC
+        │   └── INTEGER (3)
+        └── RETURN
+            └── INTEGER (0)

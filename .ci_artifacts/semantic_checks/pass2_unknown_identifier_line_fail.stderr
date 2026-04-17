@@ -1,0 +1,3 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/pass2_unknown_identifier_line_fail.c:4:0: error: SEM001: unknown identifier
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/pass2_unknown_identifier_line_fail.c:4:0: error: SEM020: Arithmetic operators require arithmetic operands
+Semantic summary: errors=2 warnings=0 scopes=3

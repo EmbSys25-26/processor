@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_060_check.c:7:0: error: SEM060: aggregate member not found
+Semantic summary: errors=1 warnings=0 scopes=3

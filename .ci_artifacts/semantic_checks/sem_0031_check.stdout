@@ -1,0 +1,22 @@
+Parse succeeded. AST:
+TRANSLATION_UNIT
+└── FUNCTION (main)
+    ├── TYPE (int)
+    └── BLOCK
+        ├── ARRAY_DECL (my_array)
+        │   ├── INTEGER (5)
+        │   └── TYPE (int)
+        ├── VAR_DECL (my_float)
+        │   └── TYPE (float)
+        ├── OPERATOR (=)
+        │   ├── IDENTIFIER (my_float)
+        │   └── FLOAT (1.5)
+        ├── VAR_DECL (result)
+        │   └── TYPE (int)
+        ├── OPERATOR (=)
+        │   ├── IDENTIFIER (result)
+        │   └── ARRAY_ACCESS (my_array)
+        │       ├── IDENTIFIER (my_array)
+        │       └── IDENTIFIER (my_float)
+        └── RETURN
+            └── INTEGER (0)

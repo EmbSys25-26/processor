@@ -1,0 +1,3 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_0023_check.c:2:0: error: SEM011: Assignment type mismatch
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_0023_check.c:5:0: error: SEM023: Bitwise operators require integral operands
+Semantic summary: errors=2 warnings=0 scopes=3

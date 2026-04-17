@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_008_check.c:2:0: error: SEM008: Assignment to an object qualified as const
+Semantic summary: errors=1 warnings=0 scopes=3

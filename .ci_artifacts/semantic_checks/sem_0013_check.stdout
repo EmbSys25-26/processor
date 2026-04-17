@@ -1,0 +1,16 @@
+Parse succeeded. AST:
+TRANSLATION_UNIT
+└── FUNCTION (main)
+    ├── TYPE (int)
+    └── BLOCK
+        ├── VAR_DECL (int_ptr)
+        │   └── POINTER
+        │       └── TYPE (int)
+        ├── VAR_DECL (float_ptr)
+        │   └── POINTER
+        │       └── TYPE (float)
+        ├── OPERATOR (=)
+        │   ├── IDENTIFIER (int_ptr)
+        │   └── IDENTIFIER (float_ptr)
+        └── RETURN
+            └── INTEGER (0)

@@ -1,0 +1,20 @@
+Parse succeeded. AST:
+TRANSLATION_UNIT
+├── STRUCT_DECL (MyStruct)
+│   └── STRUCT_MEMBER (x)
+│       └── TYPE (int)
+└── FUNCTION (main)
+    ├── TYPE (int)
+    └── BLOCK
+        ├── VAR_DECL (s)
+        │   └── TYPE (struct)
+        │       └── IDENTIFIER (MyStruct)
+        ├── VAR_DECL (result)
+        │   └── TYPE (int)
+        ├── OPERATOR (=)
+        │   ├── IDENTIFIER (result)
+        │   └── OPERATOR (+)
+        │       ├── IDENTIFIER (s)
+        │       └── INTEGER (10)
+        └── RETURN
+            └── INTEGER (0)

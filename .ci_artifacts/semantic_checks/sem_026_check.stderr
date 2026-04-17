@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_026_check.c:13:0: error: SEM026: Incompatible types in ternary operator
+Semantic summary: errors=1 warnings=0 scopes=3

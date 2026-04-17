@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_011_check.c:6:0: error: SEM011: Assignment type mismatch
+Semantic summary: errors=1 warnings=0 scopes=3

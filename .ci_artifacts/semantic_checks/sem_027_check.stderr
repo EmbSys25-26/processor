@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_027_check.c:3:0: error: SEM027: LHS of assignment must be a modifiable lvalue
+Semantic summary: errors=1 warnings=0 scopes=3

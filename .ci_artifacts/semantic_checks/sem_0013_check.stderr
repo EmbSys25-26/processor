@@ -1,0 +1,2 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_0013_check.c:5:0: error: SEM013: Assignment between incompatible pointer types
+Semantic summary: errors=1 warnings=0 scopes=3

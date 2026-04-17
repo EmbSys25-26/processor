@@ -1,0 +1,3 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_022_check.c:5:0: error: SEM022: Division or module by zero in constant expression
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_022_check.c:6:0: error: SEM022: Division or module by zero in constant expression
+Semantic summary: errors=2 warnings=0 scopes=3

@@ -1,0 +1,3 @@
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_0031_check.c:3:0: error: SEM011: Assignment type mismatch
+/home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/sem_0031_check.c:6:0: error: SEM031: Array index must be integral
+Semantic summary: errors=2 warnings=0 scopes=3
