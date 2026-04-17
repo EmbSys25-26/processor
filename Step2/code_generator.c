@@ -81,11 +81,15 @@ static uint16_t encode_statement(statement_t stmt, uint32_t stmt_lc){
 		}
 		
 		case FMT_BR: {
+		        /*
+		         * FIX the issue with mismatched displacements between this
+		         * and the old assembler.
+		         */
 		        int32_t disp8 = stmt.imm;  
 		        if (stmt.misc == LABEL) {
 				uint32_t label_addr = get_symbol_value((uint32_t)stmt.imm);
-				int32_t  disp       = (int32_t)label_addr
-				                    - (int32_t)(stmt_lc + LC_INSTRUCTION);
+				int32_t  disp       = ((int32_t)label_addr
+				                    - (int32_t)(stmt_lc))/2;
 
 				if (disp < -128 || disp > 127) {
 				    LOG_ERROR("Line %u: branch to label out of range (%d bytes)",
