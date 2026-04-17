@@ -227,19 +227,18 @@ data:               ; label "data" = 0x100
 
 ### Branches (BR, BEQ, BLT, ...)
 
-Branch instructions use a **relative displacement** — they do not jump to an absolute address, they jump **forward or backward by N bytes** relative to the instruction **after** the branch.
+Branch instructions use a **relative displacement** — they do not jump to an absolute address, they jump **forward or backward by N instructions** relative to the **current** instruction.
 
 The assembler calculates the displacement automatically when you use a label:
 ```
-displacement = label_address - (branch_address + 2)
+displacement = (label_address - branch_address)/2
 ```
 
-The `+ 2` is because by the time the branch executes, the LC has already advanced to the next instruction.
 ```asm
 .org 0x00
     ADDI r1, r0, #5   ; LC = 0x000
     ADDI r2, r0, #3   ; LC = 0x002
-    BEQ loop          ; LC = 0x004 → displacement = 0x006 - (0x004 + 2) = 0
+    BEQ loop          ; LC = 0x004 → displacement = (0x006 - 0x004)/2 = 1
 loop:
     ADD r3, r1        ; LC = 0x006
 ```
