@@ -28,6 +28,21 @@ module periph_bus(
     output wire o_uart_tx,              // UART - Transmit
     inout wire io_i2c_sda,              // I2C - SDA
     inout wire io_i2c_scl,              // I2C - SCL
+    // VGA
+    output wire [3:0] o_vga_r,
+    output wire [3:0] o_vga_g,
+    output wire [3:0] o_vga_b,
+    output wire o_vga_hs,
+    output wire o_vga_vs,
+    
+    // PS2
+    inout wire io_ps2_clk,
+    inout wire io_ps2_data,
+    
+    // I2S
+    output wire o_i2s_bclk,
+    output wire o_i2s_lrclk,
+    output wire o_i2s_dout,
     input wire i_int_en,                // IRQ - Enable Interrupt Signal
     input wire i_in_irq,                // IRQ - Is there an Interrupt currently running?
     output wire [15:0] o_irq_vector,    // IRQ - Interrupt Vector
@@ -48,6 +63,9 @@ module periph_bus(
     localparam [3:0] PARIO = 4'h2;
     localparam [3:0] UART = 4'h3;
     localparam [3:0] I2C = 4'h4;
+    localparam [3:0] VGA = 4'h5;
+    localparam [3:0] PS2 = 4'h6;
+    localparam [3:0] I2S = 4'h7;
     localparam [3:0] WDT = 4'h8;
     localparam [3:0] IRQ = 4'hF;
 
@@ -59,6 +77,9 @@ module periph_bus(
     wire _sel_pario;
     wire _sel_uart;
     wire _sel_i2c;
+    wire _sel_vga;
+    wire _sel_ps2;
+    wire _sel_i2s;
     wire _sel_irq;
     wire _sel_wdt;
 
@@ -67,6 +88,9 @@ module periph_bus(
     wire _pario_rdy;
     wire _uart_rdy;
     wire _i2c_rdy;
+    wire _vga_rdy;
+    wire _ps2_rdy;
+    wire _i2s_rdy;
     wire _irq_rdy;
     wire _wdt_rdy;
 
@@ -75,6 +99,9 @@ module periph_bus(
     wire _pario_int_req;
     wire _uart_int_req;
     wire _i2c_int_req;
+    wire _vga_int_req;
+    wire _ps2_int_req;
+    wire _i2s_int_req;
     wire _wdt_int_req;
 
     wire [7:0] _int_cause;
@@ -84,6 +111,9 @@ module periph_bus(
     wire [15:0] _pario_rdata;
     wire [15:0] _uart_rdata;
     wire [15:0] _i2c_rdata;
+    wire [15:0] _vga_rdata;
+    wire [15:0] _ps2_rdata;
+    wire [15:0] _i2s_rdata;
     wire [15:0] _irq_rdata;
     wire [15:0] _wdt_rdata;
     
@@ -101,6 +131,8 @@ module periph_bus(
     localparam integer _irq_uart = 3;
     localparam integer _irq_i2c = 4;
     localparam integer _irq_wdt = 5;
+    localparam integer _irq_vga = 6;
+    localparam integer _irq_ps2 = 7;
 
 /****************************************************************************
  * 1.3 DEFINE UART BAUDRATE
@@ -124,6 +156,9 @@ module periph_bus(
     assign _sel_pario = i_sel && (i_addr[11:8] == PARIO);
     assign _sel_uart = i_sel && (i_addr[11:8] == UART);
     assign _sel_i2c = i_sel && (i_addr[11:8] == I2C);
+    assign _sel_vga = i_sel && (i_addr[11:8] == VGA);
+    assign _sel_ps2 = i_sel && (i_addr[11:8] == PS2);
+    assign _sel_i2s = i_sel && (i_addr[11:8] == I2S);
     assign _sel_irq = i_sel && (i_addr[11:8] == IRQ);
     assign _sel_wdt = i_sel && (i_addr[11:8] == WDT);
 
@@ -136,6 +171,8 @@ module periph_bus(
     assign _int_cause[_irq_uart] = _uart_int_req;
     assign _int_cause[_irq_i2c] = _i2c_int_req;
     assign _int_cause[_irq_wdt] = _wdt_int_req;
+    assign _int_cause[_irq_vga] = _vga_int_req;
+    assign _int_cause[_irq_ps2] = _ps2_int_req;
     
     //assign _int_cause[7:6] = 2'b000;
     assign _int_cause[7] = 1'b0;
@@ -217,6 +254,51 @@ assign _int_cause[6] = 1'b0;
         .io_i2c_sda(io_i2c_sda),
         .io_i2c_scl(io_i2c_scl)
     );
+    
+    
+    // ==========================================
+    // VGA (Placeholder)
+    // ==========================================
+    
+    // ==========================================
+    // PS2 (Placeholder)
+    // ==========================================
+    
+    // ==========================================
+    // I2C (Placeholder)
+    // ==========================================
+    
+    
+    // ==========================================
+    // VGA (Placeholder Dummy Assignment)
+    // ==========================================
+    assign _vga_rdata = 16'h0000;
+    assign _vga_rdy   = 1'b1;
+    assign _vga_int_req = 1'b0;
+    assign o_vga_r  = 4'b0000;
+    assign o_vga_g  = 4'b0000;
+    assign o_vga_b  = 4'b0000;
+    assign o_vga_hs = 1'b1;
+    assign o_vga_vs = 1'b1;
+
+    // ==========================================
+    // PS2 (Placeholder Dummy Assignment)
+    // ==========================================
+    assign _ps2_rdata = 16'h0000;
+    assign _ps2_rdy   = 1'b1;
+    assign _ps2_int_req = 1'b0;
+    assign io_ps2_clk  = 1'bz;
+    assign io_ps2_data = 1'bz;
+
+    // ==========================================
+    // I2S (Placeholder Dummy Assignment)
+    // ==========================================
+    assign _i2s_rdata = 16'h0000;
+    assign _i2s_rdy   = 1'b1;
+    assign _i2s_int_req = 1'b0;
+    assign o_i2s_bclk  = 1'b0;
+    assign o_i2s_lrclk = 1'b0;
+    assign o_i2s_dout  = 1'b0;
 
     irq_ctrl u_irq_ctrl (
         .i_clk(i_clk),
@@ -254,6 +336,8 @@ assign _int_cause[6] = 1'b0;
 /****************************************************************************
  * 2.3 Return Muxes
  ***************************************************************************/
+ /*   
+ COMO ESTAVA ANTES
     assign o_rdy = _sel_timer0 ? _timer0_rdy :
                    (_sel_timer1 ? _timer1_rdy :
                    (_sel_pario ? _pario_rdy :
@@ -269,5 +353,28 @@ assign _int_cause[6] = 1'b0;
                      ((_sel_i2c && i_re) ? _i2c_rdata :
                      ((_sel_wdt    && i_re) ? _wdt_rdata :
                      ((_sel_irq && i_re) ? _irq_rdata : 16'h0000))))));
+*/
+
+assign o_rdy = _sel_timer0 ? _timer0_rdy :
+                   (_sel_timer1 ? _timer1_rdy :
+                   (_sel_pario ? _pario_rdy :
+                   (_sel_uart ? _uart_rdy :
+                   (_sel_i2c ? _i2c_rdy :
+                   (_sel_vga ? _vga_rdy :
+                   (_sel_ps2 ? _ps2_rdy :
+                   (_sel_i2s ? _i2s_rdy :
+                   (_sel_wdt    ? _wdt_rdy :
+                   (_sel_irq ? _irq_rdy : 1'b1)))))))));
+
+    assign o_rdata = (_sel_timer0 && i_re) ? _timer0_rdata :
+                     ((_sel_timer1 && i_re) ? _timer1_rdata :
+                     ((_sel_pario && i_re) ? _pario_rdata :
+                     ((_sel_uart && i_re) ? _uart_rdata :
+                     ((_sel_i2c && i_re) ? _i2c_rdata :
+                     ((_sel_vga && i_re) ? _vga_rdata :
+                     ((_sel_ps2 && i_re) ? _ps2_rdata :
+                     ((_sel_i2s && i_re) ? _i2s_rdata :
+                     ((_sel_wdt    && i_re) ? _wdt_rdata :
+                     ((_sel_irq && i_re) ? _irq_rdata : 16'h0000)))))))));
 
 endmodule
