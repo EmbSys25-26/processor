@@ -1,0 +1,51 @@
+; ====== IR dump =====================
+module test_files/IR_checks/indirectaccesslowering.c
+
+func @main() -> i16 {
+  slot %slot4 : i16  ; b
+  slot %slot3 : ptr  ; p
+  slot %slot2 : i16  ; a
+  slot %slot1 : i16  ; v
+  slot %slot0 : arr<i16, 3>  ; arr
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = *%v0
+    %v2 = gep %v1 + 0 * 2
+    *%v2 = 10
+    %v3 = addr_of %slot0
+    %v4 = *%v3
+    %v5 = gep %v4 + 1 * 2
+    *%v5 = 20
+    %v6 = addr_of %slot0
+    %v7 = *%v6
+    %v8 = gep %v7 + 2 * 2
+    *%v8 = 30
+    %v9 = addr_of %slot0
+    %v10 = *%v9
+    %v11 = gep %v10 + 1 * 2
+    %v12 = *%v11
+    %v13 = addr_of %slot1
+    *%v13 = %v12
+    %v14 = addr_of %slot2
+    *%v14 = 5
+    %v15 = addr_of %slot2
+    %v16 = addr_of %slot3
+    *%v16 = %v15
+    %v17 = addr_of %slot3
+    %v18 = *%v17
+    %v19 = *%v18
+    %v20 = addr_of %slot4
+    *%v20 = %v19
+    %v21 = addr_of %slot3
+    %v22 = *%v21
+    %v23 = (bitcast ptr) 99
+    *%v22 = %v23
+    %v24 = addr_of %slot1
+    %v25 = *%v24
+    ret %v25
+
+bb1:
+    ret void
+}
+

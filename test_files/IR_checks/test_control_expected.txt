@@ -1,24 +1,25 @@
-; ── IR dump ──────────────────────────────
-module test_files/ir_tests/test_control.c
+module test_files/IR_checks/test_control.c
 
-func @classify() -> i16 {
+func @classify(i16 %x) -> i16 {
   slot %slot0 : i16  ; x
 
 bb0:
-    %v0 = addr_of %slot0
-    %v1 = *%v0
-    %v2 = %v1 lts 0
-    if %v2 goto bb1 else bb2
+    %v1 = addr_of %slot0
+    *%v1 = %v0
+    %v2 = addr_of %slot0
+    %v3 = *%v2
+    %v4 = %v3 lts 0
+    if %v4 goto bb1 else bb2
 
 bb1:
-    %v3 = -1
-    ret %v3
+    %v5 = -1
+    ret %v5
 
 bb2:
-    %v4 = addr_of %slot0
-    %v5 = *%v4
-    %v6 = %v5 eq 0
-    if %v6 goto bb4 else bb5
+    %v6 = addr_of %slot0
+    %v7 = *%v6
+    %v8 = %v7 eq 0
+    if %v8 goto bb4 else bb5
 
 bb3:
     goto bb2
@@ -36,215 +37,227 @@ bb7:
     ret void
 }
 
-func @max() -> i16 {
-  slot %slot2 : i16  ; b
-  slot %slot1 : i16  ; a
-  slot %slot0 : i16  ; r
+func @max(i16 %a, i16 %b) -> i16 {
+  slot %slot2 : i16  ; r
+  slot %slot1 : i16  ; b
+  slot %slot0 : i16  ; a
 
 bb0:
-    %v0 = addr_of %slot1
-    %v1 = *%v0
-    %v2 = addr_of %slot2
-    %v3 = *%v2
-    %v4 = %v1 gts %v3
-    if %v4 goto bb1 else bb2
-
-bb1:
-    %v5 = addr_of %slot1
-    %v6 = *%v5
-    %v7 = addr_of %slot0
-    *%v7 = %v6
-    goto bb3
-
-bb2:
-    %v8 = addr_of %slot2
-    %v9 = *%v8
-    %v10 = addr_of %slot0
-    *%v10 = %v9
-    goto bb3
-
-bb3:
-    %v11 = addr_of %slot0
-    %v12 = *%v11
-    ret %v12
-
-bb4:
-    ret void
-}
-
-func @sum_while() -> i16 {
-  slot %slot1 : i16  ; n
-  slot %slot0 : i16  ; s
-
-bb0:
-    %v0 = addr_of %slot0
-    *%v0 = 0
-    goto bb1
-
-bb1:
-    %v1 = addr_of %slot1
-    %v2 = *%v1
-    %v3 = %v2 gts 0
-    if %v3 goto bb2 else bb3
-
-bb2:
+    %v2 = addr_of %slot0
+    *%v2 = %v0
+    %v3 = addr_of %slot1
+    *%v3 = %v1
     %v4 = addr_of %slot0
     %v5 = *%v4
     %v6 = addr_of %slot1
     %v7 = *%v6
-    %v8 = %v5 add %v7
-    %v9 = addr_of %slot0
-    *%v9 = %v8
-    %v10 = addr_of %slot1
-    %v11 = *%v10
-    %v12 = %v11 sub 1
-    %v13 = addr_of %slot1
-    *%v13 = %v12
-    goto bb1
-
-bb3:
-    %v14 = addr_of %slot0
-    %v15 = *%v14
-    ret %v15
-
-bb4:
-    ret void
-}
-
-func @sum_do_while() -> i16 {
-  slot %slot1 : i16  ; n
-  slot %slot0 : i16  ; s
-
-bb0:
-    %v0 = addr_of %slot0
-    *%v0 = 0
-    goto bb1
+    %v8 = %v5 gts %v7
+    if %v8 goto bb1 else bb3
 
 bb1:
-    %v1 = addr_of %slot0
-    %v2 = *%v1
-    %v3 = addr_of %slot1
-    %v4 = *%v3
-    %v5 = %v2 add %v4
-    %v6 = addr_of %slot0
-    *%v6 = %v5
-    %v7 = addr_of %slot1
-    %v8 = *%v7
-    %v9 = %v8 sub 1
-    %v10 = addr_of %slot1
-    *%v10 = %v9
+    %v9 = addr_of %slot2
+    %v10 = addr_of %slot0
+    %v11 = *%v10
+    *%v9 = %v11
     goto bb2
 
 bb2:
-    %v11 = addr_of %slot1
-    %v12 = *%v11
-    %v13 = %v12 gts 0
-    if %v13 goto bb1 else bb3
+    %v15 = addr_of %slot2
+    %v16 = *%v15
+    ret %v16
 
 bb3:
-    %v14 = addr_of %slot0
-    %v15 = *%v14
-    ret %v15
-
-bb4:
-    ret void
-}
-
-func @sum_for() -> i16 {
-  slot %slot2 : i16  ; n
-  slot %slot1 : i16  ; i
-  slot %slot0 : i16  ; s
-
-bb0:
-    %v0 = addr_of %slot0
-    *%v0 = 0
-    %v1 = addr_of %slot1
-    *%v1 = 0
-    goto bb1
-
-bb1:
-    %v2 = addr_of %slot1
-    %v3 = *%v2
-    %v4 = addr_of %slot2
-    %v5 = *%v4
-    %v6 = %v3 lts %v5
-    if %v6 goto bb2 else bb4
-
-bb2:
-    %v7 = addr_of %slot0
-    %v8 = *%v7
-    %v9 = addr_of %slot1
-    %v10 = *%v9
-    %v11 = %v8 add %v10
-    %v12 = addr_of %slot0
-    *%v12 = %v11
-    goto bb3
-
-bb3:
+    %v12 = addr_of %slot2
     %v13 = addr_of %slot1
     %v14 = *%v13
-    %v15 = %v14 add 1
-    *%v13 = %v15
-    goto bb1
+    *%v12 = %v14
+    goto bb2
 
 bb4:
-    %v16 = addr_of %slot0
-    %v17 = *%v16
-    ret %v17
-
-bb5:
     ret void
 }
 
-func @loop_break() -> i16 {
-  slot %slot2 : i16  ; n
-  slot %slot1 : i16  ; i
-  slot %slot0 : i16  ; s
+func @sum_while(i16 %n) -> i16 {
+  slot %slot1 : i16  ; s
+  slot %slot0 : i16  ; n
 
 bb0:
-    %v0 = addr_of %slot0
-    *%v0 = 0
-    %v1 = addr_of %slot1
-    *%v1 = 0
+    %v1 = addr_of %slot0
+    *%v1 = %v0
+    %v2 = addr_of %slot1
+    *%v2 = 0
     goto bb1
 
 bb1:
-    %v2 = addr_of %slot1
-    %v3 = *%v2
-    %v4 = addr_of %slot2
-    %v5 = *%v4
-    %v6 = %v3 lts %v5
-    if %v6 goto bb2 else bb4
+    %v3 = addr_of %slot0
+    %v4 = *%v3
+    %v5 = %v4 gts 0
+    if %v5 goto bb2 else bb3
 
 bb2:
+    %v6 = addr_of %slot1
     %v7 = addr_of %slot1
     %v8 = *%v7
-    %v9 = %v8 gts 5
-    if %v9 goto bb5 else bb6
+    %v9 = addr_of %slot0
+    %v10 = *%v9
+    %v11 = %v8 add %v10
+    *%v6 = %v11
+    %v12 = addr_of %slot0
+    %v13 = addr_of %slot0
+    %v14 = *%v13
+    %v15 = %v14 sub 1
+    *%v12 = %v15
+    goto bb1
 
 bb3:
     %v16 = addr_of %slot1
     %v17 = *%v16
-    %v18 = %v17 add 1
-    *%v16 = %v18
+    ret %v17
+
+bb4:
+    ret void
+}
+
+func @sum_do_while(i16 %n) -> i16 {
+  slot %slot1 : i16  ; s
+  slot %slot0 : i16  ; n
+
+bb0:
+    %v1 = addr_of %slot0
+    *%v1 = %v0
+    %v2 = addr_of %slot1
+    *%v2 = 0
+    goto bb1
+
+bb1:
+    %v3 = addr_of %slot1
+    %v4 = addr_of %slot1
+    %v5 = *%v4
+    %v6 = addr_of %slot0
+    %v7 = *%v6
+    %v8 = %v5 add %v7
+    *%v3 = %v8
+    %v9 = addr_of %slot0
+    %v10 = addr_of %slot0
+    %v11 = *%v10
+    %v12 = %v11 sub 1
+    *%v9 = %v12
+    goto bb2
+
+bb2:
+    %v13 = addr_of %slot0
+    %v14 = *%v13
+    %v15 = %v14 gts 0
+    if %v15 goto bb1 else bb3
+
+bb3:
+    %v16 = addr_of %slot1
+    %v17 = *%v16
+    ret %v17
+
+bb4:
+    ret void
+}
+
+func @sum_for(i16 %n) -> i16 {
+  slot %slot2 : i16  ; i
+  slot %slot1 : i16  ; s
+  slot %slot0 : i16  ; n
+
+bb0:
+    %v1 = addr_of %slot0
+    *%v1 = %v0
+    %v2 = addr_of %slot1
+    *%v2 = 0
+    %v3 = addr_of %slot2
+    *%v3 = 0
+    goto bb1
+
+bb1:
+    %v4 = addr_of %slot2
+    %v5 = *%v4
+    %v6 = addr_of %slot0
+    %v7 = *%v6
+    %v8 = %v5 lts %v7
+    if %v8 goto bb2 else bb4
+
+bb2:
+    %v9 = addr_of %slot1
+    %v10 = addr_of %slot1
+    %v11 = *%v10
+    %v12 = addr_of %slot2
+    %v13 = *%v12
+    %v14 = %v11 add %v13
+    *%v9 = %v14
+    goto bb3
+
+bb3:
+    %v15 = addr_of %slot2
+    %v16 = *%v15
+    %v17 = %v16 add 1
+    *%v15 = %v17
     goto bb1
 
 bb4:
-    %v19 = addr_of %slot0
-    %v20 = *%v19
-    ret %v20
+    %v18 = addr_of %slot1
+    %v19 = *%v18
+    ret %v19
+
+bb5:
+    ret void
+}
+
+func @loop_break(i16 %n) -> i16 {
+  slot %slot2 : i16  ; i
+  slot %slot1 : i16  ; s
+  slot %slot0 : i16  ; n
+
+bb0:
+    %v1 = addr_of %slot0
+    *%v1 = %v0
+    %v2 = addr_of %slot1
+    *%v2 = 0
+    %v3 = addr_of %slot2
+    *%v3 = 0
+    goto bb1
+
+bb1:
+    %v4 = addr_of %slot2
+    %v5 = *%v4
+    %v6 = addr_of %slot0
+    %v7 = *%v6
+    %v8 = %v5 lts %v7
+    if %v8 goto bb2 else bb4
+
+bb2:
+    %v9 = addr_of %slot2
+    %v10 = *%v9
+    %v11 = %v10 gts 5
+    if %v11 goto bb5 else bb6
+
+bb3:
+    %v18 = addr_of %slot2
+    %v19 = *%v18
+    %v20 = %v19 add 1
+    *%v18 = %v20
+    goto bb1
+
+bb4:
+    %v21 = addr_of %slot1
+    %v22 = *%v21
+    ret %v22
 
 bb5:
     goto bb4
 
 bb6:
-    %v10 = addr_of %slot0
-    %v11 = *%v10
     %v12 = addr_of %slot1
-    %v13 = *%v12
-    %v14 = %v11 add %v13
-    %v15 = addr_of %slot0
-    *%v15 = %v14
+    %v13 = addr_of %slot1
+    %v14 = *%v13
+    %v15 = addr_of %slot2
+    %v16 = *%v15
+    %v17 = %v14 add %v16
+    *%v12 = %v17
     goto bb3
 
 bb7:
@@ -254,56 +267,58 @@ bb8:
     ret void
 }
 
-func @loop_continue() -> i16 {
-  slot %slot2 : i16  ; n
-  slot %slot1 : i16  ; i
-  slot %slot0 : i16  ; s
+func @loop_continue(i16 %n) -> i16 {
+  slot %slot2 : i16  ; i
+  slot %slot1 : i16  ; s
+  slot %slot0 : i16  ; n
 
 bb0:
-    %v0 = addr_of %slot0
-    *%v0 = 0
-    %v1 = addr_of %slot1
-    *%v1 = 0
+    %v1 = addr_of %slot0
+    *%v1 = %v0
+    %v2 = addr_of %slot1
+    *%v2 = 0
+    %v3 = addr_of %slot2
+    *%v3 = 0
     goto bb1
 
 bb1:
-    %v2 = addr_of %slot1
-    %v3 = *%v2
     %v4 = addr_of %slot2
     %v5 = *%v4
-    %v6 = %v3 lts %v5
-    if %v6 goto bb2 else bb4
+    %v6 = addr_of %slot0
+    %v7 = *%v6
+    %v8 = %v5 lts %v7
+    if %v8 goto bb2 else bb4
 
 bb2:
-    %v7 = addr_of %slot1
-    %v8 = *%v7
-    %v9 = %v8 mods 2
-    %v10 = %v9 eq 0
-    if %v10 goto bb5 else bb6
+    %v9 = addr_of %slot2
+    %v10 = *%v9
+    %v11 = %v10 mods 2
+    %v12 = %v11 eq 0
+    if %v12 goto bb5 else bb6
 
 bb3:
-    %v17 = addr_of %slot1
-    %v18 = *%v17
-    %v19 = %v18 add 1
-    *%v17 = %v19
+    %v19 = addr_of %slot2
+    %v20 = *%v19
+    %v21 = %v20 add 1
+    *%v19 = %v21
     goto bb1
 
 bb4:
-    %v20 = addr_of %slot0
-    %v21 = *%v20
-    ret %v21
+    %v22 = addr_of %slot1
+    %v23 = *%v22
+    ret %v23
 
 bb5:
     goto bb3
 
 bb6:
-    %v11 = addr_of %slot0
-    %v12 = *%v11
     %v13 = addr_of %slot1
-    %v14 = *%v13
-    %v15 = %v12 add %v14
-    %v16 = addr_of %slot0
-    *%v16 = %v15
+    %v14 = addr_of %slot1
+    %v15 = *%v14
+    %v16 = addr_of %slot2
+    %v17 = *%v16
+    %v18 = %v15 add %v17
+    *%v13 = %v18
     goto bb3
 
 bb7:
@@ -313,90 +328,82 @@ bb8:
     ret void
 }
 
-func @switch_case() -> i16 {
-  slot %slot1 : i16  ; x
-  slot %slot0 : i16  ; r
+func @switch_case(i16 %x) -> i16 {
+  slot %slot1 : i16  ; r
+  slot %slot0 : i16  ; x
 
 bb0:
-    %v0 = addr_of %slot1
-    %v1 = *%v0
-    %v2 = %v1 eq 1
-    if %v2 goto bb2 else bb5
+    %v1 = addr_of %slot0
+    *%v1 = %v0
+    %v2 = addr_of %slot0
+    %v3 = *%v2
+    switch %v3 default bb4 [1:bb2] [2:bb3]
 
 bb1:
-    %v7 = addr_of %slot0
+    %v7 = addr_of %slot1
     %v8 = *%v7
     ret %v8
 
 bb2:
-    %v3 = addr_of %slot0
-    *%v3 = 10
+    %v4 = addr_of %slot1
+    *%v4 = 10
     goto bb1
 
 bb3:
-    %v5 = addr_of %slot0
+    %v5 = addr_of %slot1
     *%v5 = 20
     goto bb1
 
 bb4:
-    %v6 = addr_of %slot0
+    %v6 = addr_of %slot1
     *%v6 = 0
     goto bb1
 
-bb5:
-    %v4 = %v1 eq 2
-    if %v4 goto bb3 else bb6
-
-bb6:
-    goto bb4
-
-bb9:
+bb7:
     ret void
-
 }
-
 
 func @main() -> i16 {
   slot %slot0 : i16  ; r
 
 bb0:
-    %v0 = -5
-    %v1 = @classify(%v0)
-    %v2 = addr_of %slot0
-    *%v2 = %v1
-    %v3 = @classify(0)
-    %v4 = addr_of %slot0
-    *%v4 = %v3
-    %v5 = @classify(3)
-    %v6 = addr_of %slot0
-    *%v6 = %v5
-    %v7 = @max(10, 3)
-    %v8 = addr_of %slot0
-    *%v8 = %v7
-    %v9 = @sum_while(5)
-    %v10 = addr_of %slot0
-    *%v10 = %v9
-    %v11 = @sum_do_while(5)
-    %v12 = addr_of %slot0
-    *%v12 = %v11
-    %v13 = @sum_for(10)
-    %v14 = addr_of %slot0
-    *%v14 = %v13
-    %v15 = @loop_break(10)
-    %v16 = addr_of %slot0
-    *%v16 = %v15
-    %v17 = @loop_continue(10)
-    %v18 = addr_of %slot0
-    *%v18 = %v17
-    %v19 = @switch_case(1)
-    %v20 = addr_of %slot0
-    *%v20 = %v19
-    %v21 = @switch_case(2)
-    %v22 = addr_of %slot0
-    *%v22 = %v21
-    %v23 = @switch_case(3)
-    %v24 = addr_of %slot0
-    *%v24 = %v23
+    %v0 = addr_of %slot0
+    %v1 = -5
+    %v2 = @classify(%v1)
+    *%v0 = %v2
+    %v3 = addr_of %slot0
+    %v4 = @classify(0)
+    *%v3 = %v4
+    %v5 = addr_of %slot0
+    %v6 = @classify(3)
+    *%v5 = %v6
+    %v7 = addr_of %slot0
+    %v8 = @max(10, 3)
+    *%v7 = %v8
+    %v9 = addr_of %slot0
+    %v10 = @sum_while(5)
+    *%v9 = %v10
+    %v11 = addr_of %slot0
+    %v12 = @sum_do_while(5)
+    *%v11 = %v12
+    %v13 = addr_of %slot0
+    %v14 = @sum_for(10)
+    *%v13 = %v14
+    %v15 = addr_of %slot0
+    %v16 = @loop_break(10)
+    *%v15 = %v16
+    %v17 = addr_of %slot0
+    %v18 = @loop_continue(10)
+    *%v17 = %v18
+    %v19 = addr_of %slot0
+    %v20 = @switch_case(1)
+    *%v19 = %v20
+    %v21 = addr_of %slot0
+    %v22 = @switch_case(2)
+    *%v21 = %v22
+    %v23 = addr_of %slot0
+    %v24 = @switch_case(3)
+    *%v23 = %v24
     %v25 = addr_of %slot0
     %v26 = *%v25
     ret %v26

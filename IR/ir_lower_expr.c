@@ -221,26 +221,121 @@ ir_value_t ir_lower_lvalue_addr(ir_lower_ctx_t *lctx,
         if (out_pointee_type) *out_pointee_type = inner_type;
         return ptr;
     }
+    case NODE_ARRAY_ACCESS: {
+        /* lower base expression (get base pointer or array address)
+         *     lower index expression
+         *     determine element type and stride from semantic annotation
+         *     if base is slot/global emit addr_of first
+         *     emit IR_OP_GEP with stride
+         *     return pointer vreg
+         */
+        const TreeNode_t *base_node  = expr->p_firstChild;
+        const TreeNode_t *index_node = base_node ? base_node->p_sibling : NULL;
 
-    case NODE_ARRAY_ACCESS:
-        // G4 TODO: lower base expression (get base pointer or array address)
-        //       lower index expression
-        //       determine element type and stride from semantic annotation
-        //       if base is slot/global emit addr_of first
-        //       emit IR_OP_GEP with stride
-        //       return pointer vreg
-        return ir_val_none();
+        if (!base_node || !index_node) {
+            ir_diag(lctx, "IR001", expr->lineNumber, "malformed array access");
+            return ir_val_none();
+        }
+
+        /* Determine element type from semantic annotation on the array access node.
+         * out_pointee_type should be the element type (what you get after indexing). */
+        const sem_node_info_t *ainfo =
+            semantic_get_node_info(lctx->sem_ctx, expr);
+        ir_type_t elem_type = (ainfo && ainfo->type)
+                              ? ir_type_from_sem(ainfo->type) : ir_type_i16();
+        if (out_pointee_type) *out_pointee_type = elem_type;
+
+        /* Compute stride = sizeof(element_type) in bytes */
+        long stride = 2; /* default: i16 = 2 bytes */
+        switch (elem_type.kind) {
+        case IR_TYPE_I1:  stride = 1; break;
+        case IR_TYPE_I8:  stride = 1; break;
+        case IR_TYPE_I16: stride = 2; break;
+        case IR_TYPE_I32: stride = 4; break;
+        case IR_TYPE_PTR: stride = 2; break;
+        default:          stride = 2; break;
+        }
+
+        /* Lower base: could be an identifier (slot/global) or any pointer expr */
+        const sem_node_info_t *binfo =
+            semantic_get_node_info(lctx->sem_ctx, base_node);
+        ir_type_t base_sem_type = (binfo && binfo->type)
+                                  ? ir_type_from_sem(binfo->type) : ir_type_ptr();
+
+        ir_value_t base_ptr;
+        if (base_sem_type.kind == IR_TYPE_ARRAY ||
+            base_node->nodeType == NODE_IDENTIFIER) {
+            /* Array variable: take its address first, then load the base pointer */
+            ir_type_t dummy_pt;
+            ir_value_t base_addr = ir_lower_lvalue_addr(lctx, base_node, &dummy_pt);
+            base_ptr = emit_load(lctx, base_addr, ir_type_ptr());
+        } else {
+            /* Already a pointer expression */
+            ir_type_t bt;
+            base_ptr = ir_lower_expr(lctx, base_node, &bt);
+        }
+
+        /* Lower index */
+        ir_type_t idx_type;
+        ir_value_t idx_val = ir_lower_expr(lctx, index_node, &idx_type);
+        idx_val = maybe_widen(lctx, idx_val, 0);
+
+        /* Emit GEP: base_ptr + idx * stride */
+        unsigned r = ir_new_vreg(lctx->func);
+        ir_instr_t *gep = ir_instr_new(IR_OP_GEP);
+        gep->dst      = ir_val_vreg(r, ir_type_ptr());
+        gep->src[0]   = base_ptr;
+        gep->src[1]   = idx_val;
+        gep->as.gep.width = stride;
+        ir_instr_push(lctx->cur_block, gep);
+        return ir_val_vreg(r, ir_type_ptr());
+    }
 
     case NODE_MEMBER_ACCESS:
-    case NODE_PTR_MEMBER_ACCESS:
-        // G4 TODO: lower base expression
-        //       for MEMBER_ACCESS: emit addr_of to get base pointer
-        //       for PTR_MEMBER_ACCESS: base is already a pointer
-        //       emit IR_OP_GEP with offset 0 placeholder
-        //       embed field name in callee slot for backend reference
-        //       return pointer vreg
-        return ir_val_none();
+    case NODE_PTR_MEMBER_ACCESS: {
+        const TreeNode_t *base_node  = expr->p_firstChild;
+        const TreeNode_t *field_node = base_node ? base_node->p_sibling : NULL;
 
+        if (!base_node || !field_node) {
+            ir_diag(lctx, "IR001", expr->lineNumber, "malformed member access");
+            return ir_val_none();
+        }
+
+        /* Get field type from semantic annotation on the member access node */
+        const sem_node_info_t *minfo =
+            semantic_get_node_info(lctx->sem_ctx, expr);
+        ir_type_t field_type = (minfo && minfo->type)
+                               ? ir_type_from_sem(minfo->type) : ir_type_i16();
+        if (out_pointee_type) *out_pointee_type = field_type;
+
+        ir_value_t base_ptr;
+        if (expr->nodeType == NODE_MEMBER_ACCESS) {
+            /* '.' operator: base is a struct lvalue — take its address */
+            ir_type_t dummy_pt;
+            base_ptr = ir_lower_lvalue_addr(lctx, base_node, &dummy_pt);
+        } else {
+            /* '->' operator: base is already a pointer */
+            ir_type_t bt;
+            base_ptr = ir_lower_expr(lctx, base_node, &bt);
+        }
+
+        /* Field name embedded in callee slot for backend reference.
+         * We use GEP with index 0 and stride 0 as a field-access placeholder.
+         * The backend uses the field symbol name from the semantic annotation
+         * to resolve the actual byte offset. */
+        const char *field_name = (field_node->nodeData.sVal)
+                                 ? field_node->nodeData.sVal : "?";
+        unsigned r = ir_new_vreg(lctx->func);
+        ir_instr_t *gep = ir_instr_new(IR_OP_GEP);
+        gep->dst         = ir_val_vreg(r, ir_type_ptr());
+        gep->src[0]      = base_ptr;
+        gep->src[1]      = ir_val_imm(0, ir_type_i16());
+        gep->as.gep.width = 0; /* backend resolves field offset by name */
+        /* Store field name in callee string for backend reference */
+        snprintf(gep->as.call.callee, sizeof(gep->as.call.callee), "%s", field_name);
+        ir_instr_push(lctx->cur_block, gep);
+        return ir_val_vreg(r, ir_type_ptr());
+    }
     default:
         ir_diag(lctx, "IR001", expr->lineNumber,
                 "expression is not a valid lvalue (node %d)", expr->nodeType);
@@ -554,42 +649,197 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
         return emit_load(lctx, res_addr, expr_type);
     }
 
-    /* ── Function call (§7.7) ── */
-    case NODE_FUNCTION_CALL:
-        // G3 TODO: find callee name from first child identifier
-        //       iterate argument siblings, lower each with ir_lower_expr
-        //       emit IR_OP_CALL instruction
-        //       if return type is void: is_void_call=1, return ir_val_none()
-        //       otherwise: allocate dst vreg, return it
-        return ir_val_none();
+    /* ── G3: NODE_FUNCTION_CALL ──────────────────────────────────────
+     *
+     * AST layout (built by build_function_call_node in parser.y):
+     *   NODE_FUNCTION_CALL
+     *     p_firstChild          -> NODE_IDENTIFIER with the callee name
+     *     p_firstChild->sibling -> arg0, arg1, arg2, ... (sibling chain)
+     *
+     * IR generated for: y = sum(10, 20)
+     *   %v2 = addr_of @sum       (resolve callee)
+     *   %v3 = *%v2               (load)
+     *   ...evaluate arguments...
+     *   %vN = @sum(%v_arg0, %v_arg1)
+     *
+     * Simplified phase-1 form (direct call by name):
+     *   %v0 = 10
+     *   %v1 = 20
+     *   %v2 = @sum(%v0, %v1)
+     */
+    case NODE_FUNCTION_CALL: {
 
+        /* The first child of NODE_FUNCTION_CALL is always the callee.
+         * Without it there is nothing to call — emit a diagnostic and bail. */
+        const TreeNode_t *callee_node = expr->p_firstChild;
+        if (!callee_node) {
+            ir_diag(lctx, "IR001", expr->lineNumber, "function call missing callee");
+            return ir_val_none();
+        }
+
+        /* Phase 1 only supports direct calls (e.g. "foo(...)").
+         * We extract the function name from the NODE_IDENTIFIER child.
+         * Indirect calls through a pointer (e.g. "(*fp)(...)") are not yet
+         * supported and are rejected with a diagnostic. */
+        const char *callee_name = NULL;
+        if (callee_node->nodeType == NODE_IDENTIFIER && callee_node->nodeData.sVal) {
+            /* Direct call: callee_name now points to e.g. "soma", "printf". */
+            callee_name = callee_node->nodeData.sVal;
+        } else {
+            ir_diag(lctx, "IR001", expr->lineNumber,
+                    "indirect function call not supported in phase 1");
+            return ir_val_none();
+        }
+
+        /* Walk the sibling chain after the callee node — those are the arguments.
+         * Each argument expression is lowered recursively with ir_lower_expr,
+         * which may emit several intermediate instructions and returns the
+         * final value (a vreg, immediate, or global reference).
+         * Results are stored left-to-right in a local array for later use. */
+        ir_value_t args[IR_MAX_ARGS];
+        unsigned actual_args = 0;
+
+        for (const TreeNode_t *a = callee_node->p_sibling;
+             a && actual_args < IR_MAX_ARGS; a = a->p_sibling) {
+            ir_type_t arg_type;
+            /* Lower the argument expression and save its resulting IR value. */
+            args[actual_args++] = ir_lower_expr(lctx, a, &arg_type);
+        }
+
+        /* Determine whether this call returns a value or is void.
+         * This controls whether we allocate a destination vreg for the result.
+         * We check in two ways because the annotation may be on the call node
+         * or on the callee symbol, depending on how the semantic pass stored it. */
+        int is_void = 0;
+
+        /* Check 1: look at the type annotated directly on the call expression.
+         * If the semantic pass typed it as BUILTIN_VOID, the call is void. */
+        if (info && info->type &&
+            info->type->kind == TYPE_BUILTIN &&
+            info->type->as.builtin == BUILTIN_VOID) {
+            is_void = 1;
+        }
+
+        /* Check 2: if check 1 was inconclusive, look up the callee symbol and
+         * inspect its function type's return type directly.
+         * This handles cases where the call node itself was not annotated
+         * with a void type but the function declaration clearly returns void. */
+        if (!is_void) {
+            const sem_node_info_t *ci =
+                semantic_get_node_info(lctx->sem_ctx, callee_node);
+            if (ci && ci->symbol && ci->symbol->type &&
+                ci->symbol->type->kind == TYPE_FUNCTION &&
+                ci->symbol->type->as.function.return_type) {
+                const type_t *ret = ci->symbol->type->as.function.return_type;
+                if (ret->kind == TYPE_BUILTIN && ret->as.builtin == BUILTIN_VOID) {
+                    is_void = 1;
+                }
+            }
+        }
+
+        /* Build the IR_OP_CALL instruction.
+         * Copy the callee name into the fixed-size callee field,
+         * set the argument count, the void flag, and copy each argument value. */
+        ir_instr_t *call_i = ir_instr_new(IR_OP_CALL);
+
+        /* Store the function name (e.g. "soma") in the instruction. */
+        snprintf(call_i->as.call.callee, sizeof(call_i->as.call.callee),
+                 "%s", callee_name);
+
+        /* Record how many arguments were evaluated. */
+        call_i->as.call.arg_count    = actual_args;
+
+        /* Mark whether the call is void — the printer uses this to decide
+         * whether to emit "%vN = @f(...)" or just "@f(...)". */
+        call_i->as.call.is_void_call = is_void;
+
+        /* Copy the evaluated argument values into the instruction's arg array. */
+        for (unsigned k = 0; k < actual_args; k++) {
+            call_i->as.call.args[k] = args[k];
+        }
+
+        if (is_void) {
+            /* Void call: no destination register is needed.
+             * IR_VAL_NONE in dst tells the printer to omit the "%vN = " prefix.
+             * We return ir_val_none() because the expression has no value. */
+            call_i->dst = ir_val_none();
+            ir_instr_push(lctx->cur_block, call_i);
+            *out_type = ir_type_void();
+            return ir_val_none();
+        } else {
+            /* Non-void call: allocate a fresh vreg to hold the return value.
+             * The instruction becomes:  %vN = @soma(%v0, %v1)
+             * We return this vreg so the parent expression can use the result
+             * (e.g. in an assignment like "resultado = soma(10, 20)"). */
+            unsigned r = ir_new_vreg(lctx->func);
+            call_i->dst = ir_val_vreg(r, expr_type); /* destination: %vN */
+            ir_instr_push(lctx->cur_block, call_i);
+            *out_type = expr_type;
+            return ir_val_vreg(r, expr_type); /* return the vreg to the caller */
+        }
+    }
     /* ── Array access (rvalue) ── */
-    case NODE_ARRAY_ACCESS:
-        // G4 TODO: call ir_lower_lvalue_addr to get element address
-        //       emit load on that address
-        //       return loaded value
-        return ir_val_none();
+    case NODE_ARRAY_ACCESS: {
+        /*  call ir_lower_lvalue_addr to get element address
+         *     emit load on that address
+         *     return loaded value
+         */
+        ir_type_t elem_type;
+        ir_value_t elem_addr = ir_lower_lvalue_addr(lctx, expr, &elem_type);
+        if (elem_addr.kind == IR_VAL_NONE) return ir_val_none();
+        *out_type = elem_type;
+        return emit_load(lctx, elem_addr, elem_type);
+    }
 
     /* ── Member access (rvalue) ── */
     case NODE_MEMBER_ACCESS:
-    case NODE_PTR_MEMBER_ACCESS:
-        // G4 TODO: call ir_lower_lvalue_addr to get field address
-        //       emit load on that address
-        //       return loaded value
-        return ir_val_none();
+    case NODE_PTR_MEMBER_ACCESS: {
+        /* call ir_lower_lvalue_addr to get field address
+         *     emit load on that address
+         *     return loaded value
+         */
+        ir_type_t field_type;
+        ir_value_t field_addr = ir_lower_lvalue_addr(lctx, expr, &field_type);
+        if (field_addr.kind == IR_VAL_NONE) return ir_val_none();
+        *out_type = field_type;
+        return emit_load(lctx, field_addr, field_type);
+    }
 
     /* ── Address-of ── */
-    case NODE_REFERENCE:
-        // G4 TODO: call ir_lower_lvalue_addr on operand
-        //       return the address directly (no load)
-        return ir_val_none();
+    case NODE_REFERENCE: {
+
+        /*  call ir_lower_lvalue_addr on operand
+         *  return the address directly (no load)
+         */
+        if (!expr->p_firstChild) {
+            ir_diag(lctx, "IR001", expr->lineNumber, "address-of has no operand");
+            return ir_val_none();
+        }
+        ir_type_t pointee_type;
+        ir_value_t addr = ir_lower_lvalue_addr(lctx, expr->p_firstChild, &pointee_type);
+        *out_type = ir_type_ptr();
+        return addr;
+    }
 
     /* ── Dereference (rvalue) ── */
-    case NODE_POINTER_CONTENT:
-        // G4 TODO: lower operand with ir_lower_expr to get pointer value
-        //       emit load using that pointer
-        //       return loaded value
-        return ir_val_none();
+    case NODE_POINTER_CONTENT: {
+
+        /* lower operand with ir_lower_expr to get pointer value
+         *     emit load using that pointer
+         *     return loaded value
+         */
+        if (!expr->p_firstChild) {
+            ir_diag(lctx, "IR001", expr->lineNumber, "dereference has no operand");
+            return ir_val_none();
+        }
+        ir_type_t ptr_type;
+        ir_value_t ptr_val = ir_lower_expr(lctx, expr->p_firstChild, &ptr_type);
+
+        /* The pointee type comes from the semantic annotation on this node */
+        ir_type_t pointee_type = (info && info->type)
+                                 ? ir_type_from_sem(info->type) : ir_type_i16();
+        *out_type = pointee_type;
+        return emit_load(lctx, ptr_val, pointee_type);
 
     /* ── Type cast (§7.5) ── */
     case NODE_TYPE_CAST: {
@@ -638,4 +888,5 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
                 "unhandled expression node type %d", (int)expr->nodeType);
         return ir_val_none();
     }
+}
 }
