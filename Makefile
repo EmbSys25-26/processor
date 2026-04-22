@@ -49,12 +49,23 @@ LIVENESS_SRCS = $(REGALLOC_DIR)/liveness.c \
 test_liveness: $(LIVENESS_SRCS) $(REGALLOC_DIR)/test_liveness.c
 	$(CC) $(CFLAGS) -o $@ $^
 
-test: test_liveness
+# ── Etapa 2: interference graph standalone test ─────────────────────────────
+INTERFERENCE_SRCS = $(REGALLOC_DIR)/liveness.c     \
+                    $(REGALLOC_DIR)/interference.c \
+                    $(IR_DIR)/ir.c
+
+test_interference: $(INTERFERENCE_SRCS) $(REGALLOC_DIR)/test_interference.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+# Aggregate test target — runs everything in sequence
+test: test_liveness test_interference
 	./test_liveness
+	./test_interference
 
 clean:
 	rm -f $(PARSER_DIR)/parser.tab.c \
 	      $(PARSER_DIR)/parser.tab.h \
 	      $(LEXER_DIR)/lex.yy.c      \
 	      $(TARGET)                  \
-	      test_liveness
+	      test_liveness              \
+	      test_interference
