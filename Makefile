@@ -1,11 +1,12 @@
 CC      = gcc
-CFLAGS  = -Wall -Wextra -g 
+CFLAGS  = -Wall -Wextra -g
 
-LEXER_DIR  = Lexer
-PARSER_DIR = Parser
-UTILS_DIR  = Util
-SEM_DIR    = Semantic
-IR_DIR     = IR
+LEXER_DIR    = Lexer
+PARSER_DIR   = Parser
+UTILS_DIR    = Util
+SEM_DIR      = Semantic
+IR_DIR       = IR
+REGALLOC_DIR = RegAlloc
 
 SRCS    = $(PARSER_DIR)/parser.tab.c \
           $(LEXER_DIR)/lex.yy.c      \
@@ -41,8 +42,19 @@ $(LEXER_DIR)/lex.yy.c: $(LEXER_DIR)/lexer.l $(PARSER_DIR)/parser.tab.h
 $(TARGET): $(SRCS)
 	$(CC) $(CFLAGS) -o $@ $^
 
+# ── Etapa 1: liveness analysis standalone test ──────────────────────────────
+LIVENESS_SRCS = $(REGALLOC_DIR)/liveness.c \
+                $(IR_DIR)/ir.c
+
+test_liveness: $(LIVENESS_SRCS) $(REGALLOC_DIR)/test_liveness.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+test: test_liveness
+	./test_liveness
+
 clean:
 	rm -f $(PARSER_DIR)/parser.tab.c \
 	      $(PARSER_DIR)/parser.tab.h \
 	      $(LEXER_DIR)/lex.yy.c      \
-	      $(TARGET)
+	      $(TARGET)                  \
+	      test_liveness
