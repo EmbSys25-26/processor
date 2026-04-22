@@ -128,6 +128,14 @@ static void test_linear_no_overlap(void)
     ifg_t *g = ifg_build(f, lv);
     assert(g);
 
+    printf("\n------- test_linear_no_overlap -------\n");
+    printf("--- IR ---\n");
+    ir_function_print(stdout, f);
+    printf("--- Liveness ---\n");
+    ir_liveness_print(stdout, f, lv);
+    printf("--- Interference graph ---\n");
+    ifg_print(stdout, f->name, g);
+
     CHECK(ifg_num_nodes(g) == 3, "3 nodes");
     CHECK(!ifg_interferes(g, v0, v1), "v0,v1 must not interfere");
     CHECK(!ifg_interferes(g, v1, v2), "v1,v2 must not interfere");
@@ -182,6 +190,14 @@ static void test_overlap_simple(void)
     ir_liveness_t *lv = ir_liveness_compute(f);
     ifg_t *g = ifg_build(f, lv);
     assert(g);
+
+    printf("\n------- test_overlap_simple -------\n");
+    printf("--- IR ---\n");
+    ir_function_print(stdout, f);
+    printf("--- Liveness ---\n");
+    ir_liveness_print(stdout, f, lv);
+    printf("--- Interference graph ---\n");
+    ifg_print(stdout, f->name, g);
 
     CHECK(ifg_num_nodes(g) == 3, "3 nodes");
     CHECK( ifg_interferes(g, v0, v1), "v0,v1 MUST interfere");
@@ -261,6 +277,14 @@ static void test_ifbranch_crossblock(void)
     ifg_t *g = ifg_build(f, lv);
     assert(g);
 
+    printf("\n------- test_ifbranch_crossblock -------\n");
+    printf("--- IR ---\n");
+    ir_function_print(stdout, f);
+    printf("--- Liveness ---\n");
+    ir_liveness_print(stdout, f, lv);
+    printf("--- Interference graph ---\n");
+    ifg_print(stdout, f->name, g);
+
     CHECK( ifg_interferes(g, v0, v1), "v0,v1 MUST interfere");
     CHECK(!ifg_interferes(g, v1, v2), "v1,v2 must not (v1 dies as v2 is defined)");
     CHECK(!ifg_interferes(g, v1, v3), "v1,v3 must not");
@@ -316,6 +340,14 @@ static void test_move_coalescing_setup(void)
     ir_liveness_t *lv = ir_liveness_compute(f);
     ifg_t *g = ifg_build(f, lv);
     assert(g);
+
+    printf("\n------- test_move_coalescing_setup -------\n");
+    printf("--- IR ---\n");
+    ir_function_print(stdout, f);
+    printf("--- Liveness ---\n");
+    ir_liveness_print(stdout, f, lv);
+    printf("--- Interference graph ---\n");
+    ifg_print(stdout, f->name, g);
 
     /* Critical property for coalescing: move dst and src do NOT interfere */
     CHECK(!ifg_interferes(g, v0, v1), "move (v1<-v0) must not create interference");

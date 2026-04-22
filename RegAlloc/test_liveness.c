@@ -119,6 +119,12 @@ static void test_linear(void)
     ir_liveness_t *liv = ir_liveness_compute(f);
     assert(liv);
 
+    printf("\n------- test_linear -------\n");
+    printf("--- IR ---\n");
+    ir_function_print(stdout, f);
+    printf("--- Liveness ---\n");
+    ir_liveness_print(stdout, f, liv);
+
     /* use[bb0] = {} */
     CHECK(!vreg_set_has(&liv->blk[0].use, v0), "use[bb0] should NOT have v0");
     CHECK(!vreg_set_has(&liv->blk[0].use, v1), "use[bb0] should NOT have v1");
@@ -205,6 +211,12 @@ static void test_iftest(void)
 
     ir_liveness_t *liv = ir_liveness_compute(f);
     assert(liv);
+
+    printf("\n------- test_iftest -------\n");
+    printf("--- IR ---\n");
+    ir_function_print(stdout, f);
+    printf("--- Liveness ---\n");
+    ir_liveness_print(stdout, f, liv);
 
     /* live_in[bb0] = {} */
     CHECK(!vreg_set_has(&liv->blk[0].live_in, v0), "live_in[bb0] should NOT have v0");
@@ -331,6 +343,12 @@ static void test_looptest(void)
     ir_liveness_t *liv = ir_liveness_compute(f);
     assert(liv);
 
+    printf("\n------- test_looptest -------\n");
+    printf("--- IR ---\n");
+    ir_function_print(stdout, f);
+    printf("--- Liveness ---\n");
+    ir_liveness_print(stdout, f, liv);
+
     /* live_in[bb0]  = {} */
     CHECK(!vreg_set_has(&liv->blk[0].live_in,  v0), "live_in[bb0] empty");
 
@@ -447,6 +465,12 @@ static void test_store(void)
 
     ir_liveness_t *liv = ir_liveness_compute(f);
     assert(liv);
+
+    printf("\n------- test_store -------\n");
+    printf("--- IR ---\n");
+    ir_function_print(stdout, f);
+    printf("--- Liveness ---\n");
+    ir_liveness_print(stdout, f, liv);
 
     /* instr order: [0]=addr_of, [1]=const, [2]=store, [3]=load, [4]=ret */
 
