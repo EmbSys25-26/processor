@@ -20,9 +20,9 @@ Stages 1, 2, and 3 of Register Allocation are implemented. Stages 4 and 5 are mi
 
 $ make
 
-$ ./compiler <test>.c
+$ ./compiler "test".c
 
-Available <test> files
+Available "test" files
 
 1. linear.c
 
