@@ -17,16 +17,12 @@
 #include "ASTree.h"
 #include "../Util/NodeTypes.h"
 #include "../Util/logger.h"
-#include "ASTPrint.h"
-#include "../Semantic/semantic.h"
-#include "../IR/ir.h"
-#include "../IR/ir_lower.h"
 
 int yylex(void);
 void yyerror(const char *s);
 extern FILE* yyin; 
 
-static TreeNode_t* p_treeRoot = NULL;
+TreeNode_t* p_treeRoot = NULL;
 
 static int build_tag_declaration_node(TreeNode_t **out_decl,
                                       NodeType_t decl_kind,
@@ -1623,77 +1619,4 @@ void yyerror(const char *s)
             s, yylineno, yytext);
 }
 
-int main(int argc, char* argv[])
-{
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <file.c>\n", argv[0]);
-        return 1;
-    }
 
-    FILE* f = fopen(argv[1], "r");
-    if (!f) {
-        fprintf(stderr, "Error: cannot open file '%s'\n", argv[1]);
-        return 1;
-    }
-
-    yyin = f;
-    int result = yyparse();
-    fclose(f);
-
-    if (result == 0) {
-        printf("Parse succeeded. AST:\n");
-        ASTPrint(p_treeRoot);
-
-        /* use semantic_analyze instead of semantic_run
-           so the context stays alive after the call */
-        semantic_context_t *sem_ctx  = NULL;
-        semantic_result_t   sem_result = {0u, 0u, 0u};
-
-        if (semantic_analyze(p_treeRoot, argv[1], &sem_ctx, &sem_result) < 0) {
-            fprintf(stderr, "semantic_analyze: internal failure\n");
-            return 2;
-        }
-
-        fprintf(stderr,
-                "Semantic summary: errors=%zu warnings=%zu scopes=%zu\n",
-                sem_result.error_count,
-                sem_result.warning_count,
-                sem_result.scope_count);
-         
-        // print annotation table 
-        semantic_dump_annotations(stderr, sem_ctx);
-
-        /* print symbol table for scope 0 — context is still alive here */
-        scope_t *s = scope_current(&sem_ctx->scope_stack);
-        while (s) {
-            fprintf(stderr, "=== scope depth %zu ===\n", s->depth);
-            symbol_dump(stderr, s);
-            s = s->parent;
-        }
-
-        if (sem_result.error_count > 0u) {
-            return 2; // do not proceed if semantics returned any error
-        }
-
-
-        /* ── IR lowering (only if semantic stage is clean) ── */
-        ir_module_t *mod = ir_lower_translation_unit(p_treeRoot, sem_ctx, argv[1]);
-        if (!mod) {
-            fprintf(stderr, "IR lowering failed.\n");
-            semantic_context_destroy(sem_ctx);
-            free(sem_ctx);
-            return 3;
-        }
-
-        /* Serialise IR to stdout */
-        printf("\n; ====== IR dump =====================\n");
-        ir_module_print(stdout, mod);
-
-        // Safe to free
-        ir_module_free(mod);
-        semantic_context_destroy(sem_ctx);
-        free(sem_ctx);
-    }
-
-    return result;
-}
