@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
         if (g) ifg_print(stdout, f->name, g);
 
         printf("\n┌── [3] STAGE 3: PRE-COLORING ──────────────────────────────\n");
-        precolor_t *p = precolor_build(f);
+        precolor_t *p = precolor_build(f, liv);
         if (p) precolor_print(stdout, f->name, p);
         printf("\n");
 
