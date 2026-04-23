@@ -38,6 +38,12 @@
         output wire o_iret_detected,      // IRET instruction has fired in the ID stage
         output wire o_br_taken            // A branch/jump was committed this cycle
     );
+
+`ifndef USE_DBP
+    localparam USE_DBP = 1'b1;
+`else
+    localparam USE_DBP = `USE_DBP;
+`endif
     
     /*************************************************************************************
      * SECTION 1. DECLARE WIRES / REGS
@@ -73,11 +79,21 @@
         wire _if_valid;             // IF stage has a valid instruction this cycle
         wire [15:0] _if_pc;         // PC associated with the instruction at the IF output
         wire [15:0] _if_insn;       // Instruction word at the IF output
+        wire _if_pred_taken;
+        wire [15:0] _if_pred_target;
+
+        // ---- Predictor lookup for current fetch PC ----
+        wire _pred_taken;
+        wire [15:0] _pred_target;
+        wire _pred_taken_eff;
+        wire [15:0] _pred_target_eff;
     
         // ---- IF/ID pipeline register outputs ----
         wire _ifid_valid;
         wire [15:0] _ifid_pc;
         wire [15:0] _ifid_insn;
+        wire _ifid_pred_taken;
+        wire [15:0] _ifid_pred_target;
     
         // ---- ID stage outputs ----
         wire _id_valid;             // Instruction in ID is valid
@@ -143,6 +159,11 @@
         wire _branch_take_commit;   // Branch is committed: valid & fired & taken
         wire _id_fire;              // ID stage "fires": instruction advances to EX this cycle
         wire _iret_event;           // IRET fires in ID this cycle
+        wire _bx_resolve;
+        wire _bx_mispredict;
+        wire _jal_redirect;
+        wire _redirect;
+        wire [15:0] _redirect_pc;
         
         
         // Data Forwarding Outputs
@@ -248,6 +269,27 @@
     
         // _branch_take_commit: a branch/jump is actually committed (taken and fired).
         assign _branch_take_commit = _id_branch_take & _id_fire;
+
+        // Branch resolution and redirect policy:
+        // - JAL always redirects in ID (unconditional computed target)
+        // - BX redirects only on misprediction
+        assign _bx_resolve = _id_fire & _id_is_bx; 
+
+        /* A mispredict happens in the following cases:
+           1) Predicted not taken, but branch is taken
+           2) Predicted taken, but branch is not taken
+           3) Predicted taken to wrong target (only possible for indirect branches, but we check for all)
+        */
+        assign _bx_mispredict = _bx_resolve &
+                    ((_ifid_pred_taken != _id_branch_take) |
+                     (_id_branch_take & (_ifid_pred_target != _id_branch_target)));
+
+        assign _jal_redirect = _id_fire & _id_is_jal;
+        assign _redirect = _jal_redirect | _bx_mispredict;
+        assign _redirect_pc = _id_branch_take ? _id_branch_target : (_id_pc + 16'h0002);
+
+        assign _pred_taken_eff = USE_DBP ? _pred_taken : 1'b0;
+        assign _pred_target_eff = USE_DBP ? _pred_target : 16'h0000;
     
         // One-shot IRQ edge detector: asserted only on the first cycle i_irq_take goes high,
         // preventing repeated accepts if the line stays asserted.
@@ -303,14 +345,18 @@
             .i_rst(i_rst),
             .i_hit(i_hit),                                     
             .i_stall(_stall_if),                                // Stall: hold current state
-            .i_flush(_branch_take_commit | _accept_irq),        // Flush on branch commit or IRQ
+            .i_flush(_redirect | _accept_irq),                  // Flush on redirect or IRQ
             .i_flush_pc(_pc_next),                              // Target PC to redirect to
             .i_pc(_pc),
             .i_insn(i_insn),
+            .i_pred_taken(_pred_taken_eff),
+            .i_pred_target(_pred_target_eff),
             .o_insn_ce(_if_insn_ce),
             .o_valid(_if_valid),
             .o_pc(_if_pc),
-            .o_insn(_if_insn)
+            .o_insn(_if_insn),
+            .o_pred_taken(_if_pred_taken),
+            .o_pred_target(_if_pred_target)
         );
     
         pipe_if_id u_pipe_if_id (
@@ -321,9 +367,13 @@
             .i_valid(_if_valid),
             .i_pc(_if_pc),
             .i_insn(_if_insn),
+            .i_pred_taken(_if_pred_taken),
+            .i_pred_target(_if_pred_target),
             .o_valid(_ifid_valid),
             .o_pc(_ifid_pc),
-            .o_insn(_ifid_insn)
+            .o_insn(_ifid_insn),
+            .o_pred_taken(_ifid_pred_taken),
+            .o_pred_target(_ifid_pred_target)
         );
     
     /*************************************************************************************
@@ -422,7 +472,7 @@
             .i_id_reads_rs(_id_reads_rs),
             .i_id_is_bx(_id_is_bx),
             // External events
-            .i_branch_take(_branch_take_commit),
+            .i_redirect(_redirect),
             .i_mem_wait(_mem_wait),
             .i_irq_take(_irq_take_oneshot),
             // ID/EX stage — what's pending in EX
@@ -649,6 +699,20 @@
     /*************************************************************************************
      * 2.8 PC and Global State Updates
      ************************************************************************************/
+
+        // Dynamic branch predictor (BHT + BTB): lookup on current fetch PC,
+        // update on resolved conditional branch in ID.
+        bpu u_bpu (
+            .i_clk(i_clk),
+            .i_rst(i_rst),
+            .i_lookup_pc(_pc),
+            .o_pred_taken(_pred_taken),
+            .o_pred_target(_pred_target),
+            .i_update_en(USE_DBP & _bx_resolve),
+            .i_update_pc(_id_pc),
+            .i_update_taken(_id_branch_take),
+            .i_update_target(_id_branch_target)
+        );
     
         // pc_next computes the next PC combinationally each cycle.
         // Priority: reset > IRQ vector > branch target > PC+2 (sequential)
@@ -657,8 +721,10 @@
             .i_rst_vec(i_i_ad_rst),
             .i_pc(_pc),
             .i_hit(i_hit),
-            .i_branch_take(_branch_take_commit),
-            .i_branch_target(_id_branch_target),
+            .i_pred_take(_pred_taken_eff),
+            .i_pred_target(_pred_target_eff),
+            .i_redirect(_redirect),
+            .i_redirect_pc(_redirect_pc),
             .i_irq_take(_accept_irq),
             .i_irq_vector(i_irq_vector),
             .o_pc_next(_pc_next)

@@ -20,9 +20,13 @@ module pipe_if_id(
     input wire i_valid,
   (* mark_debug = "true" *)   input wire [15:0] i_pc,
   (* mark_debug = "true" *)   input wire [15:0] i_insn,
+        input wire i_pred_taken,
+        input wire [15:0] i_pred_target,
     output reg o_valid,
     (* mark_debug = "true" *) output reg [15:0] o_pc,
-    (* mark_debug = "true" *) output reg [15:0] o_insn
+        (* mark_debug = "true" *) output reg [15:0] o_insn,
+        output reg o_pred_taken,
+        output reg [15:0] o_pred_target
 );
 
 /*************************************************************************************
@@ -41,10 +45,14 @@ module pipe_if_id(
             o_valid <= 1'b0;
             o_pc <= 16'h0000;
             o_insn <= `CPU_NOP_INSN;
+            o_pred_taken <= 1'b0;
+            o_pred_target <= 16'h0000;
         end else if (!i_stall) begin
             o_valid <= i_valid;
             o_pc <= i_pc;
             o_insn <= i_insn;
+            o_pred_taken <= i_pred_taken;
+            o_pred_target <= i_pred_target;
         end
         // If stalled: all outputs hold their current values (implicit register freeze)
     end

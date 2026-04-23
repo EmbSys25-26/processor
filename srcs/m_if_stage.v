@@ -42,10 +42,14 @@ module if_stage(
     input wire [15:0] i_flush_pc,       // PC to redirect to after flush
     input wire [15:0] i_pc,             // Current PC (from the top-level PC register)
     input wire [15:0] i_insn,           // Instruction word returned by instruction memory
+    input wire i_pred_taken,            // Predicted taken for i_pc
+    input wire [15:0] i_pred_target,    // Predicted target for i_pc
     output wire o_insn_ce,              // Chip-enable to instruction memory
     output wire o_valid,                // Instruction at output is valid
      output reg [15:0] o_pc,             // PC associated with the current instruction
-     output wire [15:0] o_insn           // Instruction word passed to IF/ID register
+     output wire [15:0] o_insn,          // Instruction word passed to IF/ID register
+    output reg o_pred_taken,            // Prediction metadata aligned with o_pc/o_insn
+    output reg [15:0] o_pred_target
 );
 
 /*************************************************************************************
@@ -54,6 +58,8 @@ module if_stage(
 
     // One intermediate register to align the PC with the instruction on insn
     reg [15:0] _pc_d1;          // PC delayed by 1 cycle
+    reg _pred_taken_d1;
+    reg [15:0] _pred_target_d1;
 
     // Counter for post-flush bubble cycles (flush bad inflight instructions)
     // After a flush, 1 bubble slot must be injected to drain the pipeline
@@ -90,12 +96,20 @@ module if_stage(
             // so there is no spurious old-PC instruction in flight.
             _pc_d1 <= i_pc;
             o_pc   <= i_pc;
+            _pred_taken_d1 <= 1'b0;
+            _pred_target_d1 <= 16'h0000;
+            o_pred_taken <= 1'b0;
+            o_pred_target <= 16'h0000;
             _flush_bubble <= 2'd0;
         end else if (i_flush) begin
             // Redirect: load the flush target into all pipeline stages immediately,
             // and arm the 1-cycle bubble counter.
             _pc_d1 <= i_flush_pc;
             o_pc   <= i_flush_pc;
+            _pred_taken_d1 <= 1'b0;
+            _pred_target_d1 <= 16'h0000;
+            o_pred_taken <= 1'b0;
+            o_pred_target <= 16'h0000;
             _flush_bubble <= 2'd1;
         end else begin
             if (i_hit & ~i_stall) begin
@@ -103,6 +117,10 @@ module if_stage(
                 // decrement the bubble counter if it is non-zero.
                 _pc_d1 <= i_pc;
                 o_pc   <= _pc_d1;
+                _pred_taken_d1 <= i_pred_taken;
+                _pred_target_d1 <= i_pred_target;
+                o_pred_taken <= _pred_taken_d1;
+                o_pred_target <= _pred_target_d1;
                 if (_flush_bubble != 2'd0) begin
                     _flush_bubble <= _flush_bubble - 2'd1;
                 end

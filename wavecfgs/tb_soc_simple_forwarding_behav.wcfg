@@ -3,106 +3,190 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="tb_Soc_behav.wdb" id="1">
+      <db_ref path="tb_soc_simple_behav.wdb" id="1">
          <top_modules>
             <top_module name="glbl" />
-            <top_module name="tb_Soc" />
+            <top_module name="tb_soc_simple" />
          </top_modules>
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="4,500.001 ns"></ZoomEndTime>
-      <Cursor1Time time="728.935 ns"></Cursor1Time>
+      <ZoomStartTime time="0.000000 us"></ZoomStartTime>
+      <ZoomEndTime time="2.000000 us"></ZoomEndTime>
+      <Cursor1Time time="0.000000 us"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="162"></NameColumnWidth>
-      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+      <NameColumnWidth column_width="174"></NameColumnWidth>
+      <ValueColumnWidth column_width="109"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="17" />
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_cpu/i_clk">
-      <obj_property name="ElementShortName">i_clk</obj_property>
-      <obj_property name="ObjectShortName">i_clk</obj_property>
+   <WVObjectSize size="34" />
+   <wvobject type="logic" fp_name="/tb_soc_simple/_clk">
+      <obj_property name="ElementShortName">_clk</obj_property>
+      <obj_property name="ObjectShortName">_clk</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_cpu/i_rst">
-      <obj_property name="ElementShortName">i_rst</obj_property>
-      <obj_property name="ObjectShortName">i_rst</obj_property>
+   <wvobject type="logic" fp_name="/tb_soc_simple/_rst">
+      <obj_property name="ElementShortName">_rst</obj_property>
+      <obj_property name="ObjectShortName">_rst</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/i_pc">
-      <obj_property name="ElementShortName">i_pc[15:0]</obj_property>
-      <obj_property name="ObjectShortName">i_pc[15:0]</obj_property>
+   <wvobject type="array" fp_name="/tb_soc_simple/_cycles">
+      <obj_property name="ElementShortName">_cycles[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_cycles[31:0]</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/_pc_d1">
-      <obj_property name="ElementShortName">_pc_d1[15:0]</obj_property>
-      <obj_property name="ObjectShortName">_pc_d1[15:0]</obj_property>
+
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/_pc">
+      <obj_property name="ElementShortName">_pc[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_pc[15:0]</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/o_pc">
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/_pc_next">
+      <obj_property name="ElementShortName">_pc_next[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_pc_next[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_if_stage/o_pc">
       <obj_property name="ElementShortName">o_pc[15:0]</obj_property>
       <obj_property name="ObjectShortName">o_pc[15:0]</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_cpu/u_pipe_if_id/o_valid">
-      <obj_property name="ElementShortName">o_valid</obj_property>
-      <obj_property name="ObjectShortName">o_valid</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/o_valid_r">
-      <obj_property name="ElementShortName">o_valid_r</obj_property>
-      <obj_property name="ObjectShortName">o_valid_r</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/i_insn">
-      <obj_property name="ElementShortName">i_insn[15:0]</obj_property>
-      <obj_property name="ObjectShortName">i_insn[15:0]</obj_property>
-      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/o_insn">
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_if_stage/o_insn">
       <obj_property name="ElementShortName">o_insn[15:0]</obj_property>
       <obj_property name="ObjectShortName">o_insn[15:0]</obj_property>
-      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_if_stage/_flush_bubble">
-      <obj_property name="ElementShortName">_flush_bubble[1:0]</obj_property>
-      <obj_property name="ObjectShortName">_flush_bubble[1:0]</obj_property>
-      <obj_property name="CustomSignalColor">#FFA500</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_pipe_if_id/i_pc">
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_id_stage/i_pc">
       <obj_property name="ElementShortName">i_pc[15:0]</obj_property>
       <obj_property name="ObjectShortName">i_pc[15:0]</obj_property>
-      <obj_property name="CustomSignalColor">#FF0000</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_pipe_if_id/i_insn">
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_id_stage/i_insn">
       <obj_property name="ElementShortName">i_insn[15:0]</obj_property>
       <obj_property name="ObjectShortName">i_insn[15:0]</obj_property>
-      <obj_property name="CustomSignalColor">#FF0000</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_pipe_if_id/o_insn">
-      <obj_property name="ElementShortName">o_insn[15:0]</obj_property>
-      <obj_property name="ObjectShortName">o_insn[15:0]</obj_property>
-      <obj_property name="CustomSignalColor">#FF0000</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
+
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_id_valid">
+      <obj_property name="ElementShortName">_id_valid</obj_property>
+      <obj_property name="ObjectShortName">_id_valid</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_id_stage/o_branch_target">
-      <obj_property name="ElementShortName">o_branch_target[15:0]</obj_property>
-      <obj_property name="ObjectShortName">o_branch_target[15:0]</obj_property>
-      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_id_exec_valid">
+      <obj_property name="ElementShortName">_id_exec_valid</obj_property>
+      <obj_property name="ObjectShortName">_id_exec_valid</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_cpu/u_id_stage/o_branch_take">
-      <obj_property name="ElementShortName">o_branch_take</obj_property>
-      <obj_property name="ObjectShortName">o_branch_take</obj_property>
-      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_id_fire">
+      <obj_property name="ElementShortName">_id_fire</obj_property>
+      <obj_property name="ObjectShortName">_id_fire</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/tb_Soc/dut/u_cpu/u_ex_stage/o_new_ccn">
-      <obj_property name="ElementShortName">o_new_ccn</obj_property>
-      <obj_property name="ObjectShortName">o_new_ccn</obj_property>
-      <obj_property name="CustomSignalColor">#DCDCDC</obj_property>
-      <obj_property name="UseCustomSignalColor">true</obj_property>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_idex_valid">
+      <obj_property name="ElementShortName">_idex_valid</obj_property>
+      <obj_property name="ObjectShortName">_idex_valid</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/tb_Soc/dut/u_cpu/u_regfile/_t2">
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_ex_valid">
+      <obj_property name="ElementShortName">_ex_valid</obj_property>
+      <obj_property name="ObjectShortName">_ex_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_exmem_valid">
+      <obj_property name="ElementShortName">_exmem_valid</obj_property>
+      <obj_property name="ObjectShortName">_exmem_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_mem_valid">
+      <obj_property name="ElementShortName">_mem_valid</obj_property>
+      <obj_property name="ObjectShortName">_mem_valid</obj_property>
+   </wvobject>
+
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_stall_if">
+      <obj_property name="ElementShortName">_stall_if</obj_property>
+      <obj_property name="ObjectShortName">_stall_if</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_stall_id">
+      <obj_property name="ElementShortName">_stall_id</obj_property>
+      <obj_property name="ObjectShortName">_stall_id</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_stall_ex">
+      <obj_property name="ElementShortName">_stall_ex</obj_property>
+      <obj_property name="ObjectShortName">_stall_ex</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_flush_ifid">
+      <obj_property name="ElementShortName">_flush_ifid</obj_property>
+      <obj_property name="ObjectShortName">_flush_ifid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_flush_idex">
+      <obj_property name="ElementShortName">_flush_idex</obj_property>
+      <obj_property name="ObjectShortName">_flush_idex</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/u_hazard_unit/_decode_hazard">
+      <obj_property name="ElementShortName">_decode_hazard</obj_property>
+      <obj_property name="ObjectShortName">_decode_hazard</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/u_hazard_unit/_load_use_hazard">
+      <obj_property name="ElementShortName">_load_use_hazard</obj_property>
+      <obj_property name="ObjectShortName">_load_use_hazard</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_mem_wait">
+      <obj_property name="ElementShortName">_mem_wait</obj_property>
+      <obj_property name="ObjectShortName">_mem_wait</obj_property>
+   </wvobject>
+
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_id_branch_take">
+      <obj_property name="ElementShortName">_id_branch_take</obj_property>
+      <obj_property name="ObjectShortName">_id_branch_take</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/_id_branch_target">
+      <obj_property name="ElementShortName">_id_branch_target[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_id_branch_target[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_branch_take_commit">
+      <obj_property name="ElementShortName">_branch_take_commit</obj_property>
+      <obj_property name="ObjectShortName">_branch_take_commit</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_accept_irq">
+      <obj_property name="ElementShortName">_accept_irq</obj_property>
+      <obj_property name="ObjectShortName">_accept_irq</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_gie">
+      <obj_property name="ElementShortName">_gie</obj_property>
+      <obj_property name="ObjectShortName">_gie</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_in_irq">
+      <obj_property name="ElementShortName">_in_irq</obj_property>
+      <obj_property name="ObjectShortName">_in_irq</obj_property>
+   </wvobject>
+
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/_exmem_rd">
+      <obj_property name="ElementShortName">_exmem_rd[3:0]</obj_property>
+      <obj_property name="ObjectShortName">_exmem_rd[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_forward_a">
+      <obj_property name="ElementShortName">_forward_a</obj_property>
+      <obj_property name="ObjectShortName">_forward_a</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_simple/dut/u_cpu/_forward_b">
+      <obj_property name="ElementShortName">_forward_b</obj_property>
+      <obj_property name="ObjectShortName">_forward_b</obj_property>
+   </wvobject>
+
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/_d_ad">
+      <obj_property name="ElementShortName">_d_ad[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_d_ad[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/_cpu_do">
+      <obj_property name="ElementShortName">_cpu_do[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_cpu_do[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/_mem_dout">
+      <obj_property name="ElementShortName">_mem_dout[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_mem_dout[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_regfile/_t0">
+      <obj_property name="ElementShortName">_t0[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_t0[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_regfile/_t1">
+      <obj_property name="ElementShortName">_t1[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_t1[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_simple/dut/u_cpu/u_regfile/_t2">
       <obj_property name="ElementShortName">_t2[15:0]</obj_property>
       <obj_property name="ObjectShortName">_t2[15:0]</obj_property>
    </wvobject>

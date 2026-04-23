@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_soc_bpu_eval_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_soc_bpu_eval" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="6,255.684 ns"></ZoomStartTime>
+      <ZoomEndTime time="6,371.585 ns"></ZoomEndTime>
+      <Cursor1Time time="6,333.034 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="362"></NameColumnWidth>
+      <ValueColumnWidth column_width="128"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="33" />
+   <wave_markers>
+      <marker label="" time="705000" />
+      <marker label="" time="955000" />
+      <marker label="" time="6425000" />
+      <marker label="" time="6605076" />
+      <marker label="" time="6275000" />
+   </wave_markers>
+   <wvobject fp_name="divider57" type="divider">
+      <obj_property name="label">Hazards</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_stall_if">
+      <obj_property name="ElementShortName">_stall_if</obj_property>
+      <obj_property name="ObjectShortName">_stall_if</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_flush_ifid">
+      <obj_property name="ElementShortName">_flush_ifid</obj_property>
+      <obj_property name="ObjectShortName">_flush_ifid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_stall_id">
+      <obj_property name="ElementShortName">_stall_id</obj_property>
+      <obj_property name="ObjectShortName">_stall_id</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider54" type="divider">
+      <obj_property name="label">BPU</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group60">
+      <obj_property name="label">BPU</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_bpu/i_lookup_pc">
+         <obj_property name="ElementShortName">i_lookup_pc[15:0]</obj_property>
+         <obj_property name="ObjectShortName">i_lookup_pc[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_bpu/_lookup_idx">
+         <obj_property name="ElementShortName">_lookup_idx[5:0]</obj_property>
+         <obj_property name="ObjectShortName">_lookup_idx[5:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_bpu/_lookup_tag">
+         <obj_property name="ElementShortName">_lookup_tag[8:0]</obj_property>
+         <obj_property name="ObjectShortName">_lookup_tag[8:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_bpu/_lookup_hit">
+         <obj_property name="ElementShortName">_lookup_hit</obj_property>
+         <obj_property name="ObjectShortName">_lookup_hit</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="divider67" type="divider">
+      <obj_property name="label">Branch Prediction</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#0000FF</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_bpu/o_pred_taken">
+      <obj_property name="ElementShortName">o_pred_taken</obj_property>
+      <obj_property name="ObjectShortName">o_pred_taken</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_bpu/o_pred_target">
+      <obj_property name="ElementShortName">o_pred_target[15:0]</obj_property>
+      <obj_property name="ObjectShortName">o_pred_target[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider318" type="divider">
+      <obj_property name="label">IF</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#D2691E</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_if_insn">
+      <obj_property name="ElementShortName">_if_insn[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_if_insn[15:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FF0080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_if_stage/i_pc">
+      <obj_property name="ElementShortName">i_pc[15:0]</obj_property>
+      <obj_property name="ObjectShortName">i_pc[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_if_stage/_pc_d1">
+      <obj_property name="ElementShortName">_pc_d1[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_pc_d1[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_if_pc">
+      <obj_property name="ElementShortName">_if_pc[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_if_pc[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider314" type="divider">
+      <obj_property name="label">ID</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#800080</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_id_pc">
+      <obj_property name="ElementShortName">_id_pc[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_id_pc[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_id_stage/i_insn">
+      <obj_property name="ElementShortName">i_insn[15:0]</obj_property>
+      <obj_property name="ObjectShortName">i_insn[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_id_is_bx">
+      <obj_property name="ElementShortName">_id_is_bx</obj_property>
+      <obj_property name="ObjectShortName">_id_is_bx</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider58" type="divider">
+      <obj_property name="label">Branch Resolution</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#00FF7F</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_id_branch_take">
+      <obj_property name="ElementShortName">_id_branch_take</obj_property>
+      <obj_property name="ObjectShortName">_id_branch_take</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_id_branch_target">
+      <obj_property name="ElementShortName">_id_branch_target[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_id_branch_target[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_bx_resolve">
+      <obj_property name="ElementShortName">_bx_resolve</obj_property>
+      <obj_property name="ObjectShortName">_bx_resolve</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_bx_mispredict">
+      <obj_property name="ElementShortName">_bx_mispredict</obj_property>
+      <obj_property name="ObjectShortName">_bx_mispredict</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_redirect_pc">
+      <obj_property name="ElementShortName">_redirect_pc[15:0]</obj_property>
+      <obj_property name="ObjectShortName">_redirect_pc[15:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFD700</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_redirect">
+      <obj_property name="ElementShortName">_redirect</obj_property>
+      <obj_property name="ObjectShortName">_redirect</obj_property>
+      <obj_property name="CustomSignalColor">#FFD700</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group219">
+      <obj_property name="label">Registers</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_regfile/_s0">
+         <obj_property name="ElementShortName">_s0[15:0]</obj_property>
+         <obj_property name="ObjectShortName">_s0[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_regfile/_t3">
+         <obj_property name="ElementShortName">_t3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">_t3[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_regfile/_t2">
+         <obj_property name="ElementShortName">_t2[15:0]</obj_property>
+         <obj_property name="ObjectShortName">_t2[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_regfile/_t1">
+         <obj_property name="ElementShortName">_t1[15:0]</obj_property>
+         <obj_property name="ObjectShortName">_t1[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_regfile/_t0">
+         <obj_property name="ElementShortName">_t0[15:0]</obj_property>
+         <obj_property name="ObjectShortName">_t0[15:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="divider65" type="divider">
+      <obj_property name="label">Prediction Path</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group66">
+      <obj_property name="label">Prediction Path</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_pred_taken_eff">
+         <obj_property name="ElementShortName">_pred_taken_eff</obj_property>
+         <obj_property name="ObjectShortName">_pred_taken_eff</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_pred_target_eff">
+         <obj_property name="ElementShortName">_pred_target_eff[15:0]</obj_property>
+         <obj_property name="ObjectShortName">_pred_target_eff[15:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_ifid_pred_taken">
+         <obj_property name="ElementShortName">_ifid_pred_taken</obj_property>
+         <obj_property name="ObjectShortName">_ifid_pred_taken</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_ifid_pred_target">
+         <obj_property name="ElementShortName">_ifid_pred_target[15:0]</obj_property>
+         <obj_property name="ObjectShortName">_ifid_pred_target[15:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="divider59" type="divider">
+      <obj_property name="label">Throughput Metrics</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_id_fire">
+      <obj_property name="ElementShortName">_id_fire</obj_property>
+      <obj_property name="ObjectShortName">_id_fire</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/_cycles">
+      <obj_property name="ElementShortName">_cycles[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_cycles[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/_retired">
+      <obj_property name="ElementShortName">_retired[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_retired[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_soc_bpu_eval/_branches">
+      <obj_property name="ElementShortName">_branches[31:0]</obj_property>
+      <obj_property name="ObjectShortName">_branches[31:0]</obj_property>
+   </wvobject>
+</wave_config>

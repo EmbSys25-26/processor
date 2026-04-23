@@ -30,7 +30,7 @@
 //   o_stall_id   — Stall the ID stage (freeze IF/ID register)
 //   o_stall_ex   — Stall the EX stage (freeze ID/EX and EX/MEM)
 //   o_bubble_ex  — Inject a NOP bubble into ID/EX (decode hazard only)
-//   o_flush_ifid — Flush IF/ID (branch taken or IRQ accepted)
+//   o_flush_ifid — Flush IF/ID (redirect or IRQ accepted)
 //   o_flush_idex — Flush ID/EX (IRQ accepted)
 //   o_accept_irq — Acknowledge an interrupt this cycle
 //
@@ -51,7 +51,7 @@ module hazard_unit(
     input wire i_id_is_bx,            // Instruction in ID is a conditional branch (BX)
 
     // ---- External control events ----
-    input wire i_branch_take,          // A branch/jump was committed in ID this cycle
+    input wire i_redirect,             // Control-flow redirect required this cycle
     input wire i_mem_wait,             // MEM stage is waiting for data memory
     input wire i_irq_take,             // An interrupt request is pending (one-shot)
 
@@ -135,12 +135,11 @@ module hazard_unit(
     // EX stalls only during a MEM wait (the pipeline above MEM freezes).
     assign o_stall_ex  = i_mem_wait;
 
-    // Flush IF/ID on branch commit or IRQ accept (both redirect the PC).
-    assign o_flush_ifid = i_branch_take | _accept_irq;
+    // Flush IF/ID on redirect or IRQ accept.
+    assign o_flush_ifid = i_redirect | _accept_irq;
 
     // Flush ID/EX on IRQ accept to squash the instruction that was about to enter EX.
-    // (A branch commit does NOT need to flush ID/EX because the instruction in ID
-    //  is the branch itself — it has already been handled.)
+    // (Redirect recovery does not require flushing ID/EX here; IRQ accept does.)
     // Upon Load-use hazard detection => Load insn is in EX and previous insn in ID
     // The goal is not to insert a bubble on the ID/EX register that propagates along the pipeline.
     assign o_flush_idex = _accept_irq || (_decode_hazard & ~i_mem_wait);

@@ -41,8 +41,8 @@ module brom_1kb_be(
         $readmemh("srcs/mem/mem_lo.hex", _mem_l);
         $readmemh("srcs/mem/mem_hi.hex", _mem_h);
 `else
-        $readmemh("/home/mendes/Transferências/processor-pipeline-4-stage/srcs/mem/mem_lo.hex", _mem_l);
-        $readmemh("/home/mendes/Transferências/processor-pipeline-4-stage/srcs/mem/mem_hi.hex", _mem_h);
+        $readmemh("/home/vasco/processor/srcs/mem/mem_lo.hex", _mem_l);
+        $readmemh("/home/vasco/processor/srcs/mem/mem_hi.hex", _mem_h);
 `endif
     end
 /*************************************************************************************

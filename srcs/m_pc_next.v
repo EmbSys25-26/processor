@@ -14,8 +14,10 @@ module pc_next(
     input wire [15:0] i_rst_vec,
     input wire [15:0] i_pc,
     input wire i_hit,
-    input wire i_branch_take,
-    input wire [15:0] i_branch_target,
+    input wire i_pred_take,
+    input wire [15:0] i_pred_target,
+    input wire i_redirect,
+    input wire [15:0] i_redirect_pc,
     input wire i_irq_take,
     input wire [15:0] i_irq_vector,
     output wire [15:0] o_pc_next
@@ -34,6 +36,7 @@ module pc_next(
 
     assign o_pc_next = i_rst ? i_rst_vec :
                        (i_irq_take ? i_irq_vector :
-                       (i_branch_take ? i_branch_target : _pc_seq));
+                       (i_redirect ? i_redirect_pc :
+                       (i_pred_take ? i_pred_target : _pc_seq)));
 
 endmodule
