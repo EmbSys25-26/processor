@@ -288,6 +288,9 @@
         assign _redirect = _jal_redirect | _bx_mispredict;
         assign _redirect_pc = _id_branch_take ? _id_branch_target : (_id_pc + 16'h0002);
 
+        // USE_DBP as a switch for enabling/disabling the dynamic branch predictor;
+        // When enabled the IF stage gets its prediction from the BPU;
+        // When disabled, all branches are predicted not taken with the
         assign _pred_taken_eff = USE_DBP ? _pred_taken : 1'b0;
         assign _pred_target_eff = USE_DBP ? _pred_target : 16'h0000;
     
@@ -420,6 +423,7 @@
             .o_branch_take(_id_branch_take),
             .o_is_imm(_id_is_imm),
             .o_is_bx(_id_is_bx),
+            .o_br_uncond(_br_uncond),
             .o_is_cli(_id_is_cli),
             .o_is_sti(_id_is_sti),
             .o_is_iret(_id_is_iret),
@@ -471,6 +475,7 @@
             .i_id_reads_rd(_id_reads_rd),
             .i_id_reads_rs(_id_reads_rs),
             .i_id_is_bx(_id_is_bx),
+            .i_id_br_uncond(_br_uncond),
             // External events
             .i_redirect(_redirect),
             .i_mem_wait(_mem_wait),

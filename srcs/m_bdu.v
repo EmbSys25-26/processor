@@ -14,7 +14,8 @@ module bdu(
     input wire i_ccn,
     input wire i_ccc,
     input wire i_ccv,
-    output wire o_take
+    output wire o_take,
+    output wire o_br_uncond
 );
 
 /*************************************************************************************
@@ -41,5 +42,6 @@ module bdu(
     end
 
     assign o_take = i_cond[0] ? ~_t : _t; // invert condition for odd cond values (e.g. from BEQ to BNE, BC to BNC, etc.)
+    assign o_br_uncond = ((i_cond & 4'b1110) == `BR_BR);
 
 endmodule

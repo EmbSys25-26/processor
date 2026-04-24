@@ -110,7 +110,7 @@ module if_stage(
             _pred_target_d1 <= 16'h0000;
             o_pred_taken <= 1'b0;
             o_pred_target <= 16'h0000;
-            _flush_bubble <= 2'd1;
+            _flush_bubble <= 2'd1; // note if its need 2
         end else begin
             if (i_hit & ~i_stall) begin
                 // Normal advance: shift the PC pipeline forward and

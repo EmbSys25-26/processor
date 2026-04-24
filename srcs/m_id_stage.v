@@ -64,6 +64,7 @@ module id_stage(
 
     output wire o_is_imm,
     output wire o_is_bx,
+    output wire o_br_uncond,
     output wire o_is_cli,
     output wire o_is_sti,
     output wire o_is_iret,
@@ -167,6 +168,7 @@ module id_stage(
 
     // BDU output
     wire _bdu_take;     // 1 if branch condition is satisfied
+    wire _br_uncond;    // 1 if the instruction is an unconditional branch (unconditional BX)
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
@@ -224,13 +226,14 @@ module id_stage(
 
     // Branch Decision Unit: evaluates the condition-code field against the
     // current architectural flags to decide if a BX branch is taken.
-    bdu u_bdu (
+    bdu u_bdu ( 
         .i_cond(_cond),
         .i_ccz(i_ccz),
         .i_ccn(i_ccn),
         .i_ccc(i_ccc),
         .i_ccv(i_ccv),
-        .o_take(_bdu_take)
+        .o_take(_bdu_take),
+        .o_br_uncond(_br_uncond)
     );
 
     // ---- Immediate construction ----
@@ -291,6 +294,7 @@ module id_stage(
 
     assign o_is_imm      = _is_imm;
     assign o_is_bx       = _is_bx;
+    assign o_br_uncond   = _br_uncond && _is_bx; // Unconditional branch if it's a BX and the BDU identifies it as unconditional 
     assign o_is_cli      = _is_cli;
     assign o_is_sti      = _is_sti;
     assign o_is_iret     = _is_iret;

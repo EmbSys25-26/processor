@@ -11,21 +11,23 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="6,255.684 ns"></ZoomStartTime>
-      <ZoomEndTime time="6,371.585 ns"></ZoomEndTime>
-      <Cursor1Time time="6,333.034 ns"></Cursor1Time>
+      <ZoomStartTime time="710.914 ns"></ZoomStartTime>
+      <ZoomEndTime time="875.165 ns"></ZoomEndTime>
+      <Cursor1Time time="818.564 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="362"></NameColumnWidth>
-      <ValueColumnWidth column_width="128"></ValueColumnWidth>
+      <NameColumnWidth column_width="350"></NameColumnWidth>
+      <ValueColumnWidth column_width="133"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="33" />
+   <WVObjectSize size="34" />
    <wave_markers>
-      <marker label="" time="705000" />
       <marker label="" time="955000" />
       <marker label="" time="6425000" />
       <marker label="" time="6605076" />
       <marker label="" time="6275000" />
+      <marker label="" time="705000" />
+      <marker label="" time="785000" />
+      <marker label="" time="815000" />
    </wave_markers>
    <wvobject fp_name="divider57" type="divider">
       <obj_property name="label">Hazards</obj_property>
@@ -120,6 +122,10 @@
    <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/_id_is_bx">
       <obj_property name="ElementShortName">_id_is_bx</obj_property>
       <obj_property name="ObjectShortName">_id_is_bx</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_soc_bpu_eval/dut/u_cpu/u_id_stage/o_br_uncond">
+      <obj_property name="ElementShortName">o_br_uncond</obj_property>
+      <obj_property name="ObjectShortName">o_br_uncond</obj_property>
    </wvobject>
    <wvobject fp_name="divider58" type="divider">
       <obj_property name="label">Branch Resolution</obj_property>

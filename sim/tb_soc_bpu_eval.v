@@ -14,8 +14,10 @@ module tb_soc_bpu_eval;
     integer _branches = 0;
     integer _mispredicts = 0;
     integer _redirects = 0;
+    integer _halt_hits = 0;
 
     integer _max_cycles = 4000;
+    integer _halt_hits_target = 8;
 
     real _cpi;
     real _mispredict_rate;
@@ -51,6 +53,9 @@ module tb_soc_bpu_eval;
         if ($value$plusargs("MAX_CYCLES=%d", _max_cycles)) begin
             $display("[tb_soc_bpu_eval] MAX_CYCLES override = %0d", _max_cycles);
         end
+        if ($value$plusargs("HALT_HITS=%d", _halt_hits_target)) begin
+            $display("[tb_soc_bpu_eval] HALT_HITS override = %0d", _halt_hits_target);
+        end
 
         wait_clocks(12);
         _rst = 1'b0;
@@ -63,7 +68,7 @@ module tb_soc_bpu_eval;
         if (!_rst) begin
             _cycles <= _cycles + 1;
 
-            if (dut.u_cpu._id_fire) begin
+            if (dut.u_cpu._id_fire) begin  
                 _retired <= _retired + 1;
             end
 
@@ -78,6 +83,13 @@ module tb_soc_bpu_eval;
             if (dut.u_cpu._redirect) begin
                 _redirects <= _redirects + 1;
             end
+
+            // Stop once the halt self-loop is observed enough times at commit.
+            if (dut.u_cpu._id_fire &&
+                (dut.u_cpu._id_pc == 16'h01CA) &&
+                (dut.u_cpu._ifid_insn == 16'h9000)) begin
+                _halt_hits <= _halt_hits + 1;
+            end
         end
     end
 
@@ -86,7 +98,7 @@ module tb_soc_bpu_eval;
  ************************************************************************************/
     initial begin
         wait (_rst == 1'b0);
-        wait (_cycles >= _max_cycles);
+        wait ((_halt_hits >= _halt_hits_target) || (_cycles >= _max_cycles));
 
         if (_retired > 0) begin
             _cpi = _cycles;
@@ -104,6 +116,10 @@ module tb_soc_bpu_eval;
 
         $display("METRIC cycles=%0d retired=%0d branches=%0d mispredicts=%0d redirects=%0d", _cycles, _retired, _branches, _mispredicts, _redirects);
         $display("METRIC cpi=%0f mispredict_rate=%0f", _cpi, _mispredict_rate);
+        if (_halt_hits >= _halt_hits_target)
+            $display("METRIC stop_reason=halt_loop_observed halt_hits=%0d", _halt_hits);
+        else
+            $display("METRIC stop_reason=max_cycles timeout_cycles=%0d", _max_cycles);
         $display("PASS tb_soc_bpu_eval");
         $finish;
     end

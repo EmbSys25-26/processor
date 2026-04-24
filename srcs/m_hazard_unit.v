@@ -48,7 +48,8 @@ module hazard_unit(
     input wire [3:0] i_id_rs,          // Rs field
     input wire i_id_reads_rd,          // Instruction reads Rd as a source
     input wire i_id_reads_rs,          // Instruction reads Rs as a source
-    input wire i_id_is_bx,            // Instruction in ID is a conditional branch (BX)
+    input wire i_id_is_bx,             // Instruction in ID is a conditional branch (BX)
+    input wire i_id_br_uncond,         // Instruction in ID is an unconditional branch (unconditional BX)
 
     // ---- External control events ----
     input wire i_redirect,             // Control-flow redirect required this cycle
@@ -110,7 +111,8 @@ module hazard_unit(
     // Since CC flags are now purely registered (no write-first bypass),
     // BX would read stale flags. Insert a 1-cycle stall so BX reads
     // the updated flags from the register on the next cycle.
-    assign _cc_hazard = i_id_valid & i_id_is_bx & i_idex_updates_cc;
+    // Added unconditional branch flag, since they dont need stalls as they dont depend on CC flags
+    assign _cc_hazard = i_id_valid & i_id_is_bx & (!i_id_br_uncond) & i_idex_updates_cc;
 
     // Any hazard that requires inserting a stall/bubble at the decode boundary
     assign _decode_hazard = _load_use_hazard | _cc_hazard;

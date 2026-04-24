@@ -36,9 +36,9 @@ module bpu(
 /*************************************************************************************
  * SECTION 1. DECLARE WIRES / REGS
  ************************************************************************************/
-    localparam integer BPU_ENTRIES = 64;
-    localparam integer BPU_IDX_W = 6;
-    localparam integer BPU_TAG_W = 9;
+    localparam integer BPU_ENTRIES = 128;
+    localparam integer BPU_IDX_W = 7;
+    localparam integer BPU_TAG_W = 8;
 
     // Branch History Table (BHT) storage: 2-bit saturating counters
     reg [1:0] _bht [0:BPU_ENTRIES-1];
@@ -52,15 +52,15 @@ module bpu(
     reg [BPU_TAG_W-1:0] _btb_tag [0:BPU_ENTRIES-1];
     reg [15:0] _btb_target [0:BPU_ENTRIES-1];
 
-    // 6-bit lookup index and 9-bit tag derived from the lookup PC
+    // 7-bit lookup index and 8-bit tag derived from the lookup PC
     wire [BPU_IDX_W-1:0] _lookup_idx;
     // Directly use the tag bits from the PC for lookup
     wire [BPU_TAG_W-1:0] _lookup_tag;
     wire _lookup_hit;
 
-    // 6-bit update index
+    // 7-bit update index
     wire [BPU_IDX_W-1:0] _update_idx;
-    // 9-bit update tag extracted from the resolved branch PC
+    // 8-bit update tag extracted from the resolved branch PC
     wire [BPU_TAG_W-1:0] _update_tag;
 
     integer _i;
@@ -76,8 +76,8 @@ module bpu(
     // - bit[0] is always 0 (halfword aligned)
     // - bits[6:1] provide 6 index bits for 64 entries
     // Therefore, index with [6:1] and use [15:7] as tag.
-    assign _lookup_idx = i_lookup_pc[6:1];
-    assign _lookup_tag = i_lookup_pc[15:7];
+    assign _lookup_idx = i_lookup_pc[BPU_IDX_W:1];
+    assign _lookup_tag = i_lookup_pc[15:(16-BPU_TAG_W)];
 
     // A BTB hit occurs when the valid bit is set and the tag matches the lookup tag.
     assign _lookup_hit = _btb_valid[_lookup_idx] && (_btb_tag[_lookup_idx] == _lookup_tag);
@@ -98,8 +98,8 @@ module bpu(
         The update logic uses the resolved branch PC to compute the index and tag for the entry 
         to update.
      */
-    assign _update_idx = i_update_pc[6:1];
-    assign _update_tag = i_update_pc[15:7];
+    assign _update_idx = i_update_pc[BPU_IDX_W:1];
+    assign _update_tag = i_update_pc[15:(16-BPU_TAG_W)];
 
     always @(posedge i_clk) begin
         if (i_rst) begin
