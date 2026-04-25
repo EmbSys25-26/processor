@@ -30,7 +30,9 @@ SRCS    = main.c \
           $(IR_DIR)/ir_lower_stmt.c  \
           $(REGALLOC_DIR)/liveness.c \
           $(REGALLOC_DIR)/interference.c \
-          $(REGALLOC_DIR)/precolor.c
+          $(REGALLOC_DIR)/precolor.c \
+          $(REGALLOC_DIR)/regalloc.c \
+          $(REGALLOC_DIR)/spill.c
 
 TARGET  = compiler
 

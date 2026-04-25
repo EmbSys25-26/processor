@@ -17,7 +17,6 @@ static const char *phys_name[] = {
     "r9",  /* 9 — s1    */
     "r10", /* 10 — s2   */
     "r11", /* 11 — s3   */
-    "r12", /* 12 — fp   */
 };
 
 precolor_t *precolor_build(const ir_function_t *func, const ir_liveness_t *liv)
@@ -46,10 +45,42 @@ precolor_t *precolor_build(const ir_function_t *func, const ir_liveness_t *liv)
     for (unsigned i = 0; i < nparams; i++)
         p->color[i] = (phys_reg_t)(PHYS_R1 + i);  /* r1, r2, r3 */
 
-    /* Patterns 2, 3, 4 + call_live: scan every instruction in every block.
-     * We walk in the same block/instruction order as liveness.c so that
-     * instr_idx corresponds correctly to liv->instr[instr_idx]. */
+    /* ── Pass 1: Scout — build call_live completely before any precoloring.
+     *
+     * A call result that is also call-live cannot be pinned to r1: r1 is
+     * caller-saved and would be clobbered by the very next call.  We must
+     * know the full call_live set before deciding which results to pin.
+     * Walking in the same instruction order as liveness.c keeps instr_idx
+     * aligned with liv->instr[]. */
     unsigned instr_idx = 0;
+    for (const ir_block_t *b = func->entry; b; b = b->next) {
+        for (const ir_instr_t *ins = b->head; ins; ins = ins->next) {
+            if (ins->op == IR_OP_CALL && liv && instr_idx < liv->n_instrs) {
+                vreg_set_union_into(&p->call_live,
+                                    &liv->instr[instr_idx].live_after);
+                /* The call's own result is born here, not live across it. */
+                if (ins->dst.kind == IR_VAL_VREG)
+                    vreg_set_remove(&p->call_live, ins->dst.as.vreg);
+            }
+            instr_idx++;
+        }
+    }
+
+    /* ── Pass 2: Painter — apply precolor rules now that call_live is complete.
+     *
+     * Pattern 3 (call result) is the only rule that changes: a result vreg
+     * that is in call_live is NOT pinned to r1 — the allocator will assign
+     * it to a callee-saved register (r8–r11) through the call_live mechanism.
+     * A result vreg that is NOT in call_live dies before any subsequent call,
+     * so r1 is safe and the pin is applied as before.
+     *
+     * Pattern 4 cross-vreg conflict: before pinning a call-argument vreg to
+     * r1/r2/r3, verify that no other vreg simultaneously live at this call
+     * site is already pinned to the same register.  Two interfering vregs
+     * with the same precolor would produce an incorrect coloring that neither
+     * Stage 4 (which treats precolors as final) nor Stage 5 would catch.
+     * live_before(call) = live_after(call) ∪ {call arguments}. */
+    instr_idx = 0;
     for (const ir_block_t *b = func->entry; b; b = b->next) {
         for (const ir_instr_t *ins = b->head; ins; ins = ins->next) {
 
@@ -58,45 +89,54 @@ precolor_t *precolor_build(const ir_function_t *func, const ir_liveness_t *liv)
                 p->color[ins->src[0].as.vreg] = PHYS_R1;
 
             if (ins->op == IR_OP_CALL) {
-                /* Pattern 3: %vd = call @f(...)  →  return value lands in r1 (a0) */
-                if (ins->dst.kind == IR_VAL_VREG)
-                    p->color[ins->dst.as.vreg] = PHYS_R1;
+                /* Pattern 3: %vd = call @f(...)  →  return value lands in r1.
+                 * Only pin if the vreg is NOT call-live: if it must survive
+                 * a subsequent call it cannot stay in r1 (caller-saved). */
+                if (ins->dst.kind == IR_VAL_VREG) {
+                    unsigned vr = ins->dst.as.vreg;
+                    if (!vreg_set_has(&p->call_live, vr))
+                        p->color[vr] = PHYS_R1;
+                }
 
-                /* Pattern 4 (Caller ABI): arguments → r1, r2, r3
-                 * The first PHYS_ARG_REGS arguments must be in r1/r2/r3 at
-                 * the call site.  We pre-color the argument vregs now.
-                 * A conflict (vreg already bound to a different physical reg)
-                 * means Stage 4 must insert a COPY before the call. */
+                /* Pattern 4 (Caller ABI): first PHYS_ARG_REGS arguments
+                 * must be in r1/r2/r3 at the call site.
+                 * Skip call-live vregs: they must survive subsequent calls in
+                 * callee-saved registers; the code generator inserts the copy
+                 * to r1/r2/r3 at the call boundary. */
                 unsigned nargs = ins->as.call.arg_count < PHYS_ARG_REGS
                                  ? ins->as.call.arg_count : PHYS_ARG_REGS;
                 for (unsigned i = 0; i < nargs; i++) {
                     const ir_value_t *arg = &ins->as.call.args[i];
                     if (arg->kind != IR_VAL_VREG) continue;
                     unsigned vr      = arg->as.vreg;
+                    if (vreg_set_has(&p->call_live, vr)) continue;
                     phys_reg_t want  = (phys_reg_t)(PHYS_R1 + i);
                     phys_reg_t exist = p->color[vr];
-                    if (exist == PHYS_NONE)
-                        p->color[vr] = want;
-                    /* If exist == want: consistent, nothing to do.
-                     * If exist != want: genuine conflict — leave as-is;
-                     * Stage 4 will resolve it with a copy. */
-                }
-
-                /* Caller-saved clobber: any vreg live AFTER this call
-                 * that was NOT defined by the call itself is live across
-                 * the call boundary.  It must not be assigned a
-                 * caller-saved register (r1–r7) by Stage 4. */
-                if (liv && instr_idx < liv->n_instrs) {
-                    vreg_set_union_into(&p->call_live,
-                                        &liv->instr[instr_idx].live_after);
-                    /* Exclude the call's own return-value vreg: it is
-                     * produced by the call (in r1) and does not need to
-                     * survive across it. */
-                    if (ins->dst.kind == IR_VAL_VREG)
-                        vreg_set_remove(&p->call_live, ins->dst.as.vreg);
+                    if (exist == PHYS_NONE) {
+                        /* Cross-vreg conflict check: is `want` already held by
+                         * any vreg that is live just before this call?
+                         * live_before = live_after(call) ∪ call arguments. */
+                        int conflict = 0;
+                        for (unsigned ov = 0; ov < p->n_vregs && !conflict; ov++) {
+                            if (ov == vr || p->color[ov] != want) continue;
+                            /* Check live_after of this call instruction. */
+                            int live = (liv && instr_idx < liv->n_instrs) &&
+                                       vreg_set_has(&liv->instr[instr_idx].live_after, ov);
+                            /* Also check the call's own argument list (uses). */
+                            for (unsigned j = 0; j < ins->as.call.arg_count && !live; j++) {
+                                if (ins->as.call.args[j].kind == IR_VAL_VREG &&
+                                    ins->as.call.args[j].as.vreg == ov)
+                                    live = 1;
+                            }
+                            if (live) conflict = 1;
+                        }
+                        if (!conflict)
+                            p->color[vr] = want;
+                    }
+                    /* exist == want: consistent.
+                     * exist != want: conflict — Stage 4 resolves with a copy. */
                 }
             }
-
             instr_idx++;
         }
     }
@@ -129,6 +169,9 @@ int precolor_is_call_live(const precolor_t *p, unsigned vreg)
     return vreg_set_has(&p->call_live, vreg);
 }
 
+
+
+/*=======================================PRiNT====================================================*/
 void precolor_print(FILE *out, const char *func_name, const precolor_t *p)
 {
     fprintf(out, "precolor for @%s  (%u vreg%s):\n",
