@@ -2,10 +2,10 @@
 // Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
-// Date        : Sun Apr 12 14:52:02 2026
-// Host        : juliano20-ROG-Strix-G531GW-G531GW running 64-bit Ubuntu 24.04.3 LTS
+// Date        : Sat Apr 25 15:07:35 2026
+// Host        : josesilvaa-IdeaPad-Slim-3-14IAH8 running 64-bit Ubuntu 22.04.5 LTS
 // Command     : write_verilog -force -mode funcsim
-//               /home/juliano20/dev/processor_i2s/processor/processor.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_sim_netlist.v
+//               /home/josesilvaa/processor/processor.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_sim_netlist.v
 // Design      : clk_wiz_0
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
