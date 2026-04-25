@@ -2,17 +2,17 @@ connect
 targets -set -filter {name =~ "APU*"}
 stop
 targets -set -filter {name =~ "xc7z010*"}
-fpga -f "/home/juliano20/dev/processor_i2s/processor/processor.runs/impl_1/soc.bit"
+fpga -f "/home/josesilvaa/processor/processor.runs/impl_1/soc.bit"
 after 2000
 targets -set -filter {name =~ "APU*"}
-loadhw "/home/juliano20/dev/processor_i2s/processor/soc_i2s.xsa"
-source "/home/juliano20/dev/processor_i2s/processor/i2s_music/ps7_init.tcl"
+loadhw "/home/josesilvaa/processor/soc_i2s.xsa"
+source "/home/josesilvaa/processor/i2s_music/ps7_init.tcl"
 ps7_init
 ps7_post_config
 after 5000
 set DMA_BASE   0x40400000
 set MUSIC_ADDR 0x01000000
-set MUSIC_FILE "/home/juliano20/dev/processor_i2s/processor/i2s_music/musica.bin"
+set MUSIC_FILE "/home/josesilvaa/processor/i2s_music/song1.bin"
 set dma_sr [mrd -value [expr {$DMA_BASE + 0x04}]]
 puts [format "DMA SR initial: 0x%08X" $dma_sr]
 puts "Loading music..."
