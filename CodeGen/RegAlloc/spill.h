@@ -50,7 +50,7 @@
  */
 
 #include <stdio.h>
-#include "../IR/ir.h"
+#include "../../IR/ir.h"
 #include "regalloc.h"
 #include "interference.h"
 

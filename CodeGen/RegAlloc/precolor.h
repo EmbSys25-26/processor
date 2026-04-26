@@ -47,7 +47,7 @@
  */
 
 #include <stdio.h>
-#include "../IR/ir.h"
+#include "../../IR/ir.h"
 #include "liveness.h"
 
 /* ─── physical register identifiers ────────────────────────────────────────── */

@@ -6,7 +6,8 @@ PARSER_DIR   = Parser
 UTILS_DIR    = Util
 SEM_DIR      = Semantic
 IR_DIR       = IR
-REGALLOC_DIR = RegAlloc
+CODEGEN_DIR  = CodeGen
+REGALLOC_DIR = CodeGen/RegAlloc
 
 # Integrated source list
 SRCS    = main.c \
@@ -32,7 +33,8 @@ SRCS    = main.c \
           $(REGALLOC_DIR)/interference.c \
           $(REGALLOC_DIR)/precolor.c \
           $(REGALLOC_DIR)/regalloc.c \
-          $(REGALLOC_DIR)/spill.c
+          $(REGALLOC_DIR)/spill.c  \
+          $(CODEGEN_DIR)/codegen.c  
 
 TARGET  = compiler
 
@@ -59,4 +61,5 @@ clean:
 	rm -f $(PARSER_DIR)/parser.tab.c \
 	      $(PARSER_DIR)/parser.tab.h \
 	      $(LEXER_DIR)/lex.yy.c      \
+	      output.asm \
 	      $(TARGET)

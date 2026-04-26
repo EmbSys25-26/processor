@@ -77,6 +77,7 @@ typedef struct {
  * ──────────────────────────────────────────────────────────── */
 
 typedef enum {
+    IR_OP_INVALID = 0,
     /* §7.1 Constants / moves */
     IR_OP_CONST,        /* %dst = <imm>                  */
     IR_OP_COPY,         /* %dst = %src                   */

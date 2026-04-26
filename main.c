@@ -11,11 +11,12 @@
 #include "Semantic/semantic.h"
 #include "IR/ir.h"
 #include "IR/ir_lower.h"
-#include "RegAlloc/liveness.h"
-#include "RegAlloc/interference.h"
-#include "RegAlloc/precolor.h"
-#include "RegAlloc/regalloc.h"
-#include "RegAlloc/spill.h"
+#include "CodeGen/RegAlloc/liveness.h"
+#include "CodeGen/RegAlloc/interference.h"
+#include "CodeGen/RegAlloc/precolor.h"
+#include "CodeGen/RegAlloc/regalloc.h"
+#include "CodeGen/RegAlloc/spill.h"
+#include "CodeGen/codegen.h"
 
 extern FILE *yyin;
 extern int yyparse(void);
@@ -187,6 +188,12 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Usage: %s <source_file.c>\n", argv[0]);
         return 1;
     }
+    
+    FILE *asm_out = fopen("output.asm", "w");
+    if (!asm_out) {
+        fprintf(stderr, "Error: cannot open output.asm\n");
+        return 1;
+    }
 
     /* 1. Lexical & Syntax Analysis */
     yyin = open_source_file(argv[1]);
@@ -266,7 +273,10 @@ int main(int argc, char **argv) {
                 printf("\n┌── [5] FINAL IR (physical registers) ───────────────────\n");
                 if (ra) print_ir_with_regs(stdout, f, ra);
                 printf("\n");
-
+                if (ra){ 
+                    codegen_emit_function(asm_out, f, ra);
+                    printf("Assembly written to output.asm \n");
+                }
                 regalloc_free(ra);
                 precolor_free(p);
                 ifg_free(g);
@@ -296,5 +306,6 @@ int main(int argc, char **argv) {
 
     /* Cleanup */
     ir_module_free(mod);
+    fclose(asm_out);
     return 0;
 }

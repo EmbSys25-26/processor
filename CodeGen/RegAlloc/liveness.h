@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "../IR/ir.h"
+#include "../../IR/ir.h"
 
 /* ─── vreg bitset ─────────────────────────────────────────────────────────── */
 

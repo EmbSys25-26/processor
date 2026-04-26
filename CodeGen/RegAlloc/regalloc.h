@@ -42,7 +42,7 @@
  */
 
 #include <stdio.h>
-#include "../IR/ir.h"
+#include "../../IR/ir.h"
 #include "interference.h"
 #include "precolor.h"
 
