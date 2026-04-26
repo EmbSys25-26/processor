@@ -48,7 +48,9 @@ module id_stage(
     input wire i_ccn,                   // Negative flag
     input wire i_ccc,                   // Carry flag
     input wire i_ccv,                   // Overflow flag
+    input wire [`GHR_W-1:0] i_lookup_ghr,   
 
+    output wire [`GHR_W-1:0] o_lookup_ghr, // Pass GHR value through to IF/ID for prediction metadata
     output wire o_valid,                // Instruction is valid
     output wire o_exec_valid,           // Instruction dispatches to EX stage
     output wire [15:0] o_pc,
@@ -59,7 +61,7 @@ module id_stage(
     output wire [15:0] o_rd_data,
     output wire [15:0] o_rs_data,
     output wire [15:0] o_imm16,         // Fully-extended 16-bit immediate
-   (* mark_debug = "true" *)  output wire [15:0] o_branch_target, // Resolved branch/jump target address
+    (* mark_debug = "true" *)  output wire [15:0] o_branch_target, // Resolved branch/jump target address
     (* mark_debug = "true" *) output wire o_branch_take,          // Branch is taken (combinational — before commit gate)
 
     output wire o_is_imm,
@@ -278,11 +280,11 @@ module id_stage(
     // ---- Output assignments ----
     assign o_valid       = i_valid;
     
-    
     // Exclude IMM/CLI/STI/BX from the EX pipeline: they are handled entirely in ID
     assign o_exec_valid  = i_valid & ~(_is_imm | _is_cli | _is_sti | _is_bx);
     
-    
+    assign o_lookup_ghr = i_lookup_ghr; // Pass the GHR value latched in IF/ID
+
     assign o_pc          = i_pc;    // Pass data Unchanged
     assign o_rd          = _rd;
     assign o_rs          = _rs;

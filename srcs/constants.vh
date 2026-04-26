@@ -61,4 +61,13 @@
 `define CPU_NOP_INSN  16'hF000
 `define CPU_IRET_INSN 16'h00E0 // JAL r0, lr, #0
 
+/*************************************************************************************
+ * BPU CONSTANTS
+ ************************************************************************************/
+`define GHR_W 6             // Global History Register Width 
+`define BPU_ENTRIES 64      // Must be equal to 2^BPU_IDX_W
+// BPU_IDX_W + BPU_TAG_W should be == 15 to fit within the 16-bit PC indexing scheme
+`define BPU_IDX_W 6
+`define BPU_TAG_W 9
+
 `endif

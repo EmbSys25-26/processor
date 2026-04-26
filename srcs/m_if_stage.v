@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+`include "constants.vh"
+
 // ============================================================
 // IF (Instruction Fetch) stage
 //
@@ -37,19 +39,21 @@ module if_stage(
     input wire i_clk,
     input wire i_rst,
     input wire i_hit,                   // Instruction memory hit (instruction is valid)
-     input wire i_stall,                 // Stall request from the hazard unit
+    input wire i_stall,                 // Stall request from the hazard unit
     input wire i_flush,                 // Flush request (branch taken or IRQ accepted)
     input wire [15:0] i_flush_pc,       // PC to redirect to after flush
     input wire [15:0] i_pc,             // Current PC (from the top-level PC register)
     input wire [15:0] i_insn,           // Instruction word returned by instruction memory
     input wire i_pred_taken,            // Predicted taken for i_pc
     input wire [15:0] i_pred_target,    // Predicted target for i_pc
+    input wire [`GHR_W-1:0] i_lookup_ghr,      // GHR value for prediction metadata
     output wire o_insn_ce,              // Chip-enable to instruction memory
     output wire o_valid,                // Instruction at output is valid
-     output reg [15:0] o_pc,             // PC associated with the current instruction
-     output wire [15:0] o_insn,          // Instruction word passed to IF/ID register
+    output reg [15:0] o_pc,             // PC associated with the current instruction
+    output wire [15:0] o_insn,          // Instruction word passed to IF/ID register
     output reg o_pred_taken,            // Prediction metadata aligned with o_pc/o_insn
-    output reg [15:0] o_pred_target
+    output reg [15:0] o_pred_target,
+    output reg [`GHR_W-1:0] o_lookup_ghr       // GHR value passed to IF/ID for prediction metadata
 );
 
 /*************************************************************************************
@@ -60,11 +64,12 @@ module if_stage(
     reg [15:0] _pc_d1;          // PC delayed by 1 cycle
     reg _pred_taken_d1;
     reg [15:0] _pred_target_d1;
+    reg [`GHR_W-1:0] _lookup_ghr_d1;
 
     // Counter for post-flush bubble cycles (flush bad inflight instructions)
     // After a flush, 1 bubble slot must be injected to drain the pipeline
     // before a valid instruction from the new PC can appear.
-  (* mark_debug = "true" *)   reg [1:0]_flush_bubble;    // Counts down from 1 to 0 after a flush
+    (* mark_debug = "true" *)   reg [1:0]_flush_bubble;    // Counts down from 1 to 0 after a flush
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
@@ -100,6 +105,8 @@ module if_stage(
             _pred_target_d1 <= 16'h0000;
             o_pred_taken <= 1'b0;
             o_pred_target <= 16'h0000;
+            _lookup_ghr_d1 <= {`GHR_W{1'b0}};
+            o_lookup_ghr <= {`GHR_W{1'b0}};
             _flush_bubble <= 2'd0;
         end else if (i_flush) begin
             // Redirect: load the flush target into all pipeline stages immediately,
@@ -110,6 +117,8 @@ module if_stage(
             _pred_target_d1 <= 16'h0000;
             o_pred_taken <= 1'b0;
             o_pred_target <= 16'h0000;
+            _lookup_ghr_d1 <= {`GHR_W{1'b0}};
+            o_lookup_ghr <= {`GHR_W{1'b0}};
             _flush_bubble <= 2'd1; // note if its need 2
         end else begin
             if (i_hit & ~i_stall) begin
@@ -121,6 +130,8 @@ module if_stage(
                 _pred_target_d1 <= i_pred_target;
                 o_pred_taken <= _pred_taken_d1;
                 o_pred_target <= _pred_target_d1;
+                _lookup_ghr_d1 <= i_lookup_ghr;
+                o_lookup_ghr <= _lookup_ghr_d1;
                 if (_flush_bubble != 2'd0) begin
                     _flush_bubble <= _flush_bubble - 2'd1;
                 end

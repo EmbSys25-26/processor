@@ -74,6 +74,14 @@
         reg _irq_req_latched;      // Edge-detect latch: prevents re-accepting the same IRQ level
         wire _irq_take_oneshot;    // Single-cycle pulse: rising edge of i_irq_take
     
+        // ---- BPU outputs ----
+        wire _pred_taken;
+        wire [15:0] _pred_target;
+        wire _pred_taken_eff;           // Multiplexed with USE_DBP for enabling/disabling BPU
+        wire [15:0] _pred_target_eff;   // Multiplexed with USE_dbp for enabling/disabling BPU
+        wire [`GHR_W-1:0] _lookup_ghr;  // GHR value from BPU for temporal alignment with the later update stage
+        
+    
         // ---- IF stage outputs ----
         wire _if_insn_ce;           // Instruction-memory CE from IF stage
         wire _if_valid;             // IF stage has a valid instruction this cycle
@@ -81,20 +89,17 @@
         wire [15:0] _if_insn;       // Instruction word at the IF output
         wire _if_pred_taken;
         wire [15:0] _if_pred_target;
-
-        // ---- Predictor lookup for current fetch PC ----
-        wire _pred_taken;
-        wire [15:0] _pred_target;
-        wire _pred_taken_eff;
-        wire [15:0] _pred_target_eff;
-    
+        wire [`GHR_W-1:0] _if_lookup_ghr;   // GHR value latched in IF/ID register for use in ID stage
+        
         // ---- IF/ID pipeline register outputs ----
         wire _ifid_valid;
         wire [15:0] _ifid_pc;
         wire [15:0] _ifid_insn;
         wire _ifid_pred_taken;
         wire [15:0] _ifid_pred_target;
+        wire [`GHR_W-1:0] _ifid_lookup_ghr; // GHR value latched in IF/ID register for use in ID stage (for gshare indexing)
     
+
         // ---- ID stage outputs ----
         wire _id_valid;             // Instruction in ID is valid
         wire _id_exec_valid;        // Instruction should be dispatched to EX (not IMM/CLI/STI/BX pseudo-ops)
@@ -138,7 +143,9 @@
         wire _id_reads_rd;          // Instruction reads Rd as source (for hazard detection)
         wire _id_reads_rs;          // Instruction reads Rs as source
         wire _id_is_load;
-    
+        wire _br_uncond;            // Decoded branch as unconditional
+        wire [`GHR_W-1:0] _update_ghr;  // GHR value latched in ID stage for use in ID (for gshare indexing)
+        
         // ---- Register file wires ----
         wire _rf_we;                // Register-file write-enable (from WB or IRQ accept)
         wire [3:0] _rf_wa;          // Write address
@@ -354,12 +361,14 @@
             .i_insn(i_insn),
             .i_pred_taken(_pred_taken_eff),
             .i_pred_target(_pred_target_eff),
+            .i_lookup_ghr(_lookup_ghr),
             .o_insn_ce(_if_insn_ce),
             .o_valid(_if_valid),
             .o_pc(_if_pc),
             .o_insn(_if_insn),
             .o_pred_taken(_if_pred_taken),
-            .o_pred_target(_if_pred_target)
+            .o_pred_target(_if_pred_target),
+            .o_lookup_ghr(_if_lookup_ghr)
         );
     
         pipe_if_id u_pipe_if_id (
@@ -372,11 +381,13 @@
             .i_insn(_if_insn),
             .i_pred_taken(_if_pred_taken),
             .i_pred_target(_if_pred_target),
+            .i_lookup_ghr(_if_lookup_ghr),  // GHR for branch prediction metadata
             .o_valid(_ifid_valid),
             .o_pc(_ifid_pc),
             .o_insn(_ifid_insn),
             .o_pred_taken(_ifid_pred_taken),
-            .o_pred_target(_ifid_pred_target)
+            .o_pred_target(_ifid_pred_target),
+            .o_lookup_ghr(_ifid_lookup_ghr) // GHR for branchprediction metadata
         );
     
     /*************************************************************************************
@@ -409,6 +420,7 @@
             .i_ccn(_ccn),
             .i_ccc(_ccc),
             .i_ccv(_ccv),
+            .i_lookup_ghr(_ifid_lookup_ghr),    // GHR for branch prediction metadata
             .o_valid(_id_valid),
             .o_exec_valid(_id_exec_valid),
             .o_pc(_id_pc),
@@ -451,7 +463,8 @@
             .o_restore_cc(_id_restore_cc),
             .o_reads_rd(_id_reads_rd),
             .o_reads_rs(_id_reads_rs),
-            .o_is_load(_id_is_load)
+            .o_is_load(_id_is_load),
+            .o_lookup_ghr(_update_ghr)  // GHR for branch prediction metadata
         );
     
         // Register-file read addresses come from the decoded Rd/Rs fields in ID
@@ -711,12 +724,15 @@
             .i_clk(i_clk),
             .i_rst(i_rst),
             .i_lookup_pc(_pc),
-            .o_pred_taken(_pred_taken),
-            .o_pred_target(_pred_target),
             .i_update_en(USE_DBP & _bx_resolve),
             .i_update_pc(_id_pc),
             .i_update_taken(_id_branch_take),
-            .i_update_target(_id_branch_target)
+            .i_update_target(_id_branch_target),
+            .i_update_ghr(_update_ghr),
+            .i_br_uncond(_br_uncond),
+            .o_pred_taken(_pred_taken),
+            .o_pred_target(_pred_target),
+            .o_lookup_ghr(_lookup_ghr)
         );
     
         // pc_next computes the next PC combinationally each cycle.
