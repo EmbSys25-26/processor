@@ -14,6 +14,7 @@ module i2s_mmio (
     input  wire        i_clk,         // System clock (100 MHz)
     input  wire        i_rst,         // Active-high reset
     input  wire        i_mclk,        // Master clock (12.288 MHz)
+    input  wire [1:0]  i_btn_vol,     // Dedicated volume buttons: [0]=down, [1]=up
     input  wire        i_sel,         // Peripheral chip-select
     input  wire        i_we,          // Write enable
     input  wire        i_re,          // Read enable
@@ -47,6 +48,7 @@ module i2s_mmio (
 //    localparam [2:0] TX_RIGHT = 3'd1; // [W/R] Right channel PCM sample (commits pair)
     localparam [2:0] STATUS   = 3'd2; // [R]   Read-only status flags
     localparam [2:0] CTRL     = 3'd3; // [W/R] Control flags (Enable, IRQ, etc.)
+    localparam [2:0] VOLUME   = 3'd4; // [W/R] SSM2603 playback volume mirror
 
 /****************************************************************************
  * 1.2 MMIO REGISTERS
@@ -65,6 +67,17 @@ module i2s_mmio (
     reg         _codec_init_done;
     wire        _init_busy;
     reg         _init_error;
+    reg [6:0]   _volume_code;
+    reg [3:0]   _volume_req_seq;
+    reg [3:0]   _volume_req_seen;
+    reg [20:0]  _db_cnt_down;
+    reg [20:0]  _db_cnt_up;
+    reg         _db_stable_down;
+    reg         _db_stable_up;
+    reg         _db_prev_down;
+    reg         _db_prev_up;
+    wire        _vol_down_pulse;
+    wire        _vol_up_pulse;
     
     reg [15:0]  _rdata;
     wire        _tx_ready;
@@ -109,6 +122,13 @@ module i2s_mmio (
     reg [3:0]   _init_reg_idx;
     reg [15:0]  _init_seq [0:10];     // Array holds the 11 I2C initialization commands
     reg [15:0]  _init_word;
+    reg         _fsm_is_volume;
+    reg         _vol_phase;
+
+    localparam [20:0] DEBOUNCE_MAX = 21'd2_000_000;  // 20 ms @ 100 MHz
+    localparam [6:0]  VOLUME_MIN   = 7'h30;
+    localparam [6:0]  VOLUME_MAX   = 7'h7F;
+    localparam [6:0]  VOLUME_STEP  = 7'd4;
 
 /*************************************************************************************
  * 2.1 Static Assignments
@@ -124,6 +144,8 @@ module i2s_mmio (
     assign _init_busy = (_init_state != INIT_IDLE);
     assign _tx_ready = _codec_init_done && !_fifo_empty_s2;
     assign _tx_busy  = _tx_enable && _tx_ready;
+    assign _vol_down_pulse = _db_stable_down & ~_db_prev_down;
+    assign _vol_up_pulse   = _db_stable_up & ~_db_prev_up;
     
     
     //NEW: AXI4-Stream to FIFO Logic
@@ -206,6 +228,12 @@ module i2s_mmio (
             _fifo_aempty_s2 <= 1'b1;
             _underrun_s1    <= 1'b0;
             _underrun_s2    <= 1'b0;
+            _db_cnt_down    <= 21'd0;
+            _db_cnt_up      <= 21'd0;
+            _db_stable_down <= 1'b0;
+            _db_stable_up   <= 1'b0;
+            _db_prev_down   <= 1'b0;
+            _db_prev_up     <= 1'b0;
         end else begin
             _fifo_empty_s1  <= _fifo_empty_bclk;
             _fifo_aempty_s1 <= _fifo_aempty_bclk;
@@ -214,6 +242,24 @@ module i2s_mmio (
             _fifo_empty_s2  <= _fifo_empty_s1;
             _fifo_aempty_s2 <= _fifo_aempty_s1;
             _underrun_s2    <= _underrun_s1;
+
+            _db_prev_down <= _db_stable_down;
+            if (i_btn_vol[0] == _db_stable_down)
+                _db_cnt_down <= 21'd0;
+            else if (_db_cnt_down == DEBOUNCE_MAX - 1) begin
+                _db_stable_down <= i_btn_vol[0];
+                _db_cnt_down    <= 21'd0;
+            end else
+                _db_cnt_down <= _db_cnt_down + 21'd1;
+
+            _db_prev_up <= _db_stable_up;
+            if (i_btn_vol[1] == _db_stable_up)
+                _db_cnt_up <= 21'd0;
+            else if (_db_cnt_up == DEBOUNCE_MAX - 1) begin
+                _db_stable_up <= i_btn_vol[1];
+                _db_cnt_up    <= 21'd0;
+            end else
+                _db_cnt_up <= _db_cnt_up + 21'd1;
         end
     end
 
@@ -245,6 +291,9 @@ end
             _init_reg_idx     <= 4'd0;
             _codec_init_done  <= 1'b0;
             _init_error       <= 1'b0;
+            _volume_req_seen  <= 4'd0;
+            _fsm_is_volume    <= 1'b0;
+            _vol_phase        <= 1'b0;
             
             _i2c_start_pulse  <= 1'b0;
             _i2c_tx_push      <= 1'b0;
@@ -266,18 +315,29 @@ end
 
             case (_init_state)
                 INIT_IDLE: begin
-    if (_init_trigger) begin
-        _init_trigger    <= 1'b0;
-        _init_reg_idx    <= 4'd0;
-        _codec_init_done <= 1'b0;
-        _init_state      <= INIT_PUSH_H;
-    end
-end
+                    if (_init_trigger) begin
+                        _init_trigger    <= 1'b0;
+                        _init_reg_idx    <= 4'd0;
+                        _codec_init_done <= 1'b0;
+                        _fsm_is_volume   <= 1'b0;
+                        _init_state      <= INIT_PUSH_H;
+                    end else if (_codec_init_done && (_volume_req_seq != _volume_req_seen)) begin
+                        _volume_req_seen <= _volume_req_seq;
+                        _fsm_is_volume   <= 1'b1;
+                        _vol_phase       <= 1'b0;
+                        _init_word       <= {7'h02, 2'b00, _volume_code};
+                        _init_state      <= INIT_PUSH_H;
+                    end
+                end
                 INIT_PUSH_H: begin
-                    _init_word        <= _init_seq[_init_reg_idx];
                     _i2c_tx_push      <= 1'b1;
-                    _i2c_tx_push_data <= {_init_seq[_init_reg_idx][15:9],
-                                          _init_seq[_init_reg_idx][8]};
+                    if (_fsm_is_volume) begin
+                        _i2c_tx_push_data <= {_init_word[15:9], _init_word[8]};
+                    end else begin
+                        _init_word        <= _init_seq[_init_reg_idx];
+                        _i2c_tx_push_data <= {_init_seq[_init_reg_idx][15:9],
+                                              _init_seq[_init_reg_idx][8]};
+                    end
                     _init_state       <= INIT_PUSH_L;
                 end
 
@@ -299,6 +359,7 @@ end
                         _i2c_clr_done <= 1'b1;
                         if (_i2c_ack_err) begin
                             _init_error <= 1'b1;       // Abort on NACK
+                            _fsm_is_volume <= 1'b0;
                             _init_state <= INIT_IDLE;
                         end else begin
                             _init_state <= INIT_CLR;
@@ -307,17 +368,29 @@ end
                 end
 
                 INIT_CLR: begin
-                    // Iterate up to index 10 to include all 11 commands
-                    if (_init_reg_idx == 4'd10) begin
-                        _init_state      <= INIT_DONE;
+                    if (_fsm_is_volume) begin
+                        if (!_vol_phase) begin
+                            _init_word  <= {7'h03, 2'b00, _volume_code};
+                            _init_state <= INIT_PUSH_H;
+                            _vol_phase  <= 1'b1;
+                        end else begin
+                            _fsm_is_volume <= 1'b0;
+                            _init_state    <= INIT_IDLE;
+                        end
                     end else begin
-                        _init_reg_idx <= _init_reg_idx + 4'd1;
-                        _init_state   <= INIT_PUSH_H;
+                        // Iterate up to index 10 to include all 11 commands
+                        if (_init_reg_idx == 4'd10) begin
+                            _init_state      <= INIT_DONE;
+                        end else begin
+                            _init_reg_idx <= _init_reg_idx + 4'd1;
+                            _init_state   <= INIT_PUSH_H;
+                        end
                     end
                 end
 
                 INIT_DONE: begin
                     _codec_init_done <= 1'b1;
+                    _fsm_is_volume   <= 1'b0;
                     _init_state      <= INIT_IDLE;
                 end
 
@@ -337,7 +410,23 @@ end
             _irq_enable       <= 1'b0;
             _irq_pend         <= 1'b0;
             _underrun_latched <= 1'b0;
+            _volume_code      <= 7'h79;
+            _volume_req_seq   <= 4'd0;
         end else begin
+            if (_vol_down_pulse && (_volume_code > VOLUME_MIN)) begin
+                if (_volume_code < (VOLUME_MIN + VOLUME_STEP))
+                    _volume_code <= VOLUME_MIN;
+                else
+                    _volume_code <= _volume_code - VOLUME_STEP;
+                _volume_req_seq <= _volume_req_seq + 4'd1;
+            end else if (_vol_up_pulse && (_volume_code < VOLUME_MAX)) begin
+                if (_volume_code > (VOLUME_MAX - VOLUME_STEP))
+                    _volume_code <= VOLUME_MAX;
+                else
+                    _volume_code <= _volume_code + VOLUME_STEP;
+                _volume_req_seq <= _volume_req_seq + 4'd1;
+            end
+
             // Sticky latch for audio underrun (processor failed to feed FIFO in time)
             if (_underrun_s2)
                 _underrun_latched <= 1'b1;
@@ -366,6 +455,15 @@ end
                         if (i_wdata[2]) _irq_pend <= 1'b0;         // Write-1-to-Clear IRQ
                         if (i_wdata[3]) _underrun_latched <= 1'b0; // Write-1-to-Clear Underrun
                     end
+                    VOLUME: begin
+                        if (i_wdata[6:0] < VOLUME_MIN)
+                            _volume_code <= VOLUME_MIN;
+                        else if (i_wdata[6:0] > VOLUME_MAX)
+                            _volume_code <= VOLUME_MAX;
+                        else
+                            _volume_code <= i_wdata[6:0];
+                        _volume_req_seq <= _volume_req_seq + 4'd1;
+                    end
                     default: ;
                 endcase
             end
@@ -386,6 +484,7 @@ end
                                     _tx_ready, _init_error, _init_busy, 
                                     _codec_init_done, _fifo_full};
                 CTRL:     _rdata = {11'b0, 3'b000, _irq_enable, _tx_enable};
+                VOLUME:   _rdata = {9'b0, _volume_code};
                 default:  _rdata = 16'h0000;
             endcase
         end

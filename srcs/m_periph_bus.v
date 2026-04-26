@@ -169,6 +169,7 @@ module periph_bus(
         .i_clk       (i_clk),
         .i_rst       (i_rst),
         .i_mclk      (i_i2s_mclk),
+        .i_btn_vol   (i_par_i[1:0]),
         .i_sel       (_sel_i2s),
         .i_we        (i_we),
         .i_re        (i_re),

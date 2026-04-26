@@ -2,10 +2,10 @@
 // Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
-// Date        : Sat Apr 25 15:07:35 2026
-// Host        : josesilvaa-IdeaPad-Slim-3-14IAH8 running 64-bit Ubuntu 22.04.5 LTS
+// Date        : Sun Apr 26 21:40:27 2026
+// Host        : diofilfrcos-HP-Notebook running 64-bit Ubuntu 22.04.5 LTS
 // Command     : write_verilog -force -mode synth_stub
-//               /home/josesilvaa/processor/processor.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_stub.v
+//               /home/diofilfrcos/Desktop/i2s_playstop_skip_jose/processor-dev-i2s-ddr3/processor.gen/sources_1/ip/clk_wiz_0_1/clk_wiz_0_stub.v
 // Design      : clk_wiz_0
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7z010clg400-1

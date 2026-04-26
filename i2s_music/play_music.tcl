@@ -2,11 +2,11 @@ connect
 targets -set -filter {name =~ "APU*"}
 stop
 targets -set -filter {name =~ "xc7z010*"}
-fpga -f "/home/josesilvaa/processor/processor.runs/impl_1/soc.bit"
+fpga -f "/home/diofilfrcos/Desktop/i2s_playstop_skip_jose/processor-dev-i2s-ddr3/processor.runs/impl_1/soc.bit"
 after 2000
 targets -set -filter {name =~ "APU*"}
-loadhw "/home/josesilvaa/processor/soc_i2s.xsa"
-source "/home/josesilvaa/processor/i2s_music/ps7_init.tcl"
+loadhw "/home/diofilfrcos/Desktop/i2s_playstop_skip_jose/processor-dev-i2s-ddr3/soc_i2s.xsa"
+source "/home/diofilfrcos/Desktop/i2s_playstop_skip_jose/processor-dev-i2s-ddr3/i2s_music/ps7_init.tcl"
 ps7_init
 ps7_post_config
 after 5000
@@ -20,10 +20,10 @@ set SONG2_ADDR 0x02000000
 set SONG3_ADDR 0x05000000
 set SONG4_ADDR 0x08000000
 
-set SONG1_FILE "/home/josesilvaa/processor/i2s_music/song1.bin"
-set SONG2_FILE "/home/josesilvaa/processor/i2s_music/song2.bin"
-set SONG3_FILE "/home/josesilvaa/processor/i2s_music/song3.bin"
-set SONG4_FILE "/home/josesilvaa/processor/i2s_music/song4.bin"
+set SONG1_FILE "/home/diofilfrcos/Desktop/i2s_playstop_skip_jose/processor-dev-i2s-ddr3/i2s_music/song1.bin"
+set SONG2_FILE "/home/diofilfrcos/Desktop/i2s_playstop_skip_jose/processor-dev-i2s-ddr3/i2s_music/song2.bin"
+set SONG3_FILE "/home/diofilfrcos/Desktop/i2s_playstop_skip_jose/processor-dev-i2s-ddr3/i2s_music/song3.bin"
+set SONG4_FILE "/home/diofilfrcos/Desktop/i2s_playstop_skip_jose/processor-dev-i2s-ddr3/i2s_music/song4.bin"
 
 set SONG1_LEN  [file size $SONG1_FILE]
 set SONG2_LEN  [file size $SONG2_FILE]
