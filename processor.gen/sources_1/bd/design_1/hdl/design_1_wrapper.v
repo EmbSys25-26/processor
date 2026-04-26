@@ -2,8 +2,8 @@
 //Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
-//Date        : Sun Apr 12 17:24:10 2026
-//Host        : juliano20-ROG-Strix-G531GW-G531GW running 64-bit Ubuntu 24.04.3 LTS
+//Date        : Sat Apr 25 19:43:47 2026
+//Host        : josesilvaa-IdeaPad-Slim-3-14IAH8 running 64-bit Ubuntu 22.04.5 LTS
 //Command     : generate_target design_1_wrapper.bd
 //Design      : design_1_wrapper
 //Purpose     : IP block netlist
@@ -37,7 +37,8 @@ module design_1_wrapper
     M_AXIS_MM2S_0_tkeep,
     M_AXIS_MM2S_0_tlast,
     M_AXIS_MM2S_0_tready,
-    M_AXIS_MM2S_0_tvalid);
+    M_AXIS_MM2S_0_tvalid,
+    btn2_i);
   inout [14:0]DDR_addr;
   inout [2:0]DDR_ba;
   inout DDR_cas_n;
@@ -65,6 +66,7 @@ module design_1_wrapper
   output M_AXIS_MM2S_0_tlast;
   input M_AXIS_MM2S_0_tready;
   output M_AXIS_MM2S_0_tvalid;
+  input btn2_i;
 
   wire [14:0]DDR_addr;
   wire [2:0]DDR_ba;
@@ -93,6 +95,7 @@ module design_1_wrapper
   wire M_AXIS_MM2S_0_tlast;
   wire M_AXIS_MM2S_0_tready;
   wire M_AXIS_MM2S_0_tvalid;
+  wire btn2_i;
 
   design_1 design_1_i
        (.DDR_addr(DDR_addr),
@@ -121,5 +124,6 @@ module design_1_wrapper
         .M_AXIS_MM2S_0_tkeep(M_AXIS_MM2S_0_tkeep),
         .M_AXIS_MM2S_0_tlast(M_AXIS_MM2S_0_tlast),
         .M_AXIS_MM2S_0_tready(M_AXIS_MM2S_0_tready),
-        .M_AXIS_MM2S_0_tvalid(M_AXIS_MM2S_0_tvalid));
+        .M_AXIS_MM2S_0_tvalid(M_AXIS_MM2S_0_tvalid),
+        .btn2_i(btn2_i));
 endmodule

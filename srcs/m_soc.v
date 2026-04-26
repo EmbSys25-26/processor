@@ -262,7 +262,8 @@ module soc(
         .M_AXIS_MM2S_0_tlast  (),
         .M_AXIS_MM2S_0_tready (axis_i2s_tready),
         .M_AXIS_MM2S_0_tvalid (axis_i2s_tvalid),
-        .FCLK_CLK0            (_fclk)   // ← 100 MHz do PS para todo o sistema
+        .FCLK_CLK0            (_fclk),  // ← 100 MHz do PS para todo o sistema
+        .btn2_i               (i_par_i[2])  // BTN2 (K19) → AXI GPIO for PS skip
     );
 
 endmodule

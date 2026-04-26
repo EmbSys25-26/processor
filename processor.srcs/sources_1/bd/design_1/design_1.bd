@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xB553E129413F61A7",
+      "boundary_crc": "0x97F7D577CF3BEB0E",
       "device": "xc7z010clg400-1",
       "gen_directory": "../../../../processor.gen/sources_1/bd/design_1",
       "name": "design_1",
@@ -15,7 +15,8 @@
       "axi_dma_0": "",
       "smartconnect_0": "",
       "smartconnect_1": "",
-      "proc_sys_reset_0": ""
+      "proc_sys_reset_0": "",
+      "axi_gpio_0": ""
     },
     "interface_ports": {
       "DDR": {
@@ -285,6 +286,9 @@
             "value_src": "default_prop"
           }
         }
+      },
+      "btn2_i": {
+        "direction": "I"
       }
     },
     "components": {
@@ -478,6 +482,9 @@
           },
           "PCW_I2C_RESET_ENABLE": {
             "value": "0"
+          },
+          "PCW_IRQ_F2P_INTR": {
+            "value": "1"
           },
           "PCW_IRQ_F2P_MODE": {
             "value": "DIRECT"
@@ -1298,6 +1305,9 @@
           "PCW_USE_CROSS_TRIGGER": {
             "value": "0"
           },
+          "PCW_USE_FABRIC_INTERRUPT": {
+            "value": "1"
+          },
           "PCW_USE_M_AXI_GP0": {
             "value": "1"
           },
@@ -1462,7 +1472,7 @@
             "value": "0"
           },
           "c_sg_length_width": {
-            "value": "23"
+            "value": "26"
           }
         },
         "interface_ports": {
@@ -1608,6 +1618,9 @@
         "inst_hier_path": "smartconnect_1",
         "has_run_ip_tcl": "true",
         "parameters": {
+          "NUM_MI": {
+            "value": "2"
+          },
           "NUM_SI": {
             "value": "1"
           }
@@ -1626,11 +1639,12 @@
               }
             },
             "bridges": [
-              "M00_AXI"
+              "M00_AXI",
+              "M01_AXI"
             ],
             "bd_attributes": {
               "BRIDGES": {
-                "value": "M00_AXI",
+                "value": "M00_AXI:M01_AXI",
                 "value_src": "auto"
               },
               "TYPE": {
@@ -1640,6 +1654,37 @@
             }
           },
           "M00_AXI": {
+            "mode": "Master",
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+            "parameters": {
+              "NUM_READ_OUTSTANDING": {
+                "value": "8"
+              },
+              "NUM_READ_THREADS": {
+                "value": "1"
+              },
+              "NUM_WRITE_OUTSTANDING": {
+                "value": "8"
+              },
+              "NUM_WRITE_THREADS": {
+                "value": "1"
+              },
+              "RUSER_BITS_PER_BYTE": {
+                "value": "0"
+              },
+              "WUSER_BITS_PER_BYTE": {
+                "value": "0"
+              }
+            },
+            "bd_attributes": {
+              "TYPE": {
+                "value": "interior",
+                "value_src": "default"
+              }
+            }
+          },
+          "M01_AXI": {
             "mode": "Master",
             "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
             "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
@@ -1679,6 +1724,25 @@
         "xci_path": "ip/design_1_proc_sys_reset_0_0/design_1_proc_sys_reset_0_0.xci",
         "inst_hier_path": "proc_sys_reset_0",
         "has_run_ip_tcl": "true"
+      },
+      "axi_gpio_0": {
+        "vlnv": "xilinx.com:ip:axi_gpio:2.0",
+        "ip_revision": "37",
+        "xci_name": "design_1_axi_gpio_0_0",
+        "xci_path": "ip/design_1_axi_gpio_0_0/design_1_axi_gpio_0_0.xci",
+        "inst_hier_path": "axi_gpio_0",
+        "has_run_ip_tcl": "true",
+        "parameters": {
+          "C_ALL_INPUTS": {
+            "value": "1"
+          },
+          "C_GPIO_WIDTH": {
+            "value": "1"
+          },
+          "C_INTERRUPT_PRESENT": {
+            "value": "1"
+          }
+        }
       }
     },
     "interface_nets": {
@@ -1723,6 +1787,12 @@
           "smartconnect_1/M00_AXI",
           "axi_dma_0/S_AXI_LITE"
         ]
+      },
+      "smartconnect_1_M01_AXI": {
+        "interface_ports": [
+          "smartconnect_1/M01_AXI",
+          "axi_gpio_0/S_AXI"
+        ]
       }
     },
     "nets": {
@@ -1736,7 +1806,20 @@
           "axi_dma_0/s_axi_lite_aclk",
           "axi_dma_0/m_axi_mm2s_aclk",
           "proc_sys_reset_0/slowest_sync_clk",
-          "FCLK_CLK0"
+          "FCLK_CLK0",
+          "axi_gpio_0/s_axi_aclk"
+        ]
+      },
+      "axi_gpio_0_ip2intc_irpt": {
+        "ports": [
+          "axi_gpio_0/ip2intc_irpt",
+          "processing_system7_0/IRQ_F2P"
+        ]
+      },
+      "btn2_i_1": {
+        "ports": [
+          "btn2_i",
+          "axi_gpio_0/gpio_io_i"
         ]
       },
       "processing_system7_0_FCLK_RESET0_N": {
@@ -1750,7 +1833,8 @@
           "proc_sys_reset_0/peripheral_aresetn",
           "axi_dma_0/axi_resetn",
           "smartconnect_0/aresetn",
-          "smartconnect_1/aresetn"
+          "smartconnect_1/aresetn",
+          "axi_gpio_0/s_axi_aresetn"
         ]
       }
     },
@@ -1762,6 +1846,11 @@
               "SEG_axi_dma_0_Reg": {
                 "address_block": "/axi_dma_0/S_AXI_LITE/Reg",
                 "offset": "0x40400000",
+                "range": "64K"
+              },
+              "SEG_axi_gpio_0_Reg": {
+                "address_block": "/axi_gpio_0/S_AXI/Reg",
+                "offset": "0x41200000",
                 "range": "64K"
               }
             }

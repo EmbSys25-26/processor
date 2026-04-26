@@ -195,19 +195,19 @@
           },
           "ARUSER_WIDTH": {
             "value": "0",
-            "value_src": "default_prop"
+            "value_src": "default"
           },
           "AWUSER_WIDTH": {
             "value": "0",
-            "value_src": "default_prop"
+            "value_src": "default"
           },
           "BUSER_WIDTH": {
             "value": "0",
-            "value_src": "default_prop"
+            "value_src": "default"
           },
           "CLK_DOMAIN": {
             "value": "design_1_processing_system7_0_0_FCLK_CLK0",
-            "value_src": "default_prop"
+            "value_src": "default"
           },
           "DATA_WIDTH": {
             "value": "32",
@@ -223,7 +223,7 @@
           },
           "HAS_BURST": {
             "value": "1",
-            "value_src": "ip"
+            "value_src": "default"
           },
           "HAS_CACHE": {
             "value": "1",
@@ -231,7 +231,7 @@
           },
           "HAS_LOCK": {
             "value": "1",
-            "value_src": "ip"
+            "value_src": "default"
           },
           "HAS_PROT": {
             "value": "1",
@@ -239,7 +239,7 @@
           },
           "HAS_QOS": {
             "value": "1",
-            "value_src": "ip"
+            "value_src": "default"
           },
           "HAS_REGION": {
             "value": "0",
@@ -255,7 +255,7 @@
           },
           "ID_WIDTH": {
             "value": "0",
-            "value_src": "default_prop"
+            "value_src": "default"
           },
           "INSERT_VIP": {
             "value": "0",
@@ -263,7 +263,7 @@
           },
           "MAX_BURST_LENGTH": {
             "value": "16",
-            "value_src": "default_prop"
+            "value_src": "default"
           },
           "NUM_READ_OUTSTANDING": {
             "value": "2"
@@ -297,11 +297,11 @@
           },
           "RUSER_WIDTH": {
             "value": "0",
-            "value_src": "default_prop"
+            "value_src": "default"
           },
           "SUPPORTS_NARROW_BURST": {
             "value": "0",
-            "value_src": "default_prop"
+            "value_src": "default"
           },
           "WUSER_BITS_PER_BYTE": {
             "value": "0",
@@ -309,7 +309,7 @@
           },
           "WUSER_WIDTH": {
             "value": "0",
-            "value_src": "default_prop"
+            "value_src": "default"
           }
         },
         "address_space_ref": "S01_AXI",

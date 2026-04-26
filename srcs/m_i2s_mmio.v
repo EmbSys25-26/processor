@@ -143,7 +143,7 @@ module i2s_mmio (
     i2s_tx u_tx (
         .i_bclk        (_bclk),
         .i_rst         (i_rst),
-        .i_enable      (_codec_init_done),
+        .i_enable      (_codec_init_done && _tx_enable),
         .i_fifo_rdata  (_fifo_rdata),
         .i_fifo_empty  (_fifo_empty_bclk),
         .o_fifo_rd_en  (_fifo_rd_en),

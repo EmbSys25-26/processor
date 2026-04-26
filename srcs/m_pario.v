@@ -27,10 +27,39 @@ module pario(
  ************************************************************************************/
 
 /*************************************************************************************
- * 2.1 Output Register and IRQ Condition
+ * 2.1 Debounce + rising-edge detect on button 3 (i_i[3] / pin Y16)
+ *
+ *  Counter runs while i_i[3] differs from the current stable level.
+ *  When it holds for DEBOUNCE_MAX cycles (~20 ms @ 100 MHz) the stable
+ *  level is committed.  o_int_req is a 1-cycle pulse on the rising edge
+ *  of the debounced signal — exactly one IRQ per physical button press.
+ *  Buttons 2:0 are unaffected and remain readable via the input register.
  ************************************************************************************/
-    assign o_rdy = i_sel;
-    assign _int_req = (i_i == 4'hF);
+    localparam DEBOUNCE_MAX = 2_000_000;  // 20 ms @ 100 MHz
+
+    reg [20:0] _db_cnt;
+    reg        _db_stable;
+    reg        _db_prev;
+
+    assign o_rdy   = i_sel;
+    assign _int_req = _db_stable & ~_db_prev;
+
+    always @(posedge i_clk or posedge i_rst) begin
+        if (i_rst) begin
+            _db_cnt    <= 0;
+            _db_stable <= 0;
+            _db_prev   <= 0;
+        end else begin
+            _db_prev <= _db_stable;
+            if (i_i[3] == _db_stable)
+                _db_cnt <= 0;
+            else if (_db_cnt == DEBOUNCE_MAX - 1) begin
+                _db_stable <= i_i[3];
+                _db_cnt    <= 0;
+            end else
+                _db_cnt <= _db_cnt + 1;
+        end
+    end
 
     always @(posedge i_clk) begin
         if (i_rst) begin
