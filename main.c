@@ -233,7 +233,22 @@ int main(int argc, char **argv) {
      * shrinking their live ranges to one instruction.  The pipeline then
      * restarts on the modified IR.  The loop terminates when n_spills == 0.
      */
-    for (const ir_function_list_t *fl = mod->functions; fl; fl = fl->next) {
+
+    /* Count functions so we can build the allocs[] array for codegen_emit_module. */
+    unsigned n_funcs = 0;
+    for (const ir_function_list_t *fl = mod->functions; fl; fl = fl->next)
+        n_funcs++;
+
+    regalloc_t **allocs = calloc(n_funcs, sizeof(regalloc_t *));
+    if (!allocs) {
+        fprintf(stderr, "Error: out of memory allocating allocs[]\n");
+        ir_module_free(mod);
+        fclose(asm_out);
+        return 1;
+    }
+
+    unsigned func_idx = 0;
+    for (const ir_function_list_t *fl = mod->functions; fl; fl = fl->next, func_idx++) {
         ir_function_t *f = fl->func;
 
         printf("\n============================================================\n");
@@ -273,11 +288,10 @@ int main(int argc, char **argv) {
                 printf("\n┌── [5] FINAL IR (physical registers) ───────────────────\n");
                 if (ra) print_ir_with_regs(stdout, f, ra);
                 printf("\n");
-                if (ra){ 
-                    codegen_emit_function(asm_out, f, ra);
-                    printf("Assembly written to output.asm \n");
-                }
-                regalloc_free(ra);
+                /* Store the final regalloc result; codegen runs after all
+                 * functions have been allocated (codegen_emit_module needs
+                 * the full module + the complete allocs[] array). */
+                allocs[func_idx] = ra;   /* ownership transferred; freed below */
                 precolor_free(p);
                 ifg_free(g);
                 ir_liveness_free(liv);
@@ -304,7 +318,15 @@ int main(int argc, char **argv) {
         }
     }
 
+    /* 6. Code generation — emit the full module now that every function has
+     *    a completed register allocation. */
+    codegen_emit_module(asm_out, mod, (const regalloc_t **)allocs);
+    printf("Assembly written to output.asm\n");
+
     /* Cleanup */
+    for (unsigned i = 0; i < n_funcs; i++)
+        regalloc_free(allocs[i]);
+    free(allocs);
     ir_module_free(mod);
     fclose(asm_out);
     return 0;

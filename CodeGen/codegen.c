@@ -816,22 +816,6 @@ void codegen_emit_function(FILE                *out,
 {
     g_cmp_label = 0; /* reset per-function label counter */
 
-    /* ── header comment ── */
-    fprintf(out,
-            "; ──────────────────────────────────────────────────────────\n"
-            "; @%s", func->name);
-
-    /* signature */
-    fprintf(out, "(");
-    for (unsigned i = 0; i < func->param_count; i++) {
-        if (i) fprintf(out, ", ");
-        fprintf(out, "%s", func->param_names[i]);
-    }
-    fprintf(out, ")");
-    fprintf(out, "  [%u vregs, %u slots]\n", func->next_vreg, count_slots(func));
-    fprintf(out,
-            "; ──────────────────────────────────────────────────────────\n");
-
     fprintf(out, "%s:\n", func->name);
     emit_slot_comment(out, func);
     fprintf(out, "\n");
