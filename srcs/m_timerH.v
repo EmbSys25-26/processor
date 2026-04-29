@@ -41,7 +41,7 @@ module timerH(
 
     always @(posedge i_clk) begin
         if (i_rst) begin
-            _int_en <= 1'b1;
+            _int_en <= 1'b0; //mudança, original é 1'b1
             _timer_mode <= 1'b1;
             _cnt_start <= 16'h0000;
         end else if (i_sel && i_we && (i_addr == 2'b00)) begin

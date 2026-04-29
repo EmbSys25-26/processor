@@ -1,13 +1,20 @@
 set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVCMOS33} [get_ports i_clk]
-set_property -dict {PACKAGE_PIN G15 IOSTANDARD LVCMOS33} [get_ports i_rst]
-set_property -dict {PACKAGE_PIN K18 IOSTANDARD LVCMOS33} [get_ports {i_par_i[0]}]
-set_property -dict {PACKAGE_PIN P16 IOSTANDARD LVCMOS33} [get_ports {i_par_i[1]}]
-set_property -dict {PACKAGE_PIN K19 IOSTANDARD LVCMOS33} [get_ports {i_par_i[2]}]
-set_property -dict {PACKAGE_PIN Y16 IOSTANDARD LVCMOS33} [get_ports {i_par_i[3]}]
+
+# RESET - Botão BTN0 (Para não ficar "preso" a fazer reset)
+set_property -dict {PACKAGE_PIN K18 IOSTANDARD LVCMOS33} [get_ports i_rst]
+
+# PARIO INPUTS - 4 Switches (SW0 a SW3) -> Muito mais fácil gerar o 4'hF!
+set_property -dict {PACKAGE_PIN G15 IOSTANDARD LVCMOS33} [get_ports {i_par_i[0]}]
+set_property -dict {PACKAGE_PIN P15 IOSTANDARD LVCMOS33} [get_ports {i_par_i[1]}]
+set_property -dict {PACKAGE_PIN W14 IOSTANDARD LVCMOS33} [get_ports {i_par_i[2]}]
+set_property -dict {PACKAGE_PIN T16 IOSTANDARD LVCMOS33} [get_ports {i_par_i[3]}]
+
+# PARIO OUTPUTS - 4 LEDs (LED0 a LED3)
 set_property -dict {PACKAGE_PIN M14 IOSTANDARD LVCMOS33} [get_ports {o_par_o[0]}]
 set_property -dict {PACKAGE_PIN M15 IOSTANDARD LVCMOS33} [get_ports {o_par_o[1]}]
 set_property -dict {PACKAGE_PIN G14 IOSTANDARD LVCMOS33} [get_ports {o_par_o[2]}]
 set_property -dict {PACKAGE_PIN D18 IOSTANDARD LVCMOS33} [get_ports {o_par_o[3]}]
+
 set_property -dict {PACKAGE_PIN N15 IOSTANDARD LVCMOS33} [get_ports o_uart_tx]
 set_property -dict {PACKAGE_PIN L14 IOSTANDARD LVCMOS33} [get_ports i_uart_rx]
 ## This file is a .xdc for the Zybo Z7-10
@@ -16,6 +23,7 @@ set_property -dict {PACKAGE_PIN L14 IOSTANDARD LVCMOS33} [get_ports i_uart_rx]
 #create_clock -period 20.000 -name sys_clk_pin -waveform {0.000 10.000} -add [get_ports i_clk]
 ## 100 MHz:
 create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_ports i_clk]
+##create_clock -period 8.000 -name sys_clk_pin -waveform {0.000 4.000} -add [get_ports i_clk]
 
 ## Switches
 

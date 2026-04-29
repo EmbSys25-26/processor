@@ -8,7 +8,7 @@
  ************************************************************************************/
 
 module uart_mmio #(
-    parameter integer CLK_FREQ = 100_000_000,
+    parameter integer CLK_FREQ = 125_000_000,
     parameter integer BAUD_RATE = 115200
 ) (
     input wire i_clk,

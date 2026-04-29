@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`define SIM 
+//`define SIM 
 
 /*************************************************************************************
  * PERIPHERAL BUS MODULE
@@ -28,6 +28,8 @@ module periph_bus(
     output wire o_uart_tx,              // UART - Transmit
     inout wire io_i2c_sda,              // I2C - SDA
     inout wire io_i2c_scl,              // I2C - SCL
+   
+   /*
     // VGA
     output wire [3:0] o_vga_r,
     output wire [3:0] o_vga_g,
@@ -43,6 +45,7 @@ module periph_bus(
     output wire o_i2s_bclk,
     output wire o_i2s_lrclk,
     output wire o_i2s_dout,
+    */
     input wire i_int_en,                // IRQ - Enable Interrupt Signal
     input wire i_in_irq,                // IRQ - Is there an Interrupt currently running?
     output wire [15:0] o_irq_vector,    // IRQ - Interrupt Vector
@@ -176,7 +179,7 @@ module periph_bus(
     
     //assign _int_cause[7:6] = 2'b000;
     assign _int_cause[7] = 1'b0;
-assign _int_cause[6] = 1'b0;
+    assign _int_cause[6] = 1'b0;
 
 /****************************************************************************
  * 2.2 Peripheral Instances
@@ -223,7 +226,7 @@ assign _int_cause[6] = 1'b0;
     );
 
     uart_mmio #(
-        .CLK_FREQ(100_000_000),
+        .CLK_FREQ(125_000_000),
         .BAUD_RATE(BAUDRATE_UART)
     ) u_uart (
         .i_clk(i_clk),
@@ -275,20 +278,21 @@ assign _int_cause[6] = 1'b0;
     assign _vga_rdata = 16'h0000;
     assign _vga_rdy   = 1'b1;
     assign _vga_int_req = 1'b0;
-    assign o_vga_r  = 4'b0000;
+/*    assign o_vga_r  = 4'b0000;
     assign o_vga_g  = 4'b0000;
     assign o_vga_b  = 4'b0000;
     assign o_vga_hs = 1'b1;
     assign o_vga_vs = 1'b1;
-
+*/
     // ==========================================
     // PS2 (Placeholder Dummy Assignment)
     // ==========================================
     assign _ps2_rdata = 16'h0000;
     assign _ps2_rdy   = 1'b1;
     assign _ps2_int_req = 1'b0;
-    assign io_ps2_clk  = 1'bz;
+/*    assign io_ps2_clk  = 1'bz;
     assign io_ps2_data = 1'bz;
+*/
 
     // ==========================================
     // I2S (Placeholder Dummy Assignment)

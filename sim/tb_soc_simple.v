@@ -51,7 +51,7 @@ module tb_soc_simple;
 
     initial begin
         wait (_rst == 1'b0);
-        wait (_cycles >= 200);
+        wait (_cycles >= 2000);
         $display("Simulation done at cycles=%0d", _cycles);
         $finish;
     end
