@@ -89,6 +89,86 @@ ir_type_t ir_type_from_sem(const type_t *sem_type)
 }
 
 /* ***********************************************************
+ * Aggregate helpers — shared by ir_lower_decl.c and ir_lower_expr.c
+ * (declared in ir_lower.h).
+ * ************************************************************/
+
+const TreeNode_t *ir_find_aggregate_decl(const TreeNode_t *node,
+                                          NodeType_t want_kind,
+                                          const char *tag)
+{
+    if (!node || !tag) return NULL;
+    if (node->nodeType == want_kind && node->nodeData.sVal &&
+        strcmp(node->nodeData.sVal, tag) == 0)
+        return node;
+    for (const TreeNode_t *sib = node->p_sibling; sib; sib = sib->p_sibling) {
+        const TreeNode_t *r = ir_find_aggregate_decl(sib, want_kind, tag);
+        if (r) return r;
+    }
+    return ir_find_aggregate_decl(node->p_firstChild, want_kind, tag);
+}
+
+size_t ir_compute_sem_type_words(ir_lower_ctx_t *lctx, const type_t *t)
+{
+    if (!t) return 1;
+    switch (t->kind) {
+    case TYPE_BUILTIN: {
+        ir_type_t it = ir_type_from_sem(t);
+        size_t s = ir_type_size_words(it);
+        return s ? s : 1;
+    }
+    case TYPE_POINTER: return 1;
+    case TYPE_ARRAY: {
+        size_t elem = ir_compute_sem_type_words(lctx, t->as.array.elem);
+        size_t cnt  = t->as.array.is_known_size ? t->as.array.size : 1;
+        return elem * cnt;
+    }
+    case TYPE_STRUCT_TAG: {
+        const TreeNode_t *decl =
+            (const TreeNode_t *)t->as.aggregate.decl_node;
+        if (!decl && t->as.aggregate.tag)
+            decl = ir_find_aggregate_decl(lctx->root,
+                                           NODE_STRUCT_DECLARATION,
+                                           t->as.aggregate.tag);
+        size_t total = 0;
+        for (const TreeNode_t *m = decl ? decl->p_firstChild : NULL;
+             m; m = m->p_sibling) {
+            if (m->nodeType != NODE_STRUCT_MEMBER &&
+                m->nodeType != NODE_ARRAY_DECLARATION) continue;
+            const sem_node_info_t *mi =
+                semantic_get_node_info(lctx->sem_ctx, m);
+            size_t s = mi && mi->type
+                ? ir_compute_sem_type_words(lctx, mi->type) : 1;
+            total += s ? s : 1;
+        }
+        return total ? total : 1;
+    }
+    case TYPE_UNION_TAG: {
+        const TreeNode_t *decl =
+            (const TreeNode_t *)t->as.aggregate.decl_node;
+        if (!decl && t->as.aggregate.tag)
+            decl = ir_find_aggregate_decl(lctx->root,
+                                           NODE_UNION_DECLARATION,
+                                           t->as.aggregate.tag);
+        size_t maxsz = 0;
+        for (const TreeNode_t *m = decl ? decl->p_firstChild : NULL;
+             m; m = m->p_sibling) {
+            if (m->nodeType != NODE_STRUCT_MEMBER &&
+                m->nodeType != NODE_ARRAY_DECLARATION) continue;
+            const sem_node_info_t *mi =
+                semantic_get_node_info(lctx->sem_ctx, m);
+            size_t s = mi && mi->type
+                ? ir_compute_sem_type_words(lctx, mi->type) : 1;
+            if (s > maxsz) maxsz = s;
+        }
+        return maxsz ? maxsz : 1;
+    }
+    default:
+        return 1;
+    }
+}
+
+/* ***********************************************************
  * Control-frame helpers (§8.3 rule 6)
  * ************************************************************/
 
@@ -138,8 +218,7 @@ void ir_seal_goto(ir_lower_ctx_t *lctx, unsigned target_id)
 {
     if (ir_block_terminated(lctx)) return;
     ir_instr_t *i = ir_instr_new(IR_OP_GOTO);
-    i->as.branch.true_block  = target_id;
-    i->as.branch.false_block = target_id;
+    IR_BRANCH_SET_TARGETS(i, target_id, target_id);
     ir_instr_push(lctx->cur_block, i);
 }
 
@@ -149,8 +228,7 @@ void ir_seal_branch(ir_lower_ctx_t *lctx, ir_value_t pred,
     if (ir_block_terminated(lctx)) return;
     ir_instr_t *i = ir_instr_new(IR_OP_BRANCH);
     i->src[0] = pred;
-    i->as.branch.true_block  = true_id;
-    i->as.branch.false_block = false_id;
+    IR_BRANCH_SET_TARGETS(i, true_id, false_id);
     ir_instr_push(lctx->cur_block, i);
 }
 

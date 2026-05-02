@@ -141,11 +141,11 @@ static ir_value_t emit_arith_call(ir_lower_ctx_t *lctx,
 {
     unsigned r = ir_new_vreg(lctx->func);
     ir_instr_t *call = ir_instr_new(IR_OP_CALL);
-    snprintf(call->as.call.callee, sizeof(call->as.call.callee), "%s", callee);
-    call->as.call.arg_count    = 2;
-    call->as.call.args[0]      = lv;
-    call->as.call.args[1]      = rv;
-    call->as.call.is_void_call = 0;
+    IR_CALL_SET_CALLEE(call, callee);
+    IR_CALL_SET_ARG_COUNT(call, 2);
+    IR_CALL_SET_ARG(call, 0, lv);
+    IR_CALL_SET_ARG(call, 1, rv);
+    IR_CALL_SET_IS_VOID(call, 0);
     call->dst = ir_val_vreg(r, ir_type_i16());
     ir_instr_push(lctx->cur_block, call);
     return ir_val_vreg(r, ir_type_i16());
@@ -158,25 +158,8 @@ static int sem_type_is_unsigned(const type_t *t)
     return (t->qualifiers & TYPE_QUAL_UNSIGNED) != 0;
 }
 
-/* Walk the AST root to find the struct/union declaration whose tag matches
- * `tag`.  Used as a fallback when the semantic type's `aggregate.decl_node`
- * back-pointer is NULL (which happens for tags resolved indirectly through
- * the symbol table).  Mirrors find_tag_declaration() in semantic_pass2.c. */
-static const TreeNode_t *find_tag_decl_in_ast(const TreeNode_t *node,
-                                                NodeType_t want_kind,
-                                                const char *tag)
-{
-    if (!node || !tag) return NULL;
-    if (node->nodeType == want_kind && node->nodeData.sVal &&
-        strcmp(node->nodeData.sVal, tag) == 0)
-        return node;
-    /* Search siblings, then descend into first child. */
-    for (const TreeNode_t *sib = node->p_sibling; sib; sib = sib->p_sibling) {
-        const TreeNode_t *r = find_tag_decl_in_ast(sib, want_kind, tag);
-        if (r) return r;
-    }
-    return find_tag_decl_in_ast(node->p_firstChild, want_kind, tag);
-}
+/* `find_tag_decl_in_ast` previously lived here; promoted to ir_lower.c as
+ * `ir_find_aggregate_decl` and shared with ir_lower_decl.c. */
 
 /* Per C's "usual arithmetic conversions" the operation is treated as unsigned
  * if either operand has unsigned type.  The semantic pass currently returns
@@ -367,7 +350,7 @@ ir_value_t ir_lower_lvalue_addr(ir_lower_ctx_t *lctx,
         gep->dst      = ir_val_vreg(r, ir_type_ptr());
         gep->src[0]   = base_ptr;
         gep->src[1]   = idx_val;
-        gep->as.gep.width = stride;
+        IR_GEP_WIDTH_SET(gep, stride);
         ir_instr_push(lctx->cur_block, gep);
         return ir_val_vreg(r, ir_type_ptr());
     }
@@ -429,7 +412,7 @@ ir_value_t ir_lower_lvalue_addr(ir_lower_ctx_t *lctx,
              * indirectly), search the AST root for a NODE_STRUCT_DECLARATION
              * matching the tag. */
             if (!decl && agg_type->as.aggregate.tag) {
-                decl = find_tag_decl_in_ast(lctx->root,
+                decl = ir_find_aggregate_decl(lctx->root,
                                              NODE_STRUCT_DECLARATION,
                                              agg_type->as.aggregate.tag);
             }
@@ -454,7 +437,7 @@ ir_value_t ir_lower_lvalue_addr(ir_lower_ctx_t *lctx,
         gep->dst          = ir_val_vreg(r, ir_type_ptr());
         gep->src[0]       = base_ptr;
         gep->src[1]       = ir_val_imm(field_off, ir_type_i16());
-        gep->as.gep.width = 1; /* word-addressed: address = base + idx */
+        IR_GEP_WIDTH_SET(gep, 1); /* word-addressed: address = base + idx */
         ir_instr_push(lctx->cur_block, gep);
         return ir_val_vreg(r, ir_type_ptr());
     }
@@ -998,19 +981,18 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
         ir_instr_t *call_i = ir_instr_new(IR_OP_CALL);
 
         /* Store the function name (e.g. "soma") in the instruction. */
-        snprintf(call_i->as.call.callee, sizeof(call_i->as.call.callee),
-                 "%s", callee_name);
+        IR_CALL_SET_CALLEE(call_i, callee_name);
 
         /* Record how many arguments were evaluated. */
-        call_i->as.call.arg_count    = actual_args;
+        IR_CALL_SET_ARG_COUNT(call_i, actual_args);
 
         /* Mark whether the call is void — the printer uses this to decide
          * whether to emit "%vN = @f(...)" or just "@f(...)". */
-        call_i->as.call.is_void_call = is_void;
+        IR_CALL_SET_IS_VOID(call_i, is_void);
 
         /* Copy the evaluated argument values into the instruction's arg array. */
         for (unsigned k = 0; k < actual_args; k++) {
-            call_i->as.call.args[k] = args[k];
+            IR_CALL_SET_ARG(call_i, k, args[k]);
         }
 
         if (is_void) {

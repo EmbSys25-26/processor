@@ -92,6 +92,25 @@ void ir_warn(ir_lower_ctx_t *lctx, const char *code,
 ir_type_t ir_type_from_sem(const type_t *sem_type);
 
 /* ────────────────────────────────────────────────────────────
+ * Aggregate helpers — shared by ir_lower_decl.c and ir_lower_expr.c.
+ * ──────────────────────────────────────────────────────────── */
+
+/* Walk the AST rooted at `node` (depth-first, siblings then children) for a
+ * NODE_STRUCT_DECLARATION / NODE_UNION_DECLARATION whose tag matches `tag`.
+ * Used as a fallback when the semantic type's `aggregate.decl_node`
+ * back-pointer is NULL (tags resolved indirectly via the symbol table). */
+const TreeNode_t *ir_find_aggregate_decl(const TreeNode_t *node,
+                                          NodeType_t want_kind,
+                                          const char *tag);
+
+/* Storage size in 16-bit words for a SEMANTIC type, walking aggregate
+ * declarations through the AST when the IR type system has dropped layout
+ * info (TYPE_STRUCT_TAG / TYPE_UNION_TAG).  Used by `ir_lower_global_decl`
+ * to size globals and by `ir_lower_local_decl` to bump `next_slot_id` for
+ * aggregate locals. */
+size_t ir_compute_sem_type_words(ir_lower_ctx_t *lctx, const type_t *t);
+
+/* ────────────────────────────────────────────────────────────
  * Section 1 – Declarations  (ir_lower_decl.c)
  * ──────────────────────────────────────────────────────────── */
 

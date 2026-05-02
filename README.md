@@ -48,6 +48,21 @@ make
 
 Test files are available in `test_files/RegisterAllocation/` and `test_files/IR_checks/`.
 
+Run `scripts/test_compile_all.sh` after a build to compile every test and verify the generated assembly against per-test snapshots (`*_expected.asm`). Exits 0 when every test passes.
+
+## Unsupported / Known Limitations
+
+The compiler accepts a substantial C subset but rejects (or silently skips) the following:
+
+- **Function pointers / indirect calls** — IR lowering rejects with `IR001`.
+- **Struct/union pass-by-value or block copy** — only `.field` and `->field` reads/writes are lowered; `s2 = s1;`, struct-by-value parameters, and struct-returning functions are not.
+- **Aggregate initialisers** — `int arr[] = {1, 2, 3}` and `struct p = {1, 2}` are not lowered (arrays/structs zero-init).
+- **`long long` / 64-bit arithmetic** — `long` lowers to i32 but no full arithmetic; `long long` is not recognised.
+- **Floating point** — semantic-blocked at `SEM_NODE_CODEGEN_BLOCKED`.
+- **Variadic functions** — no `va_arg` machinery.
+
+See [`docs/progress-report/compiler_state.md`](docs/progress-report/compiler_state.md) §2 for the full status and rationale.
+
 ## Documentation
 
 - [`docs/Compiler Overview.md`](docs/Compiler%20Overview.md) — pipeline overview from lexer to codegen.

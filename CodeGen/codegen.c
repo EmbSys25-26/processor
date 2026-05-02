@@ -410,8 +410,6 @@ static void emit_or_rr(FILE *out,
 {
     const char *lhs = a, *rhs = b;
 
-    /* phys_name() returns ABI mnemonics; r4 = "t0", r5 = "t1", etc. */
-
     /* (1) Commutative swap to maximise dst == lhs.
      * Without this, MOV(dst, lhs) clobbers rhs whenever dst == rhs
      * (regalloc legitimately recycles dst's register from a dead source).
@@ -860,10 +858,8 @@ static void emit_instr(FILE                *out,
         if (ins->src[0].type.kind == IR_TYPE_I1) {
             fprintf(out, "    ANDI %s, #1\n", rd);
         } else if (ins->src[0].type.kind == IR_TYPE_I8) {
-            /* Zero-extend byte: mask = 0x00FF.
-             * phys_name() yields ABI mnemonics, so r4 surfaces as "t0".
-             * Pick the scratch so it is NOT the destination — otherwise
-             * the mask load overwrites the value we just placed in rd. */
+            /* Zero-extend byte: AND with 0x00FF.  Pick a scratch that is
+             * not the destination so the mask load doesn't clobber rd. */
             const char *scratch = pick_scratch3(rd, NULL, NULL);
             fprintf(out, "    IMM #0x00F\n");
             fprintf(out, "    ADDI %s, r0, #0xF       ; %s = 0x00FF (byte mask)\n",
@@ -1245,7 +1241,10 @@ static void emit_instr(FILE                *out,
 	}
 
 	    default:
-		fprintf(out, "    ; [CODEGEN] unhandled IR opcode %d\n", (int)ins->op);
+		fprintf(out, "    ; [CODEGEN] unhandled IR opcode %d "
+		             "(arithmetic helpers MUL/DIVS/DIVU/MODS/MODU are rewritten "
+		             "to IR_OP_CALL at lowering — see ir_lower_expr.c)\n",
+		             (int)ins->op);
 		break;
     }
 }

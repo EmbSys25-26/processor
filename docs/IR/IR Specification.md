@@ -335,21 +335,6 @@ _Pre/post inc/dec_ — compute address, load old value, add/subtract 1, store ne
 
 _Ternary_ — allocate a result slot, lower condition, emit `branch`, lower true/false branches each storing into the slot, emit `goto` merge, load from slot.
 
-_Logical `&&`/`||`_ — short-circuit via a control-flow diamond writing 0 / 1 into a shared result slot.
-
-For `a && b` the lowering emits:
-
-```
-evaluate a → %p1 = (a != 0)
-if %p1 goto bb_rhs else bb_false
-bb_rhs:  evaluate b → %p2 = (b != 0); if %p2 goto bb_true else bb_false
-bb_true: *%slot = 1; goto bb_merge
-bb_false:*%slot = 0; goto bb_merge
-bb_merge: %res = *%slot
-```
-
-For `a || b` the lhs predicate branches to `bb_true` instead of `bb_rhs` on the truthy side, and to `bb_rhs` on the false side. The semantics match C: the right-hand side is never evaluated when the result is already determined by the left.
-
 _Function call_ — collect argument vregs, emit `IR_OP_CALL`. Void calls set `is_void_call = 1` and return `ir_val_none()`.
 
 _Unsigned operator dispatch_ — for `+ - * / % < <= > >= << >>` the IR `is_unsigned` flag is derived from the operand types (per C's "usual arithmetic conversions"), not from the result type, because the semantic pass currently returns `g_type_int` (signed) as the result type for arithmetic. Without this, `unsigned a / b` lowered to `__divs` instead of `__divu`.
@@ -357,6 +342,52 @@ _Unsigned operator dispatch_ — for `+ - * / % < <= > >= << >>` the IR `is_unsi
 _MUL / DIV / MOD on this ISA_ — the target has no hardware multiply or divide. `IR_OP_MUL`, `IR_OP_DIVS`, `IR_OP_DIVU`, `IR_OP_MODS`, `IR_OP_MODU` are lowered as calls into the runtime library (`__mul`, `__divs`, `__divu`, `__mods`, `__modu` in `runtime/runtime.asm`). The lowering wraps the operands in an `IR_OP_CALL` so liveness/precolor/regalloc see the actual call boundary (caller-saved clobber).
 
 `ir_lower_lvalue_addr` computes the **address** of an lvalue rather than its value. It is called from `ir_lower_expr` for assignments, compound assignments, inc/dec, address-of, array access (rvalue), and member access (rvalue). The two functions are mutually recursive — `ir_lower_lvalue_addr` calls `ir_lower_expr` for subexpressions, and `ir_lower_expr` calls `ir_lower_lvalue_addr` for lvalue contexts.
+
+---
+
+### Logical short-circuit lowering — `&&` and `||` (§8.2 rule 6)
+
+`a && b` and `a || b` use C's short-circuit semantics: the right-hand side is evaluated only when its outcome can change the result. The IR realises this with a control-flow diamond and a one-word result slot — the IR is not in SSA form, so a slot + load is the standard merge mechanism (the same pattern used by ternary).
+
+**Block layout** (four basic blocks plus the current entry block):
+
+```
+                       ┌── current cur_block ──┐
+                       │ evaluate lhs → %p1     │
+                       │ %p1 = (lhs != 0)        │
+                       └────────────┬────────────┘
+                                    │  if %p1 goto … else …
+                       AND: true → bb_rhs ;  false → bb_false
+                       OR:  true → bb_true ; false → bb_rhs
+                                    │
+                       ┌────────────▼────────────┐
+                       │  bb_rhs                 │
+                       │  evaluate rhs → %p2     │
+                       │  %p2 = (rhs != 0)       │
+                       │  if %p2 goto bb_true     │
+                       │            else bb_false│
+                       └────┬────────────┬───────┘
+                            │            │
+                ┌───────────▼─┐    ┌─────▼────────┐
+                │ bb_true     │    │ bb_false     │
+                │ *%slot = 1  │    │ *%slot = 0   │
+                │ goto bb_merge│   │ goto bb_merge│
+                └─────┬───────┘    └──────┬───────┘
+                      │                   │
+                      └────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │ bb_merge            │
+                    │ %res = *%slot       │
+                    │ (lowering continues)│
+                    └─────────────────────┘
+```
+
+**Asymmetry between `&&` and `||`:** only the lhs predicate's branch targets differ. AND short-circuits on false (skip rhs and store 0); OR short-circuits on true (skip rhs and store 1). The shared rhs / true / false / merge blocks are identical for both forms.
+
+**Result type:** the slot is `i16` (matching C's `int` result type for these operators). The materialised result is always 0 or 1.
+
+**Used by:** any expression-context use of `&&` / `||` — `if (a && b)`, `while (a || b)`, `int v = (x > 0) && (y < 10)`, `cond ? a && b : c`. The same diamond is emitted for each occurrence; there is no special "predicate context" optimisation that would let the result feed a `branch` directly. (Such an optimisation would skip the slot and merge block but would require the lowering to track whether its caller wants a value or a predicate — not done in phase 1.)
 
 ---
 

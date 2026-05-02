@@ -75,79 +75,10 @@ static const TreeNode_t *decl_initialiser(const TreeNode_t *node)
  * Global declaration  (MEMORY_CLASS_GLOBAL)
  *************************************************************/
 
-/* Find a struct/union declaration in the AST root by tag. */
-static const TreeNode_t *find_aggregate_decl(const TreeNode_t *node,
-                                              NodeType_t want_kind,
-                                              const char *tag)
-{
-    if (!node || !tag) return NULL;
-    if (node->nodeType == want_kind && node->nodeData.sVal &&
-        strcmp(node->nodeData.sVal, tag) == 0)
-        return node;
-    for (const TreeNode_t *sib = node->p_sibling; sib; sib = sib->p_sibling) {
-        const TreeNode_t *r = find_aggregate_decl(sib, want_kind, tag);
-        if (r) return r;
-    }
-    return find_aggregate_decl(node->p_firstChild, want_kind, tag);
-}
-
-/* Compute storage size in 16-bit words for a SEMANTIC type, walking through
- * the AST when needed (structs/unions whose IR type loses layout info). */
-static size_t compute_sem_type_words(ir_lower_ctx_t *lctx, const type_t *t)
-{
-    if (!t) return 1;
-    switch (t->kind) {
-    case TYPE_BUILTIN: {
-        ir_type_t it = ir_type_from_sem(t);
-        size_t s = ir_type_size_words(it);
-        return s ? s : 1;
-    }
-    case TYPE_POINTER: return 1;
-    case TYPE_ARRAY: {
-        size_t elem = compute_sem_type_words(lctx, t->as.array.elem);
-        size_t cnt  = t->as.array.is_known_size ? t->as.array.size : 1;
-        return elem * cnt;
-    }
-    case TYPE_STRUCT_TAG: {
-        const TreeNode_t *decl =
-            (const TreeNode_t *)t->as.aggregate.decl_node;
-        if (!decl && t->as.aggregate.tag)
-            decl = find_aggregate_decl(lctx->root, NODE_STRUCT_DECLARATION,
-                                        t->as.aggregate.tag);
-        size_t total = 0;
-        for (const TreeNode_t *m = decl ? decl->p_firstChild : NULL;
-             m; m = m->p_sibling) {
-            if (m->nodeType != NODE_STRUCT_MEMBER &&
-                m->nodeType != NODE_ARRAY_DECLARATION) continue;
-            const sem_node_info_t *mi =
-                semantic_get_node_info(lctx->sem_ctx, m);
-            size_t s = mi && mi->type ? compute_sem_type_words(lctx, mi->type) : 1;
-            total += s ? s : 1;
-        }
-        return total ? total : 1;
-    }
-    case TYPE_UNION_TAG: {
-        const TreeNode_t *decl =
-            (const TreeNode_t *)t->as.aggregate.decl_node;
-        if (!decl && t->as.aggregate.tag)
-            decl = find_aggregate_decl(lctx->root, NODE_UNION_DECLARATION,
-                                        t->as.aggregate.tag);
-        size_t maxsz = 0;
-        for (const TreeNode_t *m = decl ? decl->p_firstChild : NULL;
-             m; m = m->p_sibling) {
-            if (m->nodeType != NODE_STRUCT_MEMBER &&
-                m->nodeType != NODE_ARRAY_DECLARATION) continue;
-            const sem_node_info_t *mi =
-                semantic_get_node_info(lctx->sem_ctx, m);
-            size_t s = mi && mi->type ? compute_sem_type_words(lctx, mi->type) : 1;
-            if (s > maxsz) maxsz = s;
-        }
-        return maxsz ? maxsz : 1;
-    }
-    default:
-        return 1;
-    }
-}
+/* `ir_find_aggregate_decl` and `ir_compute_sem_type_words` previously lived
+ * here (and a near-identical pair in ir_lower_expr.c).  Both have been
+ * promoted to ir_lower.c and exposed via ir_lower.h so the two consumers
+ * share one implementation. */
 
 /* Evaluate a constant integer expression for global initialisers
  * Returns 1 on success and writes *out; 0 if the AST node is not a
@@ -271,10 +202,10 @@ void ir_lower_global_decl(ir_lower_ctx_t *lctx,
     /* Override storage size from the semantic type so structs / unions
      * (whose IR type drops layout info) get the right number of words. */
     if (info && info->type) {
-        size_t sw = compute_sem_type_words(lctx, info->type);
+        size_t sw = ir_compute_sem_type_words(lctx, info->type);
         if (sw) g->size_words = sw;
     } else if (sym->type) {
-        size_t sw = compute_sem_type_words(lctx, sym->type);
+        size_t sw = ir_compute_sem_type_words(lctx, sym->type);
         if (sw) g->size_words = sw;
     }
 
@@ -373,7 +304,7 @@ unsigned ir_lower_local_decl(ir_lower_ctx_t *lctx, const TreeNode_t *decl_node)
     {
         const type_t *sem_type = (info && info->type) ? info->type : sym->type;
         if (sem_type) {
-            size_t correct  = compute_sem_type_words(lctx, sem_type);
+            size_t correct  = ir_compute_sem_type_words(lctx, sem_type);
             size_t reserved = ir_type_size_words(ir_t);
             if (reserved == 0) reserved = 1;
             if (correct > reserved)
