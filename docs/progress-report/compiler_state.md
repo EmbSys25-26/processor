@@ -1,108 +1,76 @@
-# Compiler Frontend State (Semantic Focus)
+# Compiler State
 
-Date: 2026-03-10
+Date: 2026-05-02
+Branch: `Compiler/RegisterAllocation`
 
-## 1) Current reality: what is already done
+## 1) Current reality: full pipeline operational
 
-### Parsing pipeline is functionally in place
-1. Lexer exists and tokenizes a broad subset of C-like input.
-2. Bison grammar parses declarations, statements, expressions, functions, and aggregate constructs.
-3. AST is built and printed successfully.
+The compiler now drives a complete C-subset → assembly pipeline:
 
-### Implemented components
-1. Lexer:
-- `compiler/Lexer/lexer.l`
-2. Parser:
-- `compiler/Parser/parser.y`
-3. AST core:
-- `compiler/Parser/ASTree.h`
-- `compiler/Parser/ASTree.c`
-4. AST printer:
-- `compiler/Parser/ASTPrint.c`
-5. Node/operator/type enums:
-- `compiler/Util/NodeTypes.h`
+```
+.c source
+   → Lexer (Flex)
+   → Parser (Bison) → AST
+   → Semantic Analysis (pass 1 binder + pass 2 checker) → annotated AST
+   → IR Lowering (3-address CFG IR with virtual registers)
+   → Liveness → Interference Graph → Pre-color → Chaitin-Briggs coloring → Spill rewrite (iterative)
+   → Code Generation → assembly text (output.asm)
+   → Software runtime (runtime/runtime.asm) for missing __mul / __divs / __divu / __mods / __modu helpers
+```
 
-## 2) Semantic analysis status: done vs not done
+`main.c` runs each stage sequentially. IR lowering only runs if semantic
+analysis returned zero errors; codegen only runs if regalloc converges.
 
-## Done
-1. AST has basic per-node `nodeVarType` enum field (`VarType_t`).
-2. Parser emits real structural scope nodes (`NODE_BLOCK`, `NODE_FOR`) instead of synthetic scope markers.
-3. Semantic core APIs exist and compile:
-- `Semantic/type.[ch]`
-- `Semantic/symbol.[ch]`
-- `Semantic/diagnostics.[ch]`
-- `Semantic/semantic.[ch]`
-4. Parser main flow now executes `semantic_run(...)` after successful parse.
-5. CI baseline validates API behavior and memory safety:
-- `scripts/ci/run_semantic_checks.sh`
-- Unit/API tests + ASan/UBSan runs.
-6. Pass1 currently implements:
-- `SEM002`, `SEM003`, `SEM004`, `SEM005`
-7. Pass2 currently implements:
-- `SEM001`, `SEM011`, `SEM040`, `SEM041`, `SEM043`, `SEM050`, `SEM051`, `SEM060`, `SEM061`, `SEM062`
-8. Parser and semantic regressions now cover:
-- declarator refactor
-- aggregate declarations
-- AST cleanup nodes
-- C11 expression ladder
-- targeted semantic pass examples
+## 2) Component status
 
-## Not done (in compiler implementation)
-1. Pass1 binder is incomplete: no AST identifier binding to symbol entries yet.
-2. Pass2 checker is incomplete: many expression/operator/statement legality rules are still missing.
-3. Full semantic rule matrix (`SEM001..`) is not implemented yet; only a subset is active.
-5. IR lowering gate is not integrated (semantic success does not yet trigger IR phase).
+### Done
+
+**Frontend** — Lexer, Parser, AST core/printer, NodeTypes, semantic context with persistent + scratch arenas, diagnostics list, scope stack.
+
+**Semantic** — Pass 1 binder (declarations bound to symbols, scopes opened/closed). Pass 2 checker (most rules in `SEMANTIC_CHECK_MATRIX.md`: assignments, lvalue/rvalue, arithmetic/bitwise/comparison/logical operators, struct/union member access, control-flow legality). Annotation table populated for every typed expression node.
+
+**IR Lowering** — Declarations (globals + locals + initialisers, including string literal pools and constant-folding for static initialisers), expressions (all C operators including `&&` / `||` short-circuit and ternary), statements (if/while/do-while/for/switch/break/continue/return), function lowering (parameters, prologue glue, body), structure (translation unit walk). Multi-dimensional arrays and struct/union member access compute correct word offsets.
+
+**Code Generation** — Frame layout, prologue/epilogue (with stack-passed parameter loading), arithmetic/bitwise (with immediate-form `ADDI` / `RCMPI` optimisations), comparisons (full branch ladder for both signed and unsigned), control flow (GOTO / BRANCH / SWITCH), memory (LOAD / STORE / GEP for word-addressed memory), casts (ZEXT / SEXT / TRUNC / BITCAST with constant-folding), function calls (parallel-copy register-arg setup, stack-arg writing via direct SW, return value plumbing), CALL register-arg cycle breaking via the reserved `t3` scratch.
+
+**Register Allocation** — Liveness dataflow to a fixed point, undirected interference graph, ABI pre-coloring (call args + returns + call-live restriction to callee-saved), Chaitin-Briggs simplification, George's conservative move coalescing, forbidden-set color selection, spill rewriting with iterated re-allocation. `r7` reserved as codegen scratch.
+
+**Runtime library** — `runtime/runtime.asm` provides `__mul` (16x16 shift-and-add), `__divu` / `__modu` (unsigned restoring long division), `__divs` / `__mods` (signed via sign normalisation + `__divu`/`__modu`).
+
+### Known limitations / future work
+
+1. **Function pointers / indirect calls** — IR lowering rejects them.
+2. **Struct/union value copy and pass-by-value** — only field access is supported; no `s2 = s1;` block copy and no struct-by-value parameters/returns.
+3. **Floating point** — semantic pass marks float/double nodes `SEM_NODE_CODEGEN_BLOCKED`; IR lowering rejects them with `IR001`.
+4. **Variadic functions** — not supported.
+5. **`long long` (i64)** — not supported; `long` maps to i32 but no full arithmetic.
+6. **Aggregate initialisers** — `{1, 2, 3}` style brace-enclosed initialisers are not yet IR-lowered for arrays/structs (only scalar globals are initialised; arrays/structs zero-init).
+7. **Spilled stack-passed parameters** — if regalloc spills a register-passed param's vreg, the spill happens after the param is in its register, so it works. Stack-passed params are loaded into their slot directly by codegen prologue, so spilling them isn't a concern.
 
 ## 3) What this means technically
 
-1. Current compiler is parser-complete with a working semantic backbone, not frontend-complete.
-2. It now validates real declaration/type/control-flow cases and emits deterministic semantic diagnostics.
-3. Most of the rule matrix is still pending, so semantically invalid programs can still pass outside the implemented subset.
+The compiler is now a working end-to-end translator from a substantial C subset to the project's custom 16-bit RISC ISA. Programs exercising scalars, locals, globals, arrays (1D and N-D), structs, pointers, function calls (any arity), short-circuit logic, and the full set of arithmetic / bitwise / comparison operators compile and produce executable assembly when assembled and linked against `runtime/runtime.asm`.
 
-## 4) Suggested path
+The reliability target is correctness on programs the semantic pass accepts. The 35-test regression suite (`test_files/RegisterAllocation/` + `test_files/IR_checks/`) covers the major paths and runs to completion with zero `(null)` operands and zero spurious self-MOVs.
 
-## Phase A - Semantic infrastructure
-1. Create `compiler/Semantic/`.
-2. Implement:
-- symbol entries,
-- lexical scope stack (nested linked parent chain),
-- type descriptor objects,
-- diagnostics emitter.
+## 4) Recent significant fixes (this milestone)
 
-## Phase B - Pass 1 (binder)
-1. Traverse AST and open/close scopes on function/block boundaries.
-2. Insert declarations in current scope.
-3. Resolve identifier usages through nearest-visible scope lookup.
-4. Record function prototype/definition metadata.
+1. **Immediate operands in IR codegen** — every IR opcode that could legally carry `IR_VAL_IMM_INT` / `IR_VAL_GLOBAL` operands now materialises them through `materialize_operand()` (or constant-folds when possible). Previously any binop/store/comparison with a non-VREG operand emitted `(null)` text into the assembly.
+2. **ABI mnemonic mismatch** — codegen's strcmps now use `a0`/`a1`/`a2` (matching `phys_name()` output) instead of canonical `r1`/`r2`/`r3`. Eliminates `MOV(a0, r1)` self-MOV pairs after every CALL.
+3. **`emit_binop_rr_nc` aliasing** — when `dst == b ≠ a` for SUB/SRL/SRA, the naive `MOV(dst, a); OP dst, b` clobbered b before reading it. SUB now uses `NEG(dst); ADD dst, a`; SRL/SRA use the reserved `t3`.
+4. **Logical `&&` / `||`** — were rejected with diagnostic `IR001`. Now lowered as a control-flow diamond storing 0/1 into a result slot, with proper short-circuit semantics.
+5. **Unsigned propagation** — `unsigned u / v` was emitting `__divs` because the semantic pass returns `g_type_int` (signed) for arithmetic results. IR lowering now derives `is_unsigned` from operand types, matching C's "usual arithmetic conversions".
+6. **Arrays under-allocated** — `int arr[5]` reserved one slot/word. Fixed via new `ir_type_size_words()`, `ir_global_t.size_words`, multi-slot allocation in `ir_new_slot`, and removal of the spurious LOAD when an array variable is the base of an array-access lvalue.
+7. **Struct member access with no offset** — `p.field` always read at offset 0 because the field name was written into a union field that overlapped `gep.width`, corrupting both. IR lowering now walks the struct's AST decl to compute true word offsets and emits `gep base + offset * 1`.
+8. **CALL stack-arg ordering** — register-arg loads ran before stack-arg pushes, so a stack arg sourced from `a0`/`a1`/`a2` was clobbered. Replaced with: allocate stack space → write all stack args to `sp+i` slots first → load register args. Scratch picker avoids any vreg-arg's home register.
+9. **CALL register-arg parallel copy** — sequential MOVs corrupted cycles like `(a0=a1, a1=a0)`. Replaced with Kahn-style topological order + cycle-breaking via `t3`.
+10. **Stack-passed parameters not loaded** — params 4+ were being read from uninitialised registers because regalloc legitimately coalesced their colors. IR lowering now skips the STORE for stack params; codegen prologue does `LW t3, fp, #+i; SW t3, fp, #-slot` directly into the local slot.
+11. **Reserved `t3` (`r7`)** — removed from regalloc's preference list. Codegen uses it as a guaranteed-safe scratch for materialisation, in-place op spilling, OR-macro internal scratch, and parallel-copy cycle breaking.
 
-## Phase C - Pass 2 (checker)
-1. Infer expression types.
-2. Enforce assignment/lvalue/operator compatibility.
-3. Enforce control-flow legality (`return`, `break`, `continue`, loop/switch context).
-4. Emit deterministic semantic diagnostics with stable rule IDs.
+## 5) Outstanding bugs/limitations
 
-## Phase D - Intermediate Representation (IR) Gated entry
-1. Only run IR lowering if semantic error count is zero.
-2. Treat unsupported semantic features as explicit errors, never silent acceptance.
+See `docs/IR/IR Specification.md` and per-file comments for the latest. The major unsupported constructs are listed in §2 above.
 
-## 5) Practical go-forward for your team split
+## 6) TL;DR
 
-1. Build semantic layer as a separate module consumed by parser output.
-2. Merge order should be:
-- semantic core,
-- binder,
-- expression checks,
-- control/function checks,
-- IR core/lowering.
-
-Reference tasks already created:
-1. `tasks/ISSUE-SEM-01-symbol-scope-core.md`
-2. `tasks/ISSUE-SEM-02-pass1-binder.md`
-3. `tasks/ISSUE-SEM-03-pass2-expression-typecheck.md`
-4. `tasks/ISSUE-SEM-04-pass2-control-flow-and-functions.md`
-
-IR-related tasks might be postponed this time around, I'm not exactly sure yet. 
-
-## 6) Bottom line / TL;DR
-1. The suggested work is symbol/scoping/type-descriptor infrastructure plus two semantic passes.
-2. After that, IR generation can be made reliable and contract-driven.
+End-to-end compilation works. Major recent work: immediate handling, parallel-copy CALL setup, stack-passed parameter loading, multi-D arrays, struct field offsets, short-circuit logical ops, unsigned dispatch, and reserving a codegen scratch register.

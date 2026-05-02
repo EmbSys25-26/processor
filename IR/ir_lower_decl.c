@@ -75,7 +75,166 @@ static const TreeNode_t *decl_initialiser(const TreeNode_t *node)
  * Global declaration  (MEMORY_CLASS_GLOBAL)
  *************************************************************/
 
-void ir_lower_global_decl(ir_lower_ctx_t *lctx, const TreeNode_t *decl_node)
+/* Find a struct/union declaration in the AST root by tag. */
+static const TreeNode_t *find_aggregate_decl(const TreeNode_t *node,
+                                              NodeType_t want_kind,
+                                              const char *tag)
+{
+    if (!node || !tag) return NULL;
+    if (node->nodeType == want_kind && node->nodeData.sVal &&
+        strcmp(node->nodeData.sVal, tag) == 0)
+        return node;
+    for (const TreeNode_t *sib = node->p_sibling; sib; sib = sib->p_sibling) {
+        const TreeNode_t *r = find_aggregate_decl(sib, want_kind, tag);
+        if (r) return r;
+    }
+    return find_aggregate_decl(node->p_firstChild, want_kind, tag);
+}
+
+/* Compute storage size in 16-bit words for a SEMANTIC type, walking through
+ * the AST when needed (structs/unions whose IR type loses layout info). */
+static size_t compute_sem_type_words(ir_lower_ctx_t *lctx, const type_t *t)
+{
+    if (!t) return 1;
+    switch (t->kind) {
+    case TYPE_BUILTIN: {
+        ir_type_t it = ir_type_from_sem(t);
+        size_t s = ir_type_size_words(it);
+        return s ? s : 1;
+    }
+    case TYPE_POINTER: return 1;
+    case TYPE_ARRAY: {
+        size_t elem = compute_sem_type_words(lctx, t->as.array.elem);
+        size_t cnt  = t->as.array.is_known_size ? t->as.array.size : 1;
+        return elem * cnt;
+    }
+    case TYPE_STRUCT_TAG: {
+        const TreeNode_t *decl =
+            (const TreeNode_t *)t->as.aggregate.decl_node;
+        if (!decl && t->as.aggregate.tag)
+            decl = find_aggregate_decl(lctx->root, NODE_STRUCT_DECLARATION,
+                                        t->as.aggregate.tag);
+        size_t total = 0;
+        for (const TreeNode_t *m = decl ? decl->p_firstChild : NULL;
+             m; m = m->p_sibling) {
+            if (m->nodeType != NODE_STRUCT_MEMBER &&
+                m->nodeType != NODE_ARRAY_DECLARATION) continue;
+            const sem_node_info_t *mi =
+                semantic_get_node_info(lctx->sem_ctx, m);
+            size_t s = mi && mi->type ? compute_sem_type_words(lctx, mi->type) : 1;
+            total += s ? s : 1;
+        }
+        return total ? total : 1;
+    }
+    case TYPE_UNION_TAG: {
+        const TreeNode_t *decl =
+            (const TreeNode_t *)t->as.aggregate.decl_node;
+        if (!decl && t->as.aggregate.tag)
+            decl = find_aggregate_decl(lctx->root, NODE_UNION_DECLARATION,
+                                        t->as.aggregate.tag);
+        size_t maxsz = 0;
+        for (const TreeNode_t *m = decl ? decl->p_firstChild : NULL;
+             m; m = m->p_sibling) {
+            if (m->nodeType != NODE_STRUCT_MEMBER &&
+                m->nodeType != NODE_ARRAY_DECLARATION) continue;
+            const sem_node_info_t *mi =
+                semantic_get_node_info(lctx->sem_ctx, m);
+            size_t s = mi && mi->type ? compute_sem_type_words(lctx, mi->type) : 1;
+            if (s > maxsz) maxsz = s;
+        }
+        return maxsz ? maxsz : 1;
+    }
+    default:
+        return 1;
+    }
+}
+
+/* Evaluate a constant integer expression for global initialisers
+ * Returns 1 on success and writes *out; 0 if the AST node is not a
+ * supported constant expression. */
+static int eval_const_int(const TreeNode_t *e, long *out) {
+    if (!e) return 0; // null node
+
+    switch(e->nodeType) {
+        case NODE_INTEGER:
+        case NODE_CHAR:
+            *out = (long)e->nodeData.dVal;
+            return 1;
+
+        case NODE_TYPE_CAST: {
+            /* (T)expr — TYPE_CAST has children:
+             *   first  = NODE_TYPE  (target type, ignored at this layer)
+             *   second = the actual expression to cast.
+             * For 16-bit-or-narrower integer casts the value is
+             * representation-preserving, so we forward the inner value. */
+            const TreeNode_t *operand = e->p_firstChild
+                                        ? e->p_firstChild->p_sibling
+                                        : NULL;
+            long v;
+            if (operand && eval_const_int(operand, &v)) {
+                *out = v;
+                return 1;
+            }
+            return 0;
+        }
+
+        case NODE_OPERATOR: {
+            const TreeNode_t *lhs = e->p_firstChild;
+            const TreeNode_t *rhs = lhs ? lhs->p_sibling : NULL;
+            long lv, rv;
+
+            /* Unary forms: minus, plus, bitwise NOT, logical NOT. */
+            if (lhs && !rhs) {
+                if (!eval_const_int(lhs, &lv)) return 0;
+                switch ((long)e->nodeData.dVal) {
+                case OP_UNARY_MINUS: *out = -lv;  return 1;
+                case OP_NEGATIVE:    *out = -lv;  return 1;
+                case OP_BITWISE_NOT: *out = ~lv;  return 1;
+                case OP_LOGICAL_NOT: *out = !lv;  return 1;
+                default:             return 0;
+                }
+            }
+
+            /* Binary forms: arithmetic, bitwise, shifts, comparisons. */
+            if (lhs && rhs) {
+                if (!eval_const_int(lhs, &lv)) return 0;
+                if (!eval_const_int(rhs, &rv)) return 0;
+                switch ((long)e->nodeData.dVal) {
+                case OP_PLUS:        *out = lv +  rv;            return 1;
+                case OP_MINUS:       *out = lv -  rv;            return 1;
+                case OP_MULTIPLY:    *out = lv *  rv;            return 1;
+                case OP_DIVIDE:      if (rv == 0) return 0;
+                                     *out = lv /  rv;            return 1;
+                case OP_MODULE:      if (rv == 0) return 0;
+                                     *out = lv %  rv;            return 1;
+                case OP_BITWISE_AND: *out = lv &  rv;            return 1;
+                case OP_BITWISE_OR:  *out = lv |  rv;            return 1;
+                case OP_BITWISE_XOR: *out = lv ^  rv;            return 1;
+                case OP_LEFT_SHIFT:  *out = lv << rv;            return 1;
+                case OP_RIGHT_SHIFT: *out = lv >> rv;            return 1;
+                case OP_EQUAL:       *out = (lv == rv);          return 1;
+                case OP_NOT_EQUAL:   *out = (lv != rv);          return 1;
+                case OP_LESS_THAN:   *out = (lv <  rv);          return 1;
+                case OP_LESS_THAN_OR_EQUAL:    *out = (lv <= rv); return 1;
+                case OP_GREATER_THAN:          *out = (lv >  rv); return 1;
+                case OP_GREATER_THAN_OR_EQUAL: *out = (lv >= rv); return 1;
+                case OP_LOGICAL_AND: *out = (lv && rv);          return 1;
+                case OP_LOGICAL_OR:  *out = (lv || rv);          return 1;
+                default:             return 0;
+                }
+            }
+            return 0;
+        }
+
+        default:
+            return 0; // not a supported constant expression
+    }
+}
+
+
+void ir_lower_global_decl(ir_lower_ctx_t *lctx, 
+                          const TreeNode_t *decl_node,
+                          const TreeNode_t *init_expr)
 {
     if (!decl_node) return;
 
@@ -103,23 +262,70 @@ void ir_lower_global_decl(ir_lower_ctx_t *lctx, const TreeNode_t *decl_node)
     }
 
     int is_extern = (sym->storage_class == STORAGE_EXTERN);
-    ir_module_add_global(lctx->module, sym->name, ir_t, is_extern);
 
-    /*
-     * Global initialiser expressions are not emitted as instructions —
-     * they are data-section values.  A future backend pass handles them.
-     * We detect non-constant initialisers here and warn.
-     */
-    const TreeNode_t *init = decl_initialiser(decl_node);
+    /* Allocate the global up-front; populate the init payload below. */
+    ir_global_t *g = ir_module_add_global(lctx->module, sym->name,
+                                           ir_t, is_extern);
+    if (!g) return;
+
+    /* Override storage size from the semantic type so structs / unions
+     * (whose IR type drops layout info) get the right number of words. */
+    if (info && info->type) {
+        size_t sw = compute_sem_type_words(lctx, info->type);
+        if (sw) g->size_words = sw;
+    } else if (sym->type) {
+        size_t sw = compute_sem_type_words(lctx, sym->type);
+        if (sw) g->size_words = sw;
+    }
+
+    const TreeNode_t *init = init_expr
+                            ? init_expr
+                            : decl_initialiser(decl_node);
+
     if (init) {
-        const sem_node_info_t *iinfo =
-            semantic_get_node_info(lctx->sem_ctx, init);
-        if (iinfo && !(iinfo->flags & SEM_NODE_CONST_EXPR)) {
-            ir_diag(lctx, "IR003", decl_node->lineNumber,
-                    "global '%s' has a non-constant initialiser "
-                    "(not yet supported in IR phase 1)", sym->name);
+        long init_value = 0;
+        if (eval_const_int(init, &init_value)) {
+            g->init_kind = IR_GINIT_INT;
+            g->init_int  = init_value;
+        } else if (init->nodeType == NODE_STRING && init->nodeData.sVal) {
+            /* `char *p = "hello";` — emit the bytes into a fresh .strN
+             * global and point this global at it via IR_GINIT_LABEL. */
+            const char *raw = init->nodeData.sVal;
+            size_t rlen = strlen(raw);
+            size_t off  = (rlen >= 2 && raw[0] == '"' && raw[rlen - 1] == '"')
+                          ? 1 : 0;
+            size_t plen = rlen - 2 * off;
+
+            static unsigned glb_str_id = 0;
+            char strlabel[64];
+            snprintf(strlabel, sizeof(strlabel), ".str%u", glb_str_id++);
+            ir_global_t *sg = ir_module_add_global(lctx->module, strlabel,
+                                                    ir_type_ptr(), 0);
+            if (sg) {
+                sg->init_kind = IR_GINIT_STRING;
+                if (plen >= sizeof(sg->init_string))
+                    plen = sizeof(sg->init_string) - 1;
+                memcpy(sg->init_string, raw + off, plen);
+                sg->init_string[plen] = '\0';
+            }
+            /* `g` is still the global we just added (we only append). */
+            g->init_kind = IR_GINIT_LABEL;
+            snprintf(g->init_label, sizeof(g->init_label), "%s", strlabel);
+        } else {
+            const sem_node_info_t *iinfo =
+                semantic_get_node_info(lctx->sem_ctx, init);
+            if (iinfo && !(iinfo->flags & SEM_NODE_CONST_EXPR)) {
+                ir_diag(lctx, "IR003", decl_node->lineNumber,
+                        "global '%s' has a non-constant initialiser "
+                        "(not yet supported in IR phase 1)", sym->name);
+            } else {
+                ir_diag(lctx, "IR003", decl_node->lineNumber,
+                        "global '%s' has an unsupported initialiser "
+                        "(only constant integer expressions and string "
+                        "literals supported in IR)",
+                        sym->name);
+            }
         }
-        /* constant initialisers: recorded in the global node; backend emits. */
     }
 }
 
@@ -159,6 +365,21 @@ unsigned ir_lower_local_decl(ir_lower_ctx_t *lctx, const TreeNode_t *decl_node)
     }
 
     unsigned slot = ir_new_slot(lctx->func, sym->name, ir_t);
+
+    /* ir_new_slot reserves ir_type_size_words(ir_t) consecutive ids, but
+     * IR types lose layout for structs/unions (they show up as 1 word).
+     * Bump next_slot_id so an aggregate slot occupies the right number
+     * of words on the stack. */
+    {
+        const type_t *sem_type = (info && info->type) ? info->type : sym->type;
+        if (sem_type) {
+            size_t correct  = compute_sem_type_words(lctx, sem_type);
+            size_t reserved = ir_type_size_words(ir_t);
+            if (reserved == 0) reserved = 1;
+            if (correct > reserved)
+                lctx->func->next_slot_id += (unsigned)(correct - reserved);
+        }
+    }
 
     const TreeNode_t *init = decl_initialiser(decl_node);
     if (init) {

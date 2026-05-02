@@ -71,6 +71,34 @@ int ir_type_equal(ir_type_t a, ir_type_t b)
     return 1;
 }
 
+/* Storage size of a type, in 16-bit words (the addressing unit of this
+ * ISA: ADDI offsets, slot ids, and LW/SW addresses are all word-indexed).
+ *
+ *   i1 / i8 / i16 / ptr → 1 word
+ *   i32                 → 2 words
+ *   array<T, N>         → N * sizeof(T) words (recursive)
+ *   struct / union      → not implemented yet; conservative 1 word.
+ *   void                → 0 (caller should not invoke for void types). */
+size_t ir_type_size_words(ir_type_t t)
+{
+    switch (t.kind) {
+    case IR_TYPE_VOID:   return 0;
+    case IR_TYPE_I1:     return 1;
+    case IR_TYPE_I8:     return 1;
+    case IR_TYPE_I16:    return 1;
+    case IR_TYPE_I32:    return 2;
+    case IR_TYPE_PTR:    return 1;
+    case IR_TYPE_ARRAY:
+        if (t.as.array.elem)
+            return t.as.array.count * ir_type_size_words(*t.as.array.elem);
+        return t.as.array.count; /* unknown elem: assume word-sized */
+    case IR_TYPE_STRUCT:
+    case IR_TYPE_UNION:
+        return 1; /* aggregates not yet supported in storage layout */
+    }
+    return 1;
+}
+
 /************************************************************
  * Value constructors
  *************************************************************/
@@ -220,15 +248,19 @@ void ir_module_add_function(ir_module_t *mod, ir_function_t *func)
     }
 }
 
-void ir_module_add_global(ir_module_t *mod, const char *name,
-                           ir_type_t type, int is_extern)
+ir_global_t *ir_module_add_global(ir_module_t *mod, const char *name,
+                                   ir_type_t type, int is_extern)
 {
-    if (!mod || !name) return;
+    if (!mod || !name) return NULL;
     ir_global_t *g = (ir_global_t *)calloc(1, sizeof(*g));
-    if (!g) return;
+    if (!g) return NULL;
     snprintf(g->name, sizeof(g->name), "%s", name);
-    g->type = type;
-    g->is_extern = is_extern;
+    g->type       = type;
+    g->is_extern  = is_extern;
+    g->init_kind  = IR_GINIT_NONE;   /* caller may overwrite */
+    g->size_words = ir_type_size_words(type);   /* default; lowering may
+                                                 * overwrite for structs */
+    if (g->size_words == 0) g->size_words = 1;
     /* append */
     if (!mod->globals) {
         mod->globals = g;
@@ -237,6 +269,7 @@ void ir_module_add_global(ir_module_t *mod, const char *name,
         while (cur->next) cur = cur->next;
         cur->next = g;
     }
+    return g;
 }
 
 /************************************************************
@@ -297,7 +330,13 @@ unsigned ir_new_slot(ir_function_t *func, const char *name, ir_type_t type)
     if (!e) return (unsigned)-1;
     if (name) snprintf(e->name, sizeof(e->name), "%s", name);
     e->type    = type;
-    e->slot_id = func->next_slot_id++;
+    e->slot_id = func->next_slot_id;
+    /* Reserve enough consecutive slot ids to hold the whole object.
+     * For arrays this means N words for `T[N]`, so the next slot starts
+     * at e->slot_id + N.  Scalars take one slot. */
+    size_t sz = ir_type_size_words(type);
+    if (sz == 0) sz = 1;
+    func->next_slot_id += (unsigned)sz;
     /* prepend (lookup is by name, order doesn't matter) */
     e->next    = func->slots;
     func->slots = e;

@@ -13,10 +13,11 @@
  *   ┌─────────────────┐  ← sp on entry
  *   │   saved lr      │  ← after PUSH(lr)
  *   │   saved fp      │  ← after PUSH(fp)   ← fp after MOV(fp,sp)
- *   │   slot 0        │  ← fp − 1
- *   │   slot 1        │  ← fp − 2
+ *   │   saved s0..s3  |  ← fp - 2..fp-(1+cc) (cc = #callee-saved used)
+ *   |   slot 0        │  ← fp − (2+cc), when cc =0, resolves to fp - 2 (see test_files/RegisterAllocation/iftest.c)
+ *   │   slot 1        │  ← fp − (3+cc)
  *   │      …          │
- *   │   slot n−1      │  ← fp − n           ← sp after allocation
+ *   │   slot n−1      │  ← fp − (1+n+cc)    ← sp after allocation
  *   └─────────────────┘
  *
  */

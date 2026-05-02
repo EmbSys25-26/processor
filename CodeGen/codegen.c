@@ -62,24 +62,79 @@ static const char *vreg2phys(const regalloc_t *ra, unsigned vreg)
  * Only safe to call when kind == IR_VAL_VREG. */
 #define PREG(val)  vreg2phys(ra, (val).as.vreg)
 
+/* Forward declarations so the materialize helper below can call into the
+ * low-level emitters defined further down in §3. */
+static void emit_load_imm(FILE *out, const char *rd, long imm);
+
+/* Pick a scratch register for codegen-introduced temps.
+ *
+ * The register allocator excludes r7 (t3) from its preference list, so t3
+ * is guaranteed never to be the home of a live vreg.  We try t3 first as
+ * the always-safe choice, and fall back to t0..t2 only if a caller forbids
+ * t3 explicitly (no current call site does).  The `avoid*` parameters are
+ * still honoured for clarity at call sites.
+ *
+ * The returned name is safe to write to without consulting liveness. */
+static const char *pick_scratch3(const char *avoid1,
+                                  const char *avoid2,
+                                  const char *avoid3)
+{
+    static const char *cands[] = {"t3", "t2", "t1", "t0"};
+    for (unsigned i = 0; i < 4; i++) {
+        if (avoid1 && strcmp(cands[i], avoid1) == 0) continue;
+        if (avoid2 && strcmp(cands[i], avoid2) == 0) continue;
+        if (avoid3 && strcmp(cands[i], avoid3) == 0) continue;
+        return cands[i];
+    }
+    return "t3";
+}
+
+/* If `v` is a virtual register, return the physical name it was allocated to
+ * (no instruction emitted).  Otherwise emit code to load the value into
+ * `scratch` and return the scratch register name.
+ *
+ * Supports immediates and global symbols.  Slot/label/none operands are
+ * not handled — they are addressed via dedicated opcodes (ADDR_OF, GOTO …). */
+static const char *materialize_operand(FILE                *out,
+                                        const ir_value_t    *v,
+                                        const regalloc_t    *ra,
+                                        const char          *scratch)
+{
+    switch (v->kind) {
+    case IR_VAL_VREG:
+        return vreg2phys(ra, v->as.vreg);
+    case IR_VAL_IMM_INT:
+        /* r0 is hardwired to zero on this ISA, so an immediate zero needs
+         * no materialisation — use r0 directly and save an instruction. */
+        if (v->as.imm == 0)
+            return "r0";
+        emit_load_imm(out, scratch, v->as.imm);
+        return scratch;
+    case IR_VAL_GLOBAL:
+        fprintf(out, "    LI(%s, %s)              ; @%s\n",
+                scratch, v->as.name, v->as.name);
+        return scratch;
+    default:
+        fprintf(out, "    ; [CODEGEN] cannot materialize operand kind %d\n",
+                (int)v->kind);
+        return scratch;
+    }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
  * §2  Frame layout helpers
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Count local stack slots declared in the function. */
+/* Total stack space used by local slots, in 16-bit words.
+ *
+ * Each named slot may occupy more than one word (arrays).  ir_new_slot()
+ * reserves consecutive slot ids by bumping `next_slot_id` by the type's
+ * word size, so the high-water mark is the right total. */
 static unsigned count_slots(const ir_function_t *func)
 {
-    unsigned n = 0;
-    for (const ir_slot_entry_t *s = func->slots; s; s = s->next) n++;
-    return n;
+    return func->next_slot_id;
 }
 
-/* Frame-pointer offset for slot_id N:  fp + offset_of(N) = address of slot N.
- * Slot 0 is directly below the saved fp → offset = -1. */
-static int slot_fp_offset(unsigned slot_id)
-{
-    return -((int)slot_id + 1);
-}
 
 /* ─── detect which callee-saved registers (r8–r11) are used by the function */
 static uint16_t callee_used_mask(const regalloc_t *ra)
@@ -92,6 +147,21 @@ static uint16_t callee_used_mask(const regalloc_t *ra)
             mask |= (uint16_t)(1u << (c - PHYS_R8)); /* bit i → r(8+i) */
     }
     return mask;
+}
+
+/* Frame-pointer offset for slot_id N:  fp + offset_of(N) = address of slot N.
+ * !! Slot 0 sits below the last callee-saved register !! */
+static int slot_fp_offset(unsigned slot_id, const regalloc_t *ra)
+{
+    /*
+        Frame layout after prologue: 
+        fp-0: saved fp
+        fp-1: saved lr 
+        fp-2, fp-3, ..., fp-(1+cc): saved callee-saved (r8–r11, if used)
+        `cc` = popcount of callee_used_mask(ra) 
+    */
+    int header = 1 + __builtin_popcount(callee_used_mask(ra));
+    return -((int)slot_id + 1 + header);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -179,7 +249,7 @@ static void emit_prologue(FILE *out,
     fprintf(out, "    PUSH(fp) \n");
     fprintf(out, "    MOV(fp, sp) \n");
     fprintf(out, "    PUSH(lr) \n");
-    
+
 
     /* Save any callee-saved registers the function uses */
     for (int i = 0; i <= 3; i++) {
@@ -191,6 +261,44 @@ static void emit_prologue(FILE *out,
     if (n_slots > 0) {
         fprintf(out, "    ; Allocate %u local slot(s)\n", n_slots);
         emit_sp_adj(out, -(int)n_slots);
+    }
+
+    /* Load stack-passed parameters straight from the caller's frame into
+     * their assigned local slots, going through t3 (regalloc-reserved).
+     *
+     * ABI recap: caller pushes args[N-1] .. args[3] before the CALL, so
+     * after our PUSH(fp) they sit at:
+     *     fp+1  → args[3]   (the first stack arg)
+     *     fp+2  → args[4]
+     *     ...
+     * Each stack-param's local slot is allocated by ir_lower_function. */
+    if (func->param_count > PHYS_ARG_REGS) {
+        for (unsigned i = PHYS_ARG_REGS; i < func->param_count; i++) {
+            int caller_off = (int)(i - PHYS_ARG_REGS) + 1;
+            unsigned slot = ir_find_slot(func, func->param_names[i]);
+            if (slot == (unsigned)-1) continue;
+            int slot_off = slot_fp_offset(slot, ra);
+            /* LW t3, fp, #caller_off */
+            if (caller_off >= -8 && caller_off <= 7) {
+                fprintf(out, "    LW t3, fp, #%d         ; load stack param %s\n",
+                        caller_off, func->param_names[i]);
+            } else {
+                uint16_t u16 = (uint16_t)(int16_t)caller_off;
+                fprintf(out, "    IMM #0x%03X\n", u16 >> 4);
+                fprintf(out, "    LW t3, fp, #%u         ; load stack param %s\n",
+                        u16 & 0xFu, func->param_names[i]);
+            }
+            /* SW t3, fp, #slot_off  — but SW's imm is also 4-bit signed. */
+            if (slot_off >= -8 && slot_off <= 7) {
+                fprintf(out, "    SW t3, fp, #%d         ; store to slot %s\n",
+                        slot_off, func->param_names[i]);
+            } else {
+                uint16_t u16 = (uint16_t)(int16_t)slot_off;
+                fprintf(out, "    IMM #0x%03X\n", u16 >> 4);
+                fprintf(out, "    SW t3, fp, #%u         ; store to slot %s\n",
+                        u16 & 0xFu, func->param_names[i]);
+            }
+        }
     }
     fprintf(out, "\n");
 }
@@ -204,15 +312,22 @@ static void emit_prologue(FILE *out,
 *
 */
 static void emit_epilogue(FILE *out,
-                           const ir_function_t *func __attribute__((unused)),
+                           const ir_function_t *func,
                            const regalloc_t    *ra)
 {
     uint16_t callee = callee_used_mask(ra);
+    unsigned n_slots = count_slots(func);
 
     fprintf(out, "    ; --- Epilogue ---\n");
-    fprintf(out, "    MOV(sp, fp)  \n");
 
-    /* Restore callee-saved in reverse order */
+    /* Free local slots: walk sp up past the slot region, leaving it at 
+     * the lowest saved callee-saved word (or saved lr if none used). */
+    if (n_slots > 0) {
+        fprintf(out, "    ; Free %u local slot(s)\n", n_slots);
+        emit_sp_adj(out, n_slots);
+    }
+
+    /* Restore callee-saved in reverse push order (push order is r8..r11) */
     for (int i = 3; i >= 0; i--) {
         if (callee & (1u << i))
             fprintf(out, "    POP(r%d)\n", 8 + i);
@@ -248,13 +363,40 @@ static void emit_binop_rr(FILE *out, const char *mnem,
     }
 }
 
-/* Non-commutative: dst = a op b  (SUB, SRL, SRA) — order matters */
+/* Non-commutative: dst = a op b  (SUB, SRL, SRA) — order matters.
+ *
+ * When dst == b (a separate register from a), the obvious sequence
+ *     MOV(dst, a) ; OP dst, b
+ * clobbers b's value before the OP reads it.  Regalloc legitimately
+ * recycles dst from a dead source — `r = a - b` with %v_r and %v_b in the
+ * same physical register is reachable in practice.
+ *
+ * For SUB we rewrite via NEG (no scratch needed):
+ *     dst = a − b   when dst == b   →   NEG(dst); ADD dst, a
+ *
+ * For SRL / SRA we save b in t3 (regalloc-reserved, never holds a live
+ * vreg) before overwriting dst with a. */
 static void emit_binop_rr_nc(FILE *out, const char *mnem,
                                const char *dst,
                                const char *a, const char *b)
 {
-    if (strcmp(dst, a) != 0)
+    if (strcmp(dst, a) == 0) {
+        fprintf(out, "    %s %s, %s\n", mnem, dst, b);
+        return;
+    }
+    if (strcmp(dst, b) == 0) {
+        if (strcmp(mnem, "SUB") == 0) {
+            fprintf(out, "    NEG(%s)\n", dst);
+            fprintf(out, "    ADD %s, %s\n", dst, a);
+            return;
+        }
+        /* SRL / SRA: stash b in the regalloc-reserved scratch t3. */
+        fprintf(out, "    MOV(t3, %s)\n", b);
         fprintf(out, "    MOV(%s, %s)\n", dst, a);
+        fprintf(out, "    %s %s, t3\n", mnem, dst);
+        return;
+    }
+    fprintf(out, "    MOV(%s, %s)\n", dst, a);
     fprintf(out, "    %s %s, %s\n", mnem, dst, b);
 }
 
@@ -268,11 +410,58 @@ static void emit_or_rr(FILE *out,
 {
     const char *lhs = a, *rhs = b;
 
-    /* Ensure rhs != r4 (t0 used internally by OR macro) */
-    if (strcmp(rhs, "r4") == 0) {
-        const char *tmp = lhs; lhs = rhs; rhs = tmp;
+    /* phys_name() returns ABI mnemonics; r4 = "t0", r5 = "t1", etc. */
+
+    /* (1) Commutative swap to maximise dst == lhs.
+     * Without this, MOV(dst, lhs) clobbers rhs whenever dst == rhs
+     * (regalloc legitimately recycles dst's register from a dead source).
+     * OR is commutative, so swapping is safe. */
+    if (strcmp(dst, rhs) == 0 && strcmp(dst, lhs) != 0) {
+        const char *t = lhs; lhs = rhs; rhs = t;
     }
 
+    /* (2) Special case: dst == t0.
+     * The OR(rd, rs) macro expands to
+     *     MOV(t0, rd); AND t0, rs; XOR rd, rs; XOR rd, t0
+     * When rd IS t0 the saved copy and the working copy alias each other;
+     * the final XOR rd, t0 collapses to XOR t0, t0 = 0.
+     *
+     * Manually expand:  dst | rhs  ≡  (dst ^ rhs) ^ (dst & rhs).
+     * The scratch must differ from both dst (= t0) and rhs.  We use t3,
+     * which the register allocator reserves, so it never holds a live
+     * vreg's value. */
+    if (strcmp(dst, "t0") == 0) {
+        /* t3 is regalloc-reserved, so it never collides with a vreg color.
+         * The only way rhs could already be t3 is if the caller materialised
+         * an imm/global into our reserved scratch.  In that case use t1
+         * with a stack save so we don't lose the materialised rhs value. */
+        if (strcmp(rhs, "t3") == 0) {
+            const char *scratch = "t1";
+            fprintf(out, "    PUSH(%s)\n", scratch);
+            if (strcmp(dst, lhs) != 0)
+                fprintf(out, "    MOV(%s, %s)\n", dst, lhs);
+            fprintf(out, "    MOV(%s, %s)\n",  scratch, dst);
+            fprintf(out, "    AND %s, %s\n",   scratch, rhs);
+            fprintf(out, "    XOR %s, %s\n",   dst,     rhs);
+            fprintf(out, "    XOR %s, %s\n",   dst,     scratch);
+            fprintf(out, "    POP(%s)\n", scratch);
+            return;
+        }
+        const char *scratch = "t3";
+        if (strcmp(dst, lhs) != 0)
+            fprintf(out, "    MOV(%s, %s)\n", dst, lhs);
+        fprintf(out, "    MOV(%s, %s)\n",  scratch, dst);
+        fprintf(out, "    AND %s, %s\n",   scratch, rhs);
+        fprintf(out, "    XOR %s, %s\n",   dst,     rhs);
+        fprintf(out, "    XOR %s, %s\n",   dst,     scratch);
+        return;
+    }
+
+    /* (3) Normal path.  OR macro's internal t0 is fine, but rhs must
+     * not be t0 (the macro's MOV(t0, rd) would clobber rhs). */
+    if (strcmp(rhs, "t0") == 0 && strcmp(lhs, "t0") != 0) {
+        const char *t = lhs; lhs = rhs; rhs = t;
+    }
     if (strcmp(dst, lhs) != 0)
         fprintf(out, "    MOV(%s, %s)\n", dst, lhs);
     fprintf(out, "    OR(%s, %s)\n", dst, rhs);
@@ -365,15 +554,14 @@ static void emit_instr(FILE                *out,
                         const ir_function_t *func,
                         const regalloc_t    *ra)
 {
-    /* Shorthand: physical name of destination vreg */
+    /* Shorthand: physical name of destination vreg.
+     * Source operands are no longer materialised eagerly here — each case
+     * calls materialize_operand() so that immediates and global labels are
+     * loaded into a chosen scratch register on demand.  The previous shorthand
+     * `rs0 / rs1` produced NULL strings for non-VREG sources and led to the
+     * "ADD t0, (null)" / "SW (null), t0, #0" miscompilations. */
     const char *rd = (ins->dst.kind == IR_VAL_VREG)
                      ? PREG(ins->dst) : NULL;
-
-    /* Shorthand: physical names of source vregs */
-    const char *rs0 = (ins->src[0].kind == IR_VAL_VREG)
-                      ? PREG(ins->src[0]) : NULL;
-    const char *rs1 = (ins->src[1].kind == IR_VAL_VREG)
-                      ? PREG(ins->src[1]) : NULL;
 
     switch (ins->op) {
 
@@ -385,93 +573,161 @@ static void emit_instr(FILE                *out,
 
     /* ── §7.2  Copy / move ───────────────────────────────────────────── */
 
-    case IR_OP_COPY:
-        if (strcmp(rd, rs0) != 0)
-            fprintf(out, "    MOV(%s, %s)\n", rd, rs0);
+    case IR_OP_COPY: {
+        /* Source may be a vreg, an immediate, or a global label.  Materialise
+         * directly into rd when possible so we don't burn a separate temp. */
+        const char *src = materialize_operand(out, &ins->src[0], ra, rd);
+        if (strcmp(rd, src) != 0)
+            fprintf(out, "    MOV(%s, %s)\n", rd, src);
         break;
+    }
 
     /* ── §7.3  Arithmetic ────────────────────────────────────────────── */
 
-    case IR_OP_ADD:
-        emit_binop_rr(out, "ADD", rd, rs0, rs1);
+    case IR_OP_ADD: {
+        /* Imm + vreg → ADDI rd, vreg, #imm (commutative).  The IMM-prefix
+         * encoding inside emit_addi_imm covers any 16-bit value. */
+        if (ins->src[0].kind == IR_VAL_VREG &&
+            ins->src[1].kind == IR_VAL_IMM_INT) {
+            emit_addi_imm(out, rd, PREG(ins->src[0]),
+                          (int)ins->src[1].as.imm);
+            break;
+        }
+        if (ins->src[1].kind == IR_VAL_VREG &&
+            ins->src[0].kind == IR_VAL_IMM_INT) {
+            emit_addi_imm(out, rd, PREG(ins->src[1]),
+                          (int)ins->src[0].as.imm);
+            break;
+        }
+        const char *a = materialize_operand(out, &ins->src[0], ra,
+                            pick_scratch3(rd, NULL, NULL));
+        const char *b = materialize_operand(out, &ins->src[1], ra,
+                            pick_scratch3(rd, a, NULL));
+        emit_binop_rr(out, "ADD", rd, a, b);
         break;
+    }
 
-    case IR_OP_SUB:
-        emit_binop_rr_nc(out, "SUB", rd, rs0, rs1);
+    case IR_OP_SUB: {
+        /* vreg − imm → ADDI rd, vreg, #-imm (when the negation fits 16 bits). */
+        if (ins->src[0].kind == IR_VAL_VREG &&
+            ins->src[1].kind == IR_VAL_IMM_INT) {
+            emit_addi_imm(out, rd, PREG(ins->src[0]),
+                          -(int)ins->src[1].as.imm);
+            break;
+        }
+        const char *a = materialize_operand(out, &ins->src[0], ra,
+                            pick_scratch3(rd, NULL, NULL));
+        const char *b = materialize_operand(out, &ins->src[1], ra,
+                            pick_scratch3(rd, a, NULL));
+        emit_binop_rr_nc(out, "SUB", rd, a, b);
         break;
+    }
 
-    case IR_OP_AND:
-        emit_binop_rr(out, "AND", rd, rs0, rs1);
+    case IR_OP_AND: {
+        const char *a = materialize_operand(out, &ins->src[0], ra,
+                            pick_scratch3(rd, NULL, NULL));
+        const char *b = materialize_operand(out, &ins->src[1], ra,
+                            pick_scratch3(rd, a, NULL));
+        emit_binop_rr(out, "AND", rd, a, b);
         break;
+    }
 
-    case IR_OP_OR:
-        emit_or_rr(out, rd, rs0, rs1);
+    case IR_OP_OR: {
+        /* The OR(rd,rs) macro expands using t0 internally, so neither input
+         * may live in t0 (emit_or_rr handles vreg-vs-vreg conflicts via swap;
+         * here we just keep our materialised scratches off t0). */
+        const char *a = materialize_operand(out, &ins->src[0], ra,
+                            pick_scratch3(rd, "t0", NULL));
+        const char *b = materialize_operand(out, &ins->src[1], ra,
+                            pick_scratch3(rd, "t0", a));
+        emit_or_rr(out, rd, a, b);
         break;
+    }
 
-    case IR_OP_XOR:
-        emit_binop_rr(out, "XOR", rd, rs0, rs1);
+    case IR_OP_XOR: {
+        const char *a = materialize_operand(out, &ins->src[0], ra,
+                            pick_scratch3(rd, NULL, NULL));
+        const char *b = materialize_operand(out, &ins->src[1], ra,
+                            pick_scratch3(rd, a, NULL));
+        emit_binop_rr(out, "XOR", rd, a, b);
         break;
+    }
 
     case IR_OP_NEG:
-        if (strcmp(rd, rs0) != 0)
-            fprintf(out, "    MOV(%s, %s)\n", rd, rs0);
-        fprintf(out, "    NEG(%s)\n", rd);
+        /* Constant-fold immediate operands at codegen time. */
+        if (ins->src[0].kind == IR_VAL_IMM_INT) {
+            emit_load_imm(out, rd, -ins->src[0].as.imm);
+        } else {
+            const char *src = materialize_operand(out, &ins->src[0], ra,
+                                  pick_scratch3(rd, NULL, NULL));
+            if (strcmp(rd, src) != 0)
+                fprintf(out, "    MOV(%s, %s)\n", rd, src);
+            fprintf(out, "    NEG(%s)\n", rd);
+        }
         break;
 
     case IR_OP_NOT:
-        if (strcmp(rd, rs0) != 0)
-            fprintf(out, "    MOV(%s, %s)\n", rd, rs0);
-        fprintf(out, "    COM(%s)\n", rd);
+        if (ins->src[0].kind == IR_VAL_IMM_INT) {
+            emit_load_imm(out, rd, ~ins->src[0].as.imm);
+        } else {
+            const char *src = materialize_operand(out, &ins->src[0], ra,
+                                  pick_scratch3(rd, NULL, NULL));
+            if (strcmp(rd, src) != 0)
+                fprintf(out, "    MOV(%s, %s)\n", rd, src);
+            fprintf(out, "    COM(%s)\n", rd);
+        }
         break;
 
-    case IR_OP_SHL:
+    case IR_OP_SHL: {
         /* SLL(rd) shifts rd left by 1.  For a constant shift count N, emit N
          * SLL instructions.  For a variable shift count, emit a software loop.
          */
+        const char *src0 = materialize_operand(out, &ins->src[0], ra,
+                              pick_scratch3(rd, NULL, NULL));
         if (ins->src[1].kind == IR_VAL_IMM_INT) {
             long n = ins->src[1].as.imm;
-            if (strcmp(rd, rs0) != 0)
-                fprintf(out, "    MOV(%s, %s)\n", rd, rs0);
+            if (strcmp(rd, src0) != 0)
+                fprintf(out, "    MOV(%s, %s)\n", rd, src0);
             for (long i = 0; i < n && i < 16; i++)
                 fprintf(out, "    SLL(%s)\n", rd);
         } else {
-            /* Variable-count left shift using a decrement-and-branch loop:
-             *
-             *   MOV rd, rs0
-             *   MOV t0, rs1        ; loop counter
-             *   CMP t0, r0
-             *   BEQ .shl_done_N
-             * .shl_loop_N:
-             *   SLL rd
-             *   ADDI t0, t0, #-1
-             *   CMP t0, r0
-             *   BEQ .shl_done_N
-             *   BR .shl_loop_N
-             * .shl_done_N:
-             */
             unsigned lbl = g_cmp_label++;
-            if (strcmp(rd, rs0) != 0)
-                fprintf(out, "    MOV(%s, %s)\n", rd, rs0);
-            fprintf(out, "    MOV(r4, %s)\n", rs1); /* t0 = shift count */
-            fprintf(out, "    CMP r4, r0\n");
+            if (strcmp(rd, src0) != 0)
+                fprintf(out, "    MOV(%s, %s)\n", rd, src0);
+            const char *src1 = materialize_operand(out, &ins->src[1], ra,
+                                  pick_scratch3(rd, src0, NULL));
+            const char *cnt = pick_scratch3(rd, src0, src1);
+            fprintf(out, "    MOV(%s, %s)\n", cnt, src1);
+            fprintf(out, "    CMP %s, r0\n", cnt);
             fprintf(out, "    BEQ .shl_done_%u\n", lbl);
             fprintf(out, ".shl_loop_%u:\n", lbl);
             fprintf(out, "    SLL(%s)\n", rd);
-            fprintf(out, "    ADDI r4, r4, #-1\n");
-            fprintf(out, "    CMP r4, r0\n");
+            fprintf(out, "    ADDI %s, %s, #-1\n", cnt, cnt);
+            fprintf(out, "    CMP %s, r0\n", cnt);
             fprintf(out, "    BEQ .shl_done_%u\n", lbl);
             fprintf(out, "    BR .shl_loop_%u\n", lbl);
             fprintf(out, ".shl_done_%u:\n", lbl);
         }
         break;
+    }
 
-    case IR_OP_SHRU:
-        emit_binop_rr_nc(out, "SRL", rd, rs0, rs1);
+    case IR_OP_SHRU: {
+        const char *a = materialize_operand(out, &ins->src[0], ra,
+                            pick_scratch3(rd, NULL, NULL));
+        const char *b = materialize_operand(out, &ins->src[1], ra,
+                            pick_scratch3(rd, a, NULL));
+        emit_binop_rr_nc(out, "SRL", rd, a, b);
         break;
+    }
 
-    case IR_OP_SHRS:
-        emit_binop_rr_nc(out, "SRA", rd, rs0, rs1);
+    case IR_OP_SHRS: {
+        const char *a = materialize_operand(out, &ins->src[0], ra,
+                            pick_scratch3(rd, NULL, NULL));
+        const char *b = materialize_operand(out, &ins->src[1], ra,
+                            pick_scratch3(rd, a, NULL));
+        emit_binop_rr_nc(out, "SRA", rd, a, b);
         break;
+    }
 
     /* ── §7.4  Memory ────────────────────────────────────────────────── */
 
@@ -481,7 +737,7 @@ static void emit_instr(FILE                *out,
      */
     case IR_OP_ADDR_OF:
         if (ins->src[0].kind == IR_VAL_SLOT) {
-            int off = slot_fp_offset(ins->src[0].as.slot);
+            int off = slot_fp_offset(ins->src[0].as.slot, ra);
             emit_addi_imm(out, rd, "fp", off);
         } else if (ins->src[0].kind == IR_VAL_GLOBAL) {
             /* Global symbol — assembler resolves the label at link time.
@@ -499,8 +755,10 @@ static void emit_instr(FILE                *out,
      * Use LW (word, 16-bit) by default; LB for i8 destination.
      */
     case IR_OP_LOAD: {
+        const char *ptr = materialize_operand(out, &ins->src[0], ra,
+                             pick_scratch3(rd, NULL, NULL));
         const char *op = (ins->dst.type.kind == IR_TYPE_I8) ? "LB" : "LW";
-        fprintf(out, "    %s %s, %s, #0\n", op, rd, rs0);
+        fprintf(out, "    %s %s, %s, #0\n", op, rd, ptr);
         break;
     }
 
@@ -510,8 +768,12 @@ static void emit_instr(FILE                *out,
      * Use SW (word) or SB (byte).
      */
     case IR_OP_STORE: {
-        const char *op = (ins->src[1].type.kind == IR_TYPE_I8) ? "SB" : "SW";
-        fprintf(out, "    %s %s, %s, #0\n", op, rs1, rs0);
+        const char *ptr = materialize_operand(out, &ins->src[0], ra,
+                             pick_scratch3(NULL, NULL, NULL));
+        const char *val = materialize_operand(out, &ins->src[1], ra,
+                             pick_scratch3(ptr, NULL, NULL));
+        const char *op  = (ins->src[1].type.kind == IR_TYPE_I8) ? "SB" : "SW";
+        fprintf(out, "    %s %s, %s, #0\n", op, val, ptr);
         break;
     }
 
@@ -525,25 +787,47 @@ static void emit_instr(FILE                *out,
      */
     case IR_OP_GEP: {
         long width = ins->as.gep.width;
+        const char *base = materialize_operand(out, &ins->src[0], ra,
+                              pick_scratch3(rd, NULL, NULL));
+        const char *idx  = materialize_operand(out, &ins->src[1], ra,
+                              pick_scratch3(rd, base, NULL));
         if (width == 1) {
-            emit_binop_rr(out, "ADD", rd, rs0, rs1);
+            emit_binop_rr(out, "ADD", rd, base, idx);
         } else if (width == 2 || width == 4) {
             int shifts = (width == 2) ? 1 : 2;
-            /* Compute idx * width in rd (may clobber rd if rd ≠ rs1). */
-            if (strcmp(rd, rs1) != 0)
-                fprintf(out, "    MOV(%s, %s)\n", rd, rs1);
+            /* Compute idx * width in rd (may clobber rd if rd ≠ idx). */
+            if (strcmp(rd, idx) != 0)
+                fprintf(out, "    MOV(%s, %s)\n", rd, idx);
             for (int i = 0; i < shifts; i++)
                 fprintf(out, "    SLL(%s)\n", rd);
-            fprintf(out, "    ADD %s, %s\n", rd, rs0); /* rd = scaled_idx + base */
+            fprintf(out, "    ADD %s, %s\n", rd, base);
         } else {
-            /* General case: rd = base + idx * width */
-            emit_load_imm(out, "r4", width);            /* r4 = width (scratch) */
-            if (strcmp(rs1, "r1") != 0) fprintf(out, "    MOV(r1, %s)\n", rs1);
-            fprintf(out, "    MOV(r2, r4)\n");
-            fprintf(out, "    CALL(__mul)             ; r1 = idx * width\n");
-            fprintf(out, "    ADD r1, %s\n", rs0);     /* r1 = base + offset */
-            if (strcmp(rd, "r1") != 0)
-                fprintf(out, "    MOV(%s, r1)\n", rd);
+            /* General case: rd = base + idx * width via __mul helper.
+             *
+             * The CALL clobbers all caller-saved registers, so `base` (which
+             * we must add after the multiply) cannot stay in t0..t3 / a0..a2
+             * across the call.  Spill it to the stack, do the call, reload
+             * into a scratch, and add. */
+            fprintf(out, "    PUSH(%s)                ; save base across __mul\n",
+                    base);
+            /* Load width into a1 directly (avoids needing a separate scratch). */
+            if (strcmp(idx, "a1") == 0) {
+                /* idx and width target collide: stage idx into a0 first. */
+                fprintf(out, "    MOV(a0, a1)\n");
+                emit_load_imm(out, "a1", width);
+            } else {
+                if (strcmp(idx, "a0") != 0)
+                    fprintf(out, "    MOV(a0, %s)\n", idx);
+                emit_load_imm(out, "a1", width);
+            }
+            fprintf(out, "    CALL(__mul)             ; a0 = idx * width\n");
+            /* Reload base into a free temp.  a0 now holds the product, so
+             * pick anything else; t0 is fine after the call (it was
+             * caller-saved). */
+            fprintf(out, "    POP(t0)                 ; reload base\n");
+            fprintf(out, "    ADD a0, t0\n");
+            if (strcmp(rd, "a0") != 0)
+                fprintf(out, "    MOV(%s, a0)\n", rd);
         }
         break;
     }
@@ -559,17 +843,33 @@ static void emit_instr(FILE                *out,
      * i16 → i16: just MOV (no-op extension).
      */
     case IR_OP_ZEXT:
-        if (strcmp(rd, rs0) != 0)
-            fprintf(out, "    MOV(%s, %s)\n", rd, rs0);
+        /* Constant-fold immediate sources: just load the masked value. */
+        if (ins->src[0].kind == IR_VAL_IMM_INT) {
+            long v = ins->src[0].as.imm;
+            if (ins->src[0].type.kind == IR_TYPE_I1)      v &= 0x1;
+            else if (ins->src[0].type.kind == IR_TYPE_I8) v &= 0xFF;
+            emit_load_imm(out, rd, v);
+            break;
+        }
+        {
+            const char *src = materialize_operand(out, &ins->src[0], ra,
+                                  pick_scratch3(rd, NULL, NULL));
+            if (strcmp(rd, src) != 0)
+                fprintf(out, "    MOV(%s, %s)\n", rd, src);
+        }
         if (ins->src[0].type.kind == IR_TYPE_I1) {
             fprintf(out, "    ANDI %s, #1\n", rd);
         } else if (ins->src[0].type.kind == IR_TYPE_I8) {
             /* Zero-extend byte: mask = 0x00FF.
-             * Load mask into a scratch (r4), then AND rd with r4.
-             * We use IMM #0x00F ; ADDI r4, r0, #0xF to get 0x00FF. */
+             * phys_name() yields ABI mnemonics, so r4 surfaces as "t0".
+             * Pick the scratch so it is NOT the destination — otherwise
+             * the mask load overwrites the value we just placed in rd. */
+            const char *scratch = pick_scratch3(rd, NULL, NULL);
             fprintf(out, "    IMM #0x00F\n");
-            fprintf(out, "    ADDI r4, r0, #0xF       ; r4 = 0x00FF (byte mask)\n");
-            fprintf(out, "    AND %s, r4              ; zero-extend byte\n", rd);
+            fprintf(out, "    ADDI %s, r0, #0xF       ; %s = 0x00FF (byte mask)\n",
+                    scratch, scratch);
+            fprintf(out, "    AND %s, %s              ; zero-extend byte\n",
+                    rd, scratch);
         }
         /* i16/i32 → i16: no masking needed, value already fits. */
         break;
@@ -583,13 +883,34 @@ static void emit_instr(FILE                *out,
      * i16 → i16: no-op.
      */
     case IR_OP_SEXT:
-        if (strcmp(rd, rs0) != 0)
-            fprintf(out, "    MOV(%s, %s)\n", rd, rs0);
+        /* Constant-fold immediate sources by sign-extending at codegen time. */
+        if (ins->src[0].kind == IR_VAL_IMM_INT) {
+            long v = ins->src[0].as.imm;
+            if (ins->src[0].type.kind == IR_TYPE_I1) {
+                v = (v & 1) ? -1L : 0L;
+            } else if (ins->src[0].type.kind == IR_TYPE_I8) {
+                v &= 0xFF;
+                if (v & 0x80) v |= ~0xFFL;
+            }
+            emit_load_imm(out, rd, v);
+            break;
+        }
+        {
+            const char *src = materialize_operand(out, &ins->src[0], ra,
+                                  pick_scratch3(rd, NULL, NULL));
+            if (strcmp(rd, src) != 0)
+                fprintf(out, "    MOV(%s, %s)\n", rd, src);
+        }
         if (ins->src[0].type.kind == IR_TYPE_I8) {
-            /* Shift left 8 then arithmetic-right 8 to sign-extend. */
-            fprintf(out, "    ADDI r4, r0, #8         ; shift count = 8\n");
+            /* Shift left 8 then arithmetic-right 8 to sign-extend.
+             * Pick a shift-count register that is NOT the destination —
+             * otherwise the ADDI overwrites the byte-to-extend before the
+             * SLL loop has a chance to shift it. */
+            const char *cnt = pick_scratch3(rd, NULL, NULL);
+            fprintf(out, "    ADDI %s, r0, #8         ; shift count = 8\n", cnt);
             for (int i = 0; i < 8; i++) fprintf(out, "    SLL(%s)\n", rd);
-            fprintf(out, "    SRA %s, r4              ; sign-extend (SRA by 8)\n", rd);
+            fprintf(out, "    SRA %s, %s              ; sign-extend (SRA by 8)\n",
+                    rd, cnt);
         } else if (ins->src[0].type.kind == IR_TYPE_I1) {
             /* i1 sign-extend: 0→0, 1→-1 (0xFFFF). */
             fprintf(out, "    NEG(%s)                 ; i1 sign-extend: 1→-1\n", rd);
@@ -597,23 +918,28 @@ static void emit_instr(FILE                *out,
         break;
 
     case IR_OP_TRUNC:
-    case IR_OP_BITCAST:
-        /* Truncation / reinterpretation: the physical register holds the value;
-         * no instruction needed — the low-order bits are already correct.
-         * A byte truncation could AND with 0xFF, but since we use 16-bit regs
-         * everywhere and the LB/SB instructions handle byte granularity in
-         * memory, this is typically a no-op at the register level. */
-        if (strcmp(rd, rs0) != 0)
-            fprintf(out, "    MOV(%s, %s)\n", rd, rs0);
+    case IR_OP_BITCAST: {
+        /* Truncation / reinterpretation: the physical register already holds
+         * the value, so for VREG sources we only need a MOV when rd ≠ src.
+         * Immediate / global sources materialise straight into rd. */
+        const char *src = materialize_operand(out, &ins->src[0], ra, rd);
+        if (strcmp(rd, src) != 0)
+            fprintf(out, "    MOV(%s, %s)\n", rd, src);
         break;
+    }
 
     /* ── §7.6  Comparisons ────────────────────────────────────────────── */
 
     case IR_OP_EQ: case IR_OP_NEQ:
     case IR_OP_LTS: case IR_OP_LES: case IR_OP_GTS: case IR_OP_GES:
-    case IR_OP_LTU: case IR_OP_LEU: case IR_OP_GTU: case IR_OP_GEU:
-        emit_comparison(out, ins->op, rd, rs0, rs1);
+    case IR_OP_LTU: case IR_OP_LEU: case IR_OP_GTU: case IR_OP_GEU: {
+        const char *a = materialize_operand(out, &ins->src[0], ra,
+                            pick_scratch3(rd, NULL, NULL));
+        const char *b = materialize_operand(out, &ins->src[1], ra,
+                            pick_scratch3(rd, a, NULL));
+        emit_comparison(out, ins->op, rd, a, b);
         break;
+    }
 
     /* ── §7.7  Terminators ────────────────────────────────────────────── */
 
@@ -638,11 +964,14 @@ static void emit_instr(FILE                *out,
      *   BEQ bbF         ; pred == 0 → false branch
      *   BR  bbT
      */
-    case IR_OP_BRANCH:
-        fprintf(out, "    CMP %s, r0\n", rs0);
+    case IR_OP_BRANCH: {
+        const char *pred = materialize_operand(out, &ins->src[0], ra,
+                              pick_scratch3(NULL, NULL, NULL));
+        fprintf(out, "    CMP %s, r0\n", pred);
         fprintf(out, "    BEQ bb%u\n", ins->as.branch.false_block);
         fprintf(out, "    BR  bb%u\n", ins->as.branch.true_block);
         break;
+    }
 
     /*
      * SWITCH %val default bbD [c0→bb0, c1→bb1, …]
@@ -656,7 +985,9 @@ static void emit_instr(FILE                *out,
      *   BR  bbDefault
      */
     case IR_OP_SWITCH: {
-        const char *val = rs0;
+        const char *val = materialize_operand(out, &ins->src[0], ra,
+                             pick_scratch3(NULL, NULL, NULL));
+        const char *scratch = pick_scratch3(val, NULL, NULL);
         for (unsigned k = 0; k < ins->as.sw.case_count; k++) {
             long cv = ins->as.sw.case_values[k];
             /* Compare val against the case constant. */
@@ -664,9 +995,8 @@ static void emit_instr(FILE                *out,
                 /* RCMPI computes imm − rd; Z is set iff rd == imm. */
                 fprintf(out, "    RCMPI %s, #%ld\n", val, cv);
             } else {
-                /* Load case value into scratch register r4. */
-                emit_load_imm(out, "r4", cv);
-                fprintf(out, "    CMP %s, r4\n", val);
+                emit_load_imm(out, scratch, cv);
+                fprintf(out, "    CMP %s, %s\n", val, scratch);
             }
             fprintf(out, "    BEQ bb%u\n", ins->as.sw.case_blocks[k]);
         }
@@ -677,13 +1007,29 @@ static void emit_instr(FILE                *out,
 
     /*
      * RET void  → epilogue (no value move needed)
-     * RET %v    → ensure return value is in r1, then epilogue
+     * RET %v    → ensure return value is in a0 (= r1), then epilogue.
+     *
+     * The strcmp uses the ABI mnemonic "a0" because phys_name() emits
+     * mnemonics; comparing against the canonical "r1" would always differ
+     * and produce a self-MOV.
      */
     case IR_OP_RET:
-        if (ins->src[0].kind == IR_VAL_VREG) {
-            const char *rv = rs0;
-            if (strcmp(rv, "r1") != 0)
-                fprintf(out, "    MOV(r1, %s)\n", rv);
+        switch (ins->src[0].kind) {
+        case IR_VAL_VREG: {
+            const char *rv = PREG(ins->src[0]);
+            if (strcmp(rv, "a0") != 0)
+                fprintf(out, "    MOV(a0, %s)\n", rv);
+            break;
+        }
+        case IR_VAL_IMM_INT:
+            emit_load_imm(out, "a0", ins->src[0].as.imm);
+            break;
+        case IR_VAL_GLOBAL:
+            fprintf(out, "    LI(a0, %s)\n", ins->src[0].as.name);
+            break;
+        default:
+            /* void return: no value to place in a0 */
+            break;
         }
         emit_epilogue(out, func, ra);
         break;
@@ -700,76 +1046,199 @@ static void emit_instr(FILE                *out,
      * here if present.
      */
     case IR_OP_CALL: {
-	    unsigned nargs = ins->as.call.arg_count;
+	    unsigned nargs  = ins->as.call.arg_count;
+	    unsigned nreg   = (nargs < PHYS_ARG_REGS) ? nargs : PHYS_ARG_REGS;
+	    unsigned nstack = nargs - nreg;
 
-	    static const char *arg_regs[] = {"r1", "r2", "r3"};
+	    /* Argument-register names use ABI mnemonics so the strcmps below
+	     * match phys_name() output (otherwise every MOV looks redundant
+	     * but still gets emitted as a no-op self-move). */
+	    static const char *arg_regs[] = {"a0", "a1", "a2"};
 
-	    /* ── 1. register arguments ───────────────────── */
-	    unsigned nreg = (nargs < PHYS_ARG_REGS) ? nargs : PHYS_ARG_REGS;
-
-	    for (unsigned i = 0; i < nreg; i++) {
+	    /* Pick a scratch register for materialising imm / global stack
+	     * args.  It must not be the home of any VREG argument (register
+	     * or stack), otherwise materialising one arg would clobber the
+	     * source of another.  Without this, calls like
+	     *     f5(1, 2, 3, p, 5)
+	     * where p lives in t0 misbehave: emitting "LI t0, #5" overwrites
+	     * p before the PUSH that is supposed to read it. */
+	    uint16_t arg_homes_mask = 0;
+	    for (unsigned i = 0; i < nargs; i++) {
 		const ir_value_t *a = &ins->as.call.args[i];
-		const char *dst = arg_regs[i];
-
-		switch (a->kind) {
-		case IR_VAL_VREG:
-		    if (strcmp(dst, PREG(*a)) != 0)
-		        fprintf(out, "    MOV(%s, %s)\n", dst, PREG(*a));
-		    break;
-
-		case IR_VAL_IMM_INT:
-		    emit_load_imm(out, dst, a->as.imm);
-		    break;
-
-		case IR_VAL_GLOBAL:
-		    fprintf(out, "    LI(%s, %s)\n", dst, a->as.name);
-		    break;
-
-		default:
-		    fprintf(out, "    ; [CALL] unsupported arg kind %d\n", a->kind);
+		if (a->kind == IR_VAL_VREG) {
+		    phys_reg_t c = ra->color[a->as.vreg];
+		    if (c < 16) arg_homes_mask |= (uint16_t)(1u << c);
+		}
+	    }
+	    static const struct { phys_reg_t p; const char *n; } t_pool[] = {
+		{ PHYS_R4, "t0" }, { PHYS_R5, "t1" },
+		{ PHYS_R6, "t2" }, { PHYS_R7, "t3" }
+	    };
+	    const char *stack_scratch = "t0";
+	    for (unsigned i = 0; i < 4; i++) {
+		if (!(arg_homes_mask & (1u << t_pool[i].p))) {
+		    stack_scratch = t_pool[i].n;
 		    break;
 		}
 	    }
 
-	    /* ── 2. stack arguments ─────────────────────── */
-	    for (unsigned i = nargs; i > PHYS_ARG_REGS; i--) {
-		const ir_value_t *a = &ins->as.call.args[i - 1];
+	    /* ── 1. stack arguments (write FIRST so register loads can't
+	     *      clobber a stack-arg vreg's source) ─────── */
+	    if (nstack > 0) {
+		/* Allocate the stack-arg slots in one shot. */
+		emit_sp_adj(out, -(int)nstack);
 
+		/* Per ABI: leftmost stack arg at lowest address.
+		 *   args[PHYS_ARG_REGS + i]  →  sp + i */
+		for (unsigned i = 0; i < nstack; i++) {
+		    const ir_value_t *a = &ins->as.call.args[PHYS_ARG_REGS + i];
+		    switch (a->kind) {
+		    case IR_VAL_VREG:
+			fprintf(out, "    SW %s, sp, #%u\n", PREG(*a), i);
+			break;
+		    case IR_VAL_IMM_INT:
+			emit_load_imm(out, stack_scratch, a->as.imm);
+			fprintf(out, "    SW %s, sp, #%u\n", stack_scratch, i);
+			break;
+		    case IR_VAL_GLOBAL:
+			fprintf(out, "    LI(%s, %s)\n",
+				stack_scratch, a->as.name);
+			fprintf(out, "    SW %s, sp, #%u\n", stack_scratch, i);
+			break;
+		    default:
+			fprintf(out,
+				"    ; [CALL] unsupported stack arg %d\n",
+				a->kind);
+			break;
+		    }
+		}
+	    }
+
+	    /* ── 2. register arguments (a0..a2) ───────────
+	     *
+	     * Naive sequential MOVs are unsafe when arg sources form a cycle
+	     * across the destination registers — e.g. `g(b, a)` with `a` in
+	     * a0 and `b` in a1 needs to swap the two registers, not just
+	     * "MOV a0, a1; MOV a1, a0" (which leaves both holding a1's value).
+	     *
+	     * We solve it as a parallel-copy:
+	     *   1. Emit any VREG copy whose dst is not the SRC of another
+	     *      pending VREG copy (Kahn-style topological order).
+	     *   2. Repeat until either nothing pending or only cycles remain.
+	     *   3. Break each remaining cycle by spilling one source into t3
+	     *      (regalloc-reserved scratch), redirecting the cycle's reads
+	     *      to t3, and re-running phase 1.
+	     *   4. Imm/global args run last so they don't clobber any vreg
+	     *      source register before it is read. */
+	    typedef struct {
+		const char *dst;
+		const char *src;          /* VREG home; updated to "t3" if cycle */
+		int         kind;         /* mirrors ir_value_kind_t */
+		long        imm;
+		const char *gname;
+		int         done;
+	    } arg_copy_t;
+
+	    arg_copy_t cps[3];
+	    unsigned cn = 0;
+	    for (unsigned i = 0; i < nreg; i++) {
+		const ir_value_t *a = &ins->as.call.args[i];
+		arg_copy_t *c = &cps[cn++];
+		c->dst   = arg_regs[i];
+		c->kind  = (int)a->kind;
+		c->done  = 0;
+		c->src   = NULL;
+		c->gname = NULL;
+		c->imm   = 0;
 		switch (a->kind) {
 		case IR_VAL_VREG:
-		    fprintf(out, "    PUSH(%s)\n", PREG(*a));
+		    c->src = PREG(*a);
+		    if (strcmp(c->dst, c->src) == 0) c->done = 1; /* no-op */
 		    break;
-
 		case IR_VAL_IMM_INT:
-		    emit_load_imm(out, "r4", a->as.imm);
-		    fprintf(out, "    PUSH(r4)\n");
+		    c->imm = a->as.imm;
 		    break;
-
 		case IR_VAL_GLOBAL:
-		    fprintf(out, "    LI(r4, %s)\n", a->as.name);
-		    fprintf(out, "    PUSH(r4)\n");
+		    c->gname = a->as.name;
 		    break;
-
 		default:
-		    fprintf(out, "    ; [CALL] unsupported stack arg %d\n", a->kind);
+		    fprintf(out, "    ; [CALL] unsupported arg kind %d\n",
+			    a->kind);
+		    c->done = 1;
 		    break;
 		}
+	    }
+
+	    /* Phase 1+2: VREG copies in topological order, breaking cycles
+	     * via t3 (regalloc-reserved). */
+	    int progress = 1;
+	    while (progress) {
+		progress = 0;
+		/* Drain everything that can be safely emitted right now. */
+		int drained = 1;
+		while (drained) {
+		    drained = 0;
+		    for (unsigned i = 0; i < cn; i++) {
+			arg_copy_t *c = &cps[i];
+			if (c->done || c->kind != IR_VAL_VREG) continue;
+			int blocked = 0;
+			for (unsigned j = 0; j < cn && !blocked; j++) {
+			    if (i == j) continue;
+			    arg_copy_t *o = &cps[j];
+			    if (o->done || o->kind != IR_VAL_VREG) continue;
+			    if (strcmp(o->src, c->dst) == 0) blocked = 1;
+			}
+			if (!blocked) {
+			    fprintf(out, "    MOV(%s, %s)\n", c->dst, c->src);
+			    c->done = 1;
+			    drained = 1;
+			    progress = 1;
+			}
+		    }
+		}
+		/* If anything remains, the survivors form one or more cycles.
+		 * Break the next cycle by spilling its current src into t3. */
+		for (unsigned i = 0; i < cn; i++) {
+		    arg_copy_t *c = &cps[i];
+		    if (c->done || c->kind != IR_VAL_VREG) continue;
+		    fprintf(out, "    MOV(t3, %s)        ; break cycle\n",
+			    c->src);
+		    /* Any other pending copy reading c->src must now read t3. */
+		    const char *old_src = c->src;
+		    for (unsigned j = 0; j < cn; j++) {
+			arg_copy_t *o = &cps[j];
+			if (o->done || o->kind != IR_VAL_VREG) continue;
+			if (strcmp(o->src, old_src) == 0) o->src = "t3";
+		    }
+		    progress = 1;
+		    break; /* re-run phase 1 */
+		}
+	    }
+
+	    /* Phase 3: imm / global. */
+	    for (unsigned i = 0; i < cn; i++) {
+		arg_copy_t *c = &cps[i];
+		if (c->done) continue;
+		if (c->kind == IR_VAL_IMM_INT)
+		    emit_load_imm(out, c->dst, c->imm);
+		else if (c->kind == IR_VAL_GLOBAL)
+		    fprintf(out, "    LI(%s, %s)\n", c->dst, c->gname);
 	    }
 
 	    /* ── 3. call ──────────────────────────────── */
 	    fprintf(out, "    CALL(%s)\n", ins->as.call.callee);
 
 	    /* ── 4. stack cleanup ─────────────────────── */
-	    if (nargs > PHYS_ARG_REGS)
-		emit_sp_adj(out, (int)(nargs - PHYS_ARG_REGS));
+	    if (nstack > 0)
+		emit_sp_adj(out, (int)nstack);
 
 	    /* ── 5. return value ───────────────────────── */
 	    if (!ins->as.call.is_void_call &&
 		ins->dst.kind == IR_VAL_VREG) {
 
 		const char *dst = PREG(ins->dst);
-		if (strcmp(dst, "r1") != 0)
-		    fprintf(out, "    MOV(%s, r1)\n", dst);
+		if (strcmp(dst, "a0") != 0)
+		    fprintf(out, "    MOV(%s, a0)\n", dst);
 	    }
 
 	    break;
@@ -785,11 +1254,11 @@ static void emit_instr(FILE                *out,
  * §8  Block and function emitters
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-static void emit_slot_comment(FILE *out, const ir_function_t *func)
+static void emit_slot_comment(FILE *out, const ir_function_t *func, const regalloc_t *ra)
 {
     fprintf(out, "    ; Frame slots (fp-based):\n");
     for (const ir_slot_entry_t *s = func->slots; s; s = s->next) {
-        int off = slot_fp_offset(s->slot_id);
+        int off = slot_fp_offset(s->slot_id, ra);
         fprintf(out, "    ;   %%slot%u (%s) @ fp%+d\n",
                 s->slot_id, s->name, off);
     }
@@ -817,7 +1286,7 @@ void codegen_emit_function(FILE                *out,
     g_cmp_label = 0; /* reset per-function label counter */
 
     fprintf(out, "%s:\n", func->name);
-    emit_slot_comment(out, func);
+    emit_slot_comment(out, func, ra);
     fprintf(out, "\n");
     emit_prologue(out, func, ra);
 
@@ -843,9 +1312,49 @@ void codegen_emit_module(FILE               *out,
         for (const ir_global_t *g = module->globals; g; g = g->next) {
             if (g->is_extern) {
                 fprintf(out, "; extern @%s  (resolved at link time)\n", g->name);
-            } else {
-                fprintf(out, "%s:\n", g->name);
-                fprintf(out, "    .word 0x0000         ; global @%s\n", g->name);
+                continue;
+            }
+            fprintf(out, "%s:\n", g->name);
+            /* Storage in 16-bit words.  ir_global_t.size_words is set by
+             * lowering to handle structs/unions whose IR type drops layout
+             * info; for plain scalars/arrays it equals ir_type_size_words. */
+            size_t words = g->size_words;
+            if (words == 0) words = 1;
+            switch (g->init_kind) {
+            case IR_GINIT_INT: {
+                /* 16-bit machine — mask to one word, two's-complement. */
+                uint16_t w = (uint16_t)(int16_t)g->init_int;
+                fprintf(out, "    .word 0x%04X         ; global @%s = %ld\n",
+                        w, g->name, g->init_int);
+                /* Pad remaining words for arrays. */
+                for (size_t i = 1; i < words; i++)
+                    fprintf(out, "    .word 0x0000\n");
+                break;
+            }
+            case IR_GINIT_STRING: {
+                /* The IR holds the body of the literal exactly as it appeared
+                 * in source, minus the surrounding quotes.  Embedded escape
+                 * sequences (\n, \t, \\, \", ...) are passed through to the
+                 * assembler, which interprets them per .asciz conventions.
+                 * The trailing NUL is implicit per .asciz semantics. */
+                fprintf(out, "    .asciz \"%s\"          ; global @%s (string literal)\n",
+                        g->init_string, g->name);
+                break;
+            }
+            case IR_GINIT_LABEL:
+                /* Pointer initialiser: store the address of another global.
+                 * Relies on the assembler/linker resolving the label as a
+                 * 16-bit word value. */
+                fprintf(out, "    .word %s         ; global @%s = &%s\n",
+                        g->init_label, g->name, g->init_label);
+                break;
+            case IR_GINIT_NONE:
+            default:
+                fprintf(out, "    .word 0x0000         ; global @%s (%zu word%s)\n",
+                        g->name, words, words == 1 ? "" : "s");
+                for (size_t i = 1; i < words; i++)
+                    fprintf(out, "    .word 0x0000\n");
+                break;
             }
         }
         fprintf(out, "\n");

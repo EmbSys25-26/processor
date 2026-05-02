@@ -252,11 +252,34 @@ typedef struct {
 
 typedef struct ir_global_s ir_global_t;
 
+/* What kind of initialiser a global carries (if any). */
+typedef enum {
+    IR_GINIT_NONE = 0,    /* uninitialised — emit zeros */
+    IR_GINIT_INT,         /* scalar integer constant in init_int */
+    IR_GINIT_STRING,      /* raw byte content (NUL-terminated) in init_string */
+    IR_GINIT_LABEL        /* address of another global symbol in init_label */
+} ir_global_init_kind_t;
+
+#define IR_GLOBAL_STR_MAX 256
+#define IR_GLOBAL_LBL_MAX 128
+
 struct ir_global_s {
-    char         name[128];
-    ir_type_t    type;
-    int          is_extern;
-    ir_global_t *next;
+    char                  name[128];
+    ir_type_t             type;
+    int                   is_extern;
+
+    /* Storage size in 16-bit words.  Codegen uses this to emit the right
+     * number of .word entries.  Set by lowering — defaults to
+     * ir_type_size_words(type) but is overridden for structs/unions whose
+     * IR type doesn't carry layout info. */
+    size_t                size_words;
+
+    ir_global_init_kind_t init_kind;
+    long                  init_int;                          /* IR_GINIT_INT    */
+    char                  init_string[IR_GLOBAL_STR_MAX];    /* IR_GINIT_STRING */
+    char                  init_label[IR_GLOBAL_LBL_MAX];     /* IR_GINIT_LABEL  */
+
+    ir_global_t          *next;
 };
 
 typedef struct ir_function_list_s ir_function_list_t;
@@ -282,7 +305,11 @@ void            ir_module_free(ir_module_t *mod);
 ir_function_t  *ir_function_new(const char *name, ir_type_t ret_type);
 void            ir_function_free(ir_function_t *func);
 void            ir_module_add_function(ir_module_t *mod, ir_function_t *func);
-void            ir_module_add_global(ir_module_t *mod, const char *name,
+/* Add a new global to the module.  The returned pointer is owned by the
+ * module; the caller may directly populate the init_kind and the matching
+ * init payload field (init_int / init_string / init_label).  Returns NULL
+ * on allocation failure or if mod/name is NULL. */
+ir_global_t    *ir_module_add_global(ir_module_t *mod, const char *name,
                                      ir_type_t type, int is_extern);
 
 /* ────────────────────────────────────────────────────────────
@@ -342,5 +369,9 @@ ir_type_t ir_type_union(const char *tag);
 /* Return the "native" scalar for a given IR type width */
 int ir_type_is_integer(ir_type_t t);
 int ir_type_equal(ir_type_t a, ir_type_t b);
+
+/* Storage size of a type in 16-bit words (the addressing unit of this
+ * ISA).  Arrays compose recursively; aggregates default to 1 word. */
+size_t ir_type_size_words(ir_type_t t);
 
 #endif /* IR_IR_H */

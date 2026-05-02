@@ -353,30 +353,35 @@ void ir_lower_function(ir_lower_ctx_t *lctx, const TreeNode_t *func_node)
         }
 
         /* Allocate a stack slot for this parameter.
-         * Even though the value arrives in a vreg, we immediately spill it
-         * to a named slot so that the rest of the body can treat it like
-         * any other local variable (load/store via addr_of). */
+         * Even though the value arrives in a vreg (or on the caller's stack
+         * for params 4+), we immediately spill it to a named slot so that
+         * the rest of the body can treat it like any other local variable
+         * (load/store via addr_of). */
         unsigned slot = ir_new_slot(func, param_name, param_ir_type);
 
-        /* Emit:  %vA = addr_of %slotK
-         * This instruction computes the address of the stack slot we just
-         * allocated.  The vreg id A is >= n_params because step 1 already
-         * consumed the first n_params ids. */
-        unsigned addr_r = ir_new_vreg(func);
-        ir_instr_t *addr_i = ir_instr_new(IR_OP_ADDR_OF);
-        addr_i->dst    = ir_val_vreg(addr_r, ir_type_ptr()); /* dest: pointer vreg */
-        addr_i->src[0] = ir_val_slot(slot, param_ir_type);   /* source: the slot   */
-        ir_instr_push(lctx->cur_block, addr_i);
+        /* Only emit IR to materialise REGISTER-PASSED params.  Stack-passed
+         * params (index >= PHYS_ARG_REGS = 3) are loaded from the caller's
+         * frame directly into their slot by the codegen prologue — going
+         * through a vreg here would force every stack-param vreg to be
+         * live-in simultaneously, but the IR has no construct for "live-in
+         * from caller", so regalloc would coalesce them and the prologue
+         * loads would clobber each other. */
+        if (param_idx < 3 /* PHYS_ARG_REGS */) {
+            /* Emit:  %vA = addr_of %slotK */
+            unsigned addr_r = ir_new_vreg(func);
+            ir_instr_t *addr_i = ir_instr_new(IR_OP_ADDR_OF);
+            addr_i->dst    = ir_val_vreg(addr_r, ir_type_ptr());
+            addr_i->src[0] = ir_val_slot(slot, param_ir_type);
+            ir_instr_push(lctx->cur_block, addr_i);
 
-        /* Emit:  *%vA = %vI
-         * Store the incoming parameter value (which lives in the reserved
-         * vreg %vI from step 1) into the stack slot via its address.
-         * After this, the parameter is accessible through the slot like
-         * any other local variable. */
-        ir_instr_t *store_i = ir_instr_new(IR_OP_STORE);
-        store_i->src[0] = ir_val_vreg(addr_r, ir_type_ptr());              /* address to write to  */
-        store_i->src[1] = ir_val_vreg(param_vregs[param_idx++], param_ir_type); /* value to write       */
-        ir_instr_push(lctx->cur_block, store_i);
+            /* Emit:  *%vA = %vI  (the precolored argument register) */
+            ir_instr_t *store_i = ir_instr_new(IR_OP_STORE);
+            store_i->src[0] = ir_val_vreg(addr_r, ir_type_ptr());
+            store_i->src[1] = ir_val_vreg(param_vregs[param_idx],
+                                           param_ir_type);
+            ir_instr_push(lctx->cur_block, store_i);
+        }
+        param_idx++;
     }
 
     /* ------------------------------------------------------------------
@@ -429,6 +434,7 @@ ir_module_t *ir_lower_translation_unit(const TreeNode_t   *root,
     memset(&lctx, 0, sizeof(lctx));
     lctx.module  = mod;
     lctx.sem_ctx = sem_ctx;
+    lctx.root    = root;
 
      /*
      * Walk the direct children of NODE_TRANSLATION_UNIT.
@@ -457,24 +463,50 @@ ir_module_t *ir_lower_translation_unit(const TreeNode_t   *root,
             if (has_body) {
                 ir_lower_function(&lctx, child);
             } else {
-                /* emit extern declaration */
-                 const char *fname = "unknown";
-                    for (const TreeNode_t *ch = child->p_firstChild; ch; ch = ch->p_sibling) {
-                        if (ch->nodeType == NODE_IDENTIFIER && ch->nodeData.sVal) {
-                            fname = ch->nodeData.sVal;
-                            break;
-                        }
-                    }
-                    ir_type_t ft = ir_type_ptr();
-                    ir_module_add_global(mod, fname, ft, /*is_extern=*/1);
-                    }
+                /* emit extern declaration — NODE_FUNCTION stores the name
+                 * directly on the node (same convention as NODE_VAR_DECLARATION),
+                 * not as a NODE_IDENTIFIER child. */
+                const char *fname = (child->nodeData.sVal && child->nodeData.sVal[0])
+                                    ? child->nodeData.sVal
+                                    : "unknown";
+                ir_type_t ft = ir_type_ptr();
+                ir_module_add_global(mod, fname, ft, /*is_extern=*/1);
             }
             break;
+        }
 
         case NODE_VAR_DECLARATION:
-        case NODE_ARRAY_DECLARATION:
-            ir_lower_global_decl(&lctx, child);
+        case NODE_ARRAY_DECLARATION: {
+            /* Detect a sibling `=` initialiser of the form 
+            *       VAR_DECL(x)
+            *       OPERATOR(=)
+            *           IDENTIFIER(x)
+            *           <expr>
+            * and feed the RHS to ir_lower_global-decl as the initialiser */
+            const TreeNode_t *init_expr = NULL;
+            const TreeNode_t *next = child->p_sibling;
+
+            /* Find this declaration's identifier name (if any). */
+            const char *decl_name = child->nodeData.sVal;
+
+            if (decl_name && next &&
+                next->nodeType == NODE_OPERATOR &&
+                (long)next->nodeData.dVal == OP_ASSIGN &&
+                next->p_firstChild && next->p_firstChild->nodeType == NODE_IDENTIFIER &&
+                next->p_firstChild->nodeData.sVal &&
+                strcmp(next->p_firstChild->nodeData.sVal, decl_name) == 0) {
+                    init_expr = next->p_firstChild->p_sibling; /* RHS */
+            }
+
+            ir_lower_global_decl(&lctx, child, init_expr);
+            
+            if (init_expr) {
+                /* Skip the OPERATOR(=) node since we already processed the initialiser. */
+                child = next; 
+            }
+
             break;
+        }
 
         case NODE_STRUCT_DECLARATION:
         case NODE_UNION_DECLARATION:

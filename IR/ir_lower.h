@@ -56,9 +56,11 @@ typedef struct {
     int      has_continue;    /* 0 for switch              */
 } ir_ctrl_frame_t;
 
-typedef struct ir_lower_ctx_s { 
+typedef struct ir_lower_ctx_s {
     ir_module_t        *module;     // The IR module being built
     semantic_context_t *sem_ctx;    // Live semantic context for type info, diagnostics, etc.
+    const TreeNode_t   *root;       // AST root — used to look up struct/union decls by tag
+                                    // when the type's decl_node back-pointer is NULL.
 
     /* current function being lowered */
     ir_function_t      *func;       // The current function being lowered (NULL if not inside a function)
@@ -98,7 +100,9 @@ ir_type_t ir_type_from_sem(const type_t *sem_type);
  * Called for top-level NODE_VAR_DECLARATION / NODE_ARRAY_DECLARATION
  * with MEMORY_CLASS_GLOBAL.
  */
-void ir_lower_global_decl(ir_lower_ctx_t *lctx, const TreeNode_t *decl_node);
+void ir_lower_global_decl(ir_lower_ctx_t *lctx, 
+                          const TreeNode_t *decl_node,
+                          const TreeNode_t *init_expr);
 
 /*
  * Emit a stack slot for a local variable inside a function.

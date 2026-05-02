@@ -85,17 +85,32 @@ These are not heap-allocated — they are small structs passed by value everywhe
 ir_module_t                         (§6.1 — top-level container)
 ├── arch string
 ├── ir_global_t*                    (linked list of global declarations)
+│       ├── name, type, is_extern
+│       ├── size_words              ← total storage in 16-bit words
+│       └── init_kind + payload     (IR_GINIT_NONE | INT | STRING | LABEL)
 └── ir_function_list_t*             (linked list of functions)
         └── ir_function_t           (§6.2 — one function)
                 ├── name, ret_type
                 ├── param_names[], param_types[]
                 ├── slot map (ir_slot_entry_t*)    ← stack allocation metadata
+                ├── next_slot_id (= total slot words allocated)
                 ├── next_vreg counter
                 └── ir_block_t*                   (§6.3 — ordered basic blocks)
                         ├── label (bbN)
                         ├── ir_instr_t* (instruction chain)
                         └── exactly one terminator
 ```
+
+### Storage sizing
+
+`ir_type_size_words(t)` returns the storage size in 16-bit words for a given IR type: scalars and pointers are 1, `i32` is 2, arrays compose recursively (`array<T, N>` = N * size(T)). It does NOT have layout for structs/unions because the IR aggregate type drops field info.
+
+For correct struct/union storage, the lowering uses `compute_sem_type_words(lctx, sem_type)` (in `ir_lower_decl.c`) which walks the struct's AST declaration to sum field sizes. The result is stashed on:
+
+- **`ir_global_t.size_words`** — codegen emits this many `.word` entries (or `.asciz` payload + zeros).
+- **`ir_function_t.next_slot_id`** — bumped by the difference so the named slot reserves the right number of consecutive single-word slot ids.
+
+`ir_new_slot()` itself only knows how to use `ir_type_size_words`, so callers that allocate aggregate slots must perform the bump explicitly. This is done in `ir_lower_local_decl`.
 
 ---
 
@@ -164,7 +179,19 @@ The `s`/`u` suffix on `div`, `mod`, and shifts is mandatory — signed and unsig
 %ptr2 = gep %base + %idx * stride  IR_OP_GEP
 ```
 
-`addr_of` takes a slot or global reference and produces a pointer virtual register. Every variable read and write goes through `addr_of` + `load`/`store` — there are no implicit memory accesses. `stride` in GEP is a compile-time constant equal to `sizeof(element_type)`.
+`addr_of` takes a slot or global reference and produces a pointer virtual register. Every variable read and write goes through `addr_of` + `load`/`store` — there are no implicit memory accesses.
+
+`stride` in GEP is the compile-time element size in **16-bit words** (the addressing unit of the target ISA — `LW`/`SW`, `ADDI` offsets, slot ids and pointer arithmetic are all word-indexed). For C types this means:
+
+| C type | stride |
+|---|---|
+| `char`, `int`, `short`, pointer | 1 word |
+| `long` (i32) | 2 words |
+| `T arr[N]` element | `N * sizeof(T)` words (recursive) |
+
+For struct member access the IR emits `gep base + field_offset * 1`, where `field_offset` is the running sum (in words) of the sizes of preceding fields, computed at lowering time by walking the struct's AST declaration. Member access on a union always uses offset 0.
+
+For an array variable / sub-array (`T arr[N]` or `T arr[i]` giving `T'[M]`) the address of the variable IS the base of its elements — no extra `load` is emitted. For a pointer variable (`T *p`) `addr_of p` gives the slot/global address and a `load` reads the pointer's value before indexing.
 
 #### §7.5 Casts
 
@@ -206,12 +233,12 @@ struct ir_instr_s {
 
     union {
         struct {
-            long stride;     /* compile-time element size in bytes */
+            long width;      /* compile-time element size in 16-bit words */
         } gep;
 
         struct {
             char       callee[128];
-            ir_value_t args[IR_MAX__ARGS];
+            ir_value_t args[IR_MAX_ARGS];
             unsigned   arg_count;
             int        is_void_call;
         } call;
@@ -229,6 +256,8 @@ struct ir_instr_s {
 `IR_MAX_ARGS` (16) bounds both the argument array in `ir_instr_t` and the parameter arrays in `ir_function_t` (`IR_MAX_PARAMS`) — they represent the same logical limit (the maximum arity of a function call contract).
 
 `IR_OP_COUNT` is a sentinel at the end of the opcode enum whose numeric value automatically equals the total number of opcodes. It is used to dimension lookup tables and validate opcodes, never as an actual instruction opcode.
+
+> **Footgun:** the `as` field is a true `union`, so `as.gep.width` and `as.call.callee[0]` overlap in memory. Never write to one and read the other for the same instruction. A previous member-access lowering wrote the field name into `as.call.callee` for `IR_OP_GEP` instructions; the first byte of the name silently overwrote `width` (e.g. field `x` set `width = 'x' = 120`). Member access offsets are now computed at lowering time and stored in `src[1]` as an immediate, with `width = 1`.
 
 ---
 
@@ -306,9 +335,26 @@ _Pre/post inc/dec_ — compute address, load old value, add/subtract 1, store ne
 
 _Ternary_ — allocate a result slot, lower condition, emit `branch`, lower true/false branches each storing into the slot, emit `goto` merge, load from slot.
 
-_Logical `&&`/`||`_ — short-circuit via branch to a shared result slot.
+_Logical `&&`/`||`_ — short-circuit via a control-flow diamond writing 0 / 1 into a shared result slot.
+
+For `a && b` the lowering emits:
+
+```
+evaluate a → %p1 = (a != 0)
+if %p1 goto bb_rhs else bb_false
+bb_rhs:  evaluate b → %p2 = (b != 0); if %p2 goto bb_true else bb_false
+bb_true: *%slot = 1; goto bb_merge
+bb_false:*%slot = 0; goto bb_merge
+bb_merge: %res = *%slot
+```
+
+For `a || b` the lhs predicate branches to `bb_true` instead of `bb_rhs` on the truthy side, and to `bb_rhs` on the false side. The semantics match C: the right-hand side is never evaluated when the result is already determined by the left.
 
 _Function call_ — collect argument vregs, emit `IR_OP_CALL`. Void calls set `is_void_call = 1` and return `ir_val_none()`.
+
+_Unsigned operator dispatch_ — for `+ - * / % < <= > >= << >>` the IR `is_unsigned` flag is derived from the operand types (per C's "usual arithmetic conversions"), not from the result type, because the semantic pass currently returns `g_type_int` (signed) as the result type for arithmetic. Without this, `unsigned a / b` lowered to `__divs` instead of `__divu`.
+
+_MUL / DIV / MOD on this ISA_ — the target has no hardware multiply or divide. `IR_OP_MUL`, `IR_OP_DIVS`, `IR_OP_DIVU`, `IR_OP_MODS`, `IR_OP_MODU` are lowered as calls into the runtime library (`__mul`, `__divs`, `__divu`, `__mods`, `__modu` in `runtime/runtime.asm`). The lowering wraps the operands in an `IR_OP_CALL` so liveness/precolor/regalloc see the actual call boundary (caller-saved clobber).
 
 `ir_lower_lvalue_addr` computes the **address** of an lvalue rather than its value. It is called from `ir_lower_expr` for assignments, compound assignments, inc/dec, address-of, array access (rvalue), and member access (rvalue). The two functions are mutually recursive — `ir_lower_lvalue_addr` calls `ir_lower_expr` for subexpressions, and `ir_lower_expr` calls `ir_lower_lvalue_addr` for lvalue contexts.
 
@@ -381,7 +427,7 @@ After a `return` or `break` the lowering creates an unreachable "dead" block. Th
 1. Retrieve return type from annotation (`info->type->as.function.return_type`)
 2. Extract function name from `func_node->nodeData.sVal`
 3. Create `ir_function_t` and entry block `bb0`
-4. Walk children for `NODE_PARAMETER` nodes; for each: register in `func->param_names/param_types`, allocate a stack slot, emit `addr_of slot` + `store` of incoming parameter vreg
+4. Walk children for parameter nodes; for each, register in `func->param_names/param_types` and allocate a stack slot. **Only the first 3 parameters get an `addr_of slot` + `store` of an incoming parameter vreg** (these arrive in `a0`/`a1`/`a2` per ABI and precolor binds those vregs to those registers). Stack-passed parameters (index ≥ 3) skip the IR store — they are loaded from the caller's frame straight into their local slot by the codegen prologue. Going through a vreg for stack params would require modelling them all as live-in simultaneously, which the IR has no construct for; without that interference, regalloc legitimately coalesces their colors and the codegen loads clobber each other.
 5. Find `NODE_BLOCK` body child and call `ir_lower_stmt`
 6. If `cur_block` has no terminator, inject `ret void` (legal for void functions; for non-void functions the semantic pass already rejected the missing return)
 7. `ir_module_add_function`

@@ -442,6 +442,66 @@ semantic_get_node_info(ctx, node)
 ```
 please see specific file for IR [IR Specification]
 
+## Register Allocation
+**Input:** IR module (functions, vregs, basic blocks)
+**Output:** the same IR module with `regalloc_t` per function — every virtual register pinned to a physical register or marked as spilled
+**Purpose:** assign concrete physical registers to virtual registers under ABI constraints, falling back to stack spills when register pressure exceeds capacity.
+**Files:** `CodeGen/RegAlloc/{liveness,interference,precolor,regalloc,spill}.{c,h}`
+
+The allocator runs as an iterative spill loop:
+
+1. **Liveness analysis** computes per-instruction `live_in`/`live_out`/`live_after` and per-block summaries via standard backward dataflow to a fixed point.
+2. **Interference graph** has one node per vreg and an edge between every pair simultaneously live. Two vregs joined by an edge cannot share a physical register.
+3. **Pre-coloring** pins ABI-constrained vregs: call return values to `r1`/`a0`; call arguments 0..2 to `r1`/`r2`/`r3`; call-live vregs (live across some `IR_OP_CALL`) restricted to callee-saved `r8`–`r11`.
+4. **Chaitin-Briggs coloring** with George's conservative coalescing builds a LIFO simplification stack and pops to assign colors. The preference list (excluding `r7`, which is the codegen scratch) is `r4`–`r6` → `r8`–`r11` → `r1`–`r3` for normal vregs and `r8`–`r11` only for call-live vregs.
+5. **Spill rewriting** picks the highest cost/degree node when a vreg can't be colored, inserts per-use loads + per-def stores into a fresh slot, shrinks the live range to a single instruction, and restarts. The loop terminates when no spills remain.
+
+`r7` is intentionally excluded from the allocator's preference list — it is reserved as a code-generator scratch register so codegen can materialise immediates, save operands across in-place SUB/SRL/SRA, drive the OR macro's internal scratch, and break parallel-copy cycles in CALL setup without ever clobbering a live vreg.
+
+## Code Generator
+**Input:** IR module + per-function `regalloc_t` (color array, spill set)
+**Output:** assembly text for the custom 16-bit RISC ISA, written to `output.asm`
+**Purpose:** lower IR instructions to ISA mnemonics, with proper frame layout and ABI conformance.
+**Files:** `CodeGen/codegen.{c,h}`
+
+The codegen walks each function in order:
+
+1. **Prologue** — `PUSH(fp); MOV(fp, sp); PUSH(lr)`, then `PUSH(r8..r11)` for any callee-saved registers actually used by this function (per a bitmask computed from `regalloc_t`), then `ADDI sp, sp, #-N` for local slots. After the standard prologue, **stack-passed parameters** are loaded from the caller's frame: for each param `i ≥ 3`, emit `LW t3, fp, #(i-2); SW t3, fp, #(slot_offset)` to copy the caller's stack value straight into the local slot.
+2. **Per-block instruction emission** — each `ir_instr_t` translates to one or more ISA instructions via a per-opcode handler. Sources that aren't virtual registers (`IR_VAL_IMM_INT`, `IR_VAL_GLOBAL`) are materialised on demand by `materialize_operand()` into a chosen scratch register (preferring `t3`, the regalloc-reserved scratch). For ADD/SUB with one immediate operand the handler short-circuits to `ADDI rd, rs, #imm`, avoiding the materialisation entirely.
+3. **CALL setup** runs in three phases to avoid clobbering live values:
+   - Phase A: write all stack arguments into pre-allocated `sp+i` slots (vreg sources still live in their register homes; immediate sources use a scratch picked to avoid every vreg-arg's home).
+   - Phase B: load register arguments into `a0`/`a1`/`a2` via a Kahn-style topological order. Cycles like `(a0=a1, a1=a0)` are broken by saving one source into `t3`.
+   - Phase C: emit `CALL(name)`, undo the stack-arg allocation, and (for non-void calls) emit `MOV(dst_color, a0)` if the destination color isn't already `a0`.
+4. **Epilogue** — `ADDI sp, sp, #+N` to free slots, pop callee-saved in reverse, `POP(lr); POP(fp); RET`.
+
+The frame layout is documented in `codegen.h`:
+```
+fp:           saved fp
+fp-1:         saved lr
+fp-2..fp-(1+cc): saved callee-saved (cc = popcount of callee_used_mask)
+fp-(2+cc)..fp-(1+cc+n_slots): local slots (slot 0 first)
+fp+1, fp+2, ...: caller's stack-passed args (read by prologue, never re-read)
+```
+
+All ISA addressing is **word-indexed** (16-bit words). `LW r, fp, #-3` reads from fp minus 3 words = fp minus 6 bytes.
+
+## Software Runtime
+**Input:** linked alongside compiled output
+**Output:** definitions for `__mul`, `__divs`, `__divu`, `__mods`, `__modu`
+**File:** `runtime/runtime.asm`
+
+The target ISA has no hardware multiplier or divider, so MUL / DIV / MOD are lowered (in `ir_lower_expr.c`) as calls into a small assembly runtime:
+
+| Helper | Algorithm | Notes |
+|---|---|---|
+| `__mul`  | 16-iter shift-and-add | leaf, clobbers `r1`–`r6` |
+| `__divu` | 16-iter restoring long division | leaf, clobbers `r1`–`r7`. Branch convention: `BLEU` is **strictly less-than unsigned** on this ISA (despite the suffix; `BLETU` is ≤ unsigned). Divide-by-zero returns 0. |
+| `__modu` | same loop, returns the remainder | leaf, clobbers `r1`–`r7` |
+| `__divs` | sign-normalise both operands then call `__divu`; negate result if signs disagreed | non-leaf, saves `r8` (sign flag) + `lr`. Per C truncation toward zero. |
+| `__mods` | sign-normalise then call `__modu`; negate result if dividend was negative | non-leaf. C99 says the sign of `%` follows the dividend. |
+
+The IR layer chooses signed vs unsigned by inspecting **operand types** rather than the result type — the semantic pass returns the static signed-int singleton for arithmetic results, so without this the lowering would always pick `__divs` even for unsigned operands.
+
 _____
 ## Annex
 #### Arena Allocator Function Reference

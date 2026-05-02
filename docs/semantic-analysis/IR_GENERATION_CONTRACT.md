@@ -128,6 +128,10 @@ The suffix convention mirrors section 7.2 for consistency.
 3. `*%ptr = %vsrc`                         (store)
 4. `%ptr2 = %base + %idx * <elem_size>`    (address arithmetic / GEP)
 
+`elem_size` is in **16-bit words** (the addressing unit of the target ISA), not bytes. `i8`/`i16`/pointer = 1; `i32` = 2; `array<T, N>` = `N * size(T)`. Struct member access is lowered as `gep base + offset_words * 1` where `offset_words` is computed by walking the struct's AST decl. Unions use offset 0 for every field.
+
+For an array variable `T arr[N]` (or sub-array `arr[i]` of type `T'[M]`), `addr_of` returns the address of the first element directly — no extra `load`. For a pointer variable `T *p`, `addr_of p` gives the slot address and a `load` reads the pointer's value before any GEP.
+
 ## 7.5 Cast / conversion
 1. `%vdst = (zext <to>) %src`              (zero-extend; use for unsigned values)
 2. `%vdst = (sext <to>) %src`             (sign-extend; use for signed values)
@@ -162,8 +166,8 @@ responsibility, not the IR's.
    - `semantic_get_node_info(ctx, expr_node)->value_kind`
 
 ## 8.2 Expression lowering
-1. Literals -> `const`.
-2. Identifier read -> `load` from symbol address/slot unless held in current SSA-like map.
+1. Literals -> `const` (or carried inline as `IR_VAL_IMM_INT` when feeding directly into another instruction).
+2. Identifier read -> `load` from symbol address/slot.
 3. Assignment:
 - lower RHS,
 - compute LHS address,
@@ -178,7 +182,19 @@ responsibility, not the IR's.
 5. Ternary:
 - lower condition to predicate,
 - branch to true/false blocks,
-- merge with value move strategy (phi-like handling can be explicit pseudo-phi or temporary slot if SSA is not yet implemented).
+- merge via a temporary slot (this IR is not in SSA form).
+6. Logical `&&` / `||`:
+- lower to a control-flow diamond writing 0 / 1 into a result slot,
+- preserve C short-circuit semantics: rhs is only evaluated when its result can change the outcome.
+7. Array access `arr[i]`:
+- if `arr` is an array variable (or sub-array), the address of the variable IS the base of its elements — emit `addr_of` only, do **not** add a `load`.
+- if `arr` is a pointer variable, `addr_of` then `load` to obtain the pointer value, then GEP.
+- emit `gep base + idx * stride` where stride is the element size in 16-bit words.
+8. Member access `s.f` / `p->f`:
+- compute the field's word offset by walking the struct's AST decl (sum of preceding fields' word sizes; for unions every field is at offset 0),
+- emit `gep base + offset * 1` where base is `addr_of s` for `.` and the loaded pointer value for `->`.
+9. Unsigned dispatch — derive `is_unsigned` from operand types, NOT the result type. The semantic pass returns the static signed-int singleton for arithmetic results, so the result type alone misses unsigned operands.
+10. MUL / DIV / MOD — lower as `IR_OP_CALL` to runtime helpers (`__mul`, `__divs`, `__divu`, `__mods`, `__modu`); see §13a.
 
 ## 8.3 Statement lowering
 1. `if/else`: create branch and merge blocks.
@@ -193,26 +209,31 @@ responsibility, not the IR's.
 1. Create entry block.
 2. Allocate stack slots for locals and spilled temporaries representation metadata.
 3. Bind params to symbols.
-4. Ensure all paths end with terminator; inject default return only when legal.
+4. For the first 3 params (passed in `a0`/`a1`/`a2`) emit `addr_of slot` + `store %v_param` to copy the incoming register into the local slot. **Do NOT emit this STORE for stack-passed params (index ≥ 3)** — the callee's codegen prologue loads them from `fp+(i-2)` directly into the slot via `t3`. Going through a vreg would require modelling all stack params as live-in simultaneously, which the IR has no construct for; without that interference, regalloc legitimately coalesces their colors and the prologue's loads would clobber each other.
+5. Ensure all paths end with terminator; inject default `ret void` only when legal.
 
 ## 9. Backend interface contract
 
 ## 9.1 Calling convention mapping (from abi.m4)
 Target register ABI mapping:
 1. `r0`: zero.
-2. `r1-r3`: args/returns (`a0/a1/a2`, return in `r1`).
-3. `r4-r7`: temporaries caller-saved.
-4. `r8-r11`: callee-saved.
-5. `r12`: frame pointer.
-6. `r13`: stack pointer.
-7. `r14`: link register.
-8. `r15`: global pointer/reserved.
+2. `r1-r3`: args/returns (`a0/a1/a2`, return in `a0`/`r1`).
+3. `r4-r6`: temporaries caller-saved (`t0`–`t2`).
+4. `r7`: codegen scratch (`t3`) — **reserved, not allocated by regalloc**.
+5. `r8-r11`: callee-saved (`s0`–`s3`).
+6. `r12`: frame pointer.
+7. `r13`: stack pointer.
+8. `r14`: link register.
+9. `r15`: global pointer/reserved.
 
 IR/backend contract:
-1. Up to 3 scalar args passed in arg registers, remainder on stack.
-2. Scalar return in `r1`.
+1. Up to 3 scalar args passed in arg registers, remainder on stack (caller pushes args[N-1]..args[3] before the CALL so that args[3] sits at lowest address; codegen actually `ADDI sp, sp, #-N; SW arg, sp, #i` to keep the order without depending on push semantics).
+2. Scalar return in `a0` (= `r1`).
 3. Call sequence must preserve callee-saved regs.
-4. Backend must honor stack discipline compatible with PUSH/POP macro convention.
+4. Backend must honour stack discipline compatible with PUSH/POP macro convention.
+5. `r7` is reserved as a codegen scratch (immediate materialisation, in-place op spilling, OR-macro internal temp, parallel-copy cycle breaking). Regalloc must not allocate it; codegen relies on it being free at every program point.
+6. Stack-passed parameters (index ≥ 3) are loaded by the callee's prologue from `fp+(i-2)` into the local slot via `t3`. The IR does NOT emit a STORE for these params (going through a vreg would force an unmodellable live-in for all of them simultaneously).
+7. Register-arg setup at a CALL must do a parallel copy, not sequential MOVs — sources can form cycles when regalloc colors don't match the precolor target. Cycles are broken via `t3`.
 
 ## 9.2 ISA lowering constraints
 From assembler ISA:
@@ -231,12 +252,17 @@ Backend obligations:
 If semantic marks a node unsupported for current backend, lowering must fail with deterministic code and message.
 Examples (until explicitly supported):
 1. Floating-point arithmetic/codegen.
-2. Full struct/union value copy/return semantics.
+2. Full struct/union value copy/return semantics (field access via `.` / `->` IS supported).
 3. Variadic call lowering.
+4. Function pointers / indirect calls.
+5. `long long` / 64-bit arithmetic.
+6. Array / struct aggregate initialisers (`{1, 2, 3}` syntax).
 
 These features are flagged at the semantic stage by setting `SEM_NODE_CODEGEN_BLOCKED`
 in the expression's `sem_node_info_t.flags`. IR lowering must check this flag before
 descending into any expression node and emit `IR001` when it is set.
+
+Logical `&&` and `||` are supported: lowered as a control-flow diamond writing 0/1 into a result slot. Short-circuit semantics are preserved.
 
 ## 11. Canonical forms required for optimization/regalloc
 1. Basic block ends with single terminator.
@@ -268,8 +294,32 @@ Use prefix `IR###`.
 Examples:
 1. `IR001`: unsupported node for lowering.
 2. `IR002`: missing symbol binding on identifier.
-3. `IR003`: type mismatch after semantic stage (internal contract violation).
+3. `IR003`: type mismatch / unsupported initialiser after semantic stage.
 4. `IR004`: unresolved control target (`break/continue`) in lowering context.
+
+## 13a. Runtime helpers (software-emulated arithmetic)
+
+The target ISA has no hardware multiply or divide. The IR opcodes `IR_OP_MUL`,
+`IR_OP_DIVS`, `IR_OP_DIVU`, `IR_OP_MODS`, `IR_OP_MODU` are lowered (in
+`ir_lower_expr.c`) as `IR_OP_CALL` with the runtime callee names below; the IR
+opcodes themselves never reach the codegen.
+
+| Helper | C operator(s) | Algorithm | ABI |
+|---|---|---|---|
+| `__mul`  | `*`         | 16-iter shift-and-add               | leaf, clobbers `r1`–`r6` |
+| `__divu` | unsigned `/`| 16-iter restoring long division     | leaf, clobbers `r1`–`r7` |
+| `__modu` | unsigned `%`| same loop, returns remainder        | leaf, clobbers `r1`–`r7` |
+| `__divs` | signed `/`  | sign-normalise then `__divu`        | non-leaf, saves `r8` + `lr` |
+| `__mods` | signed `%`  | sign-normalise then `__modu` (sign of result follows dividend, per C99) | non-leaf, saves `r8` + `lr` |
+
+Per the project ISA convention, `BLEU` is **strictly less than unsigned** and
+`BLETU` is **less-or-equal unsigned** (despite the suffix). The runtime helpers
+rely on this; do not change either side without updating the other.
+
+The unsigned-vs-signed dispatch is determined by the IR lowering from the
+operand types, NOT the result type — the semantic pass returns the static
+signed-int singleton for arithmetic results, so looking at the result alone
+misses unsigned operands.
 
 ## 14. Validation obligations
 Lowering implementation must include tests for:

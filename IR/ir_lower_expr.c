@@ -119,11 +119,80 @@ static ir_opcode_t binop_opcode(OperatorType_t op, int is_unsigned)
     }
 }
 
+/* MUL/DIV/MOD have no hardware instruction on this 16-bit RISC.
+ * They are lowered to runtime-library calls during expression lowering so that
+ * liveness/precolor/regalloc see real call boundaries (caller-saved clobber). */
+static int needs_runtime_call(OperatorType_t op, int is_unsigned,
+                               const char **out_callee)
+{
+    switch (op) {
+    case OP_MULTIPLY: *out_callee = "__mul";                           return 1;
+    case OP_DIVIDE:   *out_callee = is_unsigned ? "__divu" : "__divs"; return 1;
+    case OP_MODULE:   *out_callee = is_unsigned ? "__modu" : "__mods"; return 1;
+    default:                                                           return 0;
+    }
+}
+
+/* Emit  %vN = @callee(lv, rv)  and return the result value (i16). */
+static ir_value_t emit_arith_call(ir_lower_ctx_t *lctx,
+                                   const char       *callee,
+                                   ir_value_t        lv,
+                                   ir_value_t        rv)
+{
+    unsigned r = ir_new_vreg(lctx->func);
+    ir_instr_t *call = ir_instr_new(IR_OP_CALL);
+    snprintf(call->as.call.callee, sizeof(call->as.call.callee), "%s", callee);
+    call->as.call.arg_count    = 2;
+    call->as.call.args[0]      = lv;
+    call->as.call.args[1]      = rv;
+    call->as.call.is_void_call = 0;
+    call->dst = ir_val_vreg(r, ir_type_i16());
+    ir_instr_push(lctx->cur_block, call);
+    return ir_val_vreg(r, ir_type_i16());
+}
+
 /* Return 1 if the semantic type is unsigned */
 static int sem_type_is_unsigned(const type_t *t)
 {
     if (!t || t->kind != TYPE_BUILTIN) return 0;
     return (t->qualifiers & TYPE_QUAL_UNSIGNED) != 0;
+}
+
+/* Walk the AST root to find the struct/union declaration whose tag matches
+ * `tag`.  Used as a fallback when the semantic type's `aggregate.decl_node`
+ * back-pointer is NULL (which happens for tags resolved indirectly through
+ * the symbol table).  Mirrors find_tag_declaration() in semantic_pass2.c. */
+static const TreeNode_t *find_tag_decl_in_ast(const TreeNode_t *node,
+                                                NodeType_t want_kind,
+                                                const char *tag)
+{
+    if (!node || !tag) return NULL;
+    if (node->nodeType == want_kind && node->nodeData.sVal &&
+        strcmp(node->nodeData.sVal, tag) == 0)
+        return node;
+    /* Search siblings, then descend into first child. */
+    for (const TreeNode_t *sib = node->p_sibling; sib; sib = sib->p_sibling) {
+        const TreeNode_t *r = find_tag_decl_in_ast(sib, want_kind, tag);
+        if (r) return r;
+    }
+    return find_tag_decl_in_ast(node->p_firstChild, want_kind, tag);
+}
+
+/* Per C's "usual arithmetic conversions" the operation is treated as unsigned
+ * if either operand has unsigned type.  The semantic pass currently returns
+ * the static signed-int singleton for arithmetic / comparison results, so
+ * looking at the result alone misses unsigned operands.  Inspect both inputs
+ * directly. */
+static int binop_is_unsigned(ir_lower_ctx_t *lctx,
+                              const TreeNode_t *lhs_node,
+                              const TreeNode_t *rhs_node)
+{
+    const sem_node_info_t *li = lhs_node ?
+        semantic_get_node_info(lctx->sem_ctx, lhs_node) : NULL;
+    const sem_node_info_t *ri = rhs_node ?
+        semantic_get_node_info(lctx->sem_ctx, rhs_node) : NULL;
+    return sem_type_is_unsigned(li ? li->type : NULL) ||
+           sem_type_is_unsigned(ri ? ri->type : NULL);
 }
 
 /* Widen a value to i16 if it is i1 or i8 (for arithmetic) */
@@ -249,32 +318,40 @@ ir_value_t ir_lower_lvalue_addr(ir_lower_ctx_t *lctx,
                               ? ir_type_from_sem(ainfo->type) : ir_type_i16();
         if (out_pointee_type) *out_pointee_type = elem_type;
 
-        /* Compute stride = sizeof(element_type) in bytes */
-        long stride = 2; /* default: i16 = 2 bytes */
-        switch (elem_type.kind) {
-        case IR_TYPE_I1:  stride = 1; break;
-        case IR_TYPE_I8:  stride = 1; break;
-        case IR_TYPE_I16: stride = 2; break;
-        case IR_TYPE_I32: stride = 4; break;
-        case IR_TYPE_PTR: stride = 2; break;
-        default:          stride = 2; break;
-        }
+        /* Compute stride in 16-bit words (this ISA is word-addressed: ADDI
+         * offsets, LW/SW addresses, and slot offsets are all expressed in
+         * 16-bit words, not bytes).  An int / pointer is 1 word; an i32
+         * is 2 words; an array element is sizeof(elem) words computed
+         * recursively. */
+        long stride = ir_type_size_words(elem_type);
 
-        /* Lower base: could be an identifier (slot/global) or any pointer expr */
+        /* Lower base: could be an identifier (slot/global), a pointer
+         * variable, an array sub-expression (matrix[1]), or any other
+         * pointer expression.  The two cases differ in whether to LOAD
+         * the symbol's storage:
+         *   • Array (T arr[N] or sub-array T arr[i] giving T'[N]):
+         *     the address of the array IS the base of its elements.
+         *   • Pointer (T *p):
+         *     the slot/global holds the pointer value; load it. */
         const sem_node_info_t *binfo =
             semantic_get_node_info(lctx->sem_ctx, base_node);
         ir_type_t base_sem_type = (binfo && binfo->type)
                                   ? ir_type_from_sem(binfo->type) : ir_type_ptr();
 
         ir_value_t base_ptr;
-        if (base_sem_type.kind == IR_TYPE_ARRAY ||
-            base_node->nodeType == NODE_IDENTIFIER) {
-            /* Array variable: take its address first, then load the base pointer */
+        if (base_sem_type.kind == IR_TYPE_ARRAY) {
+            /* Array (named variable, sub-array, etc.) — its address IS
+             * the base of the elements.  No LOAD. */
+            ir_type_t dummy_pt;
+            base_ptr = ir_lower_lvalue_addr(lctx, base_node, &dummy_pt);
+        } else if (base_node->nodeType == NODE_IDENTIFIER) {
+            /* Pointer variable — addr_of gives the slot/global address;
+             * load to obtain the pointer value. */
             ir_type_t dummy_pt;
             ir_value_t base_addr = ir_lower_lvalue_addr(lctx, base_node, &dummy_pt);
             base_ptr = emit_load(lctx, base_addr, ir_type_ptr());
         } else {
-            /* Already a pointer expression */
+            /* Already a pointer expression (function result, p+k, etc.) */
             ir_type_t bt;
             base_ptr = ir_lower_expr(lctx, base_node, &bt);
         }
@@ -312,6 +389,20 @@ ir_value_t ir_lower_lvalue_addr(ir_lower_ctx_t *lctx,
                                ? ir_type_from_sem(minfo->type) : ir_type_i16();
         if (out_pointee_type) *out_pointee_type = field_type;
 
+        /* Resolve the struct/union type so we can compute the field offset.
+         * For '.' the base is the aggregate itself; for '->' the base is a
+         * pointer-to-aggregate, so we look through the pointer. */
+        const sem_node_info_t *binfo =
+            semantic_get_node_info(lctx->sem_ctx, base_node);
+        const type_t *agg_type = NULL;
+        if (binfo && binfo->type) {
+            if (expr->nodeType == NODE_MEMBER_ACCESS) {
+                agg_type = binfo->type;
+            } else if (binfo->type->kind == TYPE_POINTER) {
+                agg_type = binfo->type->as.pointer.base;
+            }
+        }
+
         ir_value_t base_ptr;
         if (expr->nodeType == NODE_MEMBER_ACCESS) {
             /* '.' operator: base is a struct lvalue — take its address */
@@ -323,20 +414,47 @@ ir_value_t ir_lower_lvalue_addr(ir_lower_ctx_t *lctx,
             base_ptr = ir_lower_expr(lctx, base_node, &bt);
         }
 
-        /* Field name embedded in callee slot for backend reference.
-         * We use GEP with index 0 and stride 0 as a field-access placeholder.
-         * The backend uses the field symbol name from the semantic annotation
-         * to resolve the actual byte offset. */
+        /* Walk the struct's AST declaration to find this field's offset
+         * in 16-bit words.  Fields are declared in order; the offset is
+         * the running sum of the sizes of preceding fields.
+         *
+         * For unions every field starts at offset 0. */
         const char *field_name = (field_node->nodeData.sVal)
-                                 ? field_node->nodeData.sVal : "?";
+                                 ? field_node->nodeData.sVal : NULL;
+        long field_off = 0;
+        if (agg_type && agg_type->kind == TYPE_STRUCT_TAG && field_name) {
+            const TreeNode_t *decl =
+                (const TreeNode_t *)agg_type->as.aggregate.decl_node;
+            /* Fallback: when the type's back-pointer is NULL (tag resolved
+             * indirectly), search the AST root for a NODE_STRUCT_DECLARATION
+             * matching the tag. */
+            if (!decl && agg_type->as.aggregate.tag) {
+                decl = find_tag_decl_in_ast(lctx->root,
+                                             NODE_STRUCT_DECLARATION,
+                                             agg_type->as.aggregate.tag);
+            }
+            for (const TreeNode_t *m = decl ? decl->p_firstChild : NULL;
+                 m; m = m->p_sibling) {
+                if (m->nodeType != NODE_STRUCT_MEMBER &&
+                    m->nodeType != NODE_ARRAY_DECLARATION) continue;
+                if (!m->nodeData.sVal) continue;
+                if (strcmp(m->nodeData.sVal, field_name) == 0) break;
+                const sem_node_info_t *mi =
+                    semantic_get_node_info(lctx->sem_ctx, m);
+                ir_type_t mt = (mi && mi->type)
+                    ? ir_type_from_sem(mi->type) : ir_type_i16();
+                size_t sz = ir_type_size_words(mt);
+                field_off += (long)(sz ? sz : 1);
+            }
+        }
+        /* Unions: field_off stays 0, which is correct. */
+
         unsigned r = ir_new_vreg(lctx->func);
         ir_instr_t *gep = ir_instr_new(IR_OP_GEP);
-        gep->dst         = ir_val_vreg(r, ir_type_ptr());
-        gep->src[0]      = base_ptr;
-        gep->src[1]      = ir_val_imm(0, ir_type_i16());
-        gep->as.gep.width = 0; /* backend resolves field offset by name */
-        /* Store field name in callee string for backend reference */
-        snprintf(gep->as.call.callee, sizeof(gep->as.call.callee), "%s", field_name);
+        gep->dst          = ir_val_vreg(r, ir_type_ptr());
+        gep->src[0]       = base_ptr;
+        gep->src[1]       = ir_val_imm(field_off, ir_type_i16());
+        gep->as.gep.width = 1; /* word-addressed: address = base + idx */
         ir_instr_push(lctx->cur_block, gep);
         return ir_val_vreg(r, ir_type_ptr());
     }
@@ -388,15 +506,25 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
     case NODE_STRING: {
         /* BUILTIN_STRING → ptr to read-only i8; name is emitted as global */
         *out_type = ir_type_ptr();
-        const char *s = expr->nodeData.sVal ? expr->nodeData.sVal : "";
-        /* We emit a synthetic global label for string literals.
-           The backend is responsible for placing them in .rodata. */
+        const char *raw = expr->nodeData.sVal ? expr->nodeData.sVal : "";
+        /* Lexer keeps the surrounding double quotes in sVal; strip them. */
+        size_t rlen = strlen(raw);
+        size_t off  = (rlen >= 2 && raw[0] == '"' && raw[rlen - 1] == '"') ? 1 : 0;
+        size_t plen = rlen - 2 * off;
+        /* Emit a synthetic global label for the string literal and store
+         * its bytes on the IR global so codegen can emit `.asciz`. */
         static unsigned str_id = 0;
         char label[64];
         snprintf(label, sizeof(label), ".str%u", str_id++);
-        ir_module_add_global(lctx->module, label, ir_type_ptr(), 0);
-        /* Mark global with the string value via a comment embedded in name */
-        (void)s; /* content used by backend data emitter, not IR instructions */
+        ir_global_t *g = ir_module_add_global(lctx->module, label,
+                                               ir_type_ptr(), 0);
+        if (g) {
+            g->init_kind = IR_GINIT_STRING;
+            if (plen >= sizeof(g->init_string))
+                plen = sizeof(g->init_string) - 1;
+            memcpy(g->init_string, raw + off, plen);
+            g->init_string[plen] = '\0';
+        }
         return ir_val_global(label, ir_type_ptr());
     }
 
@@ -448,7 +576,7 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
             ir_value_t old = emit_load(lctx, addr, lhs_type);
             ir_type_t rhs_type;
             ir_value_t rval = ir_lower_expr(lctx, rhs_node, &rhs_type);
-            int is_unsigned = sem_type_is_unsigned(info ? info->type : NULL);
+            int is_unsigned = binop_is_unsigned(lctx, lhs_node, rhs_node);
             rval = cast_value(lctx, rval, lhs_type, is_unsigned);
 
             OperatorType_t base = OP_PLUS;
@@ -466,10 +594,12 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
             default: break;
             }
 
-            if(base == OP_MULTIPLY || base == OP_DIVIDE || base == OP_MODULE){
-                ir_diag(lctx, "IR001", expr->lineNumber,
-                    "assignment operator not supported by target ISA");
-                return ir_val_none();
+            const char *rt_callee = NULL;
+            if (needs_runtime_call(base, is_unsigned, &rt_callee)) {
+                ir_value_t res = emit_arith_call(lctx, rt_callee, old, rval);
+                emit_store(lctx, addr, res);
+                *out_type = lhs_type;
+                return res;
             }
 
             unsigned r = ir_new_vreg(lctx->func);
@@ -534,9 +664,105 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
         }
 
         if (op == OP_LOGICAL_AND || op == OP_LOGICAL_OR) {
-            ir_diag(lctx, "IR001", expr->lineNumber,
-                    "logical operators require control-flow lowering");
-            return ir_val_none();
+            /* Short-circuit lowering via a control-flow diamond and a
+             * one-word result slot.  C says `&&` / `||` evaluate left-to-
+             * right and stop as soon as the result is determined.
+             *
+             *   AND:  if (lhs) eval(rhs); else result = 0
+             *   OR :  if (lhs) result = 1; else eval(rhs)
+             *
+             * Both branches funnel into a merge block that LOADs the
+             * result.  The result is i16 (C's int). */
+            if (!lhs_node || !rhs_node) {
+                ir_diag(lctx, "IR001", expr->lineNumber,
+                        "malformed logical operator");
+                return ir_val_none();
+            }
+            unsigned res_slot = ir_new_slot(lctx->func,
+                op == OP_LOGICAL_AND ? ".land" : ".lor", ir_type_i16());
+
+            ir_block_t *rhs_block   = ir_new_block(lctx);
+            ir_block_t *true_block  = ir_new_block(lctx);
+            ir_block_t *false_block = ir_new_block(lctx);
+            ir_block_t *merge_block = ir_new_block(lctx);
+
+            /* Lower lhs → predicate (lhs != 0) */
+            ir_type_t lt;
+            ir_value_t lv = ir_lower_expr(lctx, lhs_node, &lt);
+            lv = maybe_widen(lctx, lv, 0);
+            unsigned p1 = ir_new_vreg(lctx->func);
+            ir_instr_t *cmp1 = ir_instr_new(IR_OP_NEQ);
+            cmp1->dst    = ir_val_vreg(p1, ir_type_i1());
+            cmp1->src[0] = lv;
+            cmp1->src[1] = ir_val_imm(0, lv.type);
+            ir_instr_push(lctx->cur_block, cmp1);
+
+            if (op == OP_LOGICAL_AND) {
+                ir_seal_branch(lctx, ir_val_vreg(p1, ir_type_i1()),
+                                rhs_block->id, false_block->id);
+            } else { /* OP_LOGICAL_OR */
+                ir_seal_branch(lctx, ir_val_vreg(p1, ir_type_i1()),
+                                true_block->id, rhs_block->id);
+            }
+
+            /* RHS block: predicate on rhs */
+            lctx->cur_block = rhs_block;
+            ir_type_t rt;
+            ir_value_t rv = ir_lower_expr(lctx, rhs_node, &rt);
+            rv = maybe_widen(lctx, rv, 0);
+            unsigned p2 = ir_new_vreg(lctx->func);
+            ir_instr_t *cmp2 = ir_instr_new(IR_OP_NEQ);
+            cmp2->dst    = ir_val_vreg(p2, ir_type_i1());
+            cmp2->src[0] = rv;
+            cmp2->src[1] = ir_val_imm(0, rv.type);
+            ir_instr_push(lctx->cur_block, cmp2);
+            ir_seal_branch(lctx, ir_val_vreg(p2, ir_type_i1()),
+                            true_block->id, false_block->id);
+
+            /* True block: result = 1 */
+            lctx->cur_block = true_block;
+            {
+                unsigned addr_r = ir_new_vreg(lctx->func);
+                ir_instr_t *a = ir_instr_new(IR_OP_ADDR_OF);
+                a->dst    = ir_val_vreg(addr_r, ir_type_ptr());
+                a->src[0] = ir_val_slot(res_slot, ir_type_i16());
+                ir_instr_push(lctx->cur_block, a);
+                ir_instr_t *s = ir_instr_new(IR_OP_STORE);
+                s->src[0] = ir_val_vreg(addr_r, ir_type_ptr());
+                s->src[1] = ir_val_imm(1, ir_type_i16());
+                ir_instr_push(lctx->cur_block, s);
+                ir_seal_goto(lctx, merge_block->id);
+            }
+
+            /* False block: result = 0 */
+            lctx->cur_block = false_block;
+            {
+                unsigned addr_r = ir_new_vreg(lctx->func);
+                ir_instr_t *a = ir_instr_new(IR_OP_ADDR_OF);
+                a->dst    = ir_val_vreg(addr_r, ir_type_ptr());
+                a->src[0] = ir_val_slot(res_slot, ir_type_i16());
+                ir_instr_push(lctx->cur_block, a);
+                ir_instr_t *s = ir_instr_new(IR_OP_STORE);
+                s->src[0] = ir_val_vreg(addr_r, ir_type_ptr());
+                s->src[1] = ir_val_imm(0, ir_type_i16());
+                ir_instr_push(lctx->cur_block, s);
+                ir_seal_goto(lctx, merge_block->id);
+            }
+
+            /* Merge: load result */
+            lctx->cur_block = merge_block;
+            unsigned addr_r = ir_new_vreg(lctx->func);
+            ir_instr_t *a = ir_instr_new(IR_OP_ADDR_OF);
+            a->dst    = ir_val_vreg(addr_r, ir_type_ptr());
+            a->src[0] = ir_val_slot(res_slot, ir_type_i16());
+            ir_instr_push(lctx->cur_block, a);
+            unsigned res_v = ir_new_vreg(lctx->func);
+            ir_instr_t *ld = ir_instr_new(IR_OP_LOAD);
+            ld->dst    = ir_val_vreg(res_v, ir_type_i16());
+            ld->src[0] = ir_val_vreg(addr_r, ir_type_ptr());
+            ir_instr_push(lctx->cur_block, ld);
+            *out_type = ir_type_i16();
+            return ir_val_vreg(res_v, ir_type_i16());
         }
 
         if (!lhs_node || !rhs_node) {
@@ -550,13 +776,23 @@ ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
         ir_value_t lv = ir_lower_expr(lctx, lhs_node, &lt);
         ir_value_t rv = ir_lower_expr(lctx, rhs_node, &rt);
 
-        int is_unsigned = sem_type_is_unsigned(info ? info->type : NULL);
+        int is_unsigned = binop_is_unsigned(lctx, lhs_node, rhs_node);
         lv = maybe_widen(lctx, lv, is_unsigned);
         rv = maybe_widen(lctx, rv, is_unsigned);
 
+        {
+            const char *rt_callee = NULL;
+            if (needs_runtime_call(op, is_unsigned, &rt_callee)) {
+                *out_type = ir_type_i16();
+                return emit_arith_call(lctx, rt_callee, lv, rv);
+            }
+        }
+
         ir_opcode_t ir_op = binop_opcode(op, is_unsigned);
 
-        if(ir_op == IR_OP_INVALID){
+        /* IR_OP_INVALID is no longer reachable for MUL/DIV/MOD; keep this
+         * guard as a safety net for any future unhandled operator. */
+        if (ir_op == IR_OP_INVALID) {
             ir_diag(lctx, "IR001", expr->lineNumber,
                 "operator not supported by target ISA");
             return ir_val_none();
