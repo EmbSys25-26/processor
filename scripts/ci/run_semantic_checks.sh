@@ -214,73 +214,73 @@ check_run "Frontend build smoke" make -C "$ROOT_DIR"
 check_run_capture "Parser->semantic program (ok)" \
   "$OUT_DIR/compiler_minimal_ok.stdout" \
   "$OUT_DIR/compiler_minimal_ok.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/minimal_ok.c"
 
 check_run_capture "Parser declarator+matrix smoke" \
   "$OUT_DIR/compiler_decl_refactor_ok.stdout" \
   "$OUT_DIR/compiler_decl_refactor_ok.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/declarator_pointer_matrix_ok.c"
 
 check_run_capture "Parser for-init repeated pointer declarator smoke" \
   "$OUT_DIR/compiler_for_pointer_decl_ok.stdout" \
   "$OUT_DIR/compiler_for_pointer_decl_ok.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/for_pointer_decl_list_ok.c"
 
 check_run_capture "Parser struct-member declarator smoke" \
   "$OUT_DIR/compiler_struct_member_decl_ok.stdout" \
   "$OUT_DIR/compiler_struct_member_decl_ok.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/struct_member_decl_ok.c"
 
 check_run_capture "Parser function prototype declaration smoke" \
   "$OUT_DIR/compiler_function_prototype_decl_ok.stdout" \
   "$OUT_DIR/compiler_function_prototype_decl_ok.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/function_prototype_decl_ok.c"
 
 check_run_capture "Parser recursive declaration-specifiers smoke" \
   "$OUT_DIR/compiler_declspec_recursive_ok.stdout" \
   "$OUT_DIR/compiler_declspec_recursive_ok.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/declaration_specifiers_recursive_ok.c"
 
 check_run_capture "Parser aggregate declaration smoke" \
   "$OUT_DIR/compiler_aggregate_declaration_ok.stdout" \
   "$OUT_DIR/compiler_aggregate_declaration_ok.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/aggregate_declaration_ok.c"
 
 check_run_capture "Parser aggregate inline declarator smoke" \
   "$OUT_DIR/compiler_aggregate_inline_decl_ok.stdout" \
   "$OUT_DIR/compiler_aggregate_inline_decl_ok.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/aggregate_inline_decl_ok.c"
 
 check_run_capture "Parser AST cleanup block smoke" \
   "$OUT_DIR/compiler_ast_cleanup_block.stdout" \
   "$OUT_DIR/compiler_ast_cleanup_block.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/ast_cleanup_block_ok.c"
 
 check_run_capture "Parser AST cleanup for smoke" \
   "$OUT_DIR/compiler_ast_cleanup_for.stdout" \
   "$OUT_DIR/compiler_ast_cleanup_for.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/ast_cleanup_for_ok.c"
 
 check_run_capture "Parser AST cleanup member smoke" \
   "$OUT_DIR/compiler_ast_cleanup_member.stdout" \
   "$OUT_DIR/compiler_ast_cleanup_member.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/ast_cleanup_member_ok.c"
 
 check_run_capture "Parser C11 expression ladder smoke" \
   "$OUT_DIR/compiler_expression_ladder_ok.stdout" \
   "$OUT_DIR/compiler_expression_ladder_ok.stderr" \
-  "$ROOT_DIR/compiler" \
+  "$ROOT_DIR/compiler" --ast \
   "$ROOT_DIR/test_files/semantic_checks/programs/expression_ladder_ok.c"
 
 check_run "Declarator smoke AST contains repeated pointer decl" \

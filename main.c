@@ -8,6 +8,7 @@
 
 /* Include necessary headers from all compiler stages */
 #include "Parser/ASTree.h"
+#include "Parser/ASTPrint.h"
 #include "Semantic/semantic.h"
 #include "IR/ir.h"
 #include "IR/ir_lower.h"
@@ -185,20 +186,37 @@ FILE* open_source_file(const char *filename) {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s <source_file.c>\n", argv[0]);
-        return 1;
-    }
-    
-    FILE *asm_out = fopen("output.asm", "w");
-    if (!asm_out) {
-        fprintf(stderr, "Error: cannot open output.asm\n");
+        fprintf(stderr,
+            "Usage: %s [--ast] <source_file.c>\n"
+            "  --ast   parse only and print the AST tree, then exit\n",
+            argv[0]);
         return 1;
     }
 
+    int print_ast = 0;
+    const char *src_path = NULL;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--ast") == 0)      print_ast = 1;
+        else if (!src_path)                     src_path = argv[i];
+    }
+    if (!src_path) {
+        fprintf(stderr, "Usage: %s [--ast] <source_file.c>\n", argv[0]);
+        return 1;
+    }
+
+    FILE *asm_out = NULL;
+    if (!print_ast) {
+        asm_out = fopen("output.asm", "w");
+        if (!asm_out) {
+            fprintf(stderr, "Error: cannot open output.asm\n");
+            return 1;
+        }
+    }
+
     /* 1. Lexical & Syntax Analysis */
-    yyin = open_source_file(argv[1]);
+    yyin = open_source_file(src_path);
     if (!yyin) {
-        fprintf(stderr, "Error: Could not open file '%s'\n", argv[1]);
+        fprintf(stderr, "Error: Could not open file '%s'\n", src_path);
         return 1;
     }
 
@@ -208,17 +226,27 @@ int main(int argc, char **argv) {
     }
     fclose(yyin);
 
+    /* --ast: print the parse tree and exit before semantic analysis */
+    if (print_ast) {
+        ASTPrint(p_treeRoot);
+        return 0;
+    }
+
     /* 2. Semantic Analysis */
     semantic_context_t *sem_ctx = NULL;
     semantic_result_t sem_res;
 
-    int sem_status = semantic_analyze(p_treeRoot, argv[1], &sem_ctx, &sem_res);
+    int sem_status = semantic_analyze(p_treeRoot, src_path, &sem_ctx, &sem_res);
     if (sem_status != 0 || !sem_ctx) {
         return 1;
     }
+    if (sem_res.error_count > 0) {
+        if (asm_out) fclose(asm_out);
+        return 2;
+    }
 
     /* 3. IR Lowering */
-    ir_module_t *mod = ir_lower_translation_unit(p_treeRoot, sem_ctx, argv[1]);
+    ir_module_t *mod = ir_lower_translation_unit(p_treeRoot, sem_ctx, src_path);
     if (!mod) {
         return 1;
     }

@@ -149,18 +149,43 @@ static uint16_t callee_used_mask(const regalloc_t *ra)
     return mask;
 }
 
-/* Frame-pointer offset for slot_id N:  fp + offset_of(N) = address of slot N.
- * !! Slot 0 sits below the last callee-saved register !! */
-static int slot_fp_offset(unsigned slot_id, const regalloc_t *ra)
+/* ─── leaf-function detection ──────────────────────────────────────────────
+ *
+ * A function is `leaf` iff its IR body contains no IR_OP_CALL.  Leaf
+ * functions need not save lr in the prologue, because lr is preserved
+ * across a leaf body (no callee can clobber it) and the closing RET
+ * (= JAL r0, lr, #0) reads back the original lr that the caller still
+ * holds.  Skipping PUSH(lr)/POP(lr) saves two instructions per leaf
+ * function but shifts every slot one word toward fp -- see
+ * slot_fp_offset() below.
+ */
+static int function_is_leaf(const ir_function_t *func)
 {
-    /*
-        Frame layout after prologue: 
-        fp-0: saved fp
-        fp-1: saved lr 
-        fp-2, fp-3, ..., fp-(1+cc): saved callee-saved (r8–r11, if used)
-        `cc` = popcount of callee_used_mask(ra) 
-    */
-    int header = 1 + __builtin_popcount(callee_used_mask(ra));
+    for (const ir_block_t *b = func->entry; b; b = b->next)
+        for (const ir_instr_t *i = b->head; i; i = i->next)
+            if (i->op == IR_OP_CALL) return 0;
+    return 1;
+}
+
+/* Frame-pointer offset for slot_id N:  fp + offset_of(N) = address of slot N.
+ *
+ *  Non-leaf frame layout after prologue:
+ *    fp-0: saved fp
+ *    fp-1: saved lr               <-- absent for leaf functions
+ *    fp-2 .. fp-(1+cc): saved callee-saved
+ *    slot 0 lives at fp-(2+cc).
+ *
+ *  Leaf frame layout (no PUSH(lr)):
+ *    fp-0: saved fp
+ *    fp-1 .. fp-(cc): saved callee-saved
+ *    slot 0 lives at fp-(1+cc).
+ */
+static int slot_fp_offset(unsigned slot_id,
+                          const ir_function_t *func,
+                          const regalloc_t *ra)
+{
+    int lr_word = function_is_leaf(func) ? 0 : 1;
+    int header  = lr_word + __builtin_popcount(callee_used_mask(ra));
     return -((int)slot_id + 1 + header);
 }
 
@@ -244,11 +269,23 @@ static void emit_prologue(FILE *out,
 {
     unsigned n_slots = count_slots(func);
     uint16_t callee  = callee_used_mask(ra);
+    int      leaf    = function_is_leaf(func);
+    int      ultra   = leaf && n_slots == 0 && callee == 0
+                            && func->param_count <= PHYS_ARG_REGS;
 
-    fprintf(out, "    ; --- Prologue ---\n");
+    /* Ultra-leaf fast path: no frame at all -- the body uses no
+     * fp-relative addressing and the caller's lr is preserved. */
+    if (ultra) {
+        fprintf(out, "    ; --- Prologue (ultra-leaf: no frame) ---\n");
+        return;
+    }
+
+    fprintf(out, "    ; --- Prologue%s ---\n",
+            leaf ? " (leaf: skip lr save)" : "");
     fprintf(out, "    PUSH(fp) \n");
     fprintf(out, "    MOV(fp, sp) \n");
-    fprintf(out, "    PUSH(lr) \n");
+    if (!leaf)
+        fprintf(out, "    PUSH(lr) \n");
 
 
     /* Save any callee-saved registers the function uses */
@@ -277,7 +314,7 @@ static void emit_prologue(FILE *out,
             int caller_off = (int)(i - PHYS_ARG_REGS) + 1;
             unsigned slot = ir_find_slot(func, func->param_names[i]);
             if (slot == (unsigned)-1) continue;
-            int slot_off = slot_fp_offset(slot, ra);
+            int slot_off = slot_fp_offset(slot, func, ra);
             /* LW t3, fp, #caller_off */
             if (caller_off >= -8 && caller_off <= 7) {
                 fprintf(out, "    LW t3, fp, #%d         ; load stack param %s\n",
@@ -315,12 +352,24 @@ static void emit_epilogue(FILE *out,
                            const ir_function_t *func,
                            const regalloc_t    *ra)
 {
-    uint16_t callee = callee_used_mask(ra);
+    uint16_t callee  = callee_used_mask(ra);
     unsigned n_slots = count_slots(func);
+    int      leaf    = function_is_leaf(func);
+    int      ultra   = leaf && n_slots == 0 && callee == 0
+                            && func->param_count <= PHYS_ARG_REGS;
 
-    fprintf(out, "    ; --- Epilogue ---\n");
+    /* Ultra-leaf fast path: no frame was set up, so the epilogue is
+     * literally just RET. */
+    if (ultra) {
+        fprintf(out, "    ; --- Epilogue (ultra-leaf: bare RET) ---\n");
+        fprintf(out, "    RET\n");
+        return;
+    }
 
-    /* Free local slots: walk sp up past the slot region, leaving it at 
+    fprintf(out, "    ; --- Epilogue%s ---\n",
+            leaf ? " (leaf: skip lr restore)" : "");
+
+    /* Free local slots: walk sp up past the slot region, leaving it at
      * the lowest saved callee-saved word (or saved lr if none used). */
     if (n_slots > 0) {
         fprintf(out, "    ; Free %u local slot(s)\n", n_slots);
@@ -333,7 +382,8 @@ static void emit_epilogue(FILE *out,
             fprintf(out, "    POP(r%d)\n", 8 + i);
     }
 
-    fprintf(out, "    POP(lr) \n");
+    if (!leaf)
+        fprintf(out, "    POP(lr) \n");
     fprintf(out, "    POP(fp) \n");
     fprintf(out, "    RET\n");
 }
@@ -735,7 +785,7 @@ static void emit_instr(FILE                *out,
      */
     case IR_OP_ADDR_OF:
         if (ins->src[0].kind == IR_VAL_SLOT) {
-            int off = slot_fp_offset(ins->src[0].as.slot, ra);
+            int off = slot_fp_offset(ins->src[0].as.slot, func, ra);
             emit_addi_imm(out, rd, "fp", off);
         } else if (ins->src[0].kind == IR_VAL_GLOBAL) {
             /* Global symbol — assembler resolves the label at link time.
@@ -1257,7 +1307,7 @@ static void emit_slot_comment(FILE *out, const ir_function_t *func, const regall
 {
     fprintf(out, "    ; Frame slots (fp-based):\n");
     for (const ir_slot_entry_t *s = func->slots; s; s = s->next) {
-        int off = slot_fp_offset(s->slot_id, ra);
+        int off = slot_fp_offset(s->slot_id, func, ra);
         fprintf(out, "    ;   %%slot%u (%s) @ fp%+d\n",
                 s->slot_id, s->name, off);
     }

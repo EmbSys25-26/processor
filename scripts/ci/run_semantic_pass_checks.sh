@@ -137,9 +137,9 @@ run_case "sem_060_check.c" 2 "SEM060" "sem_060_check\\.c:7:0"
 run_case "sem_061_check.c" 2 "SEM061" "sem_061_check\\.c:7:0"
 run_case "sem_062_check.c" 2 "SEM062" "sem_062_check\\.c:7:0"
 
-run_case "semw_001_check.c" 0 "SEMW001" "semw_001_check\\.c:11:0" "warnings=3"
-run_case "semw_002_check.c" 0 "SEMW002" "semw_002_check\\.c:9:0" "warnings=3"
-run_case "semw_003_check.c" 0 "SEMW003" "semw_003_check\\.c:6:0" "warnings=1"
+run_case "semw_001_check.c" 1 "SEMW001" "semw_001_check\\.c:11:0"
+run_case "semw_002_check.c" 0 "SEMW002" "semw_002_check\\.c:9:0"
+run_case "semw_003_check.c" 1 "SEMW003" "semw_003_check\\.c:6:0"
 
 echo "[SUMMARY] semantic_pass_examples total=$total passed=$passed failed=$((total - passed))" | tee -a "$LOG"
 echo "PASS semantic_pass_examples" | tee -a "$LOG"

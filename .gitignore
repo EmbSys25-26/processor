@@ -14,12 +14,18 @@ output.asm
 
 # Editor / IDE
 .vscode/
+.ci_artifacts/
 .idea/
 .claude/
 *.swp
 *.swo
 *~
+compiler.dSYM/
 
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Report 
+compiler-report/ 
+references/
