@@ -2,6 +2,7 @@
 # Regression sweep: compile every test_files/**/*.c, assert success and no
 # known codegen smells.  Also enforces snapshot diffs against
 # test_files/IR_checks/*_expected.asm files when present.
+# Includes 'expect_fail' mode for explicitly unsupported features.
 #
 # Exit code:
 #   0  every test passed
@@ -22,6 +23,32 @@ ok=0
 
 for f in test_files/RegisterAllocation/*.c test_files/IR_checks/*.c; do
     total=$((total + 1))
+    
+    # ---------------------------------------------------------
+    # EXPECT FAIL
+    # ---------------------------------------------------------
+    if [[ "$f" == *"test_unsupported_"* ]]; then
+        if ./compiler "$f" >/tmp/.out_$$ 2>&1; then
+            echo "[FAIL] $f — expected to fail, but compiled successfully"
+            fail=1
+        else
+            # Compilador failed (as expected). Verify error IR001.
+            if grep -q "IR001" /tmp/.out_$$; then
+                echo "[PASS] $f — correctly rejected with IR001"
+                ok=$((ok + 1))
+            else
+                echo "[FAIL] $f — failed, but missing IR001 diagnostic in output"
+                cat /tmp/.out_$$
+                fail=1
+            fi
+        fi
+        rm -f /tmp/.out_$$
+        continue
+    fi
+
+    # ---------------------------------------------------------
+    # NORMAL TESTS THAT SHOULD PASS
+    # ---------------------------------------------------------
     if ! ./compiler "$f" >/dev/null 2>&1; then
         echo "[FAIL] $f — compiler returned non-zero"
         fail=1
@@ -45,26 +72,24 @@ for f in test_files/RegisterAllocation/*.c test_files/IR_checks/*.c; do
     expected="${f%.c}_expected.asm"
     if [[ -f "$expected" ]]; then
         if ! diff -u "$expected" output.asm >/tmp/.diff_$$ 2>&1; then
-            echo "[FAIL] $f — snapshot drift vs $expected:"
-            sed 's/^/    /' /tmp/.diff_$$ | head -20
+            echo "[FAIL] $f — snapshot drift vs $expected"
+            cat /tmp/.diff_$$
             file_failed=1
         fi
         rm -f /tmp/.diff_$$
     fi
 
-    if [[ $file_failed -ne 0 ]]; then
-        fail=1
-    else
+    if [[ $file_failed -eq 0 ]]; then
+        echo "[PASS] $f"
         ok=$((ok + 1))
+    else
+        fail=1
     fi
 done
 
-echo
-echo "[SUMMARY] $ok/$total tests passed"
-if [[ $fail -eq 0 ]]; then
-    echo "[OK] all regression tests compile cleanly"
-    exit 0
-else
-    echo "[FAIL] one or more tests regressed"
+echo "---------------------------------------------------------"
+echo "Results: $ok / $total tests passed."
+if [[ $fail -ne 0 ]]; then
     exit 1
 fi
+exit 0

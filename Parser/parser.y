@@ -1174,6 +1174,26 @@ initializer             :   assignment_expression
                             {
                                 $$.treeNode = $1.treeNode;
                             }
+                        |   TOKEN_LEFT_BRACE initializer_list TOKEN_RIGHT_BRACE
+                            {
+                                $$.treeNode = $2.treeNode;
+                            }
+                        |   TOKEN_LEFT_BRACE initializer_list TOKEN_COMMA TOKEN_RIGHT_BRACE
+                            {
+                                $$.treeNode = $2.treeNode;
+                            }
+                        ;
+
+initializer_list        :   initializer
+                            {
+                                $$.treeNode = $1.treeNode;
+                            }
+                        |   initializer_list TOKEN_COMMA initializer
+                            {
+                                TreeNode_t *pHead = $1.treeNode;
+                                if (NodeAppendSibling(&pHead, $3.treeNode)) { YYERROR; }
+                                $$.treeNode = pHead;
+                            }
                         ;
 
 declarator              :   direct_declarator

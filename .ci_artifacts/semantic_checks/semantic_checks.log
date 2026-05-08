@@ -1,0 +1,193 @@
+[INFO] Step-0 semantic API checks CI
+[CHECK 1] Header compile smoke
+[CMD] cc -std=c11 -Wall -Wextra -Wpedantic -Werror -I/home/rusbini25/2Semester/ProjetoGitHub/processor -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Parser -c /home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/test_headers_compile.c -o /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_headers_compile.o
+[CHECK 2] API test (regular): test_arena_api
+[CMD] cc -std=c11 -Wall -Wextra -Wpedantic -Werror -I/home/rusbini25/2Semester/ProjetoGitHub/processor -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Parser /home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/test_arena_api.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/arena.c -o /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_arena_api
+[CMD] /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_arena_api
+PASS test_arena_api
+[CHECK 3] API test (regular): test_type_api
+[CMD] cc -std=c11 -Wall -Wextra -Wpedantic -Werror -I/home/rusbini25/2Semester/ProjetoGitHub/processor -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Parser /home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/test_type_api.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/arena.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/type.c -o /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_type_api
+[CMD] /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_type_api
+PASS test_type_api
+[CHECK 4] API test (regular): test_symbol_api
+[CMD] cc -std=c11 -Wall -Wextra -Wpedantic -Werror -I/home/rusbini25/2Semester/ProjetoGitHub/processor -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Parser /home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/test_symbol_api.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/arena.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/symbol.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/type.c -o /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_symbol_api
+[CMD] /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_symbol_api
+PASS test_symbol_api
+[CHECK 5] API test (regular): test_diagnostics_api
+[CMD] cc -std=c11 -Wall -Wextra -Wpedantic -Werror -I/home/rusbini25/2Semester/ProjetoGitHub/processor -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Parser /home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/test_diagnostics_api.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/diagnostics.c -o /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_diagnostics_api
+[CMD] /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_diagnostics_api
+PASS test_diagnostics_api
+[CHECK 6] API test (regular): test_semantic_api
+[CMD] cc -std=c11 -Wall -Wextra -Wpedantic -Werror -I/home/rusbini25/2Semester/ProjetoGitHub/processor -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic -I/home/rusbini25/2Semester/ProjetoGitHub/processor/Parser /home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/test_semantic_api.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/arena.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/semantic_ast_helpers.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/semantic_pass1.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/semantic_pass2.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/semantic.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/symbol.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/type.c /home/rusbini25/2Semester/ProjetoGitHub/processor/Semantic/diagnostics.c -o /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_semantic_api
+[CMD] /home/rusbini25/2Semester/ProjetoGitHub/processor/.ci_artifacts/semantic_checks/test_semantic_api
+null_root.c:0:0: error: SEM000: semantic analysis received empty AST
+PASS test_semantic_api
+[CMD] make -C /home/rusbini25/2Semester/ProjetoGitHub/processor clean
+make: Entering directory '/home/rusbini25/2Semester/ProjetoGitHub/processor'
+rm -f Parser/parser.tab.c \
+      Parser/parser.tab.h \
+      Lexer/lex.yy.c      \
+      output.asm \
+      compiler
+make: Leaving directory '/home/rusbini25/2Semester/ProjetoGitHub/processor'
+[CHECK 7] Frontend build smoke
+[CMD] make -C /home/rusbini25/2Semester/ProjetoGitHub/processor
+make: Entering directory '/home/rusbini25/2Semester/ProjetoGitHub/processor'
+bison -d Parser/parser.y -o Parser/parser.tab.c
+flex -o Lexer/lex.yy.c Lexer/lexer.l
+gcc -Wall -Wextra -g  -o compiler main.c Parser/parser.tab.c Lexer/lex.yy.c Parser/ASTree.c Parser/ASTPrint.c Util/logger.c Semantic/arena.c Semantic/type.c Semantic/symbol.c Semantic/diagnostics.c Semantic/semantic_ast_helpers.c Semantic/semantic_pass1.c Semantic/semantic_pass2.c Semantic/semantic.c IR/ir.c IR/ir_lower.c IR/ir_lower_decl.c IR/ir_lower_expr.c IR/ir_lower_stmt.c CodeGen/RegAlloc/liveness.c CodeGen/RegAlloc/interference.c CodeGen/RegAlloc/precolor.c CodeGen/RegAlloc/regalloc.c CodeGen/RegAlloc/spill.c CodeGen/codegen.c
+make: Leaving directory '/home/rusbini25/2Semester/ProjetoGitHub/processor'
+[CHECK 8] Parser->semantic program (ok)
+[CMD] /home/rusbini25/2Semester/ProjetoGitHub/processor/compiler /home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/minimal_ok.c
+
+============================================================
+ FUNCTION: @main
+============================================================
+
+┌── [0] IR ───────────────────────────────────────────────────
+func @main() -> i16 {
+  slot %slot1 : i16  ; y
+  slot %slot0 : i16  ; x
+
+bb0:
+    %v0 = addr_of %slot0
+    *%v0 = 0
+    %v1 = addr_of %slot1
+    *%v1 = 1
+    %v2 = addr_of %slot0
+    %v3 = addr_of %slot0
+    %v4 = *%v3
+    %v5 = addr_of %slot1
+    %v6 = *%v5
+    %v7 = %v4 add %v6
+    *%v2 = %v7
+    %v8 = addr_of %slot0
+    %v9 = *%v8
+    ret %v9
+
+bb1:
+    ret void
+}
+
+┌── [1] STAGE 1: LIVENESS ANALYSIS ──────────────────────
+=== liveness: @main ===
+  bb0:
+    use      = {}
+    def      = {%v0, %v1, %v2, %v3, %v4, %v5, %v6, %v7, %v8, %v9}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  0]     %v0 = addr_of %slot0
+           live_after = {%v0}
+      [  1]     *%v0 = 0
+           live_after = {}
+      [  2]     %v1 = addr_of %slot1
+           live_after = {%v1}
+      [  3]     *%v1 = 1
+           live_after = {}
+      [  4]     %v2 = addr_of %slot0
+           live_after = {%v2}
+      [  5]     %v3 = addr_of %slot0
+           live_after = {%v2, %v3}
+      [  6]     %v4 = *%v3
+           live_after = {%v2, %v4}
+      [  7]     %v5 = addr_of %slot1
+           live_after = {%v2, %v4, %v5}
+      [  8]     %v6 = *%v5
+           live_after = {%v2, %v4, %v6}
+      [  9]     %v7 = %v4 add %v6
+           live_after = {%v2, %v7}
+      [ 10]     *%v2 = %v7
+           live_after = {}
+      [ 11]     %v8 = addr_of %slot0
+           live_after = {%v8}
+      [ 12]     %v9 = *%v8
+           live_after = {%v9}
+      [ 13]     ret %v9
+           live_after = {}
+  bb1:
+    use      = {}
+    def      = {}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [ 14]     ret void
+           live_after = {}
+
+┌── [2] STAGE 2: INTERFERENCE GRAPH ─────────────────────
+=== interference: @main ===
+  nodes: 10
+  edges: 7
+  moves: 0
+  edge list:
+    %v2 -- %v3
+    %v2 -- %v4
+    %v2 -- %v5
+    %v4 -- %v5
+    %v2 -- %v6
+    %v4 -- %v6
+    %v2 -- %v7
+  adjacency:
+    %v0 (deg=0): {}
+    %v1 (deg=0): {}
+    %v2 (deg=5): {%v3, %v4, %v5, %v6, %v7}
+    %v3 (deg=1): {%v2}
+    %v4 (deg=3): {%v2, %v5, %v6}
+    %v5 (deg=2): {%v2, %v4}
+    %v6 (deg=2): {%v2, %v4}
+    %v7 (deg=1): {%v2}
+    %v8 (deg=0): {}
+    %v9 (deg=0): {}
+
+┌── [3] STAGE 3: PRE-COLORING ───────────────────────────
+precolor for @main  (10 vregs):
+  %v9 → r1
+  call-live vregs (must use callee-saved r8–r12): {}
+
+┌── [4] STAGE 4: REGISTER ALLOCATION ────────────────────
+regalloc for @main  (10 vregs):
+  %v0    →  r4    [allocated]
+  %v1    →  r4    [allocated]
+  %v2    →  r6    [allocated]
+  %v3    →  r4    [allocated]
+  %v4    →  r5    [allocated]
+  %v5    →  r4    [allocated]
+  %v6    →  r4    [allocated]
+  %v7    →  r4    [allocated]
+  %v8    →  r4    [allocated]
+  %v9    →  r1    [precolored]
+  spills: none
+
+┌── [5] FINAL IR (physical registers) ───────────────────
+func @main() -> i16 {
+  slot %slot1 : i16  ; y
+  slot %slot0 : i16  ; x
+
+bb0:
+    r4 = addr_of %slot0
+    *r4 = 0
+    r4 = addr_of %slot1
+    *r4 = 1
+    r6 = addr_of %slot0
+    r4 = addr_of %slot0
+    r5 = *r4
+    r4 = addr_of %slot1
+    r4 = *r4
+    r4 = r5 add r4
+    *r6 = r4
+    r4 = addr_of %slot0
+    r1 = *r4
+    ret r1
+
+bb1:
+    ret void
+}
+
+Assembly written to output.asm
+[CHECK 9] Parser declarator+matrix smoke
+[CMD] /home/rusbini25/2Semester/ProjetoGitHub/processor/compiler /home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/declarator_pointer_matrix_ok.c
+Assembly written to output.asm
+[CHECK 10] Parser for-init repeated pointer declarator smoke
+[CMD] /home/rusbini25/2Semester/ProjetoGitHub/processor/compiler /home/rusbini25/2Semester/ProjetoGitHub/processor/test_files/semantic_checks/programs/for_pointer_decl_list_ok.c
+[SUMMARY] checks: total=10 passed=9 failed=1
+FAIL semantic_checks

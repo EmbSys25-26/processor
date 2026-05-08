@@ -1,0 +1,156 @@
+
+============================================================
+ FUNCTION: @main
+============================================================
+
+┌── [0] IR ───────────────────────────────────────────────────
+func @main() -> i16 {
+  slot %slot2 : ptr  ; pp
+  slot %slot0 : struct<Point>  ; p
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = gep %v0 + 0 * 1
+    *%v1 = 1
+    %v2 = addr_of %slot2
+    %v3 = *%v2
+    %v4 = gep %v3 + 1 * 1
+    *%v4 = 2
+    %v5 = addr_of %slot0
+    %v6 = gep %v5 + 0 * 1
+    %v7 = *%v6
+    %v8 = addr_of %slot2
+    %v9 = *%v8
+    %v10 = gep %v9 + 1 * 1
+    %v11 = *%v10
+    %v12 = %v7 add %v11
+    ret %v12
+
+bb1:
+    ret void
+}
+
+┌── [1] STAGE 1: LIVENESS ANALYSIS ──────────────────────
+=== liveness: @main ===
+  bb0:
+    use      = {}
+    def      = {%v0, %v1, %v2, %v3, %v4, %v5, %v6, %v7, %v8, %v9, %v10, %v11, %v12}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  0]     %v0 = addr_of %slot0
+           live_after = {%v0}
+      [  1]     %v1 = gep %v0 + 0 * 1
+           live_after = {%v1}
+      [  2]     *%v1 = 1
+           live_after = {}
+      [  3]     %v2 = addr_of %slot2
+           live_after = {%v2}
+      [  4]     %v3 = *%v2
+           live_after = {%v3}
+      [  5]     %v4 = gep %v3 + 1 * 1
+           live_after = {%v4}
+      [  6]     *%v4 = 2
+           live_after = {}
+      [  7]     %v5 = addr_of %slot0
+           live_after = {%v5}
+      [  8]     %v6 = gep %v5 + 0 * 1
+           live_after = {%v6}
+      [  9]     %v7 = *%v6
+           live_after = {%v7}
+      [ 10]     %v8 = addr_of %slot2
+           live_after = {%v7, %v8}
+      [ 11]     %v9 = *%v8
+           live_after = {%v7, %v9}
+      [ 12]     %v10 = gep %v9 + 1 * 1
+           live_after = {%v7, %v10}
+      [ 13]     %v11 = *%v10
+           live_after = {%v7, %v11}
+      [ 14]     %v12 = %v7 add %v11
+           live_after = {%v12}
+      [ 15]     ret %v12
+           live_after = {}
+  bb1:
+    use      = {}
+    def      = {}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [ 16]     ret void
+           live_after = {}
+
+┌── [2] STAGE 2: INTERFERENCE GRAPH ─────────────────────
+=== interference: @main ===
+  nodes: 13
+  edges: 4
+  moves: 0
+  edge list:
+    %v7 -- %v8
+    %v7 -- %v9
+    %v7 -- %v10
+    %v7 -- %v11
+  adjacency:
+    %v0 (deg=0): {}
+    %v1 (deg=0): {}
+    %v2 (deg=0): {}
+    %v3 (deg=0): {}
+    %v4 (deg=0): {}
+    %v5 (deg=0): {}
+    %v6 (deg=0): {}
+    %v7 (deg=4): {%v8, %v9, %v10, %v11}
+    %v8 (deg=1): {%v7}
+    %v9 (deg=1): {%v7}
+    %v10 (deg=1): {%v7}
+    %v11 (deg=1): {%v7}
+    %v12 (deg=0): {}
+
+┌── [3] STAGE 3: PRE-COLORING ───────────────────────────
+precolor for @main  (13 vregs):
+  %v12 → r1
+  call-live vregs (must use callee-saved r8–r12): {}
+
+┌── [4] STAGE 4: REGISTER ALLOCATION ────────────────────
+regalloc for @main  (13 vregs):
+  %v0    →  r4    [allocated]
+  %v1    →  r4    [allocated]
+  %v2    →  r4    [allocated]
+  %v3    →  r4    [allocated]
+  %v4    →  r4    [allocated]
+  %v5    →  r4    [allocated]
+  %v6    →  r4    [allocated]
+  %v7    →  r5    [allocated]
+  %v8    →  r4    [allocated]
+  %v9    →  r4    [allocated]
+  %v10   →  r4    [allocated]
+  %v11   →  r4    [allocated]
+  %v12   →  r1    [precolored]
+  spills: none
+
+┌── [5] FINAL IR (physical registers) ───────────────────
+func @main() -> i16 {
+  slot %slot2 : ptr  ; pp
+  slot %slot0 : struct<Point>  ; p
+
+bb0:
+    r4 = addr_of %slot0
+    r4 = gep r4 + 0 * 1
+    *r4 = 1
+    r4 = addr_of %slot2
+    r4 = *r4
+    r4 = gep r4 + 1 * 1
+    *r4 = 2
+    r4 = addr_of %slot0
+    r4 = gep r4 + 0 * 1
+    r5 = *r4
+    r4 = addr_of %slot2
+    r4 = *r4
+    r4 = gep r4 + 1 * 1
+    r4 = *r4
+    r1 = r5 add r4
+    ret r1
+
+bb1:
+    ret void
+}
+
+Assembly written to output.asm

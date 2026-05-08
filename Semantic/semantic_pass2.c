@@ -1371,6 +1371,29 @@ static const type_t *infer_operator_type(TreeNode_t *op_node, pass2_state_t *sta
   }
 if (op_kind == OP_ASSIGN) {
     if (lhs_type->kind != TYPE_INVALID && rhs_type->kind != TYPE_INVALID) {
+      /* SEM011: Assignment type mismatch - special handling for array initialization */
+        if (lhs_type->kind == TYPE_ARRAY) {
+          const type_t *elem_type = lhs_type->as.array.elem;
+            /* For array initialization, we allow the RHS to be a NODE_NULL with children representing initializer elements.
+               We need to validate each child against the array element type. */
+            TreeNode_t *child = rhs; 
+            int all_valid = 1;
+
+            while (child) {
+                const type_t *child_type = infer_expr_type(child, state);
+                
+                if (child_type->kind != TYPE_INVALID && !assignment_compatible(elem_type, child_type)) {
+                    pass2_emit(state, "SEM011", child->lineNumber, "Type mismatch in aggregate initialization element");
+                    all_valid = 0;
+                }
+                
+                child = child->p_sibling;
+            }            
+            return all_valid ? lhs_type : &g_type_invalid;
+        }
+            
+
+
         if (!pass2_is_lvalue_kind(pass2_get_node_info(state, lhs))) {
             pass2_emit(state, "SEM027", op_node->lineNumber, "LHS of assignment must be a modifiable lvalue");
         } else if (!pass2_is_modifiable_lvalue(lhs, state, lhs_type)) {

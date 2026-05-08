@@ -1,0 +1,85 @@
+
+============================================================
+ FUNCTION: @main
+============================================================
+
+┌── [0] IR ───────────────────────────────────────────────────
+func @main() -> i16 {
+  slot %slot0 : i16  ; Ponto
+
+bb0:
+    %v0 = addr_of %slot0
+    *%v0 = 1
+    %v1 = addr_of %slot0
+    %v2 = *%v1
+    ret %v2
+
+bb1:
+    ret void
+}
+
+┌── [1] STAGE 1: LIVENESS ANALYSIS ──────────────────────
+=== liveness: @main ===
+  bb0:
+    use      = {}
+    def      = {%v0, %v1, %v2}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  0]     %v0 = addr_of %slot0
+           live_after = {%v0}
+      [  1]     *%v0 = 1
+           live_after = {}
+      [  2]     %v1 = addr_of %slot0
+           live_after = {%v1}
+      [  3]     %v2 = *%v1
+           live_after = {%v2}
+      [  4]     ret %v2
+           live_after = {}
+  bb1:
+    use      = {}
+    def      = {}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  5]     ret void
+           live_after = {}
+
+┌── [2] STAGE 2: INTERFERENCE GRAPH ─────────────────────
+=== interference: @main ===
+  nodes: 3
+  edges: 0
+  moves: 0
+  adjacency:
+    %v0 (deg=0): {}
+    %v1 (deg=0): {}
+    %v2 (deg=0): {}
+
+┌── [3] STAGE 3: PRE-COLORING ───────────────────────────
+precolor for @main  (3 vregs):
+  %v2 → r1
+  call-live vregs (must use callee-saved r8–r12): {}
+
+┌── [4] STAGE 4: REGISTER ALLOCATION ────────────────────
+regalloc for @main  (3 vregs):
+  %v0    →  r4    [allocated]
+  %v1    →  r4    [allocated]
+  %v2    →  r1    [precolored]
+  spills: none
+
+┌── [5] FINAL IR (physical registers) ───────────────────
+func @main() -> i16 {
+  slot %slot0 : i16  ; Ponto
+
+bb0:
+    r4 = addr_of %slot0
+    *r4 = 1
+    r4 = addr_of %slot0
+    r1 = *r4
+    ret r1
+
+bb1:
+    ret void
+}
+
+Assembly written to output.asm
