@@ -1,0 +1,63 @@
+
+============================================================
+ FUNCTION: @main
+============================================================
+
+┌── [0] IR ───────────────────────────────────────────────────
+func @main() -> i16 {
+  slot %slot0 : i16  ; a
+
+bb0:
+    ret 0
+
+bb1:
+    ret void
+}
+
+┌── [1] STAGE 1: LIVENESS ANALYSIS ──────────────────────
+=== liveness: @main ===
+  bb0:
+    use      = {}
+    def      = {}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  0]     ret 0
+           live_after = {}
+  bb1:
+    use      = {}
+    def      = {}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  1]     ret void
+           live_after = {}
+
+┌── [2] STAGE 2: INTERFERENCE GRAPH ─────────────────────
+=== interference: @main ===
+  nodes: 0
+  edges: 0
+  moves: 0
+  adjacency:
+
+┌── [3] STAGE 3: PRE-COLORING ───────────────────────────
+precolor for @main  (0 vregs):
+  (none)
+  call-live vregs (must use callee-saved r8–r12): {}
+
+┌── [4] STAGE 4: REGISTER ALLOCATION ────────────────────
+regalloc for @main  (0 vregs):
+  spills: none
+
+┌── [5] FINAL IR (physical registers) ───────────────────
+func @main() -> i16 {
+  slot %slot0 : i16  ; a
+
+bb0:
+    ret 0
+
+bb1:
+    ret void
+}
+
+Assembly written to output.asm

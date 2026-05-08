@@ -1,0 +1,220 @@
+
+============================================================
+ FUNCTION: @add
+============================================================
+
+┌── [0] IR ───────────────────────────────────────────────────
+func @add(i16 %a, i16 %b) -> i16 {
+  slot %slot1 : i16  ; b
+  slot %slot0 : i16  ; a
+
+bb0:
+    %v2 = addr_of %slot0
+    *%v2 = %v0
+    %v3 = addr_of %slot1
+    *%v3 = %v1
+    %v4 = addr_of %slot0
+    %v5 = *%v4
+    %v6 = addr_of %slot1
+    %v7 = *%v6
+    %v8 = %v5 add %v7
+    ret %v8
+
+bb1:
+    ret void
+}
+
+┌── [1] STAGE 1: LIVENESS ANALYSIS ──────────────────────
+=== liveness: @add ===
+  bb0:
+    use      = {%v0, %v1}
+    def      = {%v2, %v3, %v4, %v5, %v6, %v7, %v8}
+    live_in  = {%v0, %v1}
+    live_out = {}
+    instructions:
+      [  0]     %v2 = addr_of %slot0
+           live_after = {%v0, %v1, %v2}
+      [  1]     *%v2 = %v0
+           live_after = {%v1}
+      [  2]     %v3 = addr_of %slot1
+           live_after = {%v1, %v3}
+      [  3]     *%v3 = %v1
+           live_after = {}
+      [  4]     %v4 = addr_of %slot0
+           live_after = {%v4}
+      [  5]     %v5 = *%v4
+           live_after = {%v5}
+      [  6]     %v6 = addr_of %slot1
+           live_after = {%v5, %v6}
+      [  7]     %v7 = *%v6
+           live_after = {%v5, %v7}
+      [  8]     %v8 = %v5 add %v7
+           live_after = {%v8}
+      [  9]     ret %v8
+           live_after = {}
+  bb1:
+    use      = {}
+    def      = {}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [ 10]     ret void
+           live_after = {}
+
+┌── [2] STAGE 2: INTERFERENCE GRAPH ─────────────────────
+=== interference: @add ===
+  nodes: 9
+  edges: 5
+  moves: 0
+  edge list:
+    %v0 -- %v2
+    %v1 -- %v2
+    %v1 -- %v3
+    %v5 -- %v6
+    %v5 -- %v7
+  adjacency:
+    %v0 (deg=1): {%v2}
+    %v1 (deg=2): {%v2, %v3}
+    %v2 (deg=2): {%v0, %v1}
+    %v3 (deg=1): {%v1}
+    %v4 (deg=0): {}
+    %v5 (deg=2): {%v6, %v7}
+    %v6 (deg=1): {%v5}
+    %v7 (deg=1): {%v5}
+    %v8 (deg=0): {}
+
+┌── [3] STAGE 3: PRE-COLORING ───────────────────────────
+precolor for @add  (9 vregs):
+  %v0 → r1
+  %v1 → r2
+  %v8 → r1
+  call-live vregs (must use callee-saved r8–r12): {}
+
+┌── [4] STAGE 4: REGISTER ALLOCATION ────────────────────
+regalloc for @add  (9 vregs):
+  %v0    →  r1    [precolored]
+  %v1    →  r2    [precolored]
+  %v2    →  r4    [allocated]
+  %v3    →  r4    [allocated]
+  %v4    →  r4    [allocated]
+  %v5    →  r5    [allocated]
+  %v6    →  r4    [allocated]
+  %v7    →  r4    [allocated]
+  %v8    →  r1    [precolored]
+  spills: none
+
+┌── [5] FINAL IR (physical registers) ───────────────────
+func @add(i16 %a, i16 %b) -> i16 {
+  slot %slot1 : i16  ; b
+  slot %slot0 : i16  ; a
+
+bb0:
+    r4 = addr_of %slot0
+    *r4 = r1
+    r4 = addr_of %slot1
+    *r4 = r2
+    r4 = addr_of %slot0
+    r5 = *r4
+    r4 = addr_of %slot1
+    r4 = *r4
+    r1 = r5 add r4
+    ret r1
+
+bb1:
+    ret void
+}
+
+
+============================================================
+ FUNCTION: @main
+============================================================
+
+┌── [0] IR ───────────────────────────────────────────────────
+func @main() -> i16 {
+  slot %slot0 : i16  ; out
+
+bb0:
+    %v0 = addr_of %slot0
+    %v1 = @add(3, 4)
+    *%v0 = %v1
+    %v2 = addr_of %slot0
+    %v3 = *%v2
+    ret %v3
+
+bb1:
+    ret void
+}
+
+┌── [1] STAGE 1: LIVENESS ANALYSIS ──────────────────────
+=== liveness: @main ===
+  bb0:
+    use      = {}
+    def      = {%v0, %v1, %v2, %v3}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  0]     %v0 = addr_of %slot0
+           live_after = {%v0}
+      [  1]     %v1 = @add(3, 4)
+           live_after = {%v0, %v1}
+      [  2]     *%v0 = %v1
+           live_after = {}
+      [  3]     %v2 = addr_of %slot0
+           live_after = {%v2}
+      [  4]     %v3 = *%v2
+           live_after = {%v3}
+      [  5]     ret %v3
+           live_after = {}
+  bb1:
+    use      = {}
+    def      = {}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  6]     ret void
+           live_after = {}
+
+┌── [2] STAGE 2: INTERFERENCE GRAPH ─────────────────────
+=== interference: @main ===
+  nodes: 4
+  edges: 1
+  moves: 0
+  edge list:
+    %v0 -- %v1
+  adjacency:
+    %v0 (deg=1): {%v1}
+    %v1 (deg=1): {%v0}
+    %v2 (deg=0): {}
+    %v3 (deg=0): {}
+
+┌── [3] STAGE 3: PRE-COLORING ───────────────────────────
+precolor for @main  (4 vregs):
+  %v1 → r1
+  %v3 → r1
+  call-live vregs (must use callee-saved r8–r12): {%v0}
+
+┌── [4] STAGE 4: REGISTER ALLOCATION ────────────────────
+regalloc for @main  (4 vregs):
+  %v0    →  r8    [callee-saved]
+  %v1    →  r1    [precolored]
+  %v2    →  r4    [allocated]
+  %v3    →  r1    [precolored]
+  spills: none
+
+┌── [5] FINAL IR (physical registers) ───────────────────
+func @main() -> i16 {
+  slot %slot0 : i16  ; out
+
+bb0:
+    r8 = addr_of %slot0
+    r1 = @add(3, 4)
+    *r8 = r1
+    r4 = addr_of %slot0
+    r1 = *r4
+    ret r1
+
+bb1:
+    ret void
+}
+
+Assembly written to output.asm

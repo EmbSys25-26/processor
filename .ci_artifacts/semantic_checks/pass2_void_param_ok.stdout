@@ -1,0 +1,123 @@
+
+============================================================
+ FUNCTION: @f
+============================================================
+
+┌── [0] IR ───────────────────────────────────────────────────
+func @f() -> i16 {
+bb0:
+    ret 0
+
+bb1:
+    ret void
+}
+
+┌── [1] STAGE 1: LIVENESS ANALYSIS ──────────────────────
+=== liveness: @f ===
+  bb0:
+    use      = {}
+    def      = {}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  0]     ret 0
+           live_after = {}
+  bb1:
+    use      = {}
+    def      = {}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  1]     ret void
+           live_after = {}
+
+┌── [2] STAGE 2: INTERFERENCE GRAPH ─────────────────────
+=== interference: @f ===
+  nodes: 0
+  edges: 0
+  moves: 0
+  adjacency:
+
+┌── [3] STAGE 3: PRE-COLORING ───────────────────────────
+precolor for @f  (0 vregs):
+  (none)
+  call-live vregs (must use callee-saved r8–r12): {}
+
+┌── [4] STAGE 4: REGISTER ALLOCATION ────────────────────
+regalloc for @f  (0 vregs):
+  spills: none
+
+┌── [5] FINAL IR (physical registers) ───────────────────
+func @f() -> i16 {
+bb0:
+    ret 0
+
+bb1:
+    ret void
+}
+
+
+============================================================
+ FUNCTION: @main
+============================================================
+
+┌── [0] IR ───────────────────────────────────────────────────
+func @main() -> i16 {
+bb0:
+    %v0 = @f()
+    ret %v0
+
+bb1:
+    ret void
+}
+
+┌── [1] STAGE 1: LIVENESS ANALYSIS ──────────────────────
+=== liveness: @main ===
+  bb0:
+    use      = {}
+    def      = {%v0}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  0]     %v0 = @f()
+           live_after = {%v0}
+      [  1]     ret %v0
+           live_after = {}
+  bb1:
+    use      = {}
+    def      = {}
+    live_in  = {}
+    live_out = {}
+    instructions:
+      [  2]     ret void
+           live_after = {}
+
+┌── [2] STAGE 2: INTERFERENCE GRAPH ─────────────────────
+=== interference: @main ===
+  nodes: 1
+  edges: 0
+  moves: 0
+  adjacency:
+    %v0 (deg=0): {}
+
+┌── [3] STAGE 3: PRE-COLORING ───────────────────────────
+precolor for @main  (1 vreg):
+  %v0 → r1
+  call-live vregs (must use callee-saved r8–r12): {}
+
+┌── [4] STAGE 4: REGISTER ALLOCATION ────────────────────
+regalloc for @main  (1 vreg):
+  %v0    →  r1    [precolored]
+  spills: none
+
+┌── [5] FINAL IR (physical registers) ───────────────────
+func @main() -> i16 {
+bb0:
+    r1 = @f()
+    ret r1
+
+bb1:
+    ret void
+}
+
+Assembly written to output.asm
