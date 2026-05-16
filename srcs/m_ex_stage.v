@@ -8,11 +8,12 @@
 // Executes ALU/address operations and prepares writeback/memory candidates.
 //
 // Instantiates the ALU and drives its inputs based on the decoded
-// instruction type.  Also computes:
+// instruction type. Also computes:
 //   - Data-memory address (o_d_ad)
 //   - Store data (o_store_data = Rd contents)
 //   - Pre-writeback result (o_wb_pre_data)
 //   - New condition-code values (Z, N, C, V) and carry bit
+//   - Branch Target & Outcome Verification (BDU included here)
 //
 // ALU operand selection:
 //   - RI format: A = Rd (destination used as source), B = Rd (same)
@@ -27,7 +28,7 @@
 //
 // Data-memory address:
 //   The ALU sum is used as the raw address, then shifted left by 1
-//   (o_d_ad = _sum << 1).  This converts the word-indexed offset
+//   (o_d_ad = _sum << 1). This converts the word-indexed offset
 //   produced by the ALU into a byte address for word/byte access.
 //
 // Condition-code update:
@@ -72,6 +73,10 @@ module ex_stage(
     input wire i_is_getcc,
     input wire i_restore_cc,        // SETCC: restore PSW from Rs
 
+    // Branch Control signals forwarded to EX
+    input wire i_is_bx,
+    input wire [3:0] i_cond,
+    input wire [15:0] i_branch_target,
     
     input wire i_forward_a,
     input wire i_forward_b,
@@ -102,7 +107,11 @@ module ex_stage(
     output wire o_new_ccv,
     output wire o_carry_we,             // Carry bit should be updated
     output wire o_new_c,
-    output wire o_is_load
+    output wire o_is_load,
+    
+    // Branch Target Outcomes
+    output wire o_branch_take,
+    output wire [15:0] o_branch_target_out
 );
 
 /*************************************************************************************
@@ -118,7 +127,7 @@ module ex_stage(
     // Forwarded operand values: select between EX/MEM result (10), MEM/WB result (01),
     // or the original register-file value (00) based on forwarding control signals.
     (* keep = "true" *) wire [15:0] _rd_fwd;  // Forwarded value for Rd (ALU operand A / store source)
-    (* keep = "true" *) wire [15:0] _rs_fwd; // Forwarded value for Rs (ALU operand B)
+    (* keep = "true" *) wire [15:0] _rs_fwd;  // Forwarded value for Rs (ALU operand B)
 
     // ALU outputs
     wire [15:0] _sum;       // Arithmetic result (add/sub)
@@ -136,19 +145,19 @@ module ex_stage(
     wire [15:0] _alu_res;   // Final selected ALU result for writeback
     wire [4:0] _psw_vector; // Packed PSW {c, ccz, ccn, ccc, ccv} for GETCC
     wire _update_cc;        // 1 when condition codes should actually be written
+    
+    wire _bdu_take;         // Flag from BDU indicating if branch condition is met
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
  ************************************************************************************/
 
 /*************************************************************************************
- * 2.1 ALU Datapath
+ * 2.1 ALU Datapath & BDU
  ************************************************************************************/
  
     // muxes for the forwarding
-    
     assign _rd_fwd = (i_forward_a == 1'b1) ? i_exmem_wb_data: i_rd_data;
-
     assign _rs_fwd = (i_forward_b == 1'b1) ? i_exmem_wb_data : i_rs_data;
 
     // Operand mux for RI vs RR:
@@ -186,6 +195,23 @@ module ex_stage(
         .o_x(_x)
     );
 
+    // BDU instantiation locally inside EX resolves the condition based purely on flags
+    bdu u_bdu (
+        .i_cond(i_cond),
+        .i_ccz(i_ccz),
+        .i_ccn(i_ccn),
+        .i_ccc(i_ccc),
+        .i_ccv(i_ccv),
+        .o_take(_bdu_take),
+        .o_br_uncond()
+    );
+    
+    // Unified Branch outputs: JAL is always taken and target is calculated by ALU (_sum). 
+    // BX target was already calculated sequentially in ID.
+    assign o_branch_take = (i_is_bx & _bdu_take) | i_is_jal;
+    assign o_branch_target_out = i_is_jal ? _sum : i_branch_target;
+
+
     // Derive condition flags from the arithmetic result
     assign _z  = (_sum == 16'h0000);
     assign _n  = _sum[`CPU_N];         // Negative = MSB
@@ -203,7 +229,8 @@ module ex_stage(
         ((i_is_alu & i_is_sum) | i_is_addi) ? _sum :    // Arithmetic → sum
         ((i_is_alu & i_is_log)              ? _log :    // Logical    → log
         ((i_is_alu & i_is_sr)               ? _sr  :    // Shift      → sr
-        (i_is_jal ? (i_pc_dbg + 16'h0004)       : 16'h0000))); // JAL → return addr (PC+4)
+        (i_is_jal ? (i_pc_dbg + 16'h0004)    
+           : 16'h0000))); // JAL → return addr (PC+4)
 
 /*************************************************************************************
  * 2.2 Flag and Writeback Candidates
@@ -257,8 +284,5 @@ module ex_stage(
     assign o_sw      = i_valid & i_sw;
     assign o_sb      = i_valid & i_sb;
 
-  
-
     assign o_is_load  = i_valid & (i_lw | i_lb);
-
 endmodule

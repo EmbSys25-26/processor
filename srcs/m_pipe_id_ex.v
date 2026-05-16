@@ -9,8 +9,8 @@
 //
 // Three conditions clear the register to a NOP:
 //   1. Reset (i_rst)
-//   2. Flush (i_flush) — IRQ accept: squash instruction entering EX
-//   3. Bubble (i_bubble) — decode hazard: insert a harmless NOP cycle
+//   2. Flush (i_flush) - IRQ accept: squash instruction entering EX
+//   3. Bubble (i_bubble) - decode hazard: insert a harmless NOP cycle
 //      while the pipeline above stalls waiting for a hazard to clear.
 //
 // The distinction between flush and bubble matters to the hazard unit:
@@ -53,6 +53,15 @@ module pipe_id_ex(
     input wire i_restore_cc,
     input wire i_is_load,
     output reg o_valid,
+    
+    // Branch + BPU signals
+    input wire i_is_bx,
+    input wire [3:0] i_cond,
+    input wire [15:0] i_branch_target,
+    input wire i_pred_taken,
+    input wire [15:0] i_pred_target,
+    input wire [`GHR_W-1:0] i_lookup_ghr,
+    
     output reg [15:0] o_pc,
     output reg [3:0] o_rd,
     output reg [3:0] o_rd_second,
@@ -81,7 +90,15 @@ module pipe_id_ex(
     output reg o_is_sr,
     output reg o_is_getcc,
     output reg o_restore_cc,
-    output reg o_is_load
+    output reg o_is_load,
+    
+    // Branch + BPU outputs
+    output reg o_is_bx,
+    output reg [3:0] o_cond,
+    output reg [15:0] o_branch_target,
+    output reg o_pred_taken,
+    output reg [15:0] o_pred_target,
+    output reg [`GHR_W-1:0] o_lookup_ghr
 );
 
 /*************************************************************************************
@@ -128,6 +145,14 @@ module pipe_id_ex(
             o_is_getcc     <= 1'b0;
             o_restore_cc   <= 1'b0;
             o_is_load      <= 1'b0;
+            
+            o_is_bx         <= 1'b0;
+            o_cond          <= 4'h0;
+            o_branch_target <= 16'h0000;
+            o_pred_taken    <= 1'b0;
+            o_pred_target   <= 16'h0000;
+            o_lookup_ghr    <= {`GHR_W{1'b0}};
+            
         end else if (!i_stall) begin
             // Normal advance: capture the full decode bundle
             o_valid        <= i_valid;
@@ -160,6 +185,13 @@ module pipe_id_ex(
             o_is_getcc     <= i_is_getcc;
             o_restore_cc   <= i_restore_cc;
             o_is_load      <= i_is_load;
+            
+            o_is_bx         <= i_is_bx;
+            o_cond          <= i_cond;
+            o_branch_target <= i_branch_target;
+            o_pred_taken    <= i_pred_taken;
+            o_pred_target   <= i_pred_target;
+            o_lookup_ghr    <= i_lookup_ghr;
         end
         // If stalled: all outputs hold (implicit register freeze)
     end

@@ -39,7 +39,7 @@ module soc(
 
     wire [15:0] _i_ad_rst;
 
-    reg [15:0] _insn_q;
+    (* max_fanout = 10 *)reg [15:0] _insn_q;
     wire _br_taken;
 
     wire [15:0] _imem_dout;

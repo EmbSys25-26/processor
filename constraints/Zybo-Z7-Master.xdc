@@ -15,7 +15,13 @@ set_property -dict {PACKAGE_PIN L14 IOSTANDARD LVCMOS33} [get_ports i_uart_rx]
 ## 50 MHz:
 #create_clock -period 20.000 -name sys_clk_pin -waveform {0.000 10.000} -add [get_ports i_clk]
 ## 100 MHz:
-create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_ports i_clk]
+##create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_ports i_clk]
+## 107 MHZ
+##create_clock -period 9.346 -name sys_clk_pin -waveform {0.000 4.673} -add [get_ports i_clk]
+## 108 MHZ
+##create_clock -period 9.259 -name sys_clk_pin -waveform {0.000 4.630} -add [get_ports i_clk]
+## 109 MHZ
+create_clock -period 9.174 -name sys_clk_pin -waveform {0.000 4.587} -add [get_ports i_clk]
 
 ## Switches
 

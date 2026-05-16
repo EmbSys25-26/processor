@@ -25,7 +25,7 @@ module pipe_if_id(
     input wire [`GHR_W-1:0] i_lookup_ghr,
     output reg o_valid,
     (* mark_debug = "true" *) output reg [15:0] o_pc,
-    (* mark_debug = "true" *) output reg [15:0] o_insn,
+    (* mark_debug = "true" *)(* max_fanout = 10 *) output reg [15:0] o_insn,
     output reg o_pred_taken,
     output reg [15:0] o_pred_target,
     output reg [`GHR_W-1:0] o_lookup_ghr

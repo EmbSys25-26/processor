@@ -26,7 +26,7 @@ module irq_ctrl(
     input wire i_in_irq,
     input wire i_int_en,
     input wire i_irq_ret,
-    output wire o_irq_take,
+    output reg o_irq_take,
     output wire [15:0] o_irq_vector
 );
 
@@ -167,7 +167,14 @@ module irq_ctrl(
     assign _cur_pri = (_depth_eff == 0) ? 3'd0 : _pri_stack[_depth_eff - 1];
     assign _can_preempt = (_depth_eff == 0) ? 1'b1 : (_sel_idx > _cur_pri);
 
-    assign o_irq_take = _any_pend & i_int_en & _can_preempt;
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            o_irq_take <= 1'b0;
+        end else begin
+            // This cuts the 17-level logic path directly in half!
+            o_irq_take <= _any_pend & i_int_en & _can_preempt;
+        end
+    end
 
     // Explicitly consume i_in_irq for lint cleanliness; preemption is controlled by depth/priority.
     wire _unused_in_irq;

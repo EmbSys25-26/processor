@@ -26,17 +26,16 @@
 //
 // Control outputs:
 //
-//   o_stall_if   — Stall the IF stage (freeze PC register)
-//   o_stall_id   — Stall the ID stage (freeze IF/ID register)
-//   o_stall_ex   — Stall the EX stage (freeze ID/EX and EX/MEM)
-//   o_bubble_ex  — Inject a NOP bubble into ID/EX (decode hazard only)
-//   o_flush_ifid — Flush IF/ID (redirect or IRQ accepted)
-//   o_flush_idex — Flush ID/EX (IRQ accepted)
-//   o_accept_irq — Acknowledge an interrupt this cycle
+//   o_stall_if   - Stall the IF stage (freeze PC register)
+//   o_stall_id   - Stall the ID stage (freeze IF/ID register)
+//   o_stall_ex   - Stall the EX stage (freeze ID/EX and EX/MEM)
+//   o_flush_ifid - Flush IF/ID (redirect or IRQ accepted)
+//   o_flush_idex - Flush ID/EX (redirect or IRQ accepted)
+//   o_accept_irq - Acknowledge an interrupt this cycle
 //
 // Stall vs bubble distinction:
 //   When a decode hazard occurs without a concurrent MEM wait,
-//   only a bubble is needed in ID/EX — the IF and ID stages
+//   only a bubble is needed in ID/EX - the IF and ID stages
 //   stall but EX/MEM keeps moving. When a MEM wait is active,
 //   the entire pipeline upstream of MEM must freeze (stall_ex);
 //   no bubble is injected because EX/MEM is frozen in place.
@@ -48,11 +47,9 @@ module hazard_unit(
     input wire [3:0] i_id_rs,          // Rs field
     input wire i_id_reads_rd,          // Instruction reads Rd as a source
     input wire i_id_reads_rs,          // Instruction reads Rs as a source
-    input wire i_id_is_bx,             // Instruction in ID is a conditional branch (BX)
-    input wire i_id_br_uncond,         // Instruction in ID is an unconditional branch (unconditional BX)
 
     // ---- External control events ----
-    input wire i_redirect,             // Control-flow redirect required this cycle
+    input wire i_redirect,             // Control-flow redirect required this cycle (from EX stage)
     input wire i_mem_wait,             // MEM stage is waiting for data memory
     input wire i_irq_take,             // An interrupt request is pending (one-shot)
 
@@ -60,7 +57,6 @@ module hazard_unit(
     input wire i_idex_valid,
     input wire [3:0] i_idex_rd,        // Destination register of EX instruction
     input wire i_idex_is_load,         // EX instruction is a load (extra latency)
-    input wire i_idex_updates_cc,      // EX instruction updates condition codes
 
     // ---- Control outputs ----
     output wire o_stall_if,
@@ -80,42 +76,33 @@ module hazard_unit(
     wire _match_idex;
 
     // Hazard type flags
-     wire _load_use_hazard;  // Load-use subset of RAW (extra stall cycle needed)
-    wire _cc_hazard;        // CC hazard: BX in ID while CC-updating insn in EX
+    wire _load_use_hazard; // Load-use subset of RAW (extra stall cycle needed)
+    wire _decode_hazard;   // Any hazard that requires stalling the decode stage
 
-    wire _decode_hazard;    // Any hazard that requires stalling the decode stage
-
-    wire _accept_irq;       // Internal IRQ accept signal
+    wire _accept_irq;      // Internal IRQ accept signal
 
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
  ************************************************************************************/
 
 /*************************************************************************************
- * 2.1 Data/CC Hazard Predicates
+ * 2.1 Data Hazard Predicates
  ************************************************************************************/
-
 
     // Register address match: ID instruction reads a register that the EX stage
     // is about to write. Used exclusively for load-use hazard detection.
-    assign _match_idex  = (i_id_reads_rd & (i_id_rd == i_idex_rd))  | (i_id_reads_rs & (i_id_rs == i_idex_rd));
+    assign _match_idex  = (i_id_reads_rd & (i_id_rd == i_idex_rd))  |
+                          (i_id_reads_rs & (i_id_rs == i_idex_rd));
 
     // Load-use hazard: the instruction immediately following a load reads the loaded
-    // register.  The load result is only available after MEM, so an extra stall is
-    // needed.  R0 destination excluded — writes to R0 are discarded.
+    // register. The load result is only available after MEM, so an extra stall is
+    // needed. R0 destination excluded - writes to R0 are discarded.
     // Ignore load-use hazards on rd=r0, since r0 is architecturally constant zero.
     assign _load_use_hazard = i_id_valid & i_idex_valid & i_idex_is_load &
                               (i_idex_rd != 4'h0) & _match_idex;
 
-    // CC hazard: BX in ID while a CC-updating instruction is in EX.
-    // Since CC flags are now purely registered (no write-first bypass),
-    // BX would read stale flags. Insert a 1-cycle stall so BX reads
-    // the updated flags from the register on the next cycle.
-    // Added unconditional branch flag, since they dont need stalls as they dont depend on CC flags
-    assign _cc_hazard = i_id_valid & i_id_is_bx & (!i_id_br_uncond) & i_idex_updates_cc;
-
     // Any hazard that requires inserting a stall/bubble at the decode boundary
-    assign _decode_hazard = _load_use_hazard | _cc_hazard;
+    assign _decode_hazard = _load_use_hazard;
 
 /*************************************************************************************
  * 2.2 Control Outputs
@@ -140,11 +127,9 @@ module hazard_unit(
     // Flush IF/ID on redirect or IRQ accept.
     assign o_flush_ifid = i_redirect | _accept_irq;
 
-    // Flush ID/EX on IRQ accept to squash the instruction that was about to enter EX.
-    // (Redirect recovery does not require flushing ID/EX here; IRQ accept does.)
-    // Upon Load-use hazard detection => Load insn is in EX and previous insn in ID
-    // The goal is not to insert a bubble on the ID/EX register that propagates along the pipeline.
-    assign o_flush_idex = _accept_irq || (_decode_hazard & ~i_mem_wait);
+    // Because branch evaluation moved to EX, a redirect means we need to flush
+    // both the IF/ID stage and the ID/EX stage.
+    assign o_flush_idex = i_redirect | _accept_irq || (_decode_hazard & ~i_mem_wait);
 
     assign o_accept_irq = _accept_irq;
 
