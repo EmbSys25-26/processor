@@ -69,5 +69,8 @@
 // BPU_IDX_W + BPU_TAG_W should be == 15 to fit within the 16-bit PC indexing scheme
 `define BPU_IDX_W 6
 `define BPU_TAG_W 9
-
+/*
+VGA
+*/
+`define VGA_CHANNEL_SIZE (4 -1) // To get MSB
 `endif

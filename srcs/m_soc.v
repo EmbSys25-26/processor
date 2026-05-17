@@ -10,7 +10,39 @@ module soc(
     input wire i_uart_rx,
     output wire o_uart_tx,
     inout wire io_i2c_sda,
-    inout wire io_i2c_scl
+    inout wire io_i2c_scl,
+    // --- ADDED FOR VGA & PS2 ---
+    inout wire io_ps2_clk,
+    inout wire io_ps2_data,
+    output wire [3:0] o_vga_red,
+    output wire [3:0] o_vga_green,
+    output wire [3:0] o_vga_blue,
+    output wire       o_hsync,
+    output wire       o_vsync,
+    input wire i_sw_1,
+    input wire i_sw_0,
+    // --- ADDED FOR ZYNQ PS / DDR ---
+    inout  [14:0] io_DDR_addr,
+    inout  [2:0]  io_DDR_ba,
+    inout         io_DDR_cas_n,
+    inout         io_DDR_ck_n,
+    inout         io_DDR_ck_p,
+    inout         io_DDR_cke,
+    inout         io_DDR_cs_n,
+    inout  [3:0]  io_DDR_dm,
+    inout  [31:0] io_DDR_dq,
+    inout  [3:0]  io_DDR_dqs_n,
+    inout  [3:0]  io_DDR_dqs_p,
+    inout         io_DDR_odt,
+    inout         io_DDR_ras_n,
+    inout         io_DDR_reset_n,
+    inout         io_DDR_we_n,
+    inout         io_FIXED_IO_ddr_vrn,
+    inout         io_FIXED_IO_ddr_vrp,
+    inout  [53:0] io_FIXED_IO_mio,
+    inout         io_FIXED_IO_ps_clk,
+    inout         io_FIXED_IO_ps_porb,
+    inout         io_FIXED_IO_ps_srstb
 );
 
 /*************************************************************************************
@@ -75,7 +107,23 @@ module soc(
 /*************************************************************************************
  * SECTION 2. IMPLEMENTATION
  ************************************************************************************/
-
+`ifdef SIM
+     // Simulation Clock
+     wire i_clkk  = i_clk;
+     wire _clkVGA = i_clk;
+ `else
+     wire i_clkk;
+     wire _clkVGA; // 25.175 MHz for vga
+     wire locked;
+ 
+     clk_wiz_0 clk_gen (
+         .clk_out1 (i_clkk),
+         .clk_out2 (_clkVGA),
+         .reset    (1'b0),
+         .locked   (locked),
+         .clk_in1  (i_clk)
+     );
+ `endif
 /*************************************************************************************
  * 2.1 Static Assignments
  ************************************************************************************/
@@ -149,7 +197,7 @@ module soc(
  * 2.5 CPU, ROM, RAM, and Peripheral Instances
  ************************************************************************************/
     cpu u_cpu (
-        .i_clk(i_clk),
+        .i_clk(i_clkk),
         .i_rst(_total_rst),
         .i_i_ad_rst(_i_ad_rst),
         .o_insn_ce(_insn_ce),
@@ -173,7 +221,7 @@ module soc(
     );
 
     brom_1kb_be u_rom (
-        .i_clk(i_clk),
+        .i_clk(i_clkk),
         .i_rst(_total_rst),
         .i_en(_insn_ce),
         .i_addr(_PC[9:1]),
@@ -182,7 +230,7 @@ module soc(
     );
 
     bram_1kb_be u_mem (
-        .i_clk(i_clk),
+        .i_clk(i_clkk),
         .i_rst(_total_rst),
         .i_en(_sw | _sb | _lw | _lb),
         .i_addr(_d_ad[9:1]),
@@ -195,28 +243,61 @@ module soc(
     );
 
     periph_bus u_periph (
-        .i_clk(i_clk),
-        .i_rst(_total_rst),
-        .i_rst_ext(i_rst),   // only initial reset, without a WDT activation
-        .i_addr(_d_ad),
-        .i_sel(_io_sel),
-        .i_we(_io_we),
-        .i_re(_io_re),
-        .i_wdata(_io_wdata),
-        .o_rdata(_io_rdata),
-        .o_rdy(_io_rdy),
-        .i_par_i(i_par_i),
-        .o_par_o(o_par_o),
-        .i_uart_rx(i_uart_rx),
-        .o_uart_tx(o_uart_tx),
-        .io_i2c_sda(io_i2c_sda),
-        .io_i2c_scl(io_i2c_scl),
-        .i_int_en(_int_en_cpu),
-        .i_in_irq(_in_irq),
-        .o_irq_vector(_irq_vector),
-        .o_irq_take(_irq_take),
-        .i_irq_ret(_iret_detected),
-        .o_wdt_rst(_wdt_rst_req)     // WDT Reset request after timeout
-    );
+            .i_clk(i_clkk), // Updated to use the clock wizard output
+            .i_rst(_total_rst),
+            .i_rst_ext(i_rst),   
+            .i_addr(_d_ad),
+            .i_sel(_io_sel),
+            .i_we(_io_we),
+            .i_re(_io_re),
+            .i_wdata(_io_wdata),
+            .o_rdata(_io_rdata),
+            .o_rdy(_io_rdy),
+            .i_par_i(i_par_i),
+            .o_par_o(o_par_o),
+            .i_uart_rx(i_uart_rx),
+            .o_uart_tx(o_uart_tx),
+            .io_i2c_sda(io_i2c_sda),
+            .io_i2c_scl(io_i2c_scl),
+            .i_int_en(_int_en_cpu),
+            .i_in_irq(_in_irq),
+            .o_irq_vector(_irq_vector),
+            .o_irq_take(_irq_take),
+            .i_irq_ret(_iret_detected),
+            .o_wdt_rst(_wdt_rst_req),    
+    
+            // --- NEW VGA / PS2 / DDR CONNECTIONS BELOW ---
+            .io_ps2_clk   (io_ps2_clk),
+            .io_ps2_data  (io_ps2_data),
+            .i_clkVGA     (_clkVGA),
+            .o_vga_red    (o_vga_red),
+            .o_vga_green  (o_vga_green),
+            .o_vga_blue   (o_vga_blue),
+            .o_hsync      (o_hsync),
+            .o_vsync      (o_vsync),
+            .i_mode_switch(i_sw_1),
+            .i_img_switch(i_sw_0),
+            .io_DDR_addr          (io_DDR_addr),
+            .io_DDR_ba            (io_DDR_ba),
+            .io_DDR_cas_n         (io_DDR_cas_n),
+            .io_DDR_ck_n          (io_DDR_ck_n),
+            .io_DDR_ck_p          (io_DDR_ck_p),
+            .io_DDR_cke           (io_DDR_cke),
+            .io_DDR_cs_n          (io_DDR_cs_n),
+            .io_DDR_dm            (io_DDR_dm),
+            .io_DDR_dq            (io_DDR_dq),
+            .io_DDR_dqs_n         (io_DDR_dqs_n),
+            .io_DDR_dqs_p         (io_DDR_dqs_p),
+            .io_DDR_odt           (io_DDR_odt),
+            .io_DDR_ras_n         (io_DDR_ras_n),
+            .io_DDR_reset_n       (io_DDR_reset_n),
+            .io_DDR_we_n          (io_DDR_we_n),
+            .io_FIXED_IO_ddr_vrn  (io_FIXED_IO_ddr_vrn),
+            .io_FIXED_IO_ddr_vrp  (io_FIXED_IO_ddr_vrp),
+            .io_FIXED_IO_mio      (io_FIXED_IO_mio),
+            .io_FIXED_IO_ps_clk   (io_FIXED_IO_ps_clk),
+            .io_FIXED_IO_ps_porb  (io_FIXED_IO_ps_porb),
+            .io_FIXED_IO_ps_srstb (io_FIXED_IO_ps_srstb)
+        );
 
 endmodule
