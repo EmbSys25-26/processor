@@ -60,7 +60,7 @@ set design_name vga_system
 
 # If you do not already have an existing IP Integrator design open,
 # you can create a design using the following command:
-#    create_bd_design $design_name
+#    create_bd_design -dir [get_property DIRECTORY [current_project]]/srcs/bd $design_name
 
 # Creating design if needed
 set errMsg ""
@@ -109,7 +109,7 @@ if { ${design_name} eq "" } {
 
    common::send_gid_msg -ssname BD::TCL -id 2003 -severity "INFO" "Currently there is no design <$design_name> in project, so creating one..."
 
-   create_bd_design $design_name
+   create_bd_design -dir [get_property DIRECTORY [current_project]]/srcs/bd $design_name
 
    common::send_gid_msg -ssname BD::TCL -id 2004 -severity "INFO" "Making design <$design_name> as current_bd_design."
    current_bd_design $design_name
