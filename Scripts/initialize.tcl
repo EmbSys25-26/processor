@@ -54,10 +54,10 @@ if {$bitstream_file eq ""} {
 puts "Bitstream  : $bitstream_file"
 
 # --- ps7_init.tcl: search folder first, then extract from .xsa ---
-set ps7_init_file [find_file_recursive $proj_dir "ps7_init.tcl" 5] # Changed to proj_dir
+set ps7_init_file [find_file_recursive $proj_dir "ps7_init.tcl" 5]
 
 if {$ps7_init_file eq ""} {
-    set xsa_file [find_file_recursive $proj_dir "*.xsa" 4]         # Changed to proj_dir
+    set xsa_file [find_file_recursive $proj_dir "*.xsa" 4]
     if {$xsa_file ne ""} {
         puts "Found .xsa: [file tail $xsa_file] - extracting ps7_init.tcl..."
         set extract_dir "$script_dir/ps7_extracted"

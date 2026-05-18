@@ -2,7 +2,7 @@
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
     "xci_name": "bd_654d_awoutsw_0",
-    "cell_name": "aw_la_out_swbd",
+    "cell_name": "switchboards/aw_la_out_swbd",
     "component_reference": "xilinx.com:ip:sc_switchboard:1.0",
     "ip_revision": "8",
     "gen_directory": ".",

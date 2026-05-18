@@ -2,7 +2,7 @@
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
     "xci_name": "bd_654d_rni_0",
-    "cell_name": "i_r_node",
+    "cell_name": "switchboards/i_nodes/i_r_node",
     "component_reference": "xilinx.com:ip:sc_node:1.0",
     "ip_revision": "18",
     "gen_directory": ".",

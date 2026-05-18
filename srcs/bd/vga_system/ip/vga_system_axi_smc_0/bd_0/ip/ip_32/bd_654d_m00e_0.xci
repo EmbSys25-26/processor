@@ -2,7 +2,7 @@
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
     "xci_name": "bd_654d_m00e_0",
-    "cell_name": "m00_exit",
+    "cell_name": "m00_exit_pipeline/m00_exit",
     "component_reference": "xilinx.com:ip:sc_exit:1.0",
     "ip_revision": "17",
     "gen_directory": ".",
@@ -581,7 +581,7 @@
           "parameters": {
             "POLARITY": [ { "value": "ACTIVE_LOW", "value_src": "constant_prop", "value_permission": "bd", "resolve_type": "generated", "is_ips_inferred": true, "is_static_object": false } ],
             "INSERT_VIP": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "simulation.rtl", "is_ips_inferred": true, "is_static_object": false } ],
-            "TYPE": [ { "value": "INTERCONNECT", "resolve_type": "generated", "is_ips_inferred": true, "is_static_object": false } ]
+            "TYPE": [ { "value": "INTERCONNECT", "value_permission": "bd", "resolve_type": "generated", "is_ips_inferred": true, "is_static_object": false } ]
           },
           "port_maps": {
             "RST": [ { "physical_name": "aresetn" } ]
