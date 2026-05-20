@@ -446,20 +446,20 @@ void ir_instr_print(FILE *out, const ir_instr_t *i)
     switch (i->op) {
     /* terminators */
     case IR_OP_GOTO:
-        fprintf(out, "    goto bb%u\n", i->as.branch.true_block);
+        fprintf(out, "    goto bb%u\n", IR_BRANCH_TRUE(i));
         break;
     case IR_OP_BRANCH:
         fprintf(out, "    if ");
         ir_value_print(out, &i->src[0]);
-        fprintf(out, " goto bb%u else bb%u\n", i->as.branch.true_block, i->as.branch.false_block);
+        fprintf(out, " goto bb%u else bb%u\n", IR_BRANCH_TRUE(i), IR_BRANCH_FALSE(i));
         break;
     case IR_OP_SWITCH:
         fprintf(out, "    switch ");
         ir_value_print(out, &i->src[0]);
-        fprintf(out, " default bb%u", i->as.sw.default_block);
-        for (unsigned k = 0; k < i->as.sw.case_count; ++k) {
+        fprintf(out, " default bb%u", IR_SWITCH_DEFAULT(i));
+        for (unsigned k = 0; k < IR_SWITCH_CASE_COUNT(i); ++k) {
             fprintf(out, " [");
-            // case_values and case_blocks are parallel arrays, so we can just index them with k
+            /* direct union access needed for array indexing; opcode asserted via IR_SWITCH_CASE_COUNT above */
             fprintf(out, "%ld:bb%u", i->as.sw.case_values[k], i->as.sw.case_blocks[k]);
             fprintf(out, "]");
         }
@@ -487,13 +487,14 @@ void ir_instr_print(FILE *out, const ir_instr_t *i)
     /* call (void or value) */
     case IR_OP_CALL:
         fprintf(out, "    ");
-        if (!i->as.call.is_void_call) {
+        if (!IR_CALL_IS_VOID(i)) {
             ir_value_print(out, &i->dst);
             fprintf(out, " = ");
         }
-        fprintf(out, "@%s(", i->as.call.callee);
-        for (unsigned k = 0; k < i->as.call.arg_count; k++) {
+        fprintf(out, "@%s(", IR_CALL_CALLEE(i));
+        for (unsigned k = 0; k < IR_CALL_ARG_COUNT(i); k++) {
             if (k) fprintf(out, ", ");
+            /* direct union access needed for address-of array element; opcode asserted via IR_CALL_ARG_COUNT above */
             ir_value_print(out, &i->as.call.args[k]);
         }
         fprintf(out, ")\n");
@@ -507,7 +508,7 @@ void ir_instr_print(FILE *out, const ir_instr_t *i)
         ir_value_print(out, &i->src[0]);
         fprintf(out, " + ");
         ir_value_print(out, &i->src[1]);
-        fprintf(out, " * %ld\n", i->as.gep.width);
+        fprintf(out, " * %ld\n", IR_GEP_WIDTH(i));
         break;
 
     /* cast ops */

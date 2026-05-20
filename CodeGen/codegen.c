@@ -834,7 +834,7 @@ static void emit_instr(FILE                *out,
      * Larger  → emit MUL helper call or repeated SLLs (limited support)
      */
     case IR_OP_GEP: {
-        long width = ins->as.gep.width;
+        long width = IR_GEP_WIDTH(ins);
         const char *base = materialize_operand(out, &ins->src[0], ra,
                               pick_scratch3(rd, NULL, NULL));
         const char *idx  = materialize_operand(out, &ins->src[1], ra,
@@ -997,7 +997,7 @@ static void emit_instr(FILE                *out,
     case IR_OP_GOTO: {
         unsigned tgt = (ins->src[0].kind == IR_VAL_LABEL)
                        ? ins->src[0].as.block_id
-                       : ins->as.branch.true_block;
+                       : IR_BRANCH_TRUE(ins);
         fprintf(out, "    BR bb%u\n", tgt);
         break;
     }
@@ -1014,8 +1014,8 @@ static void emit_instr(FILE                *out,
         const char *pred = materialize_operand(out, &ins->src[0], ra,
                               pick_scratch3(NULL, NULL, NULL));
         fprintf(out, "    CMP %s, r0\n", pred);
-        fprintf(out, "    BEQ bb%u\n", ins->as.branch.false_block);
-        fprintf(out, "    BR  bb%u\n", ins->as.branch.true_block);
+        fprintf(out, "    BEQ bb%u\n", IR_BRANCH_FALSE(ins));
+        fprintf(out, "    BR  bb%u\n", IR_BRANCH_TRUE(ins));
         break;
     }
 
@@ -1034,8 +1034,8 @@ static void emit_instr(FILE                *out,
         const char *val = materialize_operand(out, &ins->src[0], ra,
                              pick_scratch3(NULL, NULL, NULL));
         const char *scratch = pick_scratch3(val, NULL, NULL);
-        for (unsigned k = 0; k < ins->as.sw.case_count; k++) {
-            long cv = ins->as.sw.case_values[k];
+        for (unsigned k = 0; k < IR_SWITCH_CASE_COUNT(ins); k++) {
+            long cv = ins->as.sw.case_values[k]; /* direct: address-of array; opcode asserted above */
             /* Compare val against the case constant. */
             if (cv >= 0 && cv <= 15) {
                 /* RCMPI computes imm − rd; Z is set iff rd == imm. */
@@ -1047,7 +1047,7 @@ static void emit_instr(FILE                *out,
             fprintf(out, "    BEQ bb%u\n", ins->as.sw.case_blocks[k]);
         }
         fprintf(out, "    BR  bb%u             ; default\n",
-                ins->as.sw.default_block);
+                IR_SWITCH_DEFAULT(ins));
         break;
     }
 
@@ -1092,7 +1092,7 @@ static void emit_instr(FILE                *out,
      * here if present.
      */
     case IR_OP_CALL: {
-	    unsigned nargs  = ins->as.call.arg_count;
+	    unsigned nargs  = IR_CALL_ARG_COUNT(ins);
 	    unsigned nreg   = (nargs < PHYS_ARG_REGS) ? nargs : PHYS_ARG_REGS;
 	    unsigned nstack = nargs - nreg;
 
@@ -1110,7 +1110,7 @@ static void emit_instr(FILE                *out,
 	     * p before the PUSH that is supposed to read it. */
 	    uint16_t arg_homes_mask = 0;
 	    for (unsigned i = 0; i < nargs; i++) {
-		const ir_value_t *a = &ins->as.call.args[i];
+		const ir_value_t *a = &ins->as.call.args[i]; /* direct: address-of array element; opcode asserted via IR_CALL_ARG_COUNT above */
 		if (a->kind == IR_VAL_VREG) {
 		    phys_reg_t c = ra->color[a->as.vreg];
 		    if (c < 16) arg_homes_mask |= (uint16_t)(1u << c);
@@ -1188,7 +1188,7 @@ static void emit_instr(FILE                *out,
 	    arg_copy_t cps[3];
 	    unsigned cn = 0;
 	    for (unsigned i = 0; i < nreg; i++) {
-		const ir_value_t *a = &ins->as.call.args[i];
+		const ir_value_t *a = &ins->as.call.args[i]; /* direct: address-of array element; opcode asserted via IR_CALL_ARG_COUNT above */
 		arg_copy_t *c = &cps[cn++];
 		c->dst   = arg_regs[i];
 		c->kind  = (int)a->kind;
@@ -1272,14 +1272,14 @@ static void emit_instr(FILE                *out,
 	    }
 
 	    /* ── 3. call ──────────────────────────────── */
-	    fprintf(out, "    CALL(%s)\n", ins->as.call.callee);
+	    fprintf(out, "    CALL(%s)\n", IR_CALL_CALLEE(ins));
 
 	    /* ── 4. stack cleanup ─────────────────────── */
 	    if (nstack > 0)
 		emit_sp_adj(out, (int)nstack);
 
 	    /* ── 5. return value ───────────────────────── */
-	    if (!ins->as.call.is_void_call &&
+	    if (!IR_CALL_IS_VOID(ins) &&
 		ins->dst.kind == IR_VAL_VREG) {
 
 		const char *dst = PREG(ins->dst);
