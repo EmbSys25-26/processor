@@ -16,6 +16,12 @@ compiler
 output.asm
 *.hex
 
+# Source assembly that must stay tracked despite the *.asm / *.hex globs above.
+!runtime/
+!runtime/*.asm
+!assembler/tests/cases/
+!assembler/tests/cases/*.asm
+
 # Editor / IDE
 .vscode/
 .ci_artifacts/
