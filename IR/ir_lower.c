@@ -2,10 +2,10 @@
  * ir_lower.c — Section 4: Structure / top-level lowering glue
  *
  * Responsibilities (§8.1, §8.4, §6):
- *   • Walk the NODE_TRANSLATION_UNIT sibling chain.
- *   • Dispatch top-level declarations to ir_lower_decl.c.
- *   • Dispatch function definitions to ir_lower_function().
- *   • Provide the shared ir_lower_ctx_t helpers used by all sections.
+ *   Walk the NODE_TRANSLATION_UNIT sibling chain.
+ *   Dispatch top-level declarations to ir_lower_decl.c.
+ *   Dispatch function definitions to ir_lower_function().
+ *   Provide the shared ir_lower_ctx_t helpers used by all sections.
  */
 
 #include <assert.h>
@@ -26,6 +26,7 @@
  * Diagnostics (§13)
  * ************************************************************/
 
+/* Emits a formatted error diagnostic and bumps the context's error counter. */
 void ir_diag(ir_lower_ctx_t *lctx, const char *code,
              size_t line, const char *fmt, ...)
 {
@@ -38,6 +39,7 @@ void ir_diag(ir_lower_ctx_t *lctx, const char *code,
     if (lctx) lctx->error_count++;
 }
 
+/* Emits a formatted warning diagnostic (does not count toward errors). */
 void ir_warn(ir_lower_ctx_t *lctx, const char *code,
              size_t line, const char *fmt, ...)
 {
@@ -54,6 +56,7 @@ void ir_warn(ir_lower_ctx_t *lctx, const char *code,
  * Semantic type → IR type  (§5)
  * ************************************************************/
 
+/* Maps a semantic type_t to its corresponding IR type. */
 ir_type_t ir_type_from_sem(const type_t *sem_type)
 {
     if (!sem_type || sem_type->kind == TYPE_INVALID)
@@ -93,6 +96,7 @@ ir_type_t ir_type_from_sem(const type_t *sem_type)
  * (declared in ir_lower.h).
  * ************************************************************/
 
+/* Searches the AST for a struct/union declaration node matching `tag`. */
 const TreeNode_t *ir_find_aggregate_decl(const TreeNode_t *node,
                                           NodeType_t want_kind,
                                           const char *tag)
@@ -108,6 +112,7 @@ const TreeNode_t *ir_find_aggregate_decl(const TreeNode_t *node,
     return ir_find_aggregate_decl(node->p_firstChild, want_kind, tag);
 }
 
+/* Recursively computes the word size of a semantic type, expanding aggregates. */
 size_t ir_compute_sem_type_words(ir_lower_ctx_t *lctx, const type_t *t)
 {
     if (!t) return 1;
@@ -172,6 +177,7 @@ size_t ir_compute_sem_type_words(ir_lower_ctx_t *lctx, const type_t *t)
  * Control-frame helpers (§8.3 rule 6)
  * ************************************************************/
 
+/* Pushes a break/continue target frame onto the control-flow stack. */
 void ir_ctrl_push(ir_lower_ctx_t *lctx,
                   unsigned break_block, unsigned continue_block, int has_continue)
 {
@@ -185,11 +191,13 @@ void ir_ctrl_push(ir_lower_ctx_t *lctx,
     f->has_continue   = has_continue;
 }
 
+/* Pops the innermost control-flow frame. */
 void ir_ctrl_pop(ir_lower_ctx_t *lctx)
 {
     if (lctx->ctrl_depth > 0) lctx->ctrl_depth--;
 }
 
+/* Returns the innermost control-flow frame, or NULL if none. */
 ir_ctrl_frame_t *ir_ctrl_top(ir_lower_ctx_t *lctx)
 {
     if (lctx->ctrl_depth == 0) return NULL;
@@ -200,6 +208,7 @@ ir_ctrl_frame_t *ir_ctrl_top(ir_lower_ctx_t *lctx)
  * Block helpers
  * ************************************************************/
 
+/* Allocates and appends a fresh block to the current function. */
 ir_block_t *ir_new_block(ir_lower_ctx_t *lctx)
 {
     ir_block_t *b = ir_block_new(lctx->func);
@@ -207,6 +216,7 @@ ir_block_t *ir_new_block(ir_lower_ctx_t *lctx)
     return b;
 }
 
+/* Returns 1 if the current block already ends with a terminator. */
 int ir_block_terminated(const ir_lower_ctx_t *lctx)
 {
     if (!lctx->cur_block || !lctx->cur_block->tail) return 0;
@@ -214,6 +224,7 @@ int ir_block_terminated(const ir_lower_ctx_t *lctx)
     return (op == IR_OP_GOTO || op == IR_OP_BRANCH || op == IR_OP_RET);
 }
 
+/* Closes the current block with an unconditional goto to `target_id`. */
 void ir_seal_goto(ir_lower_ctx_t *lctx, unsigned target_id)
 {
     if (ir_block_terminated(lctx)) return;
@@ -222,6 +233,7 @@ void ir_seal_goto(ir_lower_ctx_t *lctx, unsigned target_id)
     ir_instr_push(lctx->cur_block, i);
 }
 
+/* Closes the current block with a conditional branch on `pred`. */
 void ir_seal_branch(ir_lower_ctx_t *lctx, ir_value_t pred,
                     unsigned true_id, unsigned false_id)
 {
@@ -232,6 +244,7 @@ void ir_seal_branch(ir_lower_ctx_t *lctx, ir_value_t pred,
     ir_instr_push(lctx->cur_block, i);
 }
 
+/* Closes the current block with a switch terminator over the case table. */
 void ir_seal_switch(ir_lower_ctx_t *lctx,
                     ir_value_t value,
                     unsigned default_id,
@@ -499,6 +512,8 @@ void ir_lower_function(ir_lower_ctx_t *lctx, const TreeNode_t *func_node)
  * PUBLIC IR ENTRY POINT
  *************************************************************/
 
+/* Top-level entry: walks the translation unit and lowers each
+ * function and global into the returned ir_module_t. */
 ir_module_t *ir_lower_translation_unit(const TreeNode_t   *root,
                                         semantic_context_t *sem_ctx,
                                         const char         *module_name)

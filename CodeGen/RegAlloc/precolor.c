@@ -19,6 +19,7 @@ static const char *phys_name[] = {
     "r11", /* 11 — s3   */
 };
 
+/* Builds ABI precolor assignments (params, call args/results, returns) in two passes (scout then painter). */
 precolor_t *precolor_build(const ir_function_t *func, const ir_liveness_t *liv)
 {
     precolor_t *p = malloc(sizeof(*p));
@@ -144,6 +145,7 @@ precolor_t *precolor_build(const ir_function_t *func, const ir_liveness_t *liv)
     return p;
 }
 
+/* Trivial precolor accessors: free, lookup colour, fixed?, call-live? */
 void precolor_free(precolor_t *p)
 {
     if (!p) return;
@@ -172,6 +174,7 @@ int precolor_is_call_live(const precolor_t *p, unsigned vreg)
 
 
 /*=======================================PRiNT====================================================*/
+/* Prints the precolor assignments and the call-live vreg set. */
 void precolor_print(FILE *out, const char *func_name, const precolor_t *p)
 {
     fprintf(out, "precolor for @%s  (%u vreg%s):\n",

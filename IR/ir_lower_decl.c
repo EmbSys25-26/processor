@@ -2,9 +2,9 @@
  * ir_lower_decl.c — Section 1: Declaration lowering
  *
  * Covers:
- *   • Global variable declarations  → ir_module globals  (§6.1)
- *   • Local variable declarations   → stack slots + optional initialiser
- *   • Array declarations            → slot of array IR type
+ *   Global variable declarations - ir_module globals  (§6.1)
+ *   Local variable declarations  - stack slots + optional initialiser
+ *   Array declarations           - slot of array IR type
  *
  * Contract references: §8.1, §8.4, §3 (memory_class).
  */
@@ -163,7 +163,9 @@ static int eval_const_int(const TreeNode_t *e, long *out) {
 }
 
 
-void ir_lower_global_decl(ir_lower_ctx_t *lctx, 
+/* Lowers a top-level variable/array declaration into an ir_global with an
+ * optional constant or string-literal initialiser. */
+void ir_lower_global_decl(ir_lower_ctx_t *lctx,
                           const TreeNode_t *decl_node,
                           const TreeNode_t *init_expr)
 {
@@ -264,6 +266,8 @@ void ir_lower_global_decl(ir_lower_ctx_t *lctx,
  * Local declaration  (MEMORY_CLASS_STACK / MEMORY_CLASS_PARAMETER)
  *************************************************************/
 
+/* Lowers a local variable/array declaration: allocates a stack slot and
+ * stores its initialiser (if any), returning the slot id. */
 unsigned ir_lower_local_decl(ir_lower_ctx_t *lctx, const TreeNode_t *decl_node)
 {
     if (!decl_node) return (unsigned)-1;

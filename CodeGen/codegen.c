@@ -33,10 +33,20 @@
 
 #include "codegen.h"
 
+/* Format a block label scoped by function name. Block ids restart at 0 per
+ * function; the assembler's symbol table is global, so plain "bb1" would
+ * collide across functions. The ".L" prefix keeps it a dot-label. */
+static void fmt_block_label(char *buf, size_t cap,
+                            const ir_function_t *func, unsigned id)
+{
+    snprintf(buf, cap, ".L%s_bb%u", func->name, id);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
  * §1  Physical register helpers
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Returns the ABI mnemonic for a physical register id. */
 static const char *phys_name(phys_reg_t r)
 {
     static const char *tbl[] = {
@@ -75,6 +85,7 @@ static void emit_load_imm(FILE *out, const char *rd, long imm);
  * still honoured for clarity at call sites.
  *
  * The returned name is safe to write to without consulting liveness. */
+/* Returns a safe scratch register name avoiding up to three given names. */
 static const char *pick_scratch3(const char *avoid1,
                                   const char *avoid2,
                                   const char *avoid3)
@@ -130,6 +141,7 @@ static const char *materialize_operand(FILE                *out,
  * Each named slot may occupy more than one word (arrays).  ir_new_slot()
  * reserves consecutive slot ids by bumping `next_slot_id` by the type's
  * word size, so the high-water mark is the right total. */
+/* Returns the total number of local-slot words to reserve. */
 static unsigned count_slots(const ir_function_t *func)
 {
     return func->next_slot_id;
@@ -159,6 +171,7 @@ static uint16_t callee_used_mask(const regalloc_t *ra)
  * function but shifts every slot one word toward fp -- see
  * slot_fp_offset() below.
  */
+/* Returns 1 if the function contains no IR_OP_CALL instruction. */
 static int function_is_leaf(const ir_function_t *func)
 {
     for (const ir_block_t *b = func->entry; b; b = b->next)
@@ -263,6 +276,7 @@ static void emit_load_imm(FILE *out, const char *rd, long imm)
 *   allocate local slots
 */
 
+/* Emits the function prologue: saves fp/lr/callee-saveds and allocates the frame. */
 static void emit_prologue(FILE *out,
                            const ir_function_t *func,
                            const regalloc_t    *ra)
@@ -348,6 +362,7 @@ static void emit_prologue(FILE *out,
 *    restore frame pointer
 *
 */
+/* Emits the function epilogue: frees the frame, restores saved regs, and returns. */
 static void emit_epilogue(FILE *out,
                            const ir_function_t *func,
                            const regalloc_t    *ra)
@@ -398,6 +413,7 @@ static void emit_epilogue(FILE *out,
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Commutative: dst = a op b  (ADD, AND, XOR) */
+/* Emits a commutative two-address RR op, inserting a MOV when dst aliases neither source. */
 static void emit_binop_rr(FILE *out, const char *mnem,
                             const char *dst,
                             const char *a, const char *b)
@@ -426,6 +442,7 @@ static void emit_binop_rr(FILE *out, const char *mnem,
  *
  * For SRL / SRA we save b in t3 (regalloc-reserved, never holds a live
  * vreg) before overwriting dst with a. */
+/* Emits a non-commutative RR op, handling the dst==b aliasing hazard for SUB/SRL/SRA. */
 static void emit_binop_rr_nc(FILE *out, const char *mnem,
                                const char *dst,
                                const char *a, const char *b)
@@ -455,6 +472,7 @@ static void emit_binop_rr_nc(FILE *out, const char *mnem,
  * Constraint: rs must NOT be r4 (it would be overwritten by MOV(t0,rd)) (get/set CC).
  * We handle this by swapping if rs==r4 (OR is commutative).
  */
+/* Emits a bitwise OR, working around the OR macro's t0 clobber. */
 static void emit_or_rr(FILE *out,
                          const char *dst, const char *a, const char *b)
 {
@@ -537,6 +555,7 @@ static void emit_or_rr(FILE *out,
 static unsigned g_cmp_label = 0;
 
 /* Map IR comparison opcode → branch mnemonic + whether operands are swapped. */
+/* Maps an IR comparison opcode to its branch mnemonic and operand-swap flag. */
 static void cmp_to_branch(ir_opcode_t op,
                             const char **bmnem_out,
                             int         *swap_out)
@@ -560,9 +579,13 @@ static void cmp_to_branch(ir_opcode_t op,
     }
 }
 
+/* CMP + branch ladder that lands a 0/1 boolean in rd. Local labels are
+ * scoped per-function to dodge collisions in the assembler's global
+ * symbol table. */
 static void emit_comparison(FILE *out, ir_opcode_t op,
                               const char *rd,
-                              const char *ra_r, const char *rb_r)
+                              const char *ra_r, const char *rb_r,
+                              const ir_function_t *func)
 {
     const char *bmnem;
     int         swap;
@@ -577,19 +600,19 @@ static void emit_comparison(FILE *out, ir_opcode_t op,
     if (op == IR_OP_NEQ) {
         fprintf(out, "    CMP %s, %s\n", cmp_a, cmp_b);
         fprintf(out, "    ADDI %s, r0, #1      ; assume true (!=)\n", rd);
-        fprintf(out, "    BEQ .cmp_false_%u\n", lbl);
-        fprintf(out, "    BR .cmp_done_%u\n", lbl);
-        fprintf(out, ".cmp_false_%u:\n", lbl);
+        fprintf(out, "    BEQ .cmp_false_%s_%u\n", func->name, lbl);
+        fprintf(out, "    BR .cmp_done_%s_%u\n",  func->name, lbl);
+        fprintf(out, ".cmp_false_%s_%u:\n",       func->name, lbl);
         fprintf(out, "    ADDI %s, r0, #0      ; equal → false\n", rd);
-        fprintf(out, ".cmp_done_%u:\n", lbl);
+        fprintf(out, ".cmp_done_%s_%u:\n",        func->name, lbl);
     } else {
         fprintf(out, "    CMP %s, %s\n", cmp_a, cmp_b);
         fprintf(out, "    ADDI %s, r0, #0      ; assume false\n", rd);
-        fprintf(out, "    %s .cmp_true_%u\n", bmnem, lbl);
-        fprintf(out, "    BR .cmp_done_%u\n", lbl);
-        fprintf(out, ".cmp_true_%u:\n", lbl);
+        fprintf(out, "    %s .cmp_true_%s_%u\n", bmnem, func->name, lbl);
+        fprintf(out, "    BR .cmp_done_%s_%u\n",        func->name, lbl);
+        fprintf(out, ".cmp_true_%s_%u:\n",              func->name, lbl);
         fprintf(out, "    ADDI %s, r0, #1      ; condition true\n", rd);
-        fprintf(out, ".cmp_done_%u:\n", lbl);
+        fprintf(out, ".cmp_done_%s_%u:\n",              func->name, lbl);
     }
 }
 
@@ -597,6 +620,7 @@ static void emit_comparison(FILE *out, ir_opcode_t op,
  * §7  Per-instruction emitter
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Emits assembly for a single IR instruction by dispatching on its opcode. */
 static void emit_instr(FILE                *out,
                         const ir_instr_t    *ins,
                         const ir_function_t *func,
@@ -747,14 +771,14 @@ static void emit_instr(FILE                *out,
             const char *cnt = pick_scratch3(rd, src0, src1);
             fprintf(out, "    MOV(%s, %s)\n", cnt, src1);
             fprintf(out, "    CMP %s, r0\n", cnt);
-            fprintf(out, "    BEQ .shl_done_%u\n", lbl);
-            fprintf(out, ".shl_loop_%u:\n", lbl);
+            fprintf(out, "    BEQ .shl_done_%s_%u\n", func->name, lbl);
+            fprintf(out, ".shl_loop_%s_%u:\n",        func->name, lbl);
             fprintf(out, "    SLL(%s)\n", rd);
             fprintf(out, "    ADDI %s, %s, #-1\n", cnt, cnt);
             fprintf(out, "    CMP %s, r0\n", cnt);
-            fprintf(out, "    BEQ .shl_done_%u\n", lbl);
-            fprintf(out, "    BR .shl_loop_%u\n", lbl);
-            fprintf(out, ".shl_done_%u:\n", lbl);
+            fprintf(out, "    BEQ .shl_done_%s_%u\n", func->name, lbl);
+            fprintf(out, "    BR .shl_loop_%s_%u\n",  func->name, lbl);
+            fprintf(out, ".shl_done_%s_%u:\n",        func->name, lbl);
         }
         break;
     }
@@ -983,7 +1007,7 @@ static void emit_instr(FILE                *out,
                             pick_scratch3(rd, NULL, NULL));
         const char *b = materialize_operand(out, &ins->src[1], ra,
                             pick_scratch3(rd, a, NULL));
-        emit_comparison(out, ins->op, rd, a, b);
+        emit_comparison(out, ins->op, rd, a, b, func);
         break;
     }
 
@@ -998,7 +1022,9 @@ static void emit_instr(FILE                *out,
         unsigned tgt = (ins->src[0].kind == IR_VAL_LABEL)
                        ? ins->src[0].as.block_id
                        : IR_BRANCH_TRUE(ins);
-        fprintf(out, "    BR bb%u\n", tgt);
+        char lbl[128];
+        fmt_block_label(lbl, sizeof lbl, func, tgt);
+        fprintf(out, "    BR %s\n", lbl);
         break;
     }
 
@@ -1013,9 +1039,12 @@ static void emit_instr(FILE                *out,
     case IR_OP_BRANCH: {
         const char *pred = materialize_operand(out, &ins->src[0], ra,
                               pick_scratch3(NULL, NULL, NULL));
+        char lblF[128], lblT[128];
+        fmt_block_label(lblF, sizeof lblF, func, IR_BRANCH_FALSE(ins));
+        fmt_block_label(lblT, sizeof lblT, func, IR_BRANCH_TRUE(ins));
         fprintf(out, "    CMP %s, r0\n", pred);
-        fprintf(out, "    BEQ bb%u\n", IR_BRANCH_FALSE(ins));
-        fprintf(out, "    BR  bb%u\n", IR_BRANCH_TRUE(ins));
+        fprintf(out, "    BEQ %s\n", lblF);
+        fprintf(out, "    BR  %s\n", lblT);
         break;
     }
 
@@ -1044,10 +1073,13 @@ static void emit_instr(FILE                *out,
                 emit_load_imm(out, scratch, cv);
                 fprintf(out, "    CMP %s, %s\n", val, scratch);
             }
-            fprintf(out, "    BEQ bb%u\n", ins->as.sw.case_blocks[k]);
+            char lblK[128];
+            fmt_block_label(lblK, sizeof lblK, func, ins->as.sw.case_blocks[k]);
+            fprintf(out, "    BEQ %s\n", lblK);
         }
-        fprintf(out, "    BR  bb%u             ; default\n",
-                IR_SWITCH_DEFAULT(ins));
+        char lblD[128];
+        fmt_block_label(lblD, sizeof lblD, func, IR_SWITCH_DEFAULT(ins));
+        fprintf(out, "    BR  %s             ; default\n", lblD);
         break;
     }
 
@@ -1303,6 +1335,7 @@ static void emit_instr(FILE                *out,
  * §8  Block and function emitters
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Emits a comment listing each frame slot's fp-relative offset. */
 static void emit_slot_comment(FILE *out, const ir_function_t *func, const regalloc_t *ra)
 {
     fprintf(out, "    ; Frame slots (fp-based):\n");
@@ -1313,36 +1346,374 @@ static void emit_slot_comment(FILE *out, const ir_function_t *func, const regall
     }
 }
 
+/* Emits a labelled basic block and its instruction stream. */
 static void emit_block(FILE                *out,
                         const ir_block_t    *block,
                         const ir_function_t *func,
                         const regalloc_t    *ra)
 {
-    fprintf(out, "bb%u:\n", block->id);
+    char lbl[128];
+    fmt_block_label(lbl, sizeof lbl, func, block->id);
+    fprintf(out, "%s:\n", lbl);
     for (const ir_instr_t *ins = block->head; ins; ins = ins->next)
         emit_instr(out, ins, func, ra);
     fprintf(out, "\n");
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+ * §8.5  Branch relaxation
+ *
+ * B* displacements encode a signed 8-bit instruction count (±127). Long
+ * functions can produce branches that overflow it. We emit the function
+ * with short branches, scan the buffer, and rewrite any branch beyond
+ * threshold into a J(label) trampoline. Iterate until stable.
+ *
+ *   unconditional   BR target  ->  J(target)
+ *   conditional     Bcc target ->  Bcc .Lrelax_take_<func>_K
+ *                                  BR  .Lrelax_skip_<func>_K
+ *                                  .Lrelax_take_<func>_K:
+ *                                  J(target)
+ *                                  .Lrelax_skip_<func>_K:
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Below the hard ±127 limit; leaves margin for shifts from other relaxations
+ * in the same iteration. */
+#define BRANCH_RELAX_THRESHOLD 120
+
+/* Expansion size, in physical instructions, of every macro the codegen
+ * actually emits. Kept aligned with abi.m4. */
+static unsigned macro_size_instr(const char *name, size_t len)
+{
+    if (len == 3 && memcmp(name, "MOV", 3) == 0) return 1;
+    if (len == 3 && memcmp(name, "NEG", 3) == 0) return 1;
+    if (len == 3 && memcmp(name, "SLL", 3) == 0) return 1;
+    if (len == 3 && memcmp(name, "RET", 3) == 0) return 1;
+    if (len == 3 && memcmp(name, "LEA", 3) == 0) return 1;
+    if (len == 4 && memcmp(name, "SUBI", 4) == 0) return 1;
+    if (len == 4 && memcmp(name, "PUSH", 4) == 0) return 2;
+    if (len == 3 && memcmp(name, "POP",  3) == 0) return 2;
+    if (len == 2 && memcmp(name, "LI",   2) == 0) return 2;
+    if (len == 4 && memcmp(name, "CALL", 4) == 0) return 2;
+    if (len == 1 && name[0] == 'J')               return 2;
+    if (len == 3 && memcmp(name, "COM",  3) == 0) return 2;
+    if (len == 2 && memcmp(name, "OR",   2) == 0) return 4;
+    if (len == 3 && memcmp(name, "LBS",  3) == 0) return 5;
+    if (len == 7 && memcmp(name, "PUSH_CC", 7) == 0) return 3;
+    if (len == 6 && memcmp(name, "POP_CC",  6) == 0) return 3;
+    return 1;  /* unknown macro: treat as 1 instruction */
+}
+
+static const char *skip_ws(const char *s)
+{
+    while (*s == ' ' || *s == '\t') s++;
+    return s;
+}
+
+/* How many physical instructions one buffer line produces (0 for blank,
+ * comment, label, or .word/.byte/.org/.equ directives). */
+static unsigned line_instr_count(const char *line, size_t len)
+{
+    const char *p = skip_ws(line);
+    if (p >= line + len) return 0;
+    if (*p == '\0' || *p == '\n' || *p == '\r' || *p == ';') return 0;
+
+    /* Labels end with ':'. */
+    const char *end = line + len;
+    while (end > p && (end[-1] == '\n' || end[-1] == '\r' ||
+                       end[-1] == ' ' || end[-1] == '\t')) end--;
+    if (end > p && end[-1] == ':') return 0;
+
+    if (*p == '.') {
+        if ((len > 5 && memcmp(p, ".word", 5) == 0) ||
+            (len > 5 && memcmp(p, ".byte", 5) == 0) ||
+            (len > 4 && memcmp(p, ".org",  4) == 0) ||
+            (len > 4 && memcmp(p, ".equ",  4) == 0))
+            return 0;
+    }
+
+    /* MACRO(...) form: consume the identifier and check for '('. */
+    const char *name = p;
+    while ((*p >= 'A' && *p <= 'Z') || *p == '_' ||
+           (*p >= '0' && *p <= '9')) p++;
+    size_t name_len = (size_t)(p - name);
+    p = skip_ws(p);
+    if (*p == '(') return macro_size_instr(name, name_len);
+
+    return 1;
+}
+
+/* Recognise "<ws>MNEM<ws>TARGET" branch lines. Returns 1 on match and
+ * writes mnem / target slices through the out params. */
+static int parse_branch_line(const char *line, size_t len,
+                             const char **mnem_start, size_t *mnem_len,
+                             const char **target_start, size_t *target_len)
+{
+    const char *p = skip_ws(line);
+    const char *mnem = p;
+
+    static const char * const branches[] = {
+        "BR", "BEQ", "BC", "BV", "BLT", "BLE",
+        "BLEU", "BLETU", "BLTU", NULL
+    };
+    size_t mnlen = 0;
+    for (int i = 0; branches[i]; i++) {
+        size_t bl = strlen(branches[i]);
+        /* Strict `>`: mnem[bl] is the separator we test below. */
+        if (len > (size_t)(mnem - line) + bl &&
+            memcmp(mnem, branches[i], bl) == 0 &&
+            (mnem[bl] == ' ' || mnem[bl] == '\t')) {
+            mnlen = bl;
+            break;
+        }
+    }
+    if (mnlen == 0) return 0;
+
+    const char *t = skip_ws(mnem + mnlen);
+    const char *tstart = t;
+    if (*t == '#') return 0;   /* numeric displacement, not a label */
+    while (*t && *t != ' ' && *t != '\t' && *t != '\n' &&
+           *t != '\r' && *t != ';') t++;
+    size_t tlen = (size_t)(t - tstart);
+    if (tlen == 0) return 0;
+
+    *mnem_start   = mnem;
+    *mnem_len     = mnlen;
+    *target_start = tstart;
+    *target_len   = tlen;
+    return 1;
+}
+
+/* Recognise a "NAME:" label-definition line; writes name slice on match. */
+static int parse_label_line(const char *line, size_t len,
+                            const char **name_start, size_t *name_len)
+{
+    const char *p = skip_ws(line);
+    if (p >= line + len) return 0;
+    if (*p == ';' || *p == '\n' || *p == '\r') return 0;
+
+    const char *end = line + len;
+    while (end > p && (end[-1] == '\n' || end[-1] == '\r' ||
+                       end[-1] == ' ' || end[-1] == '\t')) end--;
+    if (end <= p || end[-1] != ':') return 0;
+
+    *name_start = p;
+    *name_len   = (size_t)((end - 1) - p);
+    return 1;
+}
+
+/* One relaxation iteration. Returns 1 if any branch was rewritten (caller
+ * loops until 0). On rewrite, *bufp is replaced with a fresh allocation;
+ * the old buffer is freed. *next_relax_id supplies unique trampoline-label
+ * counters across iterations; func_name scopes them across functions. */
+static int relax_branches_once(char **bufp, unsigned *next_relax_id,
+                               const char *func_name)
+{
+    char *buf = *bufp;
+    if (!buf) return 0;
+    size_t buflen = strlen(buf);
+
+    /* --- Pass 1: catalogue labels and branch sites. ----------------------- */
+    typedef struct { size_t name_off, name_len; unsigned instr_idx; } label_t;
+    typedef struct {
+        size_t mnem_off, mnem_len;
+        size_t target_off, target_len;
+        size_t line_start, line_end;
+        unsigned instr_idx;
+    } branch_t;
+
+    /* Cap = newlines + 1; at most one label OR one branch per line. */
+    size_t max_lines = 1;
+    for (size_t i = 0; i < buflen; i++) if (buf[i] == '\n') max_lines++;
+
+    label_t  *labels   = malloc(sizeof(*labels)   * max_lines);
+    branch_t *branches = malloc(sizeof(*branches) * max_lines);
+    if (!labels || !branches) {
+        free(labels); free(branches);
+        return 0;
+    }
+    size_t n_labels = 0, n_branches = 0;
+
+    unsigned instr_idx = 0;
+    size_t line_start = 0;
+    for (size_t i = 0; i <= buflen; i++) {
+        if (i != buflen && buf[i] != '\n') continue;
+        size_t line_end = (i < buflen) ? i + 1 : i;
+        size_t llen = line_end - line_start;
+        const char *line = buf + line_start;
+
+        const char *lname; size_t lname_len;
+        if (parse_label_line(line, llen, &lname, &lname_len)) {
+            labels[n_labels].name_off  = (size_t)(lname - buf);
+            labels[n_labels].name_len  = lname_len;
+            labels[n_labels].instr_idx = instr_idx;
+            n_labels++;
+        }
+
+        const char *mn; size_t mnlen;
+        const char *tg; size_t tglen;
+        if (parse_branch_line(line, llen, &mn, &mnlen, &tg, &tglen)) {
+            branches[n_branches].mnem_off   = (size_t)(mn - buf);
+            branches[n_branches].mnem_len   = mnlen;
+            branches[n_branches].target_off = (size_t)(tg - buf);
+            branches[n_branches].target_len = tglen;
+            branches[n_branches].line_start = line_start;
+            branches[n_branches].line_end   = line_end;
+            branches[n_branches].instr_idx  = instr_idx;
+            n_branches++;
+        }
+
+        instr_idx += line_instr_count(line, llen);
+        line_start = line_end;
+    }
+
+    /* --- Pass 2: mark branches whose target is out of short-form range. -- */
+    char *flags = calloc(n_branches, 1);
+    if (!flags) { free(labels); free(branches); return 0; }
+
+    int any_relax = 0;
+    for (size_t b = 0; b < n_branches; b++) {
+        const char *t = buf + branches[b].target_off;
+        size_t tl = branches[b].target_len;
+        unsigned target_idx = (unsigned)-1;
+        for (size_t l = 0; l < n_labels; l++) {
+            if (labels[l].name_len == tl &&
+                memcmp(buf + labels[l].name_off, t, tl) == 0) {
+                target_idx = labels[l].instr_idx;
+                break;
+            }
+        }
+        /* External symbol (resolved by the assembler at link time): skip. */
+        if (target_idx == (unsigned)-1) continue;
+
+        long delta = (long)target_idx - (long)branches[b].instr_idx;
+        if (delta >  BRANCH_RELAX_THRESHOLD ||
+            delta < -BRANCH_RELAX_THRESHOLD) {
+            flags[b] = 1;
+            any_relax = 1;
+        }
+    }
+
+    if (!any_relax) {
+        free(labels); free(branches); free(flags);
+        return 0;
+    }
+
+    /* --- Pass 3: emit a new buffer, expanding the marked branches. -------- */
+    /* Each relax adds up to ~256 chars (5 lines). Pad by the branch count. */
+    size_t new_cap = buflen + n_branches * 256 + 64;
+    char *nbuf = malloc(new_cap);
+    if (!nbuf) {
+        free(labels); free(branches); free(flags);
+        return 0;
+    }
+    size_t nlen = 0;
+
+    size_t cursor = 0;
+    for (size_t b = 0; b < n_branches; b++) {
+        if (!flags[b]) continue;
+
+        /* Copy the unchanged region up to (but not including) this branch. */
+        size_t copy = branches[b].line_start - cursor;
+        memcpy(nbuf + nlen, buf + cursor, copy);
+        nlen += copy;
+        cursor = branches[b].line_end;
+
+        /* Null-terminate mnemonic and target for the printf below. */
+        char mnemz[16]  = {0};
+        char targz[256] = {0};
+        size_t mn = branches[b].mnem_len;
+        size_t tn = branches[b].target_len;
+        if (mn >= sizeof(mnemz)) mn = sizeof(mnemz) - 1;
+        if (tn >= sizeof(targz)) tn = sizeof(targz) - 1;
+        memcpy(mnemz, buf + branches[b].mnem_off, mn);
+        memcpy(targz, buf + branches[b].target_off, tn);
+
+        int n;
+        if (mnemz[0] == 'B' && mnemz[1] == 'R' && mnemz[2] == '\0') {
+            n = snprintf(nbuf + nlen, new_cap - nlen,
+                         "    J(%s)             ; relaxed long BR\n", targz);
+            if (n < 0) goto fail;
+            nlen += (size_t)n;
+        } else {
+            unsigned k = (*next_relax_id)++;
+            n = snprintf(nbuf + nlen, new_cap - nlen,
+                         "    %s .Lrelax_take_%s_%u   ; relaxed long %s\n"
+                         "    BR .Lrelax_skip_%s_%u\n"
+                         ".Lrelax_take_%s_%u:\n"
+                         "    J(%s)\n"
+                         ".Lrelax_skip_%s_%u:\n",
+                         mnemz, func_name, k, mnemz,
+                         func_name, k,
+                         func_name, k, targz,
+                         func_name, k);
+            if (n < 0) goto fail;
+            nlen += (size_t)n;
+        }
+    }
+    memcpy(nbuf + nlen, buf + cursor, buflen - cursor);
+    nlen += buflen - cursor;
+    nbuf[nlen] = '\0';
+
+    free(*bufp);
+    *bufp = nbuf;
+
+    free(labels); free(branches); free(flags);
+    return 1;
+
+fail:
+    free(nbuf);
+    free(labels); free(branches); free(flags);
+    return 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
  * §9  Public API
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Emits a complete function: label, prologue, blocks (epilogues are inlined
+ * at each RET). Goes through a memstream so the branch-relaxation pass (§8.5)
+ * can rewrite out-of-range B* into J(label) trampolines before the text
+ * reaches `out`. */
 void codegen_emit_function(FILE                *out,
                             const ir_function_t *func,
                             const regalloc_t    *ra)
 {
-    g_cmp_label = 0; /* reset per-function label counter */
+    g_cmp_label = 0;
 
-    fprintf(out, "%s:\n", func->name);
-    emit_slot_comment(out, func, ra);
-    fprintf(out, "\n");
-    emit_prologue(out, func, ra);
+    char *buf = NULL;
+    size_t bufsize = 0;
+    FILE *mem = open_memstream(&buf, &bufsize);
+    if (!mem) {
+        /* No relaxation possible — assembler will flag any overlong branch. */
+        fprintf(out, "%s:\n", func->name);
+        emit_slot_comment(out, func, ra);
+        fprintf(out, "\n");
+        emit_prologue(out, func, ra);
+        for (const ir_block_t *b = func->entry; b; b = b->next)
+            emit_block(out, b, func, ra);
+        return;
+    }
 
+    fprintf(mem, "%s:\n", func->name);
+    emit_slot_comment(mem, func, ra);
+    fprintf(mem, "\n");
+    emit_prologue(mem, func, ra);
     for (const ir_block_t *b = func->entry; b; b = b->next)
-        emit_block(out, b, func, ra);
+        emit_block(mem, b, func, ra);
+    fclose(mem);
+
+    /* Relaxation is monotonic (a branch can only go from short to long), so
+     * the loop is bounded by the branch count. 16 caps the worst case. */
+    unsigned relax_id = 0;
+    for (int iter = 0; iter < 16; iter++) {
+        if (!relax_branches_once(&buf, &relax_id, func->name)) break;
+    }
+
+    fputs(buf, out);
+    free(buf);
 }
 
+/* Emits a whole module: header banner, global data section, then function text. */
 void codegen_emit_module(FILE               *out,
                           const ir_module_t  *module,
                           const regalloc_t  **allocs)

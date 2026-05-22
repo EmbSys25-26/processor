@@ -22,11 +22,13 @@
 
 #define WORD_BITS 64u
 
+/* Returns the number of 64-bit words needed to hold n_bits. */
 static unsigned words_needed(unsigned n_bits)
 {
     return (n_bits + WORD_BITS - 1u) / WORD_BITS;
 }
 
+/* Bitset primitives over vreg ids: init/free/clear/copy/add/remove/has/union/minus/equal/print. */
 void vreg_set_init(vreg_set_t *s, unsigned n_vregs)
 {
     unsigned nw = words_needed(n_vregs == 0 ? 1 : n_vregs);
@@ -121,6 +123,7 @@ void vreg_set_print(FILE *out, const vreg_set_t *s)
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Returns 1 and sets *vr if instruction defines a vreg; 0 otherwise */
+/* Returns 1 and sets *vr if the instruction defines a vreg, else returns 0. */
 static int instr_get_def(const ir_instr_t *i, unsigned *vr)
 {
     switch (i->op) {
@@ -145,6 +148,7 @@ static int instr_get_def(const ir_instr_t *i, unsigned *vr)
 }
 
 /* Fills uses[] with vreg IDs; returns count (at most max) */
+/* Collects vreg-kind operands used by the instruction into uses[], returning the count. */
 static unsigned instr_get_uses(const ir_instr_t *i, unsigned *uses, unsigned max)
 {
     unsigned n = 0;
@@ -208,6 +212,7 @@ typedef struct {
 
 /* Fill out[] with successor block IDs of blk; returns count (max 2 normal, or
    up to IR_MAX_SWITCH_CASES+1 for switch) */
+/* Writes the CFG successor block ids of blk into out[] and returns the count. */
 static unsigned block_get_succs(const ir_block_t *blk, unsigned *out, unsigned max)
 {
     const ir_instr_t *term = blk->tail;
@@ -242,6 +247,7 @@ typedef struct {
     unsigned           n;      /* == func->next_block_id            */
 } block_map_t;
 
+/* DFS that emits block ids in postorder for later RPO reversal. */
 static void dfs_postorder(unsigned id, const block_map_t *bmap,
                           const cfg_node_t *cfg,
                           int *visited,
@@ -258,6 +264,7 @@ static void dfs_postorder(unsigned id, const block_map_t *bmap,
  * ir_liveness_compute
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Computes per-block use/def/live_in/live_out and per-instruction live_after via iterative worklist. */
 ir_liveness_t *ir_liveness_compute(const ir_function_t *func)
 {
     if (!func) return NULL;
@@ -539,6 +546,7 @@ ir_liveness_t *ir_liveness_compute(const ir_function_t *func)
  * ir_liveness_free
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Releases all bitsets and arrays owned by the liveness result. */
 void ir_liveness_free(ir_liveness_t *liv)
 {
     if (!liv) return;
@@ -566,6 +574,7 @@ void ir_liveness_free(ir_liveness_t *liv)
  * ir_liveness_print — debug printer
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Prints per-block sets and per-instruction live_after for debugging. */
 void ir_liveness_print(FILE *out, const ir_function_t *func,
                        const ir_liveness_t *liv)
 {

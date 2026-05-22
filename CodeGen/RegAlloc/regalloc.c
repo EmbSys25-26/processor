@@ -19,6 +19,7 @@
 #define K_FULL    11   /* r1–r11: all allocatable (r12/fp reserved)   */
 #define K_CALLEE   4   /* r8–r11: callee-saved only (call-live nodes) */
 
+/* Returns the colour-budget K for v: K_CALLEE if call-live, otherwise K_FULL. */
 static int k_of(const precolor_t *pc, unsigned v)
 {
     return precolor_is_call_live(pc, v) ? K_CALLEE : K_FULL;
@@ -26,6 +27,7 @@ static int k_of(const precolor_t *pc, unsigned v)
 
 /* ─── alias helpers ──────────────────────────────────────────────────────── */
 
+/* Follows the alias chain to the representative node for v. */
 static unsigned get_alias(const unsigned *alias, unsigned n, unsigned v)
 {
     /* Iterative path traversal — no mutation to keep the map simple. */
@@ -36,6 +38,7 @@ static unsigned get_alias(const unsigned *alias, unsigned n, unsigned v)
 
 /* ─── physical register names ────────────────────────────────────────────── */
 
+/* Returns a printable register name for a phys_reg_t (or SPILL/?). */
 static const char *reg_name(phys_reg_t c)
 {
     static const char *names[] = {
@@ -49,6 +52,7 @@ static const char *reg_name(phys_reg_t c)
 
 /* ─── main allocator ─────────────────────────────────────────────────────── */
 
+/* Runs the Chaitin-Briggs allocator (coalesce, simplify, select, alias) and returns the colouring. */
 regalloc_t *regalloc_build(const ir_function_t *func,
                             const ifg_t         *g,
                             const precolor_t    *pc)
@@ -322,6 +326,7 @@ regalloc_t *regalloc_build(const ir_function_t *func,
 
 /* ─── cleanup ────────────────────────────────────────────────────────────── */
 
+/* Releases the regalloc result and its colour array. */
 void regalloc_free(regalloc_t *r)
 {
     if (!r) return;
@@ -331,6 +336,7 @@ void regalloc_free(regalloc_t *r)
 
 /* ─── debug printer ──────────────────────────────────────────────────────── */
 
+/* Prints each vreg's assigned colour and any spills for debugging. */
 void regalloc_print(FILE *out, const char *func_name,
                     const regalloc_t *r, const precolor_t *pc)
 {

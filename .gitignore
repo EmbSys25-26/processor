@@ -8,9 +8,13 @@
 *.app
 compiler
 
+# Log files 
+*.log
+
 # Generated Assembly
 *.asm
 output.asm
+*.hex
 
 # Editor / IDE
 .vscode/

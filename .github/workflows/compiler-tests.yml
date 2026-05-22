@@ -1,0 +1,36 @@
+name: compiler-tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Build & verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        # gcc / make / awk are already on ubuntu-latest; flex, bison, and m4
+        # are not always guaranteed to be present at the versions we expect.
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends \
+            build-essential flex bison m4 gawk
+
+      - name: Tool versions
+        run: |
+          gcc --version | head -n1
+          flex --version
+          bison --version | head -n1
+          m4 --version | head -n1
+          make --version | head -n1
+
+      - name: Run verification suites
+        run: scripts/ci/verify_all.sh

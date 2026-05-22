@@ -53,6 +53,7 @@ struct ifg {
  * Triangular bitset helpers
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Triangular bitset accessors: bit offset for edge (lo,hi), get, and set-if-new. */
 /* Return the bit offset within `tri` corresponding to edge (lo, hi),
    where lo < hi. Precondition: lo < hi < g->n. */
 static size_t tri_bit(const ifg_t *g, unsigned lo, unsigned hi)
@@ -83,6 +84,7 @@ static int tri_set(ifg_t *g, unsigned lo, unsigned hi)
  * Adjacency list helpers (sorted insert)
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Ensures the adjacency list has capacity for `need` entries, doubling as needed. */
 static int adj_grow(adj_list_t *a, unsigned need)
 {
     if (a->cap >= need) return 0;
@@ -97,6 +99,7 @@ static int adj_grow(adj_list_t *a, unsigned need)
 
 /* Insert `id` into `a` in ascending order. Assumes `id` is not already
    present (callers guarantee this by checking the triangular bitset first). */
+/* Inserts id into the adjacency list, maintaining ascending sort. */
 static int adj_insert_sorted(adj_list_t *a, unsigned id)
 {
     if (adj_grow(a, a->len + 1) < 0) return -1;
@@ -124,6 +127,7 @@ static int adj_insert_sorted(adj_list_t *a, unsigned id)
 /* Add undirected edge (a, b). Self-edges and out-of-range are silently
    ignored. Returns 1 if the edge was new, 0 if already present, -1 on
    allocation failure. */
+/* Adds an undirected interference edge, updating both the bitset and adjacency lists. */
 static int ifg_add_edge(ifg_t *g, unsigned a, unsigned b)
 {
     if (a == b) return 0;
@@ -147,6 +151,7 @@ static int ifg_add_edge(ifg_t *g, unsigned a, unsigned b)
  * helpers across modules.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Returns 1 and sets *vr if the instruction defines a vreg, mirroring liveness.c. */
 static int instr_get_def(const ir_instr_t *i, unsigned *vr)
 {
     switch (i->op) {
@@ -193,6 +198,7 @@ static int instr_is_move(const ir_instr_t *i, unsigned *dst, unsigned *src)
  * Move list management
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Records a (dst,src) move pair for later coalescing consideration. */
 static int ifg_record_move(ifg_t *g, unsigned dst, unsigned src)
 {
     if (g->n_moves == g->moves_cap) {
@@ -213,6 +219,7 @@ static int ifg_record_move(ifg_t *g, unsigned dst, unsigned src)
  * Construction
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Builds the interference graph by scanning each instruction's live_after set and adding edges from the def. */
 ifg_t *ifg_build(const ir_function_t *func, const ir_liveness_t *liv)
 {
     if (!func || !liv) return NULL;
@@ -292,6 +299,7 @@ ifg_t *ifg_build(const ir_function_t *func, const ir_liveness_t *liv)
  * Destruction
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Releases all storage owned by the interference graph. */
 void ifg_free(ifg_t *g)
 {
     if (!g) return;
@@ -309,6 +317,7 @@ void ifg_free(ifg_t *g)
  * Queries
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Trivial graph accessors: node count, edge query, degree, and neighbour copy. */
 unsigned ifg_num_nodes(const ifg_t *g)
 {
     return g ? g->n : 0;
@@ -346,6 +355,7 @@ const ifg_move_t  *ifg_moves    (const ifg_t *g) { return g ? g->moves   : NULL;
  * Debug printer
  * ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Prints the interference graph (nodes, edges, moves, adjacency) for debugging. */
 void ifg_print(FILE *out, const char *func_name, const ifg_t *g)
 {
     if (!g) return;

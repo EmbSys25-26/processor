@@ -2,17 +2,17 @@
  * ir_lower_expr.c — Section 2: Expression lowering
  *
  * Covers §8.2 and the expression-related subsets of §7.1–§7.5:
- *   • Literals        (INTEGER / CHAR / STRING / FLOAT)
- *   • Identifier read (load from slot or global)
- *   • Binary ops      (arithmetic, bitwise, comparison, logical, assignment)
- *   • Compound assign (+=, -= …)
- *   • Unary ops       (neg, not, sizeof, reference, dereference)
- *   • Pre/post inc/dec
- *   • Ternary (?: )
- *   • Function call
- *   • Array access
- *   • Member access (. and ->)
- *   • Type cast
+ *   Literals        (INTEGER / CHAR / STRING / FLOAT)
+ *   Identifier read (load from slot or global)
+ *   Binary ops      (arithmetic, bitwise, comparison, logical, assignment)
+ *   Compound assign (+=, -= …)
+ *   Unary ops       (neg, not, sizeof, reference, dereference)
+ *   Pre/post inc/dec
+ *   Ternary (?: )
+ *   Function call
+ *   Array access
+ *   Member access (. and ->)
+ *   Type cast
  */
 
 #include <stdio.h>
@@ -241,6 +241,8 @@ static ir_value_t cast_value(ir_lower_ctx_t *lctx,
  * lvalue address lowering  (§8.2 rules 3–4)
  *************************************************************/
 
+/* Lowers an lvalue expression and returns a pointer (vreg) to its storage,
+ * also writing the pointee type to *out_pointee_type. */
 ir_value_t ir_lower_lvalue_addr(ir_lower_ctx_t *lctx,
                                  const TreeNode_t *expr,
                                  ir_type_t *out_pointee_type)
@@ -453,6 +455,8 @@ ir_value_t ir_lower_lvalue_addr(ir_lower_ctx_t *lctx,
  * Main expression lowering  (§8.2)
  ************************************************************ */
 
+/* Lowers an rvalue expression to its value (vreg / imm / global ref) and
+ * writes its IR type to *out_type. */
 ir_value_t ir_lower_expr(ir_lower_ctx_t *lctx,
                           const TreeNode_t *expr,
                           ir_type_t *out_type)

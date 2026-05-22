@@ -20,9 +20,6 @@
 
 #include "../Parser/ASTree.h"
 #include "../Semantic/semantic.h"
-#include "../Semantic/symbol.h"
-#include "../Semantic/type.h"
-#include "../Util/NodeTypes.h"
 #include "ir.h"
 #include "ir_lower.h"
 
@@ -105,6 +102,8 @@ static void prune_empty_tail_block(ir_lower_ctx_t *lctx)
     free(tail);
 }
 
+/* Walks the switch body's siblings and builds a linked list of case/default
+ * descriptors, allocating a fresh block for each clause. */
 static switch_case_t *collect_cases(const TreeNode_t *switch_body, ir_lower_ctx_t *lctx)
 {
     switch_case_t *head = NULL, *tail = NULL;
@@ -141,6 +140,7 @@ static switch_case_t *collect_cases(const TreeNode_t *switch_body, ir_lower_ctx_
 /* Forward declaration for mutual recursion */
 static void ir_lower_single_stmt(ir_lower_ctx_t *lctx, const TreeNode_t *s);
 
+/* Lowers a statement sibling chain, stopping early on the first error. */
 void ir_lower_stmt(ir_lower_ctx_t *lctx, const TreeNode_t *stmt)
 {
     if (!stmt) return;
@@ -152,6 +152,8 @@ void ir_lower_stmt(ir_lower_ctx_t *lctx, const TreeNode_t *stmt)
     }
 }
 
+/* Dispatches a single statement node to the appropriate lowering rule
+ * (blocks, control flow, declarations, returns, expression-statements). */
 static void ir_lower_single_stmt(ir_lower_ctx_t *lctx, const TreeNode_t *s)
 {
     if (!s) return;

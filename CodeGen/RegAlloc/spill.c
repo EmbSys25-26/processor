@@ -134,6 +134,7 @@ static int cmp_cost(const void *a, const void *b)
 
 /* ─── public API ─────────────────────────────────────────────────────────── */
 
+/* Rewrites the function's IR so every spilled vreg lives in a stack slot, with reload/store around each use/def. */
 spill_result_t *spill_rewrite(ir_function_t    *func,
                                const regalloc_t *ra,
                                const ifg_t      *g)
@@ -266,6 +267,7 @@ spill_result_t *spill_rewrite(ir_function_t    *func,
     return sr;
 }
 
+/* Releases the spill result and its entries array. */
 void spill_result_free(spill_result_t *sr)
 {
     if (!sr) return;
@@ -275,6 +277,7 @@ void spill_result_free(spill_result_t *sr)
 
 /* ─── debug printer ──────────────────────────────────────────────────────── */
 
+/* Prints the spilled-vreg → slot mapping with cost figures for debugging. */
 void spill_print(FILE *out, const char *func_name, const spill_result_t *sr)
 {
     if (!sr || sr->n_spilled == 0) {

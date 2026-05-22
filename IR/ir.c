@@ -17,6 +17,7 @@
  * Type helpers
  *************************************************************/
 
+/* Primitive ir_type_t constructors. */
 ir_type_t ir_type_void(void)  { ir_type_t t; memset(&t,0,sizeof(t)); t.kind=IR_TYPE_VOID;  return t; }
 ir_type_t ir_type_i1(void)   { ir_type_t t; memset(&t,0,sizeof(t)); t.kind=IR_TYPE_I1;    return t; }
 ir_type_t ir_type_i8(void)   { ir_type_t t; memset(&t,0,sizeof(t)); t.kind=IR_TYPE_I8;    return t; }
@@ -24,6 +25,7 @@ ir_type_t ir_type_i16(void)  { ir_type_t t; memset(&t,0,sizeof(t)); t.kind=IR_TY
 ir_type_t ir_type_i32(void)  { ir_type_t t; memset(&t,0,sizeof(t)); t.kind=IR_TYPE_I32;   return t; }
 ir_type_t ir_type_ptr(void)  { ir_type_t t; memset(&t,0,sizeof(t)); t.kind=IR_TYPE_PTR;   return t; }
 
+/* Builds an ir_type_t array descriptor for `elem[count]`. */
 ir_type_t ir_type_array(ir_type_t elem, size_t count)
 {
     ir_type_t t;
@@ -38,6 +40,7 @@ ir_type_t ir_type_array(ir_type_t elem, size_t count)
     return t;
 }
 
+/* Builds a struct ir_type_t carrying the given tag. */
 ir_type_t ir_type_struct(const char *tag)
 {
     ir_type_t t;
@@ -47,6 +50,7 @@ ir_type_t ir_type_struct(const char *tag)
     return t;
 }
 
+/* Builds a union ir_type_t carrying the given tag. */
 ir_type_t ir_type_union(const char *tag)
 {
     ir_type_t t;
@@ -56,12 +60,14 @@ ir_type_t ir_type_union(const char *tag)
     return t;
 }
 
+/* Returns 1 if `t` is one of the integer kinds (i1/i8/i16/i32). */
 int ir_type_is_integer(ir_type_t t)
 {
     return t.kind == IR_TYPE_I1 || t.kind == IR_TYPE_I8 ||
            t.kind == IR_TYPE_I16 || t.kind == IR_TYPE_I32;
 }
 
+/* Returns 1 if `a` and `b` have the same kind (and tag for aggregates). */
 int ir_type_equal(ir_type_t a, ir_type_t b)
 {
     if (a.kind != b.kind) return 0;
@@ -103,6 +109,7 @@ size_t ir_type_size_words(ir_type_t t)
  * Value constructors
  *************************************************************/
 
+/* ir_value_t constructors for each value kind. */
 ir_value_t ir_val_vreg(unsigned id, ir_type_t type)
 {
     ir_value_t v; memset(&v,0,sizeof(v));
@@ -150,6 +157,7 @@ ir_value_t ir_val_none(void)
  * Module lifetime
  *************************************************************/
 
+/* Allocates a zero-initialised module tagged with the given arch name. */
 ir_module_t *ir_module_new(const char *arch)
 {
     ir_module_t *mod = (ir_module_t *)calloc(1, sizeof(*mod));
@@ -158,6 +166,7 @@ ir_module_t *ir_module_new(const char *arch)
     return mod;
 }
 
+/* Releases an instruction chain starting at `head`. */
 static void ir_instr_free_chain(ir_instr_t *head)
 {
     while (head) {
@@ -167,6 +176,7 @@ static void ir_instr_free_chain(ir_instr_t *head)
     }
 }
 
+/* Releases a block chain along with each block's instructions. */
 static void ir_block_free_chain(ir_block_t *head)
 {
     while (head) {
@@ -177,6 +187,7 @@ static void ir_block_free_chain(ir_block_t *head)
     }
 }
 
+/* Releases a slot-entry chain. */
 static void ir_slot_free_chain(ir_slot_entry_t *head)
 {
     while (head) {
@@ -186,6 +197,7 @@ static void ir_slot_free_chain(ir_slot_entry_t *head)
     }
 }
 
+/* Frees a function and all of its blocks, instructions, and slots. */
 void ir_function_free(ir_function_t *func)
 {
     if (!func) return;
@@ -194,6 +206,7 @@ void ir_function_free(ir_function_t *func)
     free(func);
 }
 
+/* Frees a module along with every function and global it owns. */
 void ir_module_free(ir_module_t *mod)
 {
     if (!mod) return;
@@ -220,6 +233,7 @@ void ir_module_free(ir_module_t *mod)
  * Module / function builders
  *************************************************************/
 
+/* Allocates a fresh function with the given name and return type. */
 ir_function_t *ir_function_new(const char *name, ir_type_t ret_type)
 {
     ir_function_t *func = (ir_function_t *)calloc(1, sizeof(*func));
@@ -232,6 +246,7 @@ ir_function_t *ir_function_new(const char *name, ir_type_t ret_type)
     return func;
 }
 
+/* Appends `func` to the module's function list, preserving insertion order. */
 void ir_module_add_function(ir_module_t *mod, ir_function_t *func)
 {
     if (!mod || !func) return;
@@ -248,6 +263,7 @@ void ir_module_add_function(ir_module_t *mod, ir_function_t *func)
     }
 }
 
+/* Appends a new global symbol to the module and returns it. */
 ir_global_t *ir_module_add_global(ir_module_t *mod, const char *name,
                                    ir_type_t type, int is_extern)
 {
@@ -276,6 +292,7 @@ ir_global_t *ir_module_add_global(ir_module_t *mod, const char *name,
  * Block / instruction builders
  *************************************************************/
 
+/* Allocates a fresh basic block with the next id from `func`. */
 ir_block_t *ir_block_new(ir_function_t *func)
 {
     ir_block_t *b = (ir_block_t *)calloc(1, sizeof(*b));
@@ -284,6 +301,7 @@ ir_block_t *ir_block_new(ir_function_t *func)
     return b;
 }
 
+/* Appends `block` to the function's block list. */
 void ir_block_append(ir_function_t *func, ir_block_t *block)
 {
     if (!func || !block) return;
@@ -296,6 +314,7 @@ void ir_block_append(ir_function_t *func, ir_block_t *block)
     }
 }
 
+/* Allocates a zero-initialised instruction of opcode `op`. */
 ir_instr_t *ir_instr_new(ir_opcode_t op)
 {
     ir_instr_t *i = (ir_instr_t *)calloc(1, sizeof(*i));
@@ -307,6 +326,7 @@ ir_instr_t *ir_instr_new(ir_opcode_t op)
     return i;
 }
 
+/* Appends `instr` to the end of `block`'s instruction list. */
 void ir_instr_push(ir_block_t *block, ir_instr_t *instr)
 {
     if (!block || !instr) return;
@@ -319,11 +339,13 @@ void ir_instr_push(ir_block_t *block, ir_instr_t *instr)
     }
 }
 
+/* Returns a fresh virtual register id for `func`. */
 unsigned ir_new_vreg(ir_function_t *func)
 {
     return func->next_vreg++;
 }
 
+/* Allocates a named stack slot, reserving enough word ids to cover the type. */
 unsigned ir_new_slot(ir_function_t *func, const char *name, ir_type_t type)
 {
     ir_slot_entry_t *e = (ir_slot_entry_t *)calloc(1, sizeof(*e));
@@ -343,6 +365,7 @@ unsigned ir_new_slot(ir_function_t *func, const char *name, ir_type_t type)
     return e->slot_id;
 }
 
+/* Looks up a slot by name and returns its id, or (unsigned)-1 if absent. */
 unsigned ir_find_slot(const ir_function_t *func, const char *name)
 {
     if (!func || !name) return (unsigned)-1;
@@ -358,6 +381,7 @@ unsigned ir_find_slot(const ir_function_t *func, const char *name)
  * §12  Text serialiser - Based on IR Contract notation
  *************************************************************/
 
+/* Writes a type's textual form (per IR contract §12) to `out`. */
 void ir_type_print(FILE *out, const ir_type_t *t)
 {
     if (!t) { fprintf(out, "?"); return; }
@@ -379,6 +403,7 @@ void ir_type_print(FILE *out, const ir_type_t *t)
     }
 }
 
+/* Writes a value's textual form (vreg/slot/global/imm/label) to `out`. */
 void ir_value_print(FILE *out, const ir_value_t *v)
 {
     if (!v || v->kind == IR_VAL_NONE) { fprintf(out, "-"); return; }
@@ -392,6 +417,7 @@ void ir_value_print(FILE *out, const ir_value_t *v)
     }
 }
 
+/* Maps an opcode enum to its printable mnemonic. */
 static const char *opname(ir_opcode_t op)
 {
     switch (op) {
@@ -439,6 +465,7 @@ static const char *opname(ir_opcode_t op)
     }
 }
 
+/* Prints a single instruction, dispatching on opcode for special-case formats. */
 void ir_instr_print(FILE *out, const ir_instr_t *i)
 {
     if (!i) return;
@@ -571,6 +598,7 @@ void ir_instr_print(FILE *out, const ir_instr_t *i)
     }
 }
 
+/* Prints a block header (`bbN:`) followed by all of its instructions. */
 void ir_block_print(FILE *out, const ir_block_t *b)
 {
     if (!b) return;
@@ -580,6 +608,7 @@ void ir_block_print(FILE *out, const ir_block_t *b)
     }
 }
 
+/* Prints a function's signature, slot table, and every block. */
 void ir_function_print(FILE *out, const ir_function_t *func)
 {
     if (!func) return;
@@ -608,6 +637,7 @@ void ir_function_print(FILE *out, const ir_function_t *func)
     fprintf(out, "}\n");
 }
 
+/* Prints a whole module: header line, globals, then each function. */
 void ir_module_print(FILE *out, const ir_module_t *mod)
 {
     if (!mod) return;
