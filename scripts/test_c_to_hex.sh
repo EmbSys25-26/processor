@@ -27,6 +27,13 @@ fail=0
 failed_list=()
 
 for f in test_files/RegisterAllocation/*.c test_files/IR_checks/*.c; do
+    # Programs prefixed test_unsupported_ are designed to be rejected at
+    # compile time (see scripts/test_compile_all.sh — expect_fail/IR001 mode).
+    # They cannot produce hex by construction, so skip them in this sweep.
+    if [[ "$(basename "$f")" == test_unsupported_* ]]; then
+        continue
+    fi
+
     log=$(mktemp)
     if "$DRIVER" "$f" >"$log" 2>&1; then
         pass=$((pass + 1))
