@@ -1,10 +1,18 @@
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
+/* ============================================================
+ * Colors for terminal output
+ * ============================================================ */
+
 #define COLOR_CODE_RED      "\033[1;31m"
 #define COLOR_CODE_YELLOW   "\033[1;33m"
 #define COLOR_CODE_CYAN     "\033[1;36m"
 #define COLOR_CODE_WHITE    "\033[1;37m"
+
+/* ============================================================
+ * Log levels 
+ * ============================================================ */
 
 #define LOG_LEVEL_NONE      0u
 #define LOG_LEVEL_DEBUG     1U
@@ -12,6 +20,10 @@
 #define LOG_LEVEL_ERROR     3U
 
 #define LOG_LEVEL_SHORT LOG_LEVEL_DEBUG
+
+/* ============================================================
+ * Log macros 
+ * ============================================================ */
 
 #define LOG_MESSAGE(format, ...)                log_write(COLOR_CODE_WHITE, __FUNCTION__, format, ##__VA_ARGS__)
 #define LOG_DEBUG(format, ...)                  log_write(COLOR_CODE_CYAN, __FUNCTION__, format, ##__VA_ARGS__)
@@ -36,7 +48,11 @@
 #define LOG_ERROR_SHORT(format, ...)            do { } while (0)
 #endif
 
+/* ============================================================
+ * Log functions  
+ * ============================================================ */
+
 void log_write(const char* colorCode, const char* func, const char* format, ...);
 void log_write_no_header(const char* colorCode, const char* func, const char* format, ...);
 
-#endif
+#endif // _LOGGER_H_

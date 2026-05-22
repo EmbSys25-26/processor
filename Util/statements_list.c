@@ -4,9 +4,8 @@
 #include "asm_operations.h"
 
 
-#define INITIAL_SIZE    128     /* tamanho inicial da lista             */
-#define INCREMENT_SIZE  64      /* quanto cresce quando enche           */
-
+#define INITIAL_SIZE    127      // prime to reduce collision patterns
+#define INCREMENT_SIZE  61       // prime increment to help spread growth
 
 
 static statement_t *stmt_list    = NULL;
@@ -16,7 +15,7 @@ static uint32_t     location_counter = 0;
 static uint32_t     line_number  = 1;
 
 
-/* cresce a lista se estiver cheia */
+/// @brief function to grow the statements list when capacity cap is exceeded
 static void ensure_capacity(void)
 {
     if (stmt_count < stmt_cap)
@@ -24,14 +23,14 @@ static void ensure_capacity(void)
 
     stmt_cap += INCREMENT_SIZE;
     stmt_list = realloc(stmt_list, sizeof(statement_t) * stmt_cap);
-
     if (stmt_list == NULL) {
-        fprintf(stderr, "[ASSEMBLER] Erro: falha ao alocar memoria\n");
+        fprintf(stderr, "[ASSEMBLER]: Failed to allocate memory\n");
         exit(EXIT_FAILURE);
     }
 }
 
-/* preenche os campos comuns e insere na lista */
+/// @brief function to add a statement to the list and increase the line number
+/// @param s statement to be added to the list
 static void commit_statement(statement_t s)
 {
     ensure_capacity();
@@ -39,29 +38,28 @@ static void commit_statement(statement_t s)
     stmt_list[stmt_count++] = s;
 }
 
-/* actualiza o LC conforme o tipo de statement */
+/// @brief function to update the location counter based on the statement type
+/// @param opcode the opcode of the statement
 static void update_lc(uint8_t opcode)
 {
     if (opcode == DIR_ORG)
-        return;                          /* LC e definido pelo caller         */
+        return;                             // LC set by counter 
     else if (opcode == DIR_EQU)
-        return;                          /* .equ nao ocupa espaco em memoria  */
+        return;                             // .EQU is a directive
     else if (opcode == DIR_WORD)
-        location_counter += LC_WORD;     /* +4 bytes */
+        location_counter += LC_WORD;        // LC updated by +4 bytes
     else if (opcode == DIR_BYTE)
-        location_counter += LC_BYTE;     /* +1 byte  */
+        location_counter += LC_BYTE;        // LC updated by +1 byte
     else
-        location_counter += LC_INSTRUCTION; /* +2 bytes para toda a instrucao */
+        location_counter += LC_INSTRUCTION; // LC updated by +2 bytes
 }
 
-
-
+/// @brief initializes the statements list with default values
 void init_statements_list(void)
 {
     stmt_list = malloc(sizeof(statement_t) * INITIAL_SIZE);
-
     if (stmt_list == NULL) {
-        fprintf(stderr, "[ASSEMBLER] Erro: falha ao alocar memoria\n");
+        fprintf(stderr, "[ASSEMBLER]: Failed to allocate memory\n");
         exit(EXIT_FAILURE);
     }
 
@@ -71,6 +69,7 @@ void init_statements_list(void)
     line_number      = 1;
 }
 
+/// @brief  function to free the memory allocated for the statements list and reset the counters
 void delete_statements_list(void)
 {
     free(stmt_list);
@@ -79,164 +78,177 @@ void delete_statements_list(void)
     stmt_cap   = 0;
 }
 
-
-// RR
+/// @brief adds a RR statement to the list
+/// @param opcode the opcode of the instruction
+/// @param fn the function code
+/// @param rd the destination register
+/// @param rs the source register
 void add_statement_rr(uint8_t opcode, uint8_t fn,
                       uint8_t rd, uint8_t rs)
 {
-    statement_t s = {0};
-    s.opcode = opcode;
-    s.fn     = fn;
-    s.format = FMT_RR;
-    s.rd     = rd;
-    s.rs     = rs;
-    s.misc   = NO_TYPE;
+    statement_t s = {
+        .opcode = opcode,
+        .fn     = fn,
+        .format = FMT_RR,
+        .rd     = rd,
+        .rs     = rs,
+        .imm    = 0,
+        .cond   = 0,
+        .misc   = NO_TYPE,
+        .line_num = 0
+    };
     commit_statement(s);
     update_lc(opcode);
 }
 
-/*
- * FIX BUG5: adicionado parametro misc.
- *   misc = IMMEDIATE — imm e o valor numerico direto
- *   misc = LABEL     — imm guarda o indice na symbol table;
- *                      o code generator resolve no passo 2
- */
+/// @brief adds a RI statement to the list
+/// @param opcode the opcode of the instruction
+/// @param fn the function code
+/// @param rd the destination register
+/// @param imm the immediate value
+/// @param misc the operand type: IMMEDIATE, LABEL, etc (used for code generation)
 void add_statement_ri(uint8_t opcode, uint8_t fn,
                       uint8_t rd, int32_t imm, uint8_t misc)
 {
-    statement_t s = {0};
-    s.opcode = opcode;
-    s.fn     = fn;
-    s.format = FMT_RI;
-    s.rd     = rd;
-    s.imm    = imm;
-    s.misc   = misc;   /* FIX BUG5: era hardcoded IMMEDIATE */
+    statement_t s = {
+        .opcode = opcode,
+        .fn     = fn,
+        .format = FMT_RI,
+        .rd     = rd,
+        .imm    = imm,
+        .rs     = 0,
+        .cond   = 0,
+        .misc   = misc,
+        .line_num = 0
+    };
     commit_statement(s);
     update_lc(opcode);
 }
 
-/* RRI
- *
- * misc pode ser:
- *   IMMEDIATE — imediato numerico normal
- *   LABEL     — o imm guarda o indice na tabela de simbolos,
- *               resolvido no passo 2
- *   LINK      — instrucao guarda endereco de retorno (JAL com link)
- */
+/// @brief adds a RRI statement to the list
+/// @param opcode the instruction opcode
+/// @param rd the destination register
+/// @param rs the source register
+/// @param imm the immediate value
+/// @param misc the operand type: IMMEDIATE, LABEL, etc (used for code generation)
 void add_statement_rri(uint8_t opcode,
                        uint8_t rd, uint8_t rs, int32_t imm, uint8_t misc)
 {
-    statement_t s = {0};
-    s.opcode = opcode;
-    s.format = FMT_RRI;
-    s.rd     = rd;
-    s.rs     = rs;
-    s.imm    = imm;
-    s.misc   = misc;
+    statement_t s = {
+        .opcode = opcode,
+        .fn     = 0,
+        .format = FMT_RRI,
+        .rd     = rd,
+        .rs     = rs,
+        .imm    = imm,
+        .cond   = 0,
+        .misc   = misc,
+        .line_num = 0
+    };
     commit_statement(s);
     update_lc(opcode);
 }
 
-/*
- * FIX BUG2/BUG5: adicionado parametro misc.
- *   misc = IMMEDIATE — imm e o valor de 12 bits direto
- *   misc = LABEL     — imm guarda o indice na symbol table;
- *                      o code generator faz (addr >> 4) & 0xFFF no passo 2
- */
+/// @brief adds a I12 statement to the list
+/// @param opcode the instruction opcode
+/// @param imm the immediate value
+/// @param misc the operand type: IMMEDIATE, LABEL, etc (used for code generation)
 void add_statement_i12(uint8_t opcode, int32_t imm, uint8_t misc)
 {
-    statement_t s = {0};
-    s.opcode = opcode;
-    s.format = FMT_I12;
-    s.imm    = imm;
-    s.misc   = misc;   /* FIX BUG2/BUG5: era hardcoded IMMEDIATE */
+    statement_t s = {
+        .opcode = opcode,
+        .fn     = 0,
+        .format = FMT_I12,
+        .rd     = 0,
+        .rs     = 0,
+        .imm    = imm,
+        .cond   = 0,
+        .misc   = misc,
+        .line_num = 0
+    };
     commit_statement(s);
     update_lc(opcode);
 }
 
-/* BR
- *
- * misc pode ser:
- *   IMMEDIATE — deslocamento numerico directo
- *   LABEL     — o imm guarda indice na tabela de simbolos
- */
+/// @brief adds a BR statement to the list
+/// @param opcode the instruction opcode
+/// @param cond the condition code
+/// @param disp the displacement value
+/// @param misc the operand type: IMMEDIATE, LABEL, etc (used for code generation)
 void add_statement_br(uint8_t opcode, uint8_t cond,
                       int32_t disp, uint8_t misc)
 {
-    statement_t s = {0};
-    s.opcode = opcode;
-    s.format = FMT_BR;
-    s.cond   = cond;
-    s.imm    = disp;
-    s.misc   = misc;
+    statement_t s = {
+        .opcode = opcode,
+        .fn     = 0,
+        .format = FMT_BR,
+        .rd     = 0,
+        .rs     = 0,
+        .imm    = disp,
+        .cond   = cond,
+        .misc   = misc,
+        .line_num = 0
+    };
     commit_statement(s);
     update_lc(opcode);
 }
 
-//CLI / STI / NOP — sem operandos 
+/// @brief adds a FIXED statement to the list
+/// @param opcode the instruction opcode
 void add_statement_fixed(uint8_t opcode)
 {
-    statement_t s = {0};
-    s.opcode = opcode;
-    s.format = FMT_FIXED;
-    s.misc   = NO_TYPE;
+    statement_t s = {
+        .opcode = opcode,
+        .fn     = 0,
+        .format = FMT_FIXED,
+        .rd     = 0,
+        .rs     = 0,
+        .imm    = 0,
+        .cond   = 0,
+        .misc   = NO_TYPE,
+        .line_num = 0
+    };
     commit_statement(s);
     update_lc(opcode);
 }
 
-/* DIRETIVAS:
- *
- * .org  — value = novo endereco; LC e actualizado aqui
- * .equ  — value = valor da constante (ja resolvido pelo parser)
- * .word — value = valor a escrever em memoria (4 bytes)
- *         FIX BUG4: agora int32_t para nao truncar valores como 0xDEADBEEF
- * .byte — value = valor a escrever em memoria (1 byte)
- */
+/// @brief adds a directive statement to the list
+/// @param opcode the directive opcode
+/// @param value the value associated with the directive
 void add_statement_directive(uint8_t opcode, int32_t value)
 {
-    statement_t s = {0};
-    s.opcode = opcode;
-    s.format = FMT_FIXED;   /* diretivas nao geram instrucao */
-    s.imm    = value;
-    s.misc   = NO_TYPE;
+    statement_t s = {
+        .opcode = opcode,
+        .fn     = 0,
+        .format = FMT_FIXED,
+        .rd     = 0,
+        .rs     = 0,
+        .imm    = value,
+        .cond   = 0,
+        .misc   = NO_TYPE,
+        .line_num = 0
+    };
     commit_statement(s);
 
+    // if .ORG, set location counter to the specified value; otherwise, update LC based on the directive type
     if (opcode == DIR_ORG)
         location_counter = (uint32_t)value;
     else
         update_lc(opcode);
 }
 
-
-/*
-* getters
-*/
-
-uint32_t get_location_counter(void)
-{
-    return location_counter;
-}
-
-uint32_t get_statement_count(void)
-{
-    return stmt_count;
-}
-
+/* Getters */
+uint32_t get_location_counter(void) { return location_counter; }
+uint32_t get_statement_count(void) { return stmt_count; }
 statement_t get_statement(uint32_t index)
 {
     if (index >= stmt_count) {
-        fprintf(stderr, "[ASSEMBLER] Erro: indice %u fora dos limites\n", index);
+        fprintf(stderr, "[ASSEMBLER]: Error: index %u out of bounds\n", index);
         exit(EXIT_FAILURE);
     }
     return stmt_list[index];
 }
 
-void increment_line_number(uint32_t n)
-{
-    line_number += n;
-}
-
-void set_line_number(uint32_t n)
-{
-    line_number = n;
-}
+/* Setters */
+void increment_line_number(uint32_t n) { line_number += n; }
+void set_line_number(uint32_t n) { line_number = n; }

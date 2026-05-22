@@ -2,9 +2,10 @@
 %x INCOMMENT
 
 %{
-/*======================================================
-    INCLUDES & HEADERS
-======================================================*/
+/* ===========================================================
+ * Includes and headers
+ * ============================================================ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,31 +16,22 @@
 
 %}
 
-/*======================================================
-    DEFINICOES DE PADROES
-======================================================*/
+/* ===========================================================
+ * Definitions of regex patterns for tokens
+ * ============================================================ */
 
 digit           [0-9]
 hex             [a-fA-F]
-
 dec_number      {digit}+
 hex_number_x    0x({digit}|{hex})+
 neg_dec_number  -[0-9]+
 neg_hex_number  -0x({digit}|{hex})+
-
-/*
- * FIX BUG7: era [Rr]({digit}|[12]{digit}|3[01]) que aceitava r0-r31.
- * A ISA so tem r0-r15 (4 bits no encoding).
- * Novo padrao: r0-r9 ou r10-r15.
- */
 register        [Rr]([0-9]|1[0-5])
-
 identifier      [a-zA-Z_][a-zA-Z0-9_]*
-
+local_label     \.[a-zA-Z_][a-zA-Z0-9_]*
 newline         \n
 carriage        \r
 whitespace      [ \t]+
-
 
 %%
 
@@ -51,6 +43,7 @@ whitespace      [ \t]+
 "BLE"    { yylval.num = BLE_COND;   return TOKEN_BLE;   }
 "BLETU"  { yylval.num = BLETU_COND; return TOKEN_BLETU; }
 "BLEU"   { yylval.num = BLEU_COND;  return TOKEN_BLEU;  }
+"BLTU"   { yylval.num = BLTU_COND;  return TOKEN_BLEU;  }  /* hardware-name alias for BLEU */
 
 "ADD"    { return TOKEN_ADD; }
 "SUB"    { return TOKEN_SUB; }
@@ -93,48 +86,45 @@ whitespace      [ \t]+
 "#"      { return TOKEN_CARDINAL;    }
 ":"      { return TOKEN_COLON;       }
 
-{neg_dec_number}   { yylval.num = strtol(yytext, NULL, 10); return TOKEN_NUMBER; }
-{neg_hex_number}   { yylval.num = strtol(yytext, NULL, 16); return TOKEN_NUMBER; }
-{dec_number}       { yylval.num = strtol(yytext, NULL, 10); return TOKEN_NUMBER; }
-{hex_number_x}     { yylval.num = strtol(yytext, NULL, 16); return TOKEN_NUMBER; }
-{register}     { yylval.num = atoi(yytext + 1);          return TOKEN_REG;     }
-{identifier}   { yylval.num = add_symbol(yytext);         return TOKEN_IDENTIFIER; }
+{neg_dec_number}   { yylval.num = strtol(yytext, NULL, 10);     return TOKEN_NUMBER; }
+{neg_hex_number}   { yylval.num = strtol(yytext, NULL, 16);     return TOKEN_NUMBER; }
+{dec_number}       { yylval.num = strtol(yytext, NULL, 10);     return TOKEN_NUMBER; }
+{hex_number_x}     { yylval.num = strtol(yytext, NULL, 16);     return TOKEN_NUMBER; }
+{register}         { yylval.num = atoi(yytext + 1);             return TOKEN_REG;     }
+{identifier}       { yylval.num = add_symbol(yytext);           return TOKEN_IDENTIFIER; }
+{local_label}      { yylval.num = add_symbol(yytext);           return TOKEN_IDENTIFIER; }
 
 {newline}    { increment_line_number(1); }
-{whitespace} { /* ignorar espacos e tabs */ }
-{carriage}   { /* ignorar carriage return (Windows) */ }
+{whitespace} { /* ignore ws and tabs */ }
+{carriage}   { /* ignore carriage return (Windows) */ }
 
-"//".*  { /* comentario de linha */ }
-";".*   { /* comentario de linha */ }
+"//".*  { /* line comment */ }
+";".*   { /* line comment */ }
 
 <INITIAL>{
     "/*" { BEGIN(INCOMMENT); }
 }
 
 <INCOMMENT>{
-    <<EOF>>  { fprintf(stderr, "[ASSEMBLER] Erro: comentario nao terminado\n");
+    <<EOF>>  { fprintf(stderr, "[ASSEMBLER]: EOF in comment\n");
                return -1; }
     "*/"     { BEGIN(INITIAL); }
     "\n"     { increment_line_number(1); }
     [^*\n]+  ;
     "*"      ;
 }
-
-	/*    FIX BUG6: sem esta regra, um '*' isolado dentro de um comentario
-    (ex: "/* 5 * 3 */ //") nao era consumido por nenhuma regra e o Flex  usava a regra default, imprimindo o caracter para stdout. */
      
 <<EOF>> { return TOKEN_ENDFILE; }
 
-. { fprintf(stderr, "[ASSEMBLER] Erro: token invalido '%s'\n", yytext);
+. { fprintf(stderr, "[ASSEMBLER]: invalid token '%s'\n", yytext);
     return -1; }
 
 %%
 
-/*======================================================
-    FUNCOES DE SUPORTE
-======================================================*/
+/* ===========================================================
+ * Helper functions 
+ * ============================================================ */
 
-//Abre o ficheiro fonte e atribui a yyin.
 void init_lexer(const char *filename)
 {
     yyin = fopen(filename, "r");

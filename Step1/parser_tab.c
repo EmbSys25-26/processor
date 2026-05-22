@@ -159,10 +159,10 @@ enum yysymbol_kind_t
   YYSYMBOL_TOKEN_CARDINAL = 48,            /* TOKEN_CARDINAL  */
   YYSYMBOL_YYACCEPT = 49,                  /* $accept  */
   YYSYMBOL_program = 50,                   /* program  */
-  YYSYMBOL_lines = 51,                     /* lines  */
-  YYSYMBOL_line = 52,                      /* line  */
+  YYSYMBOL_stmt_list = 51,                 /* stmt_list  */
+  YYSYMBOL_stmt = 52,                      /* stmt  */
   YYSYMBOL_label_decl = 53,                /* label_decl  */
-  YYSYMBOL_stmt = 54,                      /* stmt  */
+  YYSYMBOL_instr_stmt = 54,                /* instr_stmt  */
   YYSYMBOL_add_stmt = 55,                  /* add_stmt  */
   YYSYMBOL_sub_stmt = 56,                  /* sub_stmt  */
   YYSYMBOL_and_stmt = 57,                  /* and_stmt  */
@@ -585,16 +585,16 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    53,    53,    58,    59,    62,    63,    64,    67,    75,
-      75,    75,    75,    75,    75,    75,    75,    75,    76,    76,
-      77,    77,    77,    77,    77,    77,    78,    78,    78,    78,
-      78,    78,    79,    80,    81,    81,    81,    85,    90,    95,
-     100,   105,   110,   115,   120,   125,   130,   135,   148,   152,
-     157,   161,   166,   170,   175,   179,   184,   188,   193,   197,
-     203,   208,   214,   218,   223,   227,   232,   236,   241,   245,
-     250,   254,   267,   271,   277,   281,   287,   292,   297,   303,
-     307,   311,   315,   319,   323,   330,   331,   332,   333,   334,
-     335,   336,   337,   341,   347
+       0,    46,    46,    51,    52,    55,    56,    57,    60,    66,
+      66,    66,    66,    66,    66,    66,    66,    66,    67,    67,
+      68,    68,    68,    68,    68,    68,    69,    69,    69,    69,
+      69,    69,    70,    71,    72,    72,    72,    79,    84,    89,
+      94,    99,   104,   109,   114,   119,   124,   129,   138,   142,
+     147,   151,   156,   160,   165,   169,   174,   178,   183,   187,
+     196,   200,   205,   209,   214,   218,   223,   227,   232,   236,
+     241,   245,   253,   257,   265,   269,   279,   284,   289,   298,
+     302,   306,   310,   314,   318,   323,   324,   325,   326,   327,
+     328,   329,   330,   333,   339
 };
 #endif
 
@@ -620,14 +620,14 @@ static const char *const yytname[] =
   "TOKEN_SB", "TOKEN_IMM_TOK", "TOKEN_BYTE", "TOKEN_WORD", "TOKEN_ORG",
   "TOKEN_EQU", "TOKEN_GETCC", "TOKEN_SETCC", "TOKEN_CLI", "TOKEN_STI",
   "TOKEN_NOP", "TOKEN_ENDFILE", "TOKEN_COMMA", "TOKEN_COLON",
-  "TOKEN_CARDINAL", "$accept", "program", "lines", "line", "label_decl",
-  "stmt", "add_stmt", "sub_stmt", "and_stmt", "xor_stmt", "adc_stmt",
-  "sbc_stmt", "cmp_stmt", "srl_stmt", "sra_stmt", "getcc_stmt",
-  "setcc_stmt", "rsubi_stmt", "andi_stmt", "xori_stmt", "adci_stmt",
-  "rsbci_stmt", "rcmpi_stmt", "addi_stmt", "jal_stmt", "lw_stmt",
-  "lb_stmt", "sw_stmt", "sb_stmt", "imm_stmt", "branch_stmt", "cli_stmt",
-  "sti_stmt", "nop_stmt", "directive", "branch_op", "expression",
-  "immediate_val", YY_NULLPTR
+  "TOKEN_CARDINAL", "$accept", "program", "stmt_list", "stmt",
+  "label_decl", "instr_stmt", "add_stmt", "sub_stmt", "and_stmt",
+  "xor_stmt", "adc_stmt", "sbc_stmt", "cmp_stmt", "srl_stmt", "sra_stmt",
+  "getcc_stmt", "setcc_stmt", "rsubi_stmt", "andi_stmt", "xori_stmt",
+  "adci_stmt", "rsbci_stmt", "rcmpi_stmt", "addi_stmt", "jal_stmt",
+  "lw_stmt", "lb_stmt", "sw_stmt", "sb_stmt", "imm_stmt", "branch_stmt",
+  "cli_stmt", "sti_stmt", "nop_stmt", "directive", "branch_op",
+  "expression", "immediate_val", YY_NULLPTR
 };
 
 static const char *
@@ -1274,8 +1274,8 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 2: /* program: lines TOKEN_ENDFILE  */
-#line 54 "Step1/parser.y"
+  case 2: /* program: stmt_list TOKEN_ENDFILE  */
+#line 47 "Step1/parser.y"
                 {
                     return 0;
                 }
@@ -1283,470 +1283,465 @@ yyreduce:
     break;
 
   case 8: /* label_decl: TOKEN_IDENTIFIER TOKEN_COLON  */
-#line 68 "Step1/parser.y"
+#line 61 "Step1/parser.y"
                 {
-                    /* gets the current LC and associates it to the declared label */
                     uint32_t current_lc = get_location_counter();
                     set_symbol_value((yyvsp[-1].num), (int16_t)current_lc);    
                 }
-#line 1293 "Step1/parser_tab.c"
+#line 1292 "Step1/parser_tab.c"
     break;
 
   case 37: /* add_stmt: TOKEN_ADD TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 86 "Step1/parser.y"
+#line 80 "Step1/parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, ADD_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1301 "Step1/parser_tab.c"
+#line 1300 "Step1/parser_tab.c"
     break;
 
   case 38: /* sub_stmt: TOKEN_SUB TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 91 "Step1/parser.y"
+#line 85 "Step1/parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, SUB_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1309 "Step1/parser_tab.c"
+#line 1308 "Step1/parser_tab.c"
     break;
 
   case 39: /* and_stmt: TOKEN_AND TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 96 "Step1/parser.y"
+#line 90 "Step1/parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, AND_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1317 "Step1/parser_tab.c"
+#line 1316 "Step1/parser_tab.c"
     break;
 
   case 40: /* xor_stmt: TOKEN_XOR TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 101 "Step1/parser.y"
+#line 95 "Step1/parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, XOR_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1325 "Step1/parser_tab.c"
+#line 1324 "Step1/parser_tab.c"
     break;
 
   case 41: /* adc_stmt: TOKEN_ADC TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 106 "Step1/parser.y"
+#line 100 "Step1/parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, ADC_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1333 "Step1/parser_tab.c"
+#line 1332 "Step1/parser_tab.c"
     break;
 
   case 42: /* sbc_stmt: TOKEN_SBC TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 111 "Step1/parser.y"
+#line 105 "Step1/parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, SBC_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1341 "Step1/parser_tab.c"
+#line 1340 "Step1/parser_tab.c"
     break;
 
   case 43: /* cmp_stmt: TOKEN_CMP TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 116 "Step1/parser.y"
+#line 110 "Step1/parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, CMP_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1349 "Step1/parser_tab.c"
+#line 1348 "Step1/parser_tab.c"
     break;
 
   case 44: /* srl_stmt: TOKEN_SRL TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 121 "Step1/parser.y"
+#line 115 "Step1/parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, SRL_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1357 "Step1/parser_tab.c"
+#line 1356 "Step1/parser_tab.c"
     break;
 
   case 45: /* sra_stmt: TOKEN_SRA TOKEN_REG TOKEN_COMMA TOKEN_REG  */
-#line 126 "Step1/parser.y"
+#line 120 "Step1/parser.y"
                 { 
                     add_statement_rr(RR_OPCODE, SRA_FN, (yyvsp[-2].num), (yyvsp[0].num));
                 }
-#line 1365 "Step1/parser_tab.c"
+#line 1364 "Step1/parser_tab.c"
     break;
 
   case 46: /* getcc_stmt: TOKEN_GETCC TOKEN_REG  */
-#line 131 "Step1/parser.y"
+#line 125 "Step1/parser.y"
                 { 
                     add_statement_rr(CC_OPCODE, GETCC_FN, (yyvsp[0].num), 0);
                 }
-#line 1373 "Step1/parser_tab.c"
+#line 1372 "Step1/parser_tab.c"
     break;
 
   case 47: /* setcc_stmt: TOKEN_SETCC TOKEN_REG  */
-#line 136 "Step1/parser.y"
+#line 130 "Step1/parser.y"
                 { 
                     add_statement_rr(CC_OPCODE, SETCC_FN, 0, (yyvsp[0].num));
                 }
-#line 1381 "Step1/parser_tab.c"
+#line 1380 "Step1/parser_tab.c"
     break;
 
   case 48: /* rsubi_stmt: TOKEN_RSUBI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 149 "Step1/parser.y"
+#line 139 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RSUBI_FN, (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1389 "Step1/parser_tab.c"
+#line 1388 "Step1/parser_tab.c"
     break;
 
   case 49: /* rsubi_stmt: TOKEN_RSUBI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 153 "Step1/parser.y"
+#line 143 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RSUBI_FN, (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1397 "Step1/parser_tab.c"
+#line 1396 "Step1/parser_tab.c"
     break;
 
   case 50: /* andi_stmt: TOKEN_ANDI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 158 "Step1/parser.y"
+#line 148 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, ANDI_FN, (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1405 "Step1/parser_tab.c"
+#line 1404 "Step1/parser_tab.c"
     break;
 
   case 51: /* andi_stmt: TOKEN_ANDI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 162 "Step1/parser.y"
+#line 152 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, ANDI_FN, (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1413 "Step1/parser_tab.c"
+#line 1412 "Step1/parser_tab.c"
     break;
 
   case 52: /* xori_stmt: TOKEN_XORI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 167 "Step1/parser.y"
+#line 157 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, XORI_FN, (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1421 "Step1/parser_tab.c"
+#line 1420 "Step1/parser_tab.c"
     break;
 
   case 53: /* xori_stmt: TOKEN_XORI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 171 "Step1/parser.y"
+#line 161 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, XORI_FN, (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1429 "Step1/parser_tab.c"
+#line 1428 "Step1/parser_tab.c"
     break;
 
   case 54: /* adci_stmt: TOKEN_ADCI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 176 "Step1/parser.y"
+#line 166 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, ADCI_FN, (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1437 "Step1/parser_tab.c"
+#line 1436 "Step1/parser_tab.c"
     break;
 
   case 55: /* adci_stmt: TOKEN_ADCI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 180 "Step1/parser.y"
+#line 170 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, ADCI_FN, (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1445 "Step1/parser_tab.c"
+#line 1444 "Step1/parser_tab.c"
     break;
 
   case 56: /* rsbci_stmt: TOKEN_RSBCI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 185 "Step1/parser.y"
+#line 175 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RSBCI_FN, (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1453 "Step1/parser_tab.c"
+#line 1452 "Step1/parser_tab.c"
     break;
 
   case 57: /* rsbci_stmt: TOKEN_RSBCI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 189 "Step1/parser.y"
+#line 179 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RSBCI_FN, (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1461 "Step1/parser_tab.c"
+#line 1460 "Step1/parser_tab.c"
     break;
 
   case 58: /* rcmpi_stmt: TOKEN_RCMPI TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 194 "Step1/parser.y"
+#line 184 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RCMPI_FN, (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1469 "Step1/parser_tab.c"
+#line 1468 "Step1/parser_tab.c"
     break;
 
   case 59: /* rcmpi_stmt: TOKEN_RCMPI TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 198 "Step1/parser.y"
+#line 188 "Step1/parser.y"
                 { 
                     add_statement_ri(RI_OPCODE, RCMPI_FN, (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1477 "Step1/parser_tab.c"
+#line 1476 "Step1/parser_tab.c"
     break;
 
   case 60: /* addi_stmt: TOKEN_ADDI TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 204 "Step1/parser.y"
+#line 197 "Step1/parser.y"
                 { 
-                    /* the value is a number saved as IMMEDIATE, no Step 2 needed */
                     add_statement_rri(ADDI_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1486 "Step1/parser_tab.c"
+#line 1484 "Step1/parser_tab.c"
     break;
 
   case 61: /* addi_stmt: TOKEN_ADDI TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 209 "Step1/parser.y"
+#line 201 "Step1/parser.y"
                 { 
-                    /* the value is a Label. forwarding the symbol table index ($6) to the IR, to be resolved in Step 2. */
                     add_statement_rri(ADDI_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1495 "Step1/parser_tab.c"
+#line 1492 "Step1/parser_tab.c"
     break;
 
   case 62: /* jal_stmt: TOKEN_JAL TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 215 "Step1/parser.y"
+#line 206 "Step1/parser.y"
                 { 
                     add_statement_rri(JAL_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1503 "Step1/parser_tab.c"
+#line 1500 "Step1/parser_tab.c"
     break;
 
   case 63: /* jal_stmt: TOKEN_JAL TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 219 "Step1/parser.y"
+#line 210 "Step1/parser.y"
                 { 
                     add_statement_rri(JAL_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1511 "Step1/parser_tab.c"
+#line 1508 "Step1/parser_tab.c"
     break;
 
   case 64: /* lw_stmt: TOKEN_LW TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 224 "Step1/parser.y"
+#line 215 "Step1/parser.y"
                 { 
                     add_statement_rri(LW_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1519 "Step1/parser_tab.c"
+#line 1516 "Step1/parser_tab.c"
     break;
 
   case 65: /* lw_stmt: TOKEN_LW TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 228 "Step1/parser.y"
+#line 219 "Step1/parser.y"
                 { 
                     add_statement_rri(LW_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1527 "Step1/parser_tab.c"
+#line 1524 "Step1/parser_tab.c"
     break;
 
   case 66: /* lb_stmt: TOKEN_LB TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 233 "Step1/parser.y"
+#line 224 "Step1/parser.y"
                 { 
                     add_statement_rri(LB_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1535 "Step1/parser_tab.c"
+#line 1532 "Step1/parser_tab.c"
     break;
 
   case 67: /* lb_stmt: TOKEN_LB TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 237 "Step1/parser.y"
+#line 228 "Step1/parser.y"
                 { 
                     add_statement_rri(LB_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1543 "Step1/parser_tab.c"
+#line 1540 "Step1/parser_tab.c"
     break;
 
   case 68: /* sw_stmt: TOKEN_SW TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 242 "Step1/parser.y"
+#line 233 "Step1/parser.y"
                 { 
                     add_statement_rri(SW_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1551 "Step1/parser_tab.c"
+#line 1548 "Step1/parser_tab.c"
     break;
 
   case 69: /* sw_stmt: TOKEN_SW TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 246 "Step1/parser.y"
+#line 237 "Step1/parser.y"
                 { 
                     add_statement_rri(SW_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1559 "Step1/parser_tab.c"
+#line 1556 "Step1/parser_tab.c"
     break;
 
   case 70: /* sb_stmt: TOKEN_SB TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA immediate_val  */
-#line 251 "Step1/parser.y"
+#line 242 "Step1/parser.y"
                 { 
                     add_statement_rri(SB_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1567 "Step1/parser_tab.c"
+#line 1564 "Step1/parser_tab.c"
     break;
 
   case 71: /* sb_stmt: TOKEN_SB TOKEN_REG TOKEN_COMMA TOKEN_REG TOKEN_COMMA TOKEN_IDENTIFIER  */
-#line 255 "Step1/parser.y"
+#line 246 "Step1/parser.y"
                 { 
                     add_statement_rri(SB_OPCODE, (yyvsp[-4].num), (yyvsp[-2].num), (yyvsp[0].num), LABEL);
                 }
-#line 1575 "Step1/parser_tab.c"
+#line 1572 "Step1/parser_tab.c"
     break;
 
   case 72: /* imm_stmt: TOKEN_IMM_TOK immediate_val  */
-#line 268 "Step1/parser.y"
+#line 254 "Step1/parser.y"
                 { 
                     add_statement_i12(IMM_OPCODE, (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1583 "Step1/parser_tab.c"
+#line 1580 "Step1/parser_tab.c"
     break;
 
   case 73: /* imm_stmt: TOKEN_IMM_TOK TOKEN_IDENTIFIER  */
-#line 272 "Step1/parser.y"
+#line 258 "Step1/parser.y"
                 { 
                     add_statement_i12(IMM_OPCODE, (yyvsp[0].num), LABEL);
                 }
-#line 1591 "Step1/parser_tab.c"
+#line 1588 "Step1/parser_tab.c"
     break;
 
   case 74: /* branch_stmt: branch_op immediate_val  */
-#line 278 "Step1/parser.y"
+#line 266 "Step1/parser.y"
                 { 
                     add_statement_br(BR_OPCODE, (yyvsp[-1].num), (yyvsp[0].num), IMMEDIATE);
                 }
-#line 1599 "Step1/parser_tab.c"
+#line 1596 "Step1/parser_tab.c"
     break;
 
   case 75: /* branch_stmt: branch_op TOKEN_IDENTIFIER  */
-#line 282 "Step1/parser.y"
+#line 270 "Step1/parser.y"
                 { 
                     /* branch targets are stored as indexes (LABEL flag) for relative displacement calculation in Step 2 */
                     add_statement_br(BR_OPCODE, (yyvsp[-1].num), (yyvsp[0].num), LABEL);
                 }
-#line 1608 "Step1/parser_tab.c"
+#line 1605 "Step1/parser_tab.c"
     break;
 
   case 76: /* cli_stmt: TOKEN_CLI  */
-#line 288 "Step1/parser.y"
+#line 280 "Step1/parser.y"
                 { 
                     add_statement_fixed(CLI_OPCODE);
                 }
-#line 1616 "Step1/parser_tab.c"
+#line 1613 "Step1/parser_tab.c"
     break;
 
   case 77: /* sti_stmt: TOKEN_STI  */
-#line 293 "Step1/parser.y"
+#line 285 "Step1/parser.y"
                 { 
                     add_statement_fixed(STI_OPCODE);
                 }
-#line 1624 "Step1/parser_tab.c"
+#line 1621 "Step1/parser_tab.c"
     break;
 
   case 78: /* nop_stmt: TOKEN_NOP  */
-#line 298 "Step1/parser.y"
+#line 290 "Step1/parser.y"
                 { 
                     add_statement_fixed(NOP_OPCODE);
                 }
-#line 1632 "Step1/parser_tab.c"
+#line 1629 "Step1/parser_tab.c"
     break;
 
   case 79: /* directive: TOKEN_ORG expression  */
-#line 304 "Step1/parser.y"
+#line 299 "Step1/parser.y"
                 { 
                     add_statement_directive(DIR_ORG, (yyvsp[0].num));
                 }
-#line 1640 "Step1/parser_tab.c"
+#line 1637 "Step1/parser_tab.c"
     break;
 
   case 80: /* directive: TOKEN_WORD expression  */
-#line 308 "Step1/parser.y"
+#line 303 "Step1/parser.y"
                 { 
                     add_statement_directive(DIR_WORD, (yyvsp[0].num));
                 }
-#line 1648 "Step1/parser_tab.c"
+#line 1645 "Step1/parser_tab.c"
     break;
 
   case 81: /* directive: TOKEN_WORD TOKEN_IDENTIFIER  */
-#line 312 "Step1/parser.y"
+#line 307 "Step1/parser.y"
                 { 
                     add_statement_directive(DIR_WORD, get_symbol_value((yyvsp[0].num)));
                 }
-#line 1656 "Step1/parser_tab.c"
+#line 1653 "Step1/parser_tab.c"
     break;
 
   case 82: /* directive: TOKEN_BYTE expression  */
-#line 316 "Step1/parser.y"
+#line 311 "Step1/parser.y"
                 { 
                     add_statement_directive(DIR_BYTE, (yyvsp[0].num));
                 }
-#line 1664 "Step1/parser_tab.c"
+#line 1661 "Step1/parser_tab.c"
     break;
 
   case 83: /* directive: TOKEN_BYTE TOKEN_IDENTIFIER  */
-#line 320 "Step1/parser.y"
+#line 315 "Step1/parser.y"
                 { 
                     add_statement_directive(DIR_BYTE, get_symbol_value((yyvsp[0].num)));
                 }
-#line 1672 "Step1/parser_tab.c"
+#line 1669 "Step1/parser_tab.c"
     break;
 
   case 84: /* directive: TOKEN_IDENTIFIER TOKEN_EQU expression  */
-#line 324 "Step1/parser.y"
+#line 319 "Step1/parser.y"
                 {
-                    /* assigns a constant value to a symbol explicitly */
                     set_symbol_value((yyvsp[-2].num), (yyvsp[0].num));
-                    add_statement_directive(DIR_EQU, (yyvsp[0].num)); 
                 }
-#line 1682 "Step1/parser_tab.c"
+#line 1677 "Step1/parser_tab.c"
     break;
 
   case 85: /* branch_op: TOKEN_BR  */
-#line 330 "Step1/parser.y"
+#line 323 "Step1/parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1688 "Step1/parser_tab.c"
+#line 1683 "Step1/parser_tab.c"
     break;
 
   case 86: /* branch_op: TOKEN_BEQ  */
-#line 331 "Step1/parser.y"
+#line 324 "Step1/parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1694 "Step1/parser_tab.c"
+#line 1689 "Step1/parser_tab.c"
     break;
 
   case 87: /* branch_op: TOKEN_BC  */
-#line 332 "Step1/parser.y"
+#line 325 "Step1/parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1700 "Step1/parser_tab.c"
+#line 1695 "Step1/parser_tab.c"
     break;
 
   case 88: /* branch_op: TOKEN_BV  */
-#line 333 "Step1/parser.y"
+#line 326 "Step1/parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1706 "Step1/parser_tab.c"
+#line 1701 "Step1/parser_tab.c"
     break;
 
   case 89: /* branch_op: TOKEN_BLT  */
-#line 334 "Step1/parser.y"
+#line 327 "Step1/parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1712 "Step1/parser_tab.c"
+#line 1707 "Step1/parser_tab.c"
     break;
 
   case 90: /* branch_op: TOKEN_BLE  */
-#line 335 "Step1/parser.y"
+#line 328 "Step1/parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1718 "Step1/parser_tab.c"
+#line 1713 "Step1/parser_tab.c"
     break;
 
   case 91: /* branch_op: TOKEN_BLETU  */
-#line 336 "Step1/parser.y"
+#line 329 "Step1/parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1724 "Step1/parser_tab.c"
+#line 1719 "Step1/parser_tab.c"
     break;
 
   case 92: /* branch_op: TOKEN_BLEU  */
-#line 337 "Step1/parser.y"
+#line 330 "Step1/parser.y"
                             { (yyval.num) = (yyvsp[0].num); }
-#line 1730 "Step1/parser_tab.c"
+#line 1725 "Step1/parser_tab.c"
     break;
 
   case 93: /* expression: TOKEN_NUMBER  */
-#line 342 "Step1/parser.y"
+#line 334 "Step1/parser.y"
                 { 
                     (yyval.num) = (yyvsp[0].num);
                 }
-#line 1738 "Step1/parser_tab.c"
+#line 1733 "Step1/parser_tab.c"
     break;
 
   case 94: /* immediate_val: TOKEN_CARDINAL expression  */
-#line 348 "Step1/parser.y"
+#line 340 "Step1/parser.y"
                 { 
                     (yyval.num) = (yyvsp[0].num);
                 }
-#line 1746 "Step1/parser_tab.c"
+#line 1741 "Step1/parser_tab.c"
     break;
 
 
-#line 1750 "Step1/parser_tab.c"
+#line 1745 "Step1/parser_tab.c"
 
       default: break;
     }
@@ -1939,7 +1934,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 353 "Step1/parser.y"
+#line 345 "Step1/parser.y"
 
 
 void yyerror(const char *s) {

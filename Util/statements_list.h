@@ -3,76 +3,63 @@
 
 #include <stdint.h>
 
-/*
- * Campos:
- *   opcode   — qual a instrucao/diretiva (usa defines de asm_operations.h)
- *   fn       — fn code para instrucoes RR e RI (0 se nao se aplica)
- *   format   — formato da instrucao: 'R','I','M','J','B','F'
- *   rd       — registo destino
- *   rs       — registo fonte
- *   imm      — imediato (4, 8 ou 12 bits conforme o formato)
- *              FIX BUG4: int32_t para suportar .word 32-bit sem truncar
- *              FIX BUG5: em casos LABEL guarda o indice da symbol table
- *   cond     — condition code para instrucoes BR
- *   misc     — tipo do operando: NO_TYPE, IMMEDIATE, LABEL, LINK
- *   line_num — numero da linha no .asm (para mensagens de erro)
- */
+/* ============================================================
+ * Fields in statement_t:
+ *   opcode   — which instruction/directive (4 bits for opcode field)
+ *   fn       — fn code for RI instructions (4 bits for fn field)
+ *   format   — instruction format: 'R','I','M','J','B','F'
+ *   rd       — destination register
+ *   rs       — source register
+ *   imm      — immediate value (4, 8 or 12 bits depending on the format)
+ *   cond     — condition code for BR instructions
+ *   misc     — operand type: NO_TYPE, IMMEDIATE, LABEL, LINK
+ *   line_num — line number in source code (for error reporting)
+ * ============================================================ */
 
-typedef struct {
+struct statement_s {
     uint8_t  opcode;
     uint8_t  fn;
     char     format;
     uint8_t  rd;
     uint8_t  rs;
-    int32_t  imm;       /* FIX BUG4: era int16_t — agora int32_t */
+    int32_t  imm;
     uint8_t  cond;
     uint8_t  misc;
     uint32_t line_num;
-} statement_t;
+};
 
+typedef struct statement_s statement_t;
 
-/* inicializa a lista — chamar antes de qualquer outra funcao */
+/* ===========================================================
+ * Statement list functions
+ * ============================================================ */
+
 void init_statements_list(void);
-
-/* liberta a memoria alocada — chamar no fim */
 void delete_statements_list(void);
-
-/* adiciona uma instrucao RR  (ex: ADD, SUB, CMP...) */
 void add_statement_rr(uint8_t opcode, uint8_t fn,
                       uint8_t rd, uint8_t rs);
-
-/* adiciona uma instrucao RI  (ex: ANDI, XORI...)
- * FIX BUG5: adicionado parametro misc para suportar LABEL (forward ref) */
 void add_statement_ri(uint8_t opcode, uint8_t fn,
                       uint8_t rd, int32_t imm, uint8_t misc);
-
-/* adiciona uma instrucao RRI (ex: ADDI, LW, SW, JAL...) */
 void add_statement_rri(uint8_t opcode,
                        uint8_t rd, uint8_t rs, int32_t imm, uint8_t misc);
-
-/* adiciona uma instrucao I12 (IMM)
- * FIX BUG2/BUG5: adicionado parametro misc para suportar LABEL */
 void add_statement_i12(uint8_t opcode, int32_t imm, uint8_t misc);
-
-/* adiciona uma instrucao BR  (ex: BEQ, BLT...) */
 void add_statement_br(uint8_t opcode, uint8_t cond, int32_t disp, uint8_t misc);
-
-/* adiciona uma instrucao FIXED (CLI, STI, NOP) */
 void add_statement_fixed(uint8_t opcode);
-
-/* adiciona uma diretiva (DIR_ORG, DIR_EQU, DIR_WORD, DIR_BYTE)
- * FIX BUG4: value e int32_t para suportar .word sem truncar */
 void add_statement_directive(uint8_t opcode, int32_t value);
 
+/* ===========================================================
+ * Getter functions
+ * ============================================================ */
 
-/* getters */
 uint32_t        get_location_counter(void);
 uint32_t        get_statement_count(void);
 statement_t     get_statement(uint32_t index);
 
-/* linha actual — chamado pelo lexer */
+/* ===========================================================
+ * Setter functions
+ * ============================================================ */
+
 void            increment_line_number(uint32_t n);
 void            set_line_number(uint32_t n);
-
 
 #endif /* STATEMENTS_LIST_H */
