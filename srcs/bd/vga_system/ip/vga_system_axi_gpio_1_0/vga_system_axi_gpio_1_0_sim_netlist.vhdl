@@ -1,11 +1,11 @@
 -- Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 -- Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
--- Tool Version: Vivado v.2025.1.1 (lin64) Build 6233196 Thu Sep 11 21:27:11 MDT 2025
--- Date        : Sun May 17 13:49:33 2026
+-- Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
+-- Date        : Fri May 22 16:59:19 2026
 -- Host        : armeiro-IdeaPad-Flex-5-14ALC05 running 64-bit Ubuntu 24.04.4 LTS
--- Command     : write_vhdl -force -mode funcsim -rename_top vga_system_axi_gpio_1_0 -prefix
---               vga_system_axi_gpio_1_0_ vga_system_axi_gpio_1_0_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim
+--               /home/armeiro/Documents/projeto_processor/processor-pipeline-dynamic-branch-predictor/srcs/bd/vga_system/ip/vga_system_axi_gpio_1_0/vga_system_axi_gpio_1_0_sim_netlist.vhdl
 -- Design      : vga_system_axi_gpio_1_0
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -43,6 +43,8 @@ entity vga_system_axi_gpio_1_0_address_decoder is
     \Not_Dual.ALLOUT0_ND.READ_REG_GEN[0].reg2_reg\ : in STD_LOGIC;
     \Not_Dual.ALLOUT0_ND.READ_REG_GEN[0].reg1_reg\ : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_axi_gpio_1_0_address_decoder : entity is "address_decoder";
 end vga_system_axi_gpio_1_0_address_decoder;
 
 architecture STRUCTURE of vga_system_axi_gpio_1_0_address_decoder is
@@ -326,6 +328,8 @@ entity vga_system_axi_gpio_1_0_xpm_cdc_array_single is
   attribute DEST_SYNC_FF of vga_system_axi_gpio_1_0_xpm_cdc_array_single : entity is 4;
   attribute INIT_SYNC_FF : integer;
   attribute INIT_SYNC_FF of vga_system_axi_gpio_1_0_xpm_cdc_array_single : entity is 0;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_axi_gpio_1_0_xpm_cdc_array_single : entity is "xpm_cdc_array_single";
   attribute SIM_ASSERT_CHK : integer;
   attribute SIM_ASSERT_CHK of vga_system_axi_gpio_1_0_xpm_cdc_array_single : entity is 0;
   attribute SRC_INPUT_REG : integer;
@@ -485,6 +489,8 @@ entity vga_system_axi_gpio_1_0_GPIO_Core is
     \Not_Dual.gpio_OE_reg[0]_1\ : in STD_LOGIC;
     \Not_Dual.gpio_Data_Out_reg[0]_0\ : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_axi_gpio_1_0_GPIO_Core : entity is "GPIO_Core";
 end vga_system_axi_gpio_1_0_GPIO_Core;
 
 architecture STRUCTURE of vga_system_axi_gpio_1_0_GPIO_Core is
@@ -821,6 +827,8 @@ entity vga_system_axi_gpio_1_0_slave_attachment is
     s_axi_araddr : in STD_LOGIC_VECTOR ( 2 downto 0 );
     s_axi_awaddr : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_axi_gpio_1_0_slave_attachment : entity is "slave_attachment";
 end vga_system_axi_gpio_1_0_slave_attachment;
 
 architecture STRUCTURE of vga_system_axi_gpio_1_0_slave_attachment is
@@ -1474,6 +1482,8 @@ entity vga_system_axi_gpio_1_0_axi_lite_ipif is
     s_axi_araddr : in STD_LOGIC_VECTOR ( 2 downto 0 );
     s_axi_awaddr : in STD_LOGIC_VECTOR ( 2 downto 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_axi_gpio_1_0_axi_lite_ipif : entity is "axi_lite_ipif";
 end vga_system_axi_gpio_1_0_axi_lite_ipif;
 
 architecture STRUCTURE of vga_system_axi_gpio_1_0_axi_lite_ipif is
@@ -1577,6 +1587,8 @@ entity vga_system_axi_gpio_1_0_axi_gpio is
   attribute C_TRI_DEFAULT of vga_system_axi_gpio_1_0_axi_gpio : entity is "32'b11111111111111111111111111111111";
   attribute C_TRI_DEFAULT_2 : string;
   attribute C_TRI_DEFAULT_2 of vga_system_axi_gpio_1_0_axi_gpio : entity is "32'b11111111111111111111111111111111";
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_axi_gpio_1_0_axi_gpio : entity is "axi_gpio";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of vga_system_axi_gpio_1_0_axi_gpio : entity is "yes";
   attribute ip_group : string;
@@ -1865,7 +1877,7 @@ entity vga_system_axi_gpio_1_0 is
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of vga_system_axi_gpio_1_0 : entity is "yes";
   attribute x_core_info : string;
-  attribute x_core_info of vga_system_axi_gpio_1_0 : entity is "axi_gpio,Vivado 2025.1.1";
+  attribute x_core_info of vga_system_axi_gpio_1_0 : entity is "axi_gpio,Vivado 2025.1";
 end vga_system_axi_gpio_1_0;
 
 architecture STRUCTURE of vga_system_axi_gpio_1_0 is

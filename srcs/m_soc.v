@@ -52,16 +52,16 @@ module soc(
     localparam [15:0] _reset_vec = `CPU_RESET_VEC;
 
     wire _insn_ce;
-    wire [15:0] _PC;
+    (* mark_debug = "true" *) wire [15:0] _PC;
     wire _hit;
 
-    wire [15:0] _d_ad;
-    wire _sw;
+    (* mark_debug = "true" *) wire [15:0] _d_ad;
+    (* mark_debug = "true" *) wire _sw;
     wire _sb;
     wire _lw;
     wire _lb;
 
-    wire [15:0] _cpu_do;
+    (* mark_debug = "true" *) wire [15:0] _cpu_do;
     wire [15:0] _cpu_di;
 
     wire [7:0] _imem_dout_h;
@@ -89,8 +89,8 @@ module soc(
     wire [15:0] _mem_dout;
     wire [15:0] _mem_load_data;
 
-    wire _io_sel;
-    wire _io_we;
+    (* mark_debug = "true" *) wire _io_sel;
+    (* mark_debug = "true" *) wire _io_we;
     wire _io_re;
     wire [15:0] _io_wdata;
     wire [15:0] _io_rdata;
@@ -111,36 +111,43 @@ module soc(
      // Simulation Clock
      wire i_clkk  = i_clk;
      wire _clkVGA = i_clk;
+     wire _locked = 1'b1; // Simulate an instant lock
  `else
      wire i_clkk;
-     wire _clkVGA; // 25.175 MHz for vga
-     wire locked;
- 
+     wire _clkVGA;
+     wire _locked;
      clk_wiz_0 clk_gen (
          .clk_out1 (i_clkk),
          .clk_out2 (_clkVGA),
          .reset    (1'b0),
-         .locked   (locked),
+         .locked   (_locked),
          .clk_in1  (i_clk)
      );
  `endif
+
 /*************************************************************************************
- * 2.1 Static Assignments
+ * 2.1 Static Assignments & Clean Reset
  ************************************************************************************/
-   // assign _hit = ~i_rst;
-  
-    wire _total_rst = i_rst | _wdt_rst_req; // watchdog reset or external reset
+    // 1. Hold reset high if the Watchdog fires, external reset is pressed, OR the PLL is not locked yet
+    wire _raw_rst = i_rst | _wdt_rst_req | ~_locked;
+    
+    // 2. Register the reset to the system clock to prevent LUT glitches (Fixes LUTAR-1)
+    (* mark_debug = "true" *) reg  _total_rst;
+    always @(posedge i_clkk) begin
+        _total_rst <= _raw_rst;
+    end
+
     assign _hit = ~_total_rst;
     assign _i_ad_rst = _reset_vec;
-
     assign _imem_dout = {_imem_dout_h, _imem_dout_l};
     assign _imem_invalid = ~|_imem_dout;
 
 /*************************************************************************************
  * 2.2 Instruction Fetch Latch
  ************************************************************************************/
-    always @(posedge i_clk) begin
-        if (i_rst | _imem_invalid) begin
+    // CHANGED: Now correctly uses the internal buffered clock
+    always @(posedge i_clkk) begin
+        if (_total_rst | _imem_invalid) begin
             _insn_q <= _default_nop;
         end else if (_insn_ce) begin
             _insn_q <= _imem_dout;
@@ -151,16 +158,18 @@ module soc(
  * 2.3 Load Ready Tracking
  ************************************************************************************/
     reg _insn_ce_r;
-    //RECENTLY ADDED
-    always @(posedge i_clk) begin
-        if (i_rst)
+    
+    // CHANGED: Now correctly uses the internal buffered clock
+    always @(posedge i_clkk) begin
+        if (_total_rst)
             _insn_ce_r <= 1'b0;
         else
             _insn_ce_r <= _insn_ce;
     end
     
-    always @(posedge i_clk) begin
-        if (i_rst) begin
+    // CHANGED: Now correctly uses the internal buffered clock
+    always @(posedge i_clkk) begin
+        if (_total_rst) begin
             _loaded <= 1'b0;
         end else if (_insn_ce_r) begin
             _loaded <= 1'b0;

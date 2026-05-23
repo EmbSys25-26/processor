@@ -1,8 +1,8 @@
 -- Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 -- Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
--- Tool Version: Vivado v.2025.1.1 (lin64) Build 6233196 Thu Sep 11 21:27:11 MDT 2025
--- Date        : Mon May 18 18:36:08 2026
+-- Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
+-- Date        : Fri May 22 16:59:21 2026
 -- Host        : armeiro-IdeaPad-Flex-5-14ALC05 running 64-bit Ubuntu 24.04.4 LTS
 -- Command     : write_vhdl -force -mode funcsim
 --               /home/armeiro/Documents/projeto_processor/processor-pipeline-dynamic-branch-predictor/srcs/bd/vga_system/ip/vga_system_processing_system7_0_0/vga_system_processing_system7_0_0_sim_netlist.vhdl
@@ -5451,7 +5451,7 @@ entity vga_system_processing_system7_0_0 is
   attribute DowngradeIPIdentifiedWarnings : string;
   attribute DowngradeIPIdentifiedWarnings of vga_system_processing_system7_0_0 : entity is "yes";
   attribute X_CORE_INFO : string;
-  attribute X_CORE_INFO of vga_system_processing_system7_0_0 : entity is "processing_system7_v5_5_processing_system7,Vivado 2025.1.1";
+  attribute X_CORE_INFO of vga_system_processing_system7_0_0 : entity is "processing_system7_v5_5_processing_system7,Vivado 2025.1";
 end vga_system_processing_system7_0_0;
 
 architecture STRUCTURE of vga_system_processing_system7_0_0 is

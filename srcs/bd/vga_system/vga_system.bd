@@ -1,12 +1,12 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x89A1D710E6477964",
+      "boundary_crc": "0x89A1D710ABB27E80",
       "device": "xc7z010clg400-1",
       "name": "vga_system",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
-      "tool_version": "2025.1.1",
+      "tool_version": "2025.1",
       "validated": "true"
     },
     "design_tree": {
@@ -2472,14 +2472,14 @@
       "processing_system7_0_FCLK_CLK0": {
         "ports": [
           "processing_system7_0/FCLK_CLK0",
-          "processing_system7_0/S_AXI_HP0_ACLK",
           "axi_vdma_0/m_axi_mm2s_aclk",
           "axi_vdma_0/s_axi_lite_aclk",
+          "axi_gpio_1/s_axi_aclk",
           "axi_smc/aclk",
           "processing_system7_0/M_AXI_GP0_ACLK",
+          "processing_system7_0/S_AXI_HP0_ACLK",
           "rst_ps7_0_50M/slowest_sync_clk",
-          "smartconnect_0/aclk",
-          "axi_gpio_1/s_axi_aclk"
+          "smartconnect_0/aclk"
         ]
       },
       "processing_system7_0_FCLK_RESET0_N": {
@@ -2492,9 +2492,9 @@
         "ports": [
           "rst_ps7_0_50M/peripheral_aresetn",
           "axi_vdma_0/axi_resetn",
+          "axi_gpio_1/s_axi_aresetn",
           "axi_smc/aresetn",
-          "smartconnect_0/aresetn",
-          "axi_gpio_1/s_axi_aresetn"
+          "smartconnect_0/aresetn"
         ]
       }
     },

@@ -8,7 +8,7 @@
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "scoped": "true",
       "synth_flow_mode": "None",
-      "tool_version": "2025.1.1",
+      "tool_version": "2025.1",
       "validated": "true"
     },
     "design_tree": {

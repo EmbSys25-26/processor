@@ -1,11 +1,11 @@
 -- Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 -- Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
--- Tool Version: Vivado v.2025.1.1 (lin64) Build 6233196 Thu Sep 11 21:27:11 MDT 2025
--- Date        : Sun May 17 13:50:05 2026
+-- Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
+-- Date        : Fri May 22 16:59:54 2026
 -- Host        : armeiro-IdeaPad-Flex-5-14ALC05 running 64-bit Ubuntu 24.04.4 LTS
--- Command     : write_vhdl -force -mode synth_stub -rename_top vga_system_smartconnect_0_0 -prefix
---               vga_system_smartconnect_0_0_ vga_system_smartconnect_0_0_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub
+--               /home/armeiro/Documents/projeto_processor/processor-pipeline-dynamic-branch-predictor/srcs/bd/vga_system/ip/vga_system_smartconnect_0_0/vga_system_smartconnect_0_0_stub.vhdl
 -- Design      : vga_system_smartconnect_0_0
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7z010clg400-1
@@ -52,7 +52,7 @@ entity vga_system_smartconnect_0_0 is
   attribute CHECK_LICENSE_TYPE : string;
   attribute CHECK_LICENSE_TYPE of vga_system_smartconnect_0_0 : entity is "vga_system_smartconnect_0_0,bd_ead3,{}";
   attribute CORE_GENERATION_INFO : string;
-  attribute CORE_GENERATION_INFO of vga_system_smartconnect_0_0 : entity is "vga_system_smartconnect_0_0,bd_ead3,{x_ipProduct=Vivado 2025.1.1,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=smartconnect,x_ipVersion=1.0,x_ipCoreRevision=27,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}";
+  attribute CORE_GENERATION_INFO of vga_system_smartconnect_0_0 : entity is "vga_system_smartconnect_0_0,bd_ead3,{x_ipProduct=Vivado 2025.1,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=smartconnect,x_ipVersion=1.0,x_ipCoreRevision=27,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}";
   attribute DowngradeIPIdentifiedWarnings : string;
   attribute DowngradeIPIdentifiedWarnings of vga_system_smartconnect_0_0 : entity is "yes";
 end vga_system_smartconnect_0_0;
@@ -106,6 +106,6 @@ architecture stub of vga_system_smartconnect_0_0 is
   attribute X_INTERFACE_INFO of M00_AXI_rvalid : signal is "xilinx.com:interface:aximm:1.0 M00_AXI RVALID";
   attribute X_INTERFACE_INFO of M00_AXI_rready : signal is "xilinx.com:interface:aximm:1.0 M00_AXI RREADY";
   attribute X_CORE_INFO : string;
-  attribute X_CORE_INFO of stub : architecture is "bd_ead3,Vivado 2025.1.1";
+  attribute X_CORE_INFO of stub : architecture is "bd_ead3,Vivado 2025.1";
 begin
 end;

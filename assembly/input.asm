@@ -1,70 +1,149 @@
 .include "../tools/abi.inc"
 
-    ; ============================
-    ; Constants / addresses
-    ; ============================
-    .equ RESET_VEC, 0x0100
-    .equ STACK_TOP, 0x03FF
+; ============================================================
+; MMIO ADDRESSING EXPLANATION
+; ============================================================
+; The CPU datapath: o_d_ad = (_sum << 1)
+; So _d_ad is a BYTE address = word_address * 2
+;
+; SW uses a WORD offset in the immediate field.
+; Final byte addr = (IMM_prefix<<4 | imm4 + base_reg) << 1
+;
+; periph_bus selects register via i_addr[2:1] (byte addr bits 2:1)
+; which equals word_offset bits [1:0].
+;
+; VGA base byte addr = 0x8600 (periph_bus VGA=4'h6, bit15=1)
+; VGA base word addr = 0x4300
+; IMM prefix = 0x430, base=zero, imm=offset
+;
+; Register offsets (WORD offsets → byte addr[2:1]):
+;   CNTRL  : word offset 0 → byte 0x8600 → addr[2:1]=00
+;   VGASEL : word offset 1 → byte 0x8602 → addr[2:1]=01 (AVOID: Odd offset bug)
+;   CHAR   : word offset 2 → byte 0x8604 → addr[2:1]=10
+;
+; Same logic applies to all peripherals.
+; ============================================================
 
-    ; ============================
-    ; 0x0100 — reset / init
-    ; ============================
+    .equ INTR_RET,    0x0000
+    .equ INTR_VEC,    0x0002
+    .equ TIMER_VEC,   0x0020
+    .equ TIMER1_VEC,  0x0040
+    .equ PARIO_VEC,   0x0060
+    .equ UART_VEC,    0x0080
+    .equ I2C_VEC,     0x00A0
+    .equ PS2_VEC,     0x00C0
+    .equ RESET_VEC,   0x0200     ; CRITICAL FIX: Byte addr 0x0200 = Word addr 0x0100
+
+    ; Word base addresses for peripherals
+    .equ TIMER0_BASE, 0x4000
+    .equ TIMER1_BASE, 0x4080
+    .equ PARIO_BASE,  0x4100
+    .equ PS2_BASE,    0x4280
+    .equ VGA_BASE,    0x4300
+
+    ; Register offsets (0 to 15)
+    .equ CTRL_REG,    0
+    .equ VGA_VGASEL,  1
+    .equ VGA_CHAR,    2
+    
+    .equ PS2_CR,      2
+
+    .equ STACK_TOP,   0x03FF
+    .equ CDC_DELAY,   16
+
+; ============================================================
+; ISR vector table
+; ============================================================
+    .org INTR_RET
+intr_ret:
+    JAL r14, r14, #0
+
+    .org INTR_VEC
+    IRET
+    .org TIMER_VEC
+    IRET
+    .org TIMER1_VEC
+    IRET
+    .org PARIO_VEC
+    IRET
+    .org UART_VEC
+    IRET
+    .org I2C_VEC
+    IRET
+    .org PS2_VEC
+    IRET
+
+; ============================================================
+; 0x0100 - Reset / main (CPU wakes up here!)
+; ============================================================
     .org RESET_VEC
-
 reset:
-    LI   sp, #STACK_TOP         ; => IMM #0x03F        [8|03F] = 0x803F  (prefix: upper 12 bits of STACK_TOP=0x03FF) | MEM_ADDR = 0x0100
-                                ; => ADDI sp,zero,#0xF  [1|D|0|F] = 0x1D0F  (sp = 0x03FF with prefix)                | MEM_ADDR = 0x0102
-main:
-    LI   t0, #0                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 0>>4 = 0)                          | MEM_ADDR = 0x0104
-                                ; => ADDI t0,zero,#0x0  [1|4|0|0] = 0x1400  (t0 = 0)                                 | MEM_ADDR = 0x0106
+    LI   sp, #STACK_TOP
 
-    LI   t1, #1                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 1>>4 = 0)                          | MEM_ADDR = 0x0108
-                                ; => ADDI t1,zero,#0x1  [1|5|0|1] = 0x1501  (t1 = 1)                                 | MEM_ADDR = 0x010A
+    ; 1. Disable timers
+    LI   t0, #TIMER0_BASE
+    SW   zero, t0, #CTRL_REG
+    LI   t0, #TIMER1_BASE
+    SW   zero, t0, #CTRL_REG
 
-    LI   t2, #0                 ; => IMM #0x000        [8|000] = 0x8000  (prefix: 0>>4 = 0)                          | MEM_ADDR = 0x010C
-                                ; => ADDI t2,zero,#0x0  [1|6|0|0] = 0x1600  (t2 = 0, iteration counter)              | MEM_ADDR = 0x010E
+    ; 2. Wait for CDC propagation
+    LI   t1, #CDC_DELAY
+cdc_wait:
+    ADDI t1, t1, #-1
+    RCMPI t1, #0
+    BEQ  cdc_done
+    BR   cdc_wait
+cdc_done:
 
-    ; Deactivate TimerH int_en -- MMIO write requires input address to be (final_address >>1)
-    IMM  #0x408                 ; [8|408] = 0x8408  (prefix: upper 12 bits of MMIO word-address 0x8100)              | MEM_ADDR = 0x0110
-    SW   r0, r0, #0             ; [6|0|0|0] = 0x6000  (MEM[0+0x8100] = r0 = 0, using prefix)                         | MEM_ADDR = 0x0112
+    ; 3. Enable VGA (CNTRL=0x03)
+    LI   t0, #VGA_BASE
+    LI   a0, #0x03
+    SW   a0, t0, #CTRL_REG
 
-    ; ============================
-    ; 0x0114 — main loop (16 iterations, 4 branches each)
-    ; ============================
-loop:
-    ; branch 1: BEQ not taken (t0=0 != t1=1 → Z=0)
-    CMP  t0, t1                 ; [2|4|5|6] = 0x2456  (t0 - t1, updates CC)                                          | MEM_ADDR = 0x0114
-    BEQ  halt                   ; [9|2|0E] = 0x920E  (disp=+14: halt_byte=0x0132, not taken)                         | MEM_ADDR = 0x0116
+    ; 4. Enable PS/2 Receiver Bypass (EN=bit1=1, RXIE=bit0=0 -> Value 2)
+    ; Interrupts are OFF so it won't crash the CPU, but hardware bypass stays ON!
+    LI   t0, #PS2_BASE
+    LI   a0, #0x02
+    SW   a0, t0, #PS2_CR
 
-    ; branch 2: BR always taken
-    BR   b2_land                ; [9|0|02] = 0x9002  (disp=+2: skips dead ADDI)                                      | MEM_ADDR = 0x0118
-    ADDI t2, t2, #-1            ; [1|6|6|F] = 0x166F  (never executes)                                               | MEM_ADDR = 0x011A
+    ; 5. Write "VGA TEXT OK > "
+    LI   t0, #VGA_BASE      ; Base address for VGA
+    
+    LI   a0, #0x56  ; 'V'
+    SW   a0, t0, #VGA_CHAR  ; offset = 2
+    LI   a0, #0x47  ; 'G'
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x41  ; 'A'
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x20  ; ' '
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x54  ; 'T'
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x45  ; 'E'
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x58  ; 'X'
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x54  ; 'T'
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x20  ; ' '
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x4F  ; 'O'
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x4B  ; 'K'
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x20  ; ' '
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x3E  ; '>'
+    SW   a0, t0, #VGA_CHAR
+    LI   a0, #0x20  ; ' '
+    SW   a0, t0, #VGA_CHAR
 
-    ; branch 3: BLT taken (t0=0 < t1=1 → N=1)
-b2_land:
-    CMP  t0, t1                 ; [2|4|5|6] = 0x2456  (t0 - t1, updates CC)                                          | MEM_ADDR = 0x011C
-    BLT  b3_land                ; [9|8|02] = 0x9802  (disp=+2: skips dead ADDI, taken)                               | MEM_ADDR = 0x011E
-    ADDI t2, t2, #-1            ; [1|6|6|F] = 0x166F  (never executes)                                               | MEM_ADDR = 0x0120
+    ; 6. End configuration & Halt
+    STI
+    
+    LI   t0, #PARIO_BASE
+    LI   a0, #0x07
+    SW   a0, t0, #CTRL_REG  ; LEDs = 0111 (Ready)
 
-    ; branch 4: BLE taken (t0=0 <= t1=1 → N=1 or Z=1)
-b3_land:
-    CMP  t0, t1                 ; [2|4|5|6] = 0x2456  (t0 - t1, updates CC)                                          | MEM_ADDR = 0x0122
-    BLE  b4_land                ; [9|A|02] = 0x9A02  (disp=+2: skips dead ADDI, taken)                               | MEM_ADDR = 0x0124
-    ADDI t2, t2, #-1            ; [1|6|6|F] = 0x166F  (never executes)                                               | MEM_ADDR = 0x0126
-
-    ; increment counter, loop back if t2 < 16
-b4_land:
-    ADDI t2, t2, #1             ; [1|6|6|1] = 0x1661  (t2++)                                                         | MEM_ADDR = 0x0128
-
-    LI   t3, #16                ; => IMM #0x001        [8|001] = 0x8001  (prefix: 16>>4 = 1)                         | MEM_ADDR = 0x012A
-                                ; => ADDI t3,zero,#0x0  [1|7|0|0] = 0x1700  (t3 = 0x10 = 16 with prefix)             | MEM_ADDR = 0x012C
-
-    ; branch 5: BLT taken while t2 < 16, not taken on last iteration
-    CMP  t2, t3                 ; [2|6|7|6] = 0x2676  (t2 - t3, updates CC)                                          | MEM_ADDR = 0x012E
-    BLT  loop                   ; [9|8|F2] = 0x98F2  (disp=-14: loop_byte=0x0114, taken 15x)                         | MEM_ADDR = 0x0130
-
-    ; ============================
-    ; 0x0132 — halt
-    ; ============================
-halt:
-    BR   halt                   ; [9|0|00] = 0x9000  (disp=0: infinite self-loop)                                     | MEM_ADDR = 0x0132
+main_loop:
+    BR   #-1

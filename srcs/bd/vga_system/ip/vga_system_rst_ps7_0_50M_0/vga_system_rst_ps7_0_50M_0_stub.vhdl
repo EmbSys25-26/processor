@@ -1,11 +1,11 @@
 -- Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 -- Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
--- Tool Version: Vivado v.2025.1.1 (lin64) Build 6233196 Thu Sep 11 21:27:11 MDT 2025
--- Date        : Sun May 17 13:49:31 2026
+-- Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
+-- Date        : Fri May 22 16:59:18 2026
 -- Host        : armeiro-IdeaPad-Flex-5-14ALC05 running 64-bit Ubuntu 24.04.4 LTS
--- Command     : write_vhdl -force -mode synth_stub -rename_top vga_system_rst_ps7_0_50M_0 -prefix
---               vga_system_rst_ps7_0_50M_0_ vga_system_rst_ps7_0_50M_0_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub
+--               /home/armeiro/Documents/projeto_processor/processor-pipeline-dynamic-branch-predictor/srcs/bd/vga_system/ip/vga_system_rst_ps7_0_50M_0/vga_system_rst_ps7_0_50M_0_stub.vhdl
 -- Design      : vga_system_rst_ps7_0_50M_0
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7z010clg400-1
@@ -30,7 +30,7 @@ entity vga_system_rst_ps7_0_50M_0 is
   attribute CHECK_LICENSE_TYPE : string;
   attribute CHECK_LICENSE_TYPE of vga_system_rst_ps7_0_50M_0 : entity is "vga_system_rst_ps7_0_50M_0,proc_sys_reset,{}";
   attribute core_generation_info : string;
-  attribute core_generation_info of vga_system_rst_ps7_0_50M_0 : entity is "vga_system_rst_ps7_0_50M_0,proc_sys_reset,{x_ipProduct=Vivado 2025.1.1,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=proc_sys_reset,x_ipVersion=5.0,x_ipCoreRevision=17,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED,C_FAMILY=zynq,C_EXT_RST_WIDTH=4,C_AUX_RST_WIDTH=4,C_EXT_RESET_HIGH=0,C_AUX_RESET_HIGH=0,C_NUM_BUS_RST=1,C_NUM_PERP_RST=1,C_NUM_INTERCONNECT_ARESETN=1,C_NUM_PERP_ARESETN=1}";
+  attribute core_generation_info of vga_system_rst_ps7_0_50M_0 : entity is "vga_system_rst_ps7_0_50M_0,proc_sys_reset,{x_ipProduct=Vivado 2025.1,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=proc_sys_reset,x_ipVersion=5.0,x_ipCoreRevision=17,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED,C_FAMILY=zynq,C_EXT_RST_WIDTH=4,C_AUX_RST_WIDTH=4,C_EXT_RESET_HIGH=0,C_AUX_RESET_HIGH=0,C_NUM_BUS_RST=1,C_NUM_PERP_RST=1,C_NUM_INTERCONNECT_ARESETN=1,C_NUM_PERP_ARESETN=1}";
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of vga_system_rst_ps7_0_50M_0 : entity is "yes";
 end vga_system_rst_ps7_0_50M_0;
@@ -71,6 +71,6 @@ architecture stub of vga_system_rst_ps7_0_50M_0 is
   attribute x_interface_mode of peripheral_aresetn : signal is "master peripheral_low_rst";
   attribute x_interface_parameter of peripheral_aresetn : signal is "XIL_INTERFACENAME peripheral_low_rst, POLARITY ACTIVE_LOW, TYPE PERIPHERAL, INSERT_VIP 0";
   attribute x_core_info : string;
-  attribute x_core_info of stub : architecture is "proc_sys_reset,Vivado 2025.1.1";
+  attribute x_core_info of stub : architecture is "proc_sys_reset,Vivado 2025.1";
 begin
 end;

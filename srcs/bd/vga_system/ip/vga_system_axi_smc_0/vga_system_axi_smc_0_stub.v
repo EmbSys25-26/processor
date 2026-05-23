@@ -1,11 +1,11 @@
 // Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 // Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
-// Tool Version: Vivado v.2025.1.1 (lin64) Build 6233196 Thu Sep 11 21:27:11 MDT 2025
-// Date        : Sun May 17 13:50:10 2026
+// Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
+// Date        : Fri May 22 17:00:01 2026
 // Host        : armeiro-IdeaPad-Flex-5-14ALC05 running 64-bit Ubuntu 24.04.4 LTS
-// Command     : write_verilog -force -mode synth_stub -rename_top vga_system_axi_smc_0 -prefix
-//               vga_system_axi_smc_0_ vga_system_axi_smc_0_stub.v
+// Command     : write_verilog -force -mode synth_stub
+//               /home/armeiro/Documents/projeto_processor/processor-pipeline-dynamic-branch-predictor/srcs/bd/vga_system/ip/vga_system_axi_smc_0/vga_system_axi_smc_0_stub.v
 // Design      : vga_system_axi_smc_0
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7z010clg400-1
@@ -14,8 +14,8 @@
 // This empty module with port declaration file causes synthesis tools to infer a black box for IP.
 // The synthesis directives are for Synopsys Synplify support to prevent IO buffer insertion.
 // Please paste the declaration into a Verilog source file or add the file as an additional source.
-(* CHECK_LICENSE_TYPE = "vga_system_axi_smc_0,bd_654d,{}" *) (* CORE_GENERATION_INFO = "vga_system_axi_smc_0,bd_654d,{x_ipProduct=Vivado 2025.1.1,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=smartconnect,x_ipVersion=1.0,x_ipCoreRevision=27,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}" *) (* DowngradeIPIdentifiedWarnings = "yes" *) 
-(* X_CORE_INFO = "bd_654d,Vivado 2025.1.1" *) 
+(* CHECK_LICENSE_TYPE = "vga_system_axi_smc_0,bd_654d,{}" *) (* CORE_GENERATION_INFO = "vga_system_axi_smc_0,bd_654d,{x_ipProduct=Vivado 2025.1,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=smartconnect,x_ipVersion=1.0,x_ipCoreRevision=27,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}" *) (* DowngradeIPIdentifiedWarnings = "yes" *) 
+(* X_CORE_INFO = "bd_654d,Vivado 2025.1" *) 
 module vga_system_axi_smc_0(aclk, aresetn, S00_AXI_awid, S00_AXI_awaddr, 
   S00_AXI_awlen, S00_AXI_awsize, S00_AXI_awburst, S00_AXI_awlock, S00_AXI_awcache, 
   S00_AXI_awprot, S00_AXI_awqos, S00_AXI_awvalid, S00_AXI_awready, S00_AXI_wid, 

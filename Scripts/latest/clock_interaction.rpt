@@ -1,0 +1,39 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
+| Date         : Fri May 22 16:35:09 2026
+| Host         : armeiro-IdeaPad-Flex-5-14ALC05 running 64-bit Ubuntu 24.04.4 LTS
+| Command      : report_clock_interaction -file ./reports/latest/clock_interaction.rpt
+| Design       : soc
+| Device       : 7z010-clg400
+| Speed File   : -1  PRODUCTION 1.12 2019-11-22
+| Design State : Physopt postRoute
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Clock Interaction Report
+
+Clock Interaction Table
+-----------------------
+
+                                            WNS                            TNS Failing  TNS Total    WNS Path         Clock-Pair           Inter-Clock                  
+From Clock            To Clock              Clock Edges  WNS(ns)  TNS(ns)    Endpoints    Endpoints  Requirement(ns)  Classification       Constraints                  
+--------------------  --------------------  -----------  -------  -------  -----------  -----------  ---------------  -------------------  ---------------------------  
+clk_fpga_0            clk_fpga_0            rise - rise     2.35     0.00            0         6825            10.00  Clean                Partial False Path           
+clk_fpga_0            clk_out2_clk_wiz_0                                             0           21                   Ignored              False Path                   
+clk_fpga_0            clk_out2_clk_wiz_0_1                                           0           21                   Ignored              False Path                   
+clk_out1_clk_wiz_0    clk_out1_clk_wiz_0    rise - rise     0.17     0.00            0        16609            10.00  Clean                Timed                        
+clk_out1_clk_wiz_0    clk_out1_clk_wiz_0_1  rise - rise     0.17     0.00            0        16609            10.00  No Common Clock      Timed (unsafe)               
+clk_out1_clk_wiz_0    clk_out2_clk_wiz_0                                             0            4                   Ignored              False Path                   
+clk_out1_clk_wiz_0    clk_out2_clk_wiz_0_1                                           0            4                   Ignored              False Path                   
+clk_out1_clk_wiz_0_1  clk_out1_clk_wiz_0    rise - rise     0.17     0.00            0        16609            10.00  No Common Clock      Timed (unsafe)               
+clk_out1_clk_wiz_0_1  clk_out1_clk_wiz_0_1  rise - rise     0.17     0.00            0        16609            10.00  Clean                Timed                        
+clk_out1_clk_wiz_0_1  clk_out2_clk_wiz_0                                             0            4                   Ignored              False Path                   
+clk_out1_clk_wiz_0_1  clk_out2_clk_wiz_0_1                                           0            4                   Ignored              False Path                   
+clk_out2_clk_wiz_0    clk_fpga_0                                                     0            5                   Ignored              False Path                   
+clk_out2_clk_wiz_0    clk_out2_clk_wiz_0    rise - rise    24.81     0.00            0          317            39.58  Clean                Partial False Path           
+clk_out2_clk_wiz_0    clk_out2_clk_wiz_0_1  rise - rise    24.81     0.00            0          317            39.58  No Common Clock      Partial False Path (unsafe)  
+clk_out2_clk_wiz_0_1  clk_fpga_0                                                     0            5                   Ignored              False Path                   
+clk_out2_clk_wiz_0_1  clk_out2_clk_wiz_0    rise - rise    24.81     0.00            0          317            39.58  No Common Clock      Partial False Path (unsafe)  
+clk_out2_clk_wiz_0_1  clk_out2_clk_wiz_0_1  rise - rise    24.82     0.00            0          317            39.58  Clean                Partial False Path           
+
+

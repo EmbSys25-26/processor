@@ -1,11 +1,11 @@
 -- Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 -- Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
--- Tool Version: Vivado v.2025.1.1 (lin64) Build 6233196 Thu Sep 11 21:27:11 MDT 2025
--- Date        : Sun May 17 13:49:32 2026
+-- Tool Version: Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
+-- Date        : Fri May 22 16:59:19 2026
 -- Host        : armeiro-IdeaPad-Flex-5-14ALC05 running 64-bit Ubuntu 24.04.4 LTS
--- Command     : write_vhdl -force -mode funcsim -rename_top vga_system_rst_ps7_0_50M_0 -prefix
---               vga_system_rst_ps7_0_50M_0_ vga_system_rst_ps7_0_50M_0_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim
+--               /home/armeiro/Documents/projeto_processor/processor-pipeline-dynamic-branch-predictor/srcs/bd/vga_system/ip/vga_system_rst_ps7_0_50M_0/vga_system_rst_ps7_0_50M_0_sim_netlist.vhdl
 -- Design      : vga_system_rst_ps7_0_50M_0
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -22,6 +22,8 @@ entity vga_system_rst_ps7_0_50M_0_upcnt_n is
     seq_cnt_en : in STD_LOGIC;
     slowest_sync_clk : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_rst_ps7_0_50M_0_upcnt_n : entity is "upcnt_n";
 end vga_system_rst_ps7_0_50M_0_upcnt_n;
 
 architecture STRUCTURE of vga_system_rst_ps7_0_50M_0_upcnt_n is
@@ -188,6 +190,8 @@ entity vga_system_rst_ps7_0_50M_0_xpm_cdc_single is
   attribute DEST_SYNC_FF of vga_system_rst_ps7_0_50M_0_xpm_cdc_single : entity is 4;
   attribute INIT_SYNC_FF : integer;
   attribute INIT_SYNC_FF of vga_system_rst_ps7_0_50M_0_xpm_cdc_single : entity is 0;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_rst_ps7_0_50M_0_xpm_cdc_single : entity is "xpm_cdc_single";
   attribute SIM_ASSERT_CHK : integer;
   attribute SIM_ASSERT_CHK of vga_system_rst_ps7_0_50M_0_xpm_cdc_single : entity is 0;
   attribute SRC_INPUT_REG : integer;
@@ -358,6 +362,8 @@ entity vga_system_rst_ps7_0_50M_0_lpf is
     ext_reset_in : in STD_LOGIC;
     aux_reset_in : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_rst_ps7_0_50M_0_lpf : entity is "lpf";
 end vga_system_rst_ps7_0_50M_0_lpf;
 
 architecture STRUCTURE of vga_system_rst_ps7_0_50M_0_lpf is
@@ -601,6 +607,8 @@ entity vga_system_rst_ps7_0_50M_0_sequence_psr is
     lpf_int : in STD_LOGIC;
     slowest_sync_clk : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_rst_ps7_0_50M_0_sequence_psr : entity is "sequence_psr";
 end vga_system_rst_ps7_0_50M_0_sequence_psr;
 
 architecture STRUCTURE of vga_system_rst_ps7_0_50M_0_sequence_psr is
@@ -939,6 +947,8 @@ entity vga_system_rst_ps7_0_50M_0_proc_sys_reset is
   attribute C_NUM_PERP_ARESETN of vga_system_rst_ps7_0_50M_0_proc_sys_reset : entity is 1;
   attribute C_NUM_PERP_RST : integer;
   attribute C_NUM_PERP_RST of vga_system_rst_ps7_0_50M_0_proc_sys_reset : entity is 1;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of vga_system_rst_ps7_0_50M_0_proc_sys_reset : entity is "proc_sys_reset";
 end vga_system_rst_ps7_0_50M_0_proc_sys_reset;
 
 architecture STRUCTURE of vga_system_rst_ps7_0_50M_0_proc_sys_reset is
@@ -1069,7 +1079,7 @@ entity vga_system_rst_ps7_0_50M_0 is
   attribute downgradeipidentifiedwarnings : string;
   attribute downgradeipidentifiedwarnings of vga_system_rst_ps7_0_50M_0 : entity is "yes";
   attribute x_core_info : string;
-  attribute x_core_info of vga_system_rst_ps7_0_50M_0 : entity is "proc_sys_reset,Vivado 2025.1.1";
+  attribute x_core_info of vga_system_rst_ps7_0_50M_0 : entity is "proc_sys_reset,Vivado 2025.1";
 end vga_system_rst_ps7_0_50M_0;
 
 architecture STRUCTURE of vga_system_rst_ps7_0_50M_0 is

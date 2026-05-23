@@ -1,0 +1,32 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
+| Date         : Fri May 22 16:36:01 2026
+| Host         : armeiro-IdeaPad-Flex-5-14ALC05 running 64-bit Ubuntu 24.04.4 LTS
+| Command      : report_cdc -file ./reports/latest/cdc.rpt
+| Design       : soc
+| Device       : 7z010-clg400
+| Speed File   : -1  PRODUCTION 1.12 2019-11-22
+| Design State : Physopt postRoute
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+CDC Report
+
+Severity  Source Clock          Destination Clock     CDC Type                 Exceptions  Endpoints   Safe  Unsafe  Unknown  No ASYNC_REG  
+--------  --------------------  --------------------  -----------------------  ----------  ---------  -----  ------  -------  ------------  
+Critical  clk_out2_clk_wiz_0    clk_fpga_0            No Common Primary Clock  False Path          5      4       1        0             0  
+Critical  clk_out2_clk_wiz_0_1  clk_fpga_0            No Common Primary Clock  False Path          5      4       1        0             0  
+Critical  clk_out1_clk_wiz_0_1  clk_out1_clk_wiz_0    No Common Primary Clock  None            16609  10070     340     6199             3  
+Critical  input port clock      clk_out1_clk_wiz_0    No Common Primary Clock  False Path          3      2       0        1             2  
+Critical  clk_out1_clk_wiz_0    clk_out1_clk_wiz_0_1  No Common Primary Clock  None            16609  10070     340     6199             3  
+Critical  input port clock      clk_out1_clk_wiz_0_1  No Common Primary Clock  False Path          3      2       0        1             2  
+Critical  clk_out2_clk_wiz_0_1  clk_out2_clk_wiz_0    No Common Primary Clock  None              317    152      12      153             1  
+Critical  clk_out2_clk_wiz_0    clk_out2_clk_wiz_0_1  No Common Primary Clock  None              317    152      12      153             1  
+Warning   clk_fpga_0            clk_out2_clk_wiz_0    No Common Primary Clock  False Path         20     20       0        0             0  
+Warning   clk_fpga_0            clk_out2_clk_wiz_0_1  No Common Primary Clock  False Path         20     20       0        0             0  
+Info      input port clock      clk_fpga_0            No Common Primary Clock  False Path          2      2       0        0             0  
+Info      clk_out1_clk_wiz_0    clk_out2_clk_wiz_0    User Ignored             False Path          3      3       0        0             0  
+Info      clk_out1_clk_wiz_0_1  clk_out2_clk_wiz_0    No Common Primary Clock  False Path          3      3       0        0             0  
+Info      clk_out1_clk_wiz_0    clk_out2_clk_wiz_0_1  No Common Primary Clock  False Path          3      3       0        0             0  
+Info      clk_out1_clk_wiz_0_1  clk_out2_clk_wiz_0_1  User Ignored             False Path          3      3       0        0             0  
+

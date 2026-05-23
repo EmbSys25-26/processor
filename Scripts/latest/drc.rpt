@@ -1,0 +1,60 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.1 (lin64) Build 6140274 Wed May 21 22:58:25 MDT 2025
+| Date         : Fri May 22 16:35:08 2026
+| Host         : armeiro-IdeaPad-Flex-5-14ALC05 running 64-bit Ubuntu 24.04.4 LTS
+| Command      : report_drc -file ./reports/latest/drc.rpt
+| Design       : soc
+| Device       : xc7z010clg400-1
+| Speed File   : -1
+| Design State : Fully Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Report DRC
+
+Table of Contents
+-----------------
+1. REPORT SUMMARY
+2. REPORT DETAILS
+
+1. REPORT SUMMARY
+-----------------
+            Netlist: netlist
+          Floorplan: impl_1
+      Design limits: <entire design considered>
+           Ruledeck: default
+             Max checks: <unlimited>
+             Checks found: 2
++-----------+----------+---------------------------------+--------+
+| Rule      | Severity | Description                     | Checks |
++-----------+----------+---------------------------------+--------+
+| RPBF-3    | Warning  | IO port buffering is incomplete | 1      |
+| RTSTAT-10 | Warning  | No routable loads               | 1      |
++-----------+----------+---------------------------------+--------+
+
+2. REPORT DETAILS
+-----------------
+RPBF-3#1 Warning
+IO port buffering is incomplete  
+Device port io_i2c_scl expects both input and output buffering but the buffers are incomplete.
+Related violations: <none>
+
+RTSTAT-10#1 Warning
+No routable loads  
+15 net(s) have no routable loads. The problem bus(es) and/or net(s) are u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/m01_nodes/m01_b_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/m01_nodes/m01_aw_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/m00_nodes/m00_w_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/m00_nodes/m00_aw_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/s00_nodes/s00_ar_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/m00_nodes/m00_ar_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/m01_nodes/m01_ar_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/s00_nodes/s00_w_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/s00_nodes/s00_r_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/s00_nodes/s00_aw_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/m01_nodes/m01_r_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/m00_nodes/m00_r_node/inst/mi_handler_m_sc_areset_pipe,
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/s00_nodes/s00_b_node/inst/mi_handler_m_sc_areset_pipe
+u_periph/u_vga/u_system/vga_system_i/axi_smc/inst/m00_nodes/m00_b_node/inst/mi_handler_m_sc_areset_pipe.
+Related violations: <none>
+
+

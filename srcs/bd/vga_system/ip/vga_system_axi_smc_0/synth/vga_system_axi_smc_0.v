@@ -50,9 +50,9 @@
 // IP VLNV: xilinx.com:ip:smartconnect:1.0
 // IP Revision: 27
 
-(* X_CORE_INFO = "bd_654d,Vivado 2025.1.1" *)
+(* X_CORE_INFO = "bd_654d,Vivado 2025.1" *)
 (* CHECK_LICENSE_TYPE = "vga_system_axi_smc_0,bd_654d,{}" *)
-(* CORE_GENERATION_INFO = "vga_system_axi_smc_0,bd_654d,{x_ipProduct=Vivado 2025.1.1,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=smartconnect,x_ipVersion=1.0,x_ipCoreRevision=27,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}" *)
+(* CORE_GENERATION_INFO = "vga_system_axi_smc_0,bd_654d,{x_ipProduct=Vivado 2025.1,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=smartconnect,x_ipVersion=1.0,x_ipCoreRevision=27,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}" *)
 (* DowngradeIPIdentifiedWarnings = "yes" *)
 module vga_system_axi_smc_0 (
   aclk,
