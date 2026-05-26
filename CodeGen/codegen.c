@@ -1305,7 +1305,7 @@ static void emit_instr(FILE                *out,
 
 	    /* ── 3. call ──────────────────────────────── */
 	    fprintf(out, "    CALL(%s)\n", IR_CALL_CALLEE(ins));
-
+        fprintf(out, "    NOP                        ; hazard guard: JAL delay slot\n");
 	    /* ── 4. stack cleanup ─────────────────────── */
 	    if (nstack > 0)
 		emit_sp_adj(out, (int)nstack);
