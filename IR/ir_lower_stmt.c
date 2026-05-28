@@ -505,24 +505,32 @@ static void ir_lower_single_stmt(ir_lower_ctx_t *lctx, const TreeNode_t *s)
          * This extraction keeps the lowering logic explicit and robust.
          */
         /*
-         * A multi-declarator init like `for (int *p, *q; ...)` arrives as
-         * a sibling chain of declaration nodes that all belong to the init
-         * slot, so cond/update/body live past the run of declarations.
+         * The parser always emits four trailing slots: init, cond, update,
+         * body (with NODE_NULL for any that the source omitted).  The init
+         * slot itself can be a sibling chain of arbitrary length: a
+         * declaration with an initializer like `int i = 1` arrives as two
+         * siblings (the VAR_DECL and a separate OPERATOR(=) assignment), and
+         * a multi-declarator init like `int i = 0, j = 1` produces four.
+         *
+         * Rather than try to recognise where the init chain ends by node
+         * type (which is fragile — both initializer assignments and the
+         * cond are OPERATOR nodes), pin cond/update/body to the *last three*
+         * children and treat everything before them as init.
          */
-        const TreeNode_t *init_node = s->p_firstChild;
-        const TreeNode_t *init_end = init_node;
-        if (init_node &&
-            (init_node->nodeType == NODE_VAR_DECLARATION ||
-             init_node->nodeType == NODE_ARRAY_DECLARATION)) {
-            while (init_end->p_sibling &&
-                   (init_end->p_sibling->nodeType == NODE_VAR_DECLARATION ||
-                    init_end->p_sibling->nodeType == NODE_ARRAY_DECLARATION)) {
-                init_end = init_end->p_sibling;
-            }
+        unsigned n_children = 0;
+        for (const TreeNode_t *c = s->p_firstChild; c; c = c->p_sibling)
+            n_children++;
+        if (n_children < 4) {
+            ir_diag(lctx, "IR001", s->lineNumber, "malformed for statement");
+            break;
         }
-        const TreeNode_t *cond_node = init_end ? init_end->p_sibling : NULL;
-        const TreeNode_t *update_node = cond_node ? cond_node->p_sibling : NULL;
-        const TreeNode_t *body_node = update_node ? update_node->p_sibling : NULL;
+        const TreeNode_t *init_node = s->p_firstChild;
+        const TreeNode_t *init_end  = init_node;
+        for (unsigned k = 1; k < n_children - 3; k++)
+            init_end = init_end->p_sibling;
+        const TreeNode_t *cond_node   = init_end->p_sibling;
+        const TreeNode_t *update_node = cond_node->p_sibling;
+        const TreeNode_t *body_node   = update_node->p_sibling;
         ir_type_t cond_type;
         ir_value_t cond_val;
         ir_value_t pred;
@@ -538,20 +546,22 @@ static void ir_lower_single_stmt(ir_lower_ctx_t *lctx, const TreeNode_t *s)
 
         /*
          * Lower the initializer(s) in the current preheader block before
-         * entering loop control flow.
-         * If init is a declaration (e.g., for (int i = 0; ...)), create its
-         * local slot here; otherwise lower it as a normal expression.
+         * entering loop control flow.  The chain init_node..cond_node is
+         * a mix of declaration nodes (which create slots) and expression
+         * nodes (the initializer assignments the parser emits as separate
+         * siblings); handle each per its kind, matching how the block-
+         * statement lowering walks the same shape.
          */
         if (init_node->nodeType != NODE_NULL) {
-            if (init_node->nodeType == NODE_VAR_DECLARATION ||
-                init_node->nodeType == NODE_ARRAY_DECLARATION) {
-                for (const TreeNode_t *d = init_node; d != cond_node;
-                     d = d->p_sibling) {
+            for (const TreeNode_t *d = init_node; d != cond_node;
+                 d = d->p_sibling) {
+                if (d->nodeType == NODE_VAR_DECLARATION ||
+                    d->nodeType == NODE_ARRAY_DECLARATION) {
                     ir_lower_local_decl(lctx, d);
+                } else {
+                    ir_type_t t;
+                    (void)ir_lower_expr(lctx, d, &t);
                 }
-            } else {
-                ir_type_t t;
-                (void)ir_lower_expr(lctx, init_node, &t);
             }
         }
 

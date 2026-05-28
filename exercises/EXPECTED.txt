@@ -35,3 +35,79 @@ solE033 | solE033_leetcode.c   | 0181 | sum of squares 1..10 = 385
 solE034 | solE034_leetcode.c   | 0004 | distinct count {1,2,2,3,1,4,3} -> 4
 solE035 | solE035_leetcode.c   | 0009 | median3 — 2 + 7 = 9
 solE036 | solE036_leetcode.c   | 0003 | LC 136 single number via XOR -> 3
+
+# ── feature-coverage suite ─────────────────────────────────────────────
+# One focused test per language feature; regression net so bugs like the
+# for-loop `int i = ...` init-shift never re-surface silently.
+feat_for_decl              | feat_for_decl.c              | 0037 | for (int i = 1..10) sum -> 55
+feat_for_assign            | feat_for_assign.c            | 000A | for (i = 0..4) sum -> 10
+feat_for_break             | feat_for_break.c             | 000A | for-loop break at i==5 -> 10
+feat_for_continue          | feat_for_continue.c          | 0014 | for-loop skip odd -> 20
+feat_for_nested            | feat_for_nested.c            | 0012 | 3x3 nested for sum(i+j) -> 18
+feat_while                 | feat_while.c                 | 0037 | while n>0 sum 10..1 -> 55
+feat_while_break           | feat_while_break.c           | 0015 | while(1) break at 7 -> 21
+feat_do_while              | feat_do_while.c              | 000F | do/while 5..1 -> 15
+feat_if_else_chain         | feat_if_else_chain.c         | 0022 | if/else if/else picks middle
+feat_nested_if             | feat_nested_if.c             | 0077 | nested if inside else
+feat_switch                | feat_switch.c                | 0022 | switch x=2 → case 2 → 0x22
+feat_switch_default        | feat_switch_default.c        | 0099 | switch x=7 → default → 0x99
+feat_call_simple           | feat_call_simple.c           | 0008 | add(3,5) -> 8
+feat_call_recursive        | feat_call_recursive.c        | 0078 | fact(5) -> 120
+feat_call_3args            | feat_call_3args.c            | 0006 | sum3(1,2,3) -> 6
+feat_call_4args            | feat_call_4args.c            | 000A | sum4(1,2,3,4) stack-arg -> 10
+feat_mul                   | feat_mul.c                   | 005B | 7*13 via __mul -> 91
+feat_div_signed            | feat_div_signed.c            | 000E | 100/7 -> 14
+feat_div_unsigned          | feat_div_unsigned.c          | 2445 | 65000u/7 -> 9285
+feat_mod                   | feat_mod.c                   | 0002 | 100%7 -> 2
+feat_bitwise               | feat_bitwise.c               | 6464 | mixed AND/OR/XOR/NOT
+feat_shift_left            | feat_shift_left.c            | 00F0 | 0x000F << 4 -> 0x00F0
+feat_shift_right_signed    | feat_shift_right_signed.c    | FFFC | (-16) >> 2 -> -4
+feat_shift_right_unsigned  | feat_shift_right_unsigned.c  | 0F00 | 0xF000u >> 4 -> 0x0F00
+feat_cmp_signed            | feat_cmp_signed.c            | 0023 | signed (<,<=,!=) -> 0x23
+feat_cmp_unsigned          | feat_cmp_unsigned.c          | 002C | unsigned (>,>=,!=) -> 0x2C
+feat_array_sum             | feat_array_sum.c             | 0024 | sum a[0..7]={1..8} -> 36
+feat_array_write_read      | feat_array_write_read.c      | 0024 | a[i]=i*i, return a[6]=36
+
+# ── parallel-exploration suite ─────────────────────────────────────────
+# 31 tests gathered by three concurrent subagents covering operators,
+# control-flow gaps (continue, switch fall-through, nested switch,
+# empty for-slots, early return), and data types (char, globals,
+# pointers, structs).  All passed on first run; net is permanent so
+# regressions in these areas surface immediately.
+
+# operators & expressions
+feat_ternary               | feat_ternary.c               | 0007 | ternary (a>b)?a:b
+feat_logical_and           | feat_logical_and.c           | 0001 | (a>0) && (b>0)
+feat_logical_or            | feat_logical_or.c            | 0001 | (a>0) || (b>0)
+feat_short_circuit_and     | feat_short_circuit_and.c     | 0000 | && skips RHS side effect
+feat_short_circuit_or      | feat_short_circuit_or.c      | 0000 | || skips RHS side effect
+feat_post_increment        | feat_post_increment.c        | 0022 | int r=i++ ; r*10+i = 34
+feat_pre_increment         | feat_pre_increment.c         | 002C | int r=++i ; r*10+i = 44
+feat_compound_add          | feat_compound_add.c          | 0011 | += chain -> 17
+feat_compound_mul          | feat_compound_mul.c          | 000C | *= via __mul -> 12
+feat_compound_shift        | feat_compound_shift.c        | 0010 | <<= 4 -> 16
+
+# control-flow gaps
+feat_while_continue        | feat_while_continue.c        | 0019 | while+continue odd sum -> 25
+feat_do_while_continue     | feat_do_while_continue.c     | 0019 | do/while + continue -> 25
+feat_do_while_break        | feat_do_while_break.c        | 000A | do/while + break -> 10
+feat_switch_fallthrough    | feat_switch_fallthrough.c    | 000B | switch case fall-through
+feat_switch_no_default     | feat_switch_no_default.c     | 0007 | switch no-match, no default
+feat_nested_switch         | feat_nested_switch.c         | 0017 | switch inside switch case
+feat_break_inside_for_inside_while | feat_break_inside_for_inside_while.c | 0132 | inner break, outer continues
+feat_for_empty_init        | feat_for_empty_init.c        | 000A | for(;cond;upd) empty init
+feat_for_empty_update      | feat_for_empty_update.c      | 000A | for(init;cond;) empty update
+feat_for_empty_cond        | feat_for_empty_cond.c        | 000A | for(init;;upd) empty cond
+feat_early_return_inside_loop | feat_early_return_inside_loop.c | 0015 | return from inside for body
+
+# data types & memory
+feat_char_basic            | feat_char_basic.c            | 0008 | char c=5 ; c+3
+feat_char_truncate         | feat_char_truncate.c         | 0034 | char narrowing of 0x1234
+feat_char_arith            | feat_char_arith.c            | 0096 | char + char no overflow
+feat_global_int            | feat_global_int.c            | 002A | global int read/write
+feat_global_array          | feat_global_array.c          | 000A | global int[4] r/w
+feat_pointer_basic         | feat_pointer_basic.c         | 002A | &x then *p read
+feat_pointer_write         | feat_pointer_write.c         | 0063 | *p = v write-through
+feat_pointer_param         | feat_pointer_param.c         | 004D | int* function parameter
+feat_struct_basic          | feat_struct_basic.c          | 0007 | struct field r/w (.)
+feat_struct_ptr            | feat_struct_ptr.c            | 0021 | struct* param, -> access

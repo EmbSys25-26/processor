@@ -340,33 +340,30 @@ static void emit_prologue(FILE *out,
      *     fp+1  → args[3]   (the first stack arg)
      *     fp+2  → args[4]
      *     ...
-     * Each stack-param's local slot is allocated by ir_lower_function. */
+     * Each stack-param's local slot is allocated by ir_lower_function.
+     *
+     * ISA quirk: the LW/SW 4-bit immediate is NOT a plain signed offset.
+     * For word-offset opcodes the ID stage builds imm16 as
+     *     {sxi11, _imm[0], _imm[3:1], 0}
+     * which (a) forces LSB to 0 (so any non-zero offset becomes even) and
+     * (b) maps the encoded _imm[0] to bit 4, scrambling the value.  To
+     * stay safe and match the codegen's universal "compute address with
+     * ADDI, then LW/SW #0" pattern, we materialise both addresses with
+     * ADDI first (whose immediate is a plain signed 4-bit value). */
     if (func->param_count > PHYS_ARG_REGS) {
         for (unsigned i = PHYS_ARG_REGS; i < func->param_count; i++) {
             int caller_off = (int)(i - PHYS_ARG_REGS) + 1;
             unsigned slot = ir_find_slot(func, func->param_names[i]);
             if (slot == (unsigned)-1) continue;
             int slot_off = slot_fp_offset(slot, func, ra);
-            /* LW t3, fp, #caller_off */
-            if (caller_off >= -8 && caller_off <= 7) {
-                fprintf(out, "    LW t3, fp, #%d         ; load stack param %s\n",
-                        caller_off, func->param_names[i]);
-            } else {
-                uint16_t u16 = (uint16_t)(int16_t)caller_off;
-                fprintf(out, "    IMM #0x%03X\n", u16 >> 4);
-                fprintf(out, "    LW t3, fp, #%u         ; load stack param %s\n",
-                        u16 & 0xFu, func->param_names[i]);
-            }
-            /* SW t3, fp, #slot_off  — but SW's imm is also 4-bit signed. */
-            if (slot_off >= -8 && slot_off <= 7) {
-                fprintf(out, "    SW t3, fp, #%d         ; store to slot %s\n",
-                        slot_off, func->param_names[i]);
-            } else {
-                uint16_t u16 = (uint16_t)(int16_t)slot_off;
-                fprintf(out, "    IMM #0x%03X\n", u16 >> 4);
-                fprintf(out, "    SW t3, fp, #%u         ; store to slot %s\n",
-                        u16 & 0xFu, func->param_names[i]);
-            }
+            /* address-of caller's slot into t2, then LW via #0 */
+            emit_addi_imm(out, "t2", "fp", caller_off);
+            fprintf(out, "    LW t3, t2, #0          ; load stack param %s\n",
+                    func->param_names[i]);
+            /* address-of our local slot into t2, then SW via #0 */
+            emit_addi_imm(out, "t2", "fp", slot_off);
+            fprintf(out, "    SW t3, t2, #0          ; store to slot %s\n",
+                    func->param_names[i]);
         }
     }
     fprintf(out, "\n");
