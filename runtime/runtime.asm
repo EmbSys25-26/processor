@@ -69,7 +69,10 @@ __divu_loop:
     MOV(r7, r1)
     SRA  r7, r6             ; sign-extend bit 15 across r7 ...
     ANDI r7, #1             ; ... then keep only bit 0 = original MSB
-    OR(r3, r7)              ; remainder |= dividend MSB
+    ADD  r3, r7             ; remainder |= dividend MSB.  r3[0]=0 after shift
+                            ; left, r7 has only bit 0, so ADD == OR here.
+                            ; Plain OR would clobber the quotient because
+                            ; the OR macro uses t0 == r4 == quotient.
     ADD  r1, r1             ; dividend <<= 1
     CMP  r3, r2
     BLEU __divu_no_sub      ; rem < divisor -> skip subtract (BLEU = strict <)
@@ -106,7 +109,8 @@ __modu_loop:
     MOV(r7, r1)
     SRA  r7, r6
     ANDI r7, #1
-    OR(r3, r7)
+    ADD  r3, r7             ; r3 |= r7 — see __divu for rationale (avoid OR
+                            ; macro which would smash the live state via t0)
     ADD  r1, r1
     CMP  r3, r2
     BLEU __modu_no_sub      ; strict less-than -> skip
@@ -157,6 +161,7 @@ __divs_neg_divisor:
     ADDI r8, r8, #1         ; flag ^= 1
 __divs_do_unsigned:
     CALL(__divu)
+    NOP                     ; hazard guard: JAL delay slot
     ANDI r8, #1             ; keep low bit (0 or 1)
     CMP  r8, r0
     BEQ  __divs_done
@@ -202,6 +207,7 @@ __mods_abs_divisor:
     NEG(r2)
 __mods_do_unsigned:
     CALL(__modu)
+    NOP                     ; hazard guard: JAL delay slot
     CMP  r8, r0
     BEQ  __mods_done
     NEG(r1)

@@ -301,8 +301,15 @@ typedef struct ir_slot_entry_s ir_slot_entry_t;
 
 struct ir_slot_entry_s {
     char             name[128];  /* symbol name                    */
-    unsigned         slot_id;    /* %slotN                         */
+    unsigned         slot_id;    /* %slotN — id of the FIRST word  */
     ir_type_t        type;
+    /* Number of consecutive slot ids this entry actually occupies.
+     * Equals ir_type_size_words(type) for plain scalars and arrays
+     * whose IR type carries an element count, but may be overridden
+     * by ir_lower_decl for aggregates whose IR type loses layout
+     * (structs/unions).  Used by codegen to compute the lowest-address
+     * fp offset of a multi-word slot, so `&obj + i` works. */
+    unsigned         size_words;
     ir_slot_entry_t *next;
 };
 
@@ -426,6 +433,9 @@ unsigned    ir_new_vreg(ir_function_t *func);
 unsigned    ir_new_slot(ir_function_t *func, const char *name, ir_type_t type);
 /* Look up slot id by symbol name; returns (unsigned)-1 if not found */
 unsigned    ir_find_slot(const ir_function_t *func, const char *name);
+/* Bump an aggregate slot's reserved word count (used by lowering for
+ * structs/unions whose IR type loses layout). */
+void        ir_slot_bump_size(ir_function_t *func, unsigned slot_id, unsigned extra_words);
 
 /* ────────────────────────────────────────────────────────────
  * §12  Text serialiser

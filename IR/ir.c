@@ -358,11 +358,24 @@ unsigned ir_new_slot(ir_function_t *func, const char *name, ir_type_t type)
      * at e->slot_id + N.  Scalars take one slot. */
     size_t sz = ir_type_size_words(type);
     if (sz == 0) sz = 1;
+    e->size_words = (unsigned)sz;
     func->next_slot_id += (unsigned)sz;
     /* prepend (lookup is by name, order doesn't matter) */
     e->next    = func->slots;
     func->slots = e;
     return e->slot_id;
+}
+
+/* Adjust an existing slot's reserved size — used by ir_lower_decl when an
+ * aggregate's IR type loses layout but we know the semantic word count. */
+void ir_slot_bump_size(ir_function_t *func, unsigned slot_id, unsigned extra_words)
+{
+    for (ir_slot_entry_t *e = func->slots; e; e = e->next) {
+        if (e->slot_id == slot_id) {
+            e->size_words += extra_words;
+            return;
+        }
+    }
 }
 
 /* Looks up a slot by name and returns its id, or (unsigned)-1 if absent. */

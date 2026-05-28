@@ -303,16 +303,20 @@ unsigned ir_lower_local_decl(ir_lower_ctx_t *lctx, const TreeNode_t *decl_node)
 
     /* ir_new_slot reserves ir_type_size_words(ir_t) consecutive ids, but
      * IR types lose layout for structs/unions (they show up as 1 word).
-     * Bump next_slot_id so an aggregate slot occupies the right number
-     * of words on the stack. */
+     * Bump next_slot_id AND the slot entry's recorded size so an
+     * aggregate slot occupies the right number of words on the stack
+     * and codegen knows the slot's true extent (for &obj address calc). */
     {
         const type_t *sem_type = (info && info->type) ? info->type : sym->type;
         if (sem_type) {
             size_t correct  = ir_compute_sem_type_words(lctx, sem_type);
             size_t reserved = ir_type_size_words(ir_t);
             if (reserved == 0) reserved = 1;
-            if (correct > reserved)
-                lctx->func->next_slot_id += (unsigned)(correct - reserved);
+            if (correct > reserved) {
+                unsigned extra = (unsigned)(correct - reserved);
+                lctx->func->next_slot_id += extra;
+                ir_slot_bump_size(lctx->func, slot, extra);
+            }
         }
     }
 

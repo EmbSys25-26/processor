@@ -14,7 +14,7 @@
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DRIVER="$ROOT/scripts/build_c_to_hex.sh"
+DRIVER="$ROOT/scripts/build_c_e2e.sh"
 
 if [[ ! -x "$DRIVER" ]]; then
     echo "ERROR: $DRIVER not executable" >&2

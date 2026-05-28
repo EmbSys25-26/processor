@@ -180,18 +180,26 @@ static int function_is_leaf(const ir_function_t *func)
     return 1;
 }
 
-/* Frame-pointer offset for slot_id N:  fp + offset_of(N) = address of slot N.
+/* Frame-pointer offset for slot_id N: returns the address of the FIRST
+ * element of the slot (LOWEST byte address in the slot's range), so that
+ * `&obj + i` indexing into an array slot accesses elements within the
+ * slot's reserved region.
  *
  *  Non-leaf frame layout after prologue:
  *    fp-0: saved fp
  *    fp-1: saved lr               <-- absent for leaf functions
  *    fp-2 .. fp-(1+cc): saved callee-saved
- *    slot 0 lives at fp-(2+cc).
+ *    slot region starts at fp-(2+cc) and grows downward.
  *
  *  Leaf frame layout (no PUSH(lr)):
  *    fp-0: saved fp
  *    fp-1 .. fp-(cc): saved callee-saved
- *    slot 0 lives at fp-(1+cc).
+ *    slot region starts at fp-(1+cc).
+ *
+ * A slot of size S occupies ids [slot_id .. slot_id+S-1].  Address of
+ * the K-th id is fp - (K + 1 + header), so the LOWEST address (= base
+ * for indexing) is fp - (slot_id + S + header).  For 1-word scalars
+ * this is identical to the legacy `slot_id + 1 + header` formula.
  */
 static int slot_fp_offset(unsigned slot_id,
                           const ir_function_t *func,
@@ -199,7 +207,14 @@ static int slot_fp_offset(unsigned slot_id,
 {
     int lr_word = function_is_leaf(func) ? 0 : 1;
     int header  = lr_word + __builtin_popcount(callee_used_mask(ra));
-    return -((int)slot_id + 1 + header);
+    int size    = 1;
+    for (const ir_slot_entry_t *e = func->slots; e; e = e->next) {
+        if (e->slot_id == slot_id) {
+            size = (int)(e->size_words ? e->size_words : 1);
+            break;
+        }
+    }
+    return -((int)slot_id + size + header);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -252,9 +267,12 @@ static void emit_sp_adj(FILE *out, int delta)
  */
 static void emit_load_imm(FILE *out, const char *rd, long imm)
 {
+    /* ADDI's 4-bit imm is SIGNED (range [-8, +7]).  Values in [8, 15]
+     * would decode as their value-16 (the imm[3] sign bit), so they
+     * must be routed through LI even though they fit in the nibble. */
     if (imm == 0) {
         fprintf(out, "    MOV(%s, r0)\n", rd);
-    } else if (imm >= 1 && imm <= 15) {
+    } else if (imm >= -8 && imm <= 7) {
         fprintf(out, "    ADDI %s, r0, #%ld\n", rd, imm);
     } else {
         uint16_t u16 = (uint16_t)(int16_t)imm;
@@ -524,9 +542,25 @@ static void emit_or_rr(FILE *out,
     }
 
     /* (3) Normal path.  OR macro's internal t0 is fine, but rhs must
-     * not be t0 (the macro's MOV(t0, rd) would clobber rhs). */
+     * not be t0 (the macro's MOV(t0, rd) would clobber rhs).
+     *
+     * If rhs is t0 we usually swap lhs and rhs to move t0 into lhs and
+     * let `MOV(dst, lhs)` then `OR(dst, rhs)` recompute dst.  That is
+     * NOT safe when dst == lhs originally (i.e. dst already aliases the
+     * accumulator value): the swap would force `MOV(dst, t0)`, which
+     * destroys the accumulator before the OR ever runs.  In that case
+     * inline-expand the OR using t3 (regalloc-reserved) as scratch. */
     if (strcmp(rhs, "t0") == 0 && strcmp(lhs, "t0") != 0) {
-        const char *t = lhs; lhs = rhs; rhs = t;
+        if (strcmp(dst, lhs) != 0) {
+            const char *t = lhs; lhs = rhs; rhs = t;
+        } else {
+            const char *scratch = "t3";
+            fprintf(out, "    MOV(%s, %s)\n", scratch, dst);
+            fprintf(out, "    AND %s, %s\n",  scratch, rhs);
+            fprintf(out, "    XOR %s, %s\n",  dst,     rhs);
+            fprintf(out, "    XOR %s, %s\n",  dst,     scratch);
+            return;
+        }
     }
     if (strcmp(dst, lhs) != 0)
         fprintf(out, "    MOV(%s, %s)\n", dst, lhs);
@@ -595,20 +629,28 @@ static void emit_comparison(FILE *out, ir_opcode_t op,
     const char *cmp_a = swap ? rb_r : ra_r;
     const char *cmp_b = swap ? ra_r : rb_r;
 
-    /* For NEQ we want "branch if NOT equal to true", so invert sense:
-     * "CMP; BEQ .false; ADDI rD,#1; BR .done; .false: ADDI rD,#0; .done:" */
+    /* The "assume" ADDI cannot sit BETWEEN CMP and Bcc (ADDI updates
+     * Z/N/C/V on this target, so the branch would read garbage), and it
+     * cannot move BEFORE the CMP either — `rd` may share a physical
+     * register with one of the CMP operands (regalloc coalesces non-
+     * interfering vregs), so pre-writing rd would clobber the operand
+     * before CMP reads it.
+     * The fix is to emit BOTH the false-path and true-path ADDIs only
+     * AFTER the branch resolves.  Neither value is written until rd has
+     * stopped being a live operand of CMP, and no ADDI is interposed
+     * between CMP and the conditional branch. */
     if (op == IR_OP_NEQ) {
         fprintf(out, "    CMP %s, %s\n", cmp_a, cmp_b);
-        fprintf(out, "    ADDI %s, r0, #1      ; assume true (!=)\n", rd);
         fprintf(out, "    BEQ .cmp_false_%s_%u\n", func->name, lbl);
+        fprintf(out, "    ADDI %s, r0, #1      ; not equal → true\n", rd);
         fprintf(out, "    BR .cmp_done_%s_%u\n",  func->name, lbl);
         fprintf(out, ".cmp_false_%s_%u:\n",       func->name, lbl);
         fprintf(out, "    ADDI %s, r0, #0      ; equal → false\n", rd);
         fprintf(out, ".cmp_done_%s_%u:\n",        func->name, lbl);
     } else {
         fprintf(out, "    CMP %s, %s\n", cmp_a, cmp_b);
-        fprintf(out, "    ADDI %s, r0, #0      ; assume false\n", rd);
         fprintf(out, "    %s .cmp_true_%s_%u\n", bmnem, func->name, lbl);
+        fprintf(out, "    ADDI %s, r0, #0      ; condition false\n", rd);
         fprintf(out, "    BR .cmp_done_%s_%u\n",        func->name, lbl);
         fprintf(out, ".cmp_true_%s_%u:\n",              func->name, lbl);
         fprintf(out, "    ADDI %s, r0, #1      ; condition true\n", rd);
@@ -893,6 +935,7 @@ static void emit_instr(FILE                *out,
                 emit_load_imm(out, "a1", width);
             }
             fprintf(out, "    CALL(__mul)             ; a0 = idx * width\n");
+            fprintf(out, "    NOP                     ; hazard guard: JAL delay slot\n");
             /* Reload base into a free temp.  a0 now holds the product, so
              * pick anything else; t0 is fine after the call (it was
              * caller-saved). */
@@ -977,7 +1020,7 @@ static void emit_instr(FILE                *out,
              * otherwise the ADDI overwrites the byte-to-extend before the
              * SLL loop has a chance to shift it. */
             const char *cnt = pick_scratch3(rd, NULL, NULL);
-            fprintf(out, "    ADDI %s, r0, #8         ; shift count = 8\n", cnt);
+            emit_load_imm(out, cnt, 8);            /* #8 sign-extends in ADDI imm4; LI is correct */
             for (int i = 0; i < 8; i++) fprintf(out, "    SLL(%s)\n", rd);
             fprintf(out, "    SRA %s, %s              ; sign-extend (SRA by 8)\n",
                     rd, cnt);
@@ -1713,7 +1756,60 @@ void codegen_emit_function(FILE                *out,
     free(buf);
 }
 
-/* Emits a whole module: header banner, global data section, then function text. */
+/* Emits the SoC boot section: IRET stubs at each ISR vector and the
+ * reset-vector startup stub.  The pipelined gr0040 SoC fixes the reset PC
+ * at 0x0100 and six ISR vectors at 0x0020/0x0040/0x0060/0x0080/0x00A0/
+ * 0x00C0; the C runtime model is that user programs supply only `main`,
+ * so codegen is responsible for plugging those vectors with safe stubs
+ * and for branching into `main` after reset.
+ *
+ * IRET stubs ensure a stray peripheral IRQ (Timer16 overflows ~16 cycles
+ * after reset) returns immediately instead of executing NOP-padded BROM.
+ *
+ * The reset stub masks IRQs (CLI), initialises sp to the top of the
+ * 512-word BRAM (sp is a word-index — EX shifts <<1 to byte-address, so
+ * sp=0x01FE puts the first push at byte 0x3FC, the last BRAM word),
+ * CALLs main, and spins on a self-BR after main returns. */
+static void emit_boot_section(FILE *out)
+{
+    static const struct { unsigned addr; const char *name; } isr_vectors[] = {
+        { 0x0020, "TIMER0" },
+        { 0x0040, "TIMER1" },
+        { 0x0060, "PARIO"  },
+        { 0x0080, "UART"   },
+        { 0x00A0, "I2C"    },
+        { 0x00C0, "WDT"    },
+    };
+
+    fprintf(out,
+            "; ── Boot section ─────────────────────────────────────────\n"
+            "; IRET stubs at each ISR vector so any IRQ that fires before\n"
+            "; the reset stub's CLI takes effect returns immediately.\n");
+    for (size_t i = 0; i < sizeof isr_vectors / sizeof *isr_vectors; i++) {
+        fprintf(out, "    .org 0x%04X\n", isr_vectors[i].addr);
+        fprintf(out, "    JAL r0, lr, #0          ; IRET stub: %s\n",
+                isr_vectors[i].name);
+    }
+
+    fprintf(out,
+            "\n"
+            "; Reset vector — mask IRQs, init sp at top-of-BRAM, call main,\n"
+            "; halt-loop after return so the testbench can sample a0.\n"
+            "    .org 0x0100\n"
+            "_start:\n"
+            "    CLI\n"
+            "    NOP                     ; CLI hazard guard\n"
+            "    LI(sp, 0x01FE)\n"
+            "    NOP                     ; LI consumer hazard guard\n"
+            "    CALL(main)\n"
+            "    NOP                     ; CALL/JAL delay slot\n"
+            "_halt:\n"
+            "    BR _halt\n"
+            "\n");
+}
+
+/* Emits a whole module: header banner, boot section, global data, then
+ * function text. */
 void codegen_emit_module(FILE               *out,
                           const ir_module_t  *module,
                           const regalloc_t  **allocs)
@@ -1725,6 +1821,9 @@ void codegen_emit_module(FILE               *out,
             "; Custom 16-bit RISC ISA\n"
             "; ============================================================\n\n",
             module->arch);
+
+    /* ── boot section (ISR stubs + reset stub) ── */
+    emit_boot_section(out);
 
     /* ── global data section ── */
     if (module->globals) {

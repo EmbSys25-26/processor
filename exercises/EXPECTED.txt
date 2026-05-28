@@ -1,0 +1,37 @@
+# exercise_name | source_file | expected_a0_hex | description
+solE001 | solE001_codeforces.c | 0013 | Codeforces 4A Watermelon — bit-packed YES/NO ladder
+solE002 | solE002_leetcode.c   | 0059 | LeetCode 70 Climbing Stairs — n=10 -> 89
+solE003 | solE003_leetcode.c   | 0015 | LeetCode 231 Power of Two — bit-packed ladder
+solE004 | solE004_codeforces.c | 0004 | Codeforces 1A Theatre Square — 6x6 tiled by 4
+solE005 | solE005_leetcode.c   | 0016 | LeetCode 9 Palindrome Number — bit-packed ladder
+solE006 | solE006_leetcode.c   | 016E | LeetCode 7 Reverse Integer — sum of two reverses
+solE007 | solE007_leetcode.c   | 0021 | Sum of digits — 15 + 18 = 33
+solE008 | solE008_codeforces.c | 0002 | CF 791A Bear and Big Brother — 4,7 -> 2 years
+solE009 | solE009_leetcode.c   | 0004 | min3 — 3 + 1
+solE010 | solE010_leetcode.c   | 0009 | max in array of 8
+solE011 | solE011_leetcode.c   | 0003 | linear search — target at index 3
+solE012 | solE012_leetcode.c   | 0005 | LC 704 Binary Search — target at index 5
+solE013 | solE013_leetcode.c   | 0012 | bubble sort then min*10+max
+solE014 | solE014_leetcode.c   | 0001 | LC 1 Two Sum — (0,1) -> 1
+solE015 | solE015_leetcode.c   | 000D | LC 191 popcount — 5 + 8 = 13
+solE016 | solE016_leetcode.c   | 0062 | sum of multiples of 3 or 5 up to 20 -> 98
+solE017 | solE017_leetcode.c   | 0008 | count divisors — d(12)+d(7) = 6+2
+solE018 | solE018_leetcode.c   | 001F | recursive GCD — 6 + 25 = 31
+solE019 | solE019_leetcode.c   | 000B | LC 342 Power of Four — bit-packed ladder
+solE020 | solE020_leetcode.c   | 0037 | recursive sum 1..10 = 55
+solE021 | solE021_leetcode.c   | 0400 | linear pow(2,10) = 1024
+solE022 | solE022_leetcode.c   | 0095 | tribonacci T(10) = 149
+solE023 | solE023_leetcode.c   | 000F | integer sqrt — 10 + 5 = 15
+solE024 | solE024_leetcode.c   | 0109 | Gauss formula — 55 + 210 = 265
+solE025 | solE025_leetcode.c   | 01F5 | in-place reversal — 5*100 + 1
+solE026 | solE026_leetcode.c   | 0004 | count occurrences of 2 in array
+solE027 | solE027_leetcode.c   | 0003 | LC 169 Boyer-Moore majority -> 3
+solE028 | solE028_leetcode.c   | 000D | climb-stairs {1,2,3} steps to n=5 -> 13
+solE029 | solE029_leetcode.c   | 0400 | LC 50 fast-pow(2,10) = 1024
+solE030 | solE030_leetcode.c   | 0005 | LC 53 Kadane max subarray -> 5
+solE031 | solE031_leetcode.c   | 0008 | LC 204 count primes <= 20 -> 8
+solE032 | solE032_leetcode.c   | 0015 | recursive fib(8) = 21
+solE033 | solE033_leetcode.c   | 0181 | sum of squares 1..10 = 385
+solE034 | solE034_leetcode.c   | 0004 | distinct count {1,2,2,3,1,4,3} -> 4
+solE035 | solE035_leetcode.c   | 0009 | median3 — 2 + 7 = 9
+solE036 | solE036_leetcode.c   | 0003 | LC 136 single number via XOR -> 3

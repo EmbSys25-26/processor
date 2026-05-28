@@ -1,22 +1,27 @@
 #!/usr/bin/env bash
 # =============================================================================
-# build_c_to_hex.sh — compile a .c file through the full backend toolchain:
+# build_c_e2e.sh — single end-to-end builder: .c -> .hex (hi/lo pair).
 #
-#   .c  --[compiler]-->  .asm  --[concat runtime]-->  .asm+rt
-#       --[m4]-->  expanded.asm
-#       --[assembler]-->  .hex
-#       --[awk]-->  hi.hex / lo.hex
+# Stages:
+#   .c  --[compiler]-->  .asm         (codegen also emits boot section:
+#       --[+ runtime]-->  .full.asm     ISR IRET stubs + reset-vector stub)
+#       --[m4 expand]-->  .pre.asm
+#       --[assembler]-->  .hex (16-bit BE per line)
+#       --[byte split]-->  _hi.hex, _lo.hex
 #
 # Usage:
-#   scripts/build_c_to_hex.sh <input.c> [--out-dir DIR] [--no-runtime]
+#   scripts/build_c_e2e.sh <input.c> [--out-dir DIR] [--out-stem STEM]
+#                                    [--no-runtime]
 #
-# Layout produced in <out-dir>/ (default: build_c2hex/):
-#   <base>.asm        compiler output, unmodified
-#   <base>.full.asm   compiler output + runtime concatenated
-#   <base>.pre.asm    after m4 macro expansion
-#   <base>.hex        16-bit big-endian hex words, one per line
-#   <base>_hi.hex     high byte
-#   <base>_lo.hex     low byte
+# Produces in <out-dir>/ (default build_c2hex/):
+#   <stem>.asm        compiler output, unmodified
+#   <stem>.full.asm   compiler output + runtime concatenated
+#   <stem>.pre.asm    after m4 macro expansion
+#   <stem>.hex        16-bit big-endian hex words, one per line
+#   <stem>_hi.hex     high byte
+#   <stem>_lo.hex     low byte
+# where <stem> defaults to the input basename without .c, or the value of
+# --out-stem if given.
 #
 # Exit codes:
 #   0  pipeline succeeded
@@ -34,11 +39,13 @@ RUNTIME_ASM="$ROOT/runtime/runtime.asm"
 
 OUT_DIR="$ROOT/build_c2hex"
 USE_RUNTIME=1
+OUT_STEM=""
 INPUT=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --out-dir)    OUT_DIR="$2"; shift 2 ;;
+        --out-stem)   OUT_STEM="$2"; shift 2 ;;
         --no-runtime) USE_RUNTIME=0; shift ;;
         -h|--help)
             sed -n '2,28p' "$0"
@@ -55,7 +62,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$INPUT" ]]; then
-    echo "Usage: $0 <input.c> [--out-dir DIR] [--no-runtime]" >&2
+    echo "Usage: $0 <input.c> [--out-dir DIR] [--out-stem STEM] [--no-runtime]" >&2
     exit 2
 fi
 
@@ -64,7 +71,6 @@ if [[ ! -f "$INPUT" ]]; then
     exit 2
 fi
 
-# --- preflight: every tool we need ------------------------------------------
 for tool in m4 awk; do
     if ! command -v "$tool" >/dev/null 2>&1; then
         echo "ERROR: required tool '$tool' not on PATH" >&2
@@ -88,32 +94,29 @@ if [[ $USE_RUNTIME -eq 1 ]] && [[ ! -f "$RUNTIME_ASM" ]]; then
 fi
 
 mkdir -p "$OUT_DIR"
-BASE="$(basename "$INPUT" .c)"
+STEM="${OUT_STEM:-$(basename "$INPUT" .c)}"
 
-ASM_OUT="$OUT_DIR/${BASE}.asm"
-FULL_ASM="$OUT_DIR/${BASE}.full.asm"
-PRE_ASM="$OUT_DIR/${BASE}.pre.asm"
-HEX="$OUT_DIR/${BASE}.hex"
-HI_HEX="$OUT_DIR/${BASE}_hi.hex"
-LO_HEX="$OUT_DIR/${BASE}_lo.hex"
+ASM_OUT="$OUT_DIR/${STEM}.asm"
+FULL_ASM="$OUT_DIR/${STEM}.full.asm"
+PRE_ASM="$OUT_DIR/${STEM}.pre.asm"
+HEX="$OUT_DIR/${STEM}.hex"
+HI_HEX="$OUT_DIR/${STEM}_hi.hex"
+LO_HEX="$OUT_DIR/${STEM}_lo.hex"
 
-# --- 1. Compile -------------------------------------------------------------
 echo "[1/5] compile  : $INPUT"
 (cd "$ROOT" && "$COMPILER" "$INPUT") || {
     echo "  -> compiler failed" >&2
     exit 1
 }
-# The compiler writes to ./output.asm at $ROOT
 cp "$ROOT/output.asm" "$ASM_OUT"
 
-# --- 2. Concatenate runtime ------------------------------------------------
 echo "[2/5] link rt  : $([[ $USE_RUNTIME -eq 1 ]] && echo yes || echo no)"
 if [[ $USE_RUNTIME -eq 1 ]]; then
     {
         cat "$ASM_OUT"
         echo ""
         echo "; ============================================================"
-        echo "; Runtime library (concatenated by scripts/build_c_to_hex.sh)"
+        echo "; Runtime library (concatenated by scripts/build_c_e2e.sh)"
         echo "; ============================================================"
         cat "$RUNTIME_ASM"
     } > "$FULL_ASM"
@@ -121,23 +124,19 @@ else
     cp "$ASM_OUT" "$FULL_ASM"
 fi
 
-# --- 3. m4 expand ----------------------------------------------------------
 echo "[3/5] m4 expand"
 m4 "$ABI_M4" "$FULL_ASM" > "$PRE_ASM" || {
     echo "  -> m4 failed" >&2
     exit 1
 }
 
-# --- 4. Assemble -----------------------------------------------------------
 echo "[4/5] assemble : $PRE_ASM"
 (cd "$OUT_DIR" && "$ASM_BIN" "$PRE_ASM") || {
     echo "  -> assembler reported an error" >&2
     exit 1
 }
-# Assembler writes to ./bleh.hex in its CWD
 mv "$OUT_DIR/bleh.hex" "$HEX"
 
-# --- 5. Byte split ---------------------------------------------------------
 echo "[5/5] hi/lo split"
 awk '{ print substr($1, 1, 2) }' "$HEX" > "$HI_HEX"
 awk '{ print substr($1, 3, 2) }' "$HEX" > "$LO_HEX"
