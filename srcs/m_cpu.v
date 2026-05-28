@@ -288,8 +288,12 @@ module cpu(
  ************************************************************************************/
 
     // _id_fire: the ID stage commits an instruction this cycle.
-    // Requires a valid instruction in IF/ID, no stall, and no concurrent IRQ accept.
-    assign _id_fire = _ifid_valid & ~_stall_id & ~_accept_irq;
+    // Requires a valid instruction in IF/ID, no stall, no concurrent IRQ
+    // accept, and no concurrent branch/JAL redirect (the speculatively-
+    // fetched instruction in ID is flushed by the redirect — letting it
+    // "fire" would commit speculative side effects such as _iret_event
+    // [-> IRQ-depth / o_iret_detected] and the CLI/STI GIE updates).
+    assign _id_fire = _ifid_valid & ~_stall_id & ~_accept_irq & ~_redirect;
     
     // The EX stage commits this cycle
     assign _ex_fire = _idex_valid & ~_stall_ex;
@@ -862,7 +866,14 @@ module cpu(
 
             // IMM prefix tracking: record when a fired instruction is an IMM prefix,
             // and latch its 12-bit payload for use by the immediately following instruction.
-            if (_id_fire) begin
+            // Branch redirect (mispredict or JAL) must also clear the prefix flag:
+            // an IMM sitting in ID when the redirect resolves is speculative and must
+            // not commit its payload, and any earlier-set prefix whose consumer was just
+            // flushed is now stale.  The IF/ID flush handles squashing the IMM's bits,
+            // but the prefix state lives in the CPU and needs its own clear path.
+            if (_redirect) begin
+                _imm_pre_state <= 1'b0;
+            end else if (_id_fire) begin
                 _imm_pre_state <= _id_is_imm;
                 if (_id_is_imm) begin
                     _i12_pre_state <= _id_i12;

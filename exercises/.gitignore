@@ -1,0 +1,12 @@
+# xsim scratch
+xsim.dir/
+.Xil/
+xvlog.log
+xvlog.pb
+xelab.log
+xelab.pb
+xsim.log
+xsim.jou
+xsim_*.backup.log
+xsim_*.backup.jou
+webtalk*

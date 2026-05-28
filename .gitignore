@@ -11,6 +11,7 @@ processor.*/
 *.bak
 *.swp
 *.swo
+*.pb
 # ignore build artifacts
 build/
 dist/
@@ -38,3 +39,4 @@ test-results/
 .ci_artifacts/
 # ignore admin documentation
 admin-docs/
+.investigation/

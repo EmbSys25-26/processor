@@ -33,7 +33,22 @@ module alu(
  * Logic and Shift Units
  ************************************************************************************/
     assign o_log = i_is_xor ? (i_a ^ i_b) : (i_a & i_b);
-    assign o_sr = {i_is_sra ? i_b[`CPU_N] : 1'b0, i_b[`CPU_N:1]};
+    // Barrel shifter: shift the rd operand (i_a) right by the low 4 bits
+    // of rs (i_b).  SRA preserves the sign bit (arithmetic shift); SRL
+    // zero-fills (logical shift).  Matches the documented `SRA rd, rs` /
+    // `SRL rd, rs` semantics — the previous single-bit shift on i_b broke
+    // the runtime helpers (__mul, __divu, __modu) and the codegen's
+    // IR_OP_SHRU/SHRS lowering, both of which load the shift count into a
+    // register and expect the destination to be shifted by that amount.
+    // Sign- or zero-extend to 32 bits before shifting so the arithmetic-
+    // shift sign-fill works portably across simulators (`$signed() >>>`
+    // can fail to sign-extend when the LHS is unsigned-context).
+    wire [31:0] _sext_a    = {{16{i_a[`CPU_N]}}, i_a};
+    wire [31:0] _zext_a    = {16'b0, i_a};
+    wire [31:0] _shifted_a = i_is_sra
+        ? (_sext_a >> i_b[3:0])
+        : (_zext_a >> i_b[3:0]);
+    assign o_sr = _shifted_a[`CPU_N:0];
 
 endmodule
 
